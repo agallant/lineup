@@ -8,6 +8,11 @@ export default tseslint.config(
   ...tseslint.configs.strict,
   {
     languageOptions: { globals: { ...globals.browser } },
+    rules: {
+      // With noUncheckedIndexedAccess, `buf[i]!` inside bounds-checked DSP
+      // loops is the clearest way to say "this index exists".
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
   },
   {
     files: ['scripts/**', '*.config.*'],
