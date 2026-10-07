@@ -1,0 +1,90 @@
+:root {
+  --bg: #14121f;
+  --panel: #1f1c30;
+  --line: #3b3656;
+  --text: #ece9f7;
+  --muted: #9b96b5;
+  --accent: #ffd166;
+  --good: #06d6a0;
+  --bad: #ef476f;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    16px/1.4 -apple-system,
+    system-ui,
+    sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+h1 {
+  margin: 0.5em 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.menu a,
+.menu span,
+button {
+  display: block;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font: inherit;
+  text-decoration: none;
+}
+
+.menu span {
+  color: var(--muted);
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+#build-info {
+  padding: 8px 16px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}

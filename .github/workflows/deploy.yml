@@ -1,0 +1,36 @@
+# Deploys main to the root of the gh-pages branch, which GitHub Pages serves.
+# PR previews live under pr-preview/ on the same branch (see preview.yml),
+# so this deploy must not delete that folder.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          BUILD_SHA: ${{ github.sha }}
+          BUILD_LABEL: main
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+          clean-exclude: pr-preview/
