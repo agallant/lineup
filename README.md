@@ -75,10 +75,40 @@ and in a preview subfolder. Routing uses hashes (`#/mic`) for the same reason.
 deployment → Source: **Deploy from a branch** → `gh-pages` / `(root)`. The
 `gh-pages` branch appears after the first preview or deploy run.
 
+## Mic & latency test (`#/mic`)
+
+This is the first check on a real device. It shows:
+
+- the live waveform and input level (RMS and peak), with a clipping warning
+- the detected pitch: note name, Hz, cents, the nearest open GCEA string, and clarity
+- detected onsets (plucks and strums): a count, a flash, the velocity, and the
+  delay from detection to the main thread
+- the `AudioContext` sampleRate, baseLatency, outputLatency and state, plus the
+  mic's own reported sampleRate, latency and channel count
+- whether echo cancellation, noise suppression and AGC are actually off, as
+  reported by `track.getSettings()`
+- an input device picker and channel picker for multi-channel audio interfaces
+- **Copy diagnostics**, which copies the details as JSON so you can paste them
+  into a PR comment
+
+How audio flows: mic → `MediaStreamSource` → `AudioWorkletNode` (`src/audio/worklet/`)
+→ `InputAnalyzer` (pitch via `pitchy`, onsets via an energy-rise detector on the
+signal's first difference) → `postMessage` → UI. An `AnalyserNode` taps the
+source, but only to draw the waveform.
+
+Automated coverage: unit tests on synthetic sine, additive-pluck and
+Karplus-Strong signals at G4/C4/E4/A4 (44.1 and 48 kHz). The page has also been
+smoke-tested in headless Chromium using a synthetic WAV as a fake mic.
+
 ## Verified on device
 
-| What                       | iPad Safari | iPad PWA | Desktop Chrome |
-| -------------------------- | ----------- | -------- | -------------- |
-| Site loads from Pages      | not yet     | not yet  | not yet        |
-| Add to Home Screen + icon  | not yet     | not yet  | n/a            |
-| Footer shows correct build | not yet     | not yet  | not yet        |
+| What                                      | iPad Safari | iPad PWA | Desktop Chrome |
+| ----------------------------------------- | ----------- | -------- | -------------- |
+| Site loads from Pages                     | not yet     | not yet  | not yet        |
+| Add to Home Screen + icon                 | not yet     | not yet  | n/a            |
+| Footer shows correct build                | not yet     | not yet  | not yet        |
+| Mic permission prompt + audio running     | not yet     | not yet  | not yet        |
+| EC / NS / AGC reported off                | not yet     | not yet  | not yet        |
+| Pitch correct on all 4 strings            | not yet     | not yet  | not yet        |
+| One onset per pluck, one per strum        | not yet     | not yet  | not yet        |
+| Audio interface selectable, right channel | not yet     | not yet  | not yet        |
