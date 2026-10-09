@@ -1,7 +1,7 @@
 {
-  "name": "Strumline",
-  "short_name": "Strumline",
-  "description": "A rhythm game you play by strumming a real ukulele.",
+  "name": "Lineup",
+  "short_name": "Lineup",
+  "description": "Rhythm games you play with a real instrument: ukulele, voice, winds and percussion.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
