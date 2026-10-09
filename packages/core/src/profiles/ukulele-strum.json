@@ -1,0 +1,38 @@
+{
+  "id": "ukulele-strum",
+  "name": "Ukulele (strum)",
+  "mode": "strumline",
+  "input": "strum",
+  "renderer": "lane-highway",
+  "range": { "lowMidi": 60, "highMidi": 81 },
+  "transposition": { "writtenMinusSounding": 0 },
+  "tuning": {
+    "name": "GCEA re-entrant",
+    "reentrant": true,
+    "strings": [
+      { "label": "G4", "midi": 67 },
+      { "label": "C4", "midi": 60 },
+      { "label": "E4", "midi": 64 },
+      { "label": "A4", "midi": 69 }
+    ]
+  },
+  "lanes": [
+    { "id": "down", "label": "Down", "color": "#ef476f" },
+    { "id": "up", "label": "Up", "color": "#06d6a0" }
+  ],
+  "detector": {
+    "windowSize": 2048,
+    "hopSize": 512,
+    "clarityThreshold": 0.9,
+    "minLevelDb": -60,
+    "minHz": 150,
+    "maxHz": 1400,
+    "stabilityGateMs": 0,
+    "onset": { "riseDb": 10, "refractoryMs": 70, "lookbackMs": 30, "minLevelDb": -60 }
+  },
+  "judgment": {
+    "strategy": "discrete",
+    "timing": { "perfectMs": 45, "goodMs": 110 },
+    "match": { "lane": false, "pitch": false, "chord": false }
+  }
+}

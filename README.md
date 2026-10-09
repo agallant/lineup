@@ -1,16 +1,22 @@
-# Strumline
+# Lineup
 
-A rhythm game (DDR / Elite Beat Agents style) that you play by strumming a real
-ukulele instead of stomping on pads. Ukulele only for now, in standard
-re-entrant GCEA tuning (G4 C4 E4 A4).
+An umbrella platform of rhythm games (DDR / Elite Beat Agents / SingStar style)
+that you play by performing on a real instrument. One mode per instrument family:
+
+| Mode          | Instrument                         | Status                     |
+| ------------- | ---------------------------------- | -------------------------- |
+| **Strumline** | ukulele (GCEA re-entrant)          | mic test + detectors exist |
+| **Singline**  | voice                              | planned (L2)               |
+| **Windline**  | ocarina, recorder, penny whistle   | planned (L3, later)        |
+| **Beatline**  | claps, taps, hand drums, kit, pads | planned (L4)               |
 
 It's a static web app, built for Safari on iOS/iPadOS first and also tested in
 desktop Chrome. You can install it as a PWA. There's no backend.
 
 ## Play / test
 
-- **Main:** https://agallant.github.io/strumline/
-- **PR previews:** https://agallant.github.io/strumline/pr-preview/pr-N/. A bot
+- **Main:** https://agallant.github.io/lineup/
+- **PR previews:** https://agallant.github.io/lineup/pr-preview/pr-N/. A bot
   comments the exact link on each PR.
 
 The footer shows which build you're looking at (`main` or `PR #N`, the commit
@@ -22,13 +28,13 @@ Home Screen**.
 
 ## Develop
 
-Requires Node 22+.
+Requires Node 22+. This is an npm-workspaces monorepo.
 
 ```sh
 npm ci
-npm run dev        # Vite dev server
-npm run check      # typecheck + lint + test + build (what CI runs)
-npm test           # Vitest unit tests
+npm run dev        # Vite dev server for apps/web
+npm run check      # typecheck + lint + test + build + dist check (what CI runs)
+npm test           # Vitest, all packages
 npm run format     # Prettier
 ```
 
@@ -37,14 +43,17 @@ Mic access needs a secure context (HTTPS or `localhost`).
 ## Layout
 
 ```
-src/
-  app/      screens, hash router, app state
-  audio/    mic capture, AudioWorklet, pitch + onset detection -> InputEvent   (M1)
-  chart/    chart JSON format + loader                                         (M3)
-  judge/    pure timing judge: InputEvents vs chart notes -> perfect/good/miss (M3)
-  render/   canvas 2D highway                                                  (M3)
-public/     manifest, icons, service worker (copied verbatim)
+packages/
+  core/      pure TypeScript, no DOM: notes, chart format, profiles, clock, calibration, judges, scoring
+  input/     detectors (pitch, onset), analyzer, AudioWorklet, mic capture
+  render/    canvas helpers and renderers
+  testkit/   synthetic signals for tests (dev-only)
+  sim/       headless end-to-end harness: synthetic player -> real pipeline -> score (dev-only)
+apps/
+  web/       the PWA: screens, router, styles, manifest, service worker
 ```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for data flow and how each piece fits.
 
 Design rules:
 
@@ -55,6 +64,18 @@ Design rules:
 - A calibrated input-latency offset is subtracted by the judge.
 - DSP and the judge are pure and tested with synthetic audio, so tests don't
   need a mic.
+- `packages/core` and `packages/testkit` are DOM-free, enforced by TypeScript
+  (no DOM lib) and an ESLint rule.
+
+## Limitations (known)
+
+- **Overlapping ringing notes confuse single-note pitch tracking.** Two notes
+  sounding at once blend into one ambiguous pitch (659 Hz + 880 Hz reads as
+  220 Hz). Timing is unaffected; pitch matching on wide leaps over ringing
+  notes can be wrong. Covered by explicit "KNOWN LIMITATION" tests.
+- **Simulations are synthetic.** They prove the software chain; real strings,
+  microphones, rooms and iOS audio behaviour are listed per PR under
+  "Unverified on real hardware".
 
 ## Deploy
 
@@ -68,7 +89,7 @@ Everything goes through PRs. Nothing is pushed directly to `main`.
   comments the URL on the PR, and deletes the preview when the PR closes. It
   uses [`rossjrw/pr-preview-action`](https://github.com/rossjrw/pr-preview-action).
 
-The Vite `base` is `./` (relative), so one build works both at the site root
+The Vite `base` (in `apps/web/vite.config.ts`) is `./` (relative), so one build works both at the site root
 and in a preview subfolder. Routing uses hashes (`#/mic`) for the same reason.
 
 **One-time setup (done in the GitHub UI):** Settings → Pages → Build and

@@ -1,0 +1,92 @@
+{
+  "id": "ukulele-note",
+  "name": "Ukulele (single notes)",
+  "mode": "strumline",
+  "input": "pitch",
+  "renderer": "lane-highway",
+  "range": {
+    "lowMidi": 60,
+    "highMidi": 81
+  },
+  "transposition": {
+    "writtenMinusSounding": 0
+  },
+  "tuning": {
+    "name": "GCEA re-entrant",
+    "reentrant": true,
+    "strings": [
+      {
+        "label": "G4",
+        "midi": 67
+      },
+      {
+        "label": "C4",
+        "midi": 60
+      },
+      {
+        "label": "E4",
+        "midi": 64
+      },
+      {
+        "label": "A4",
+        "midi": 69
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "g",
+      "label": "G",
+      "color": "#ffd166"
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "color": "#ef476f"
+    },
+    {
+      "id": "e",
+      "label": "E",
+      "color": "#06d6a0"
+    },
+    {
+      "id": "a",
+      "label": "A",
+      "color": "#118ab2"
+    }
+  ],
+  "detector": {
+    "windowSize": 2048,
+    "hopSize": 512,
+    "clarityThreshold": 0.9,
+    "minLevelDb": -60,
+    "minHz": 150,
+    "maxHz": 1400,
+    "stabilityGateMs": 0,
+    "onset": {
+      "riseDb": 10,
+      "refractoryMs": 70,
+      "lookbackMs": 30,
+      "minLevelDb": -60
+    }
+  },
+  "judgment": {
+    "strategy": "discrete",
+    "timing": {
+      "perfectMs": 50,
+      "goodMs": 120
+    },
+    "match": {
+      "lane": false,
+      "pitch": true,
+      "chord": false
+    },
+    "pitch": {
+      "toleranceCents": 60,
+      "octaveForgiving": false,
+      "vibratoSmoothingMs": 0,
+      "coverageGood": 0.5,
+      "coveragePerfect": 0.8
+    }
+  }
+}

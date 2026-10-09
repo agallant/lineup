@@ -1,22 +1,23 @@
 {
-  "name": "strumline",
+  "name": "lineup",
   "private": true,
   "version": "0.0.0",
-  "description": "A rhythm game you play by strumming a real ukulele.",
+  "description": "Rhythm games you play with a real instrument: ukulele, voice, winds and percussion.",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
+    "dev": "npm -w @lineup/web run dev",
+    "build": "npm -w @lineup/web run build",
+    "preview": "npm -w @lineup/web run preview",
+    "typecheck": "tsc -p . && npm run typecheck --workspaces --if-present",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "check:dist": "node scripts/check-dist.mjs",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build && npm run check:dist"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -31,5 +32,9 @@
   },
   "dependencies": {
     "pitchy": "^4.1.0"
-  }
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
 }
