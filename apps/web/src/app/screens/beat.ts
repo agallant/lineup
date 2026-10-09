@@ -269,6 +269,8 @@ export const beatScreen: Screen = (root) => {
 
   /** The open in flight, shared by every caller: a second open would leak the first session. */
   let micOpening: Promise<MicSession | null> | null = null;
+  /** Set when a demo starts: a mic open still pending must then close itself instead of landing. */
+  let demoClaimed = false;
 
   const openMicSession = async (): Promise<MicSession | null> => {
     const forProfile = profile;
@@ -278,6 +280,12 @@ export const beatScreen: Screen = (root) => {
       const opened = await openMic(undefined, 0, analyzerOptionsFromProfile(forProfile));
       if (disposed) {
         await opened.close();
+        return null;
+      }
+      if (demoClaimed) {
+        // a demo started while the mic was opening and owns the audio now
+        await opened.close();
+        micBtn.disabled = false;
         return null;
       }
       if (forProfile !== profile) {
@@ -303,6 +311,7 @@ export const beatScreen: Screen = (root) => {
 
   const startMic = (): Promise<MicSession | null> => {
     if (mic) return Promise.resolve(mic);
+    if (!micOpening) demoClaimed = false; // an explicit mic request takes the audio back
     micOpening ??= openMicSession().finally(() => {
       micOpening = null;
     });
@@ -624,6 +633,7 @@ export const beatScreen: Screen = (root) => {
     try {
       const chart = selectedChart();
       setupStatus.classList.remove('error');
+      demoClaimed = demo;
       if (!demo) {
         if (classCount() > 1 && !model) {
           setupStatus.textContent = 'Teach it your sounds first (section 3).';
