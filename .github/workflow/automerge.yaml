@@ -1,0 +1,17 @@
+name: Auto-Merge PRs
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+jobs:
+  enable-automerge:
+    runs-on: ubuntu-latest
+    # Only run on PRs targeting your main branch
+    if: github.base_ref == 'main'
+    steps:
+      - name: Enable Auto-Merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ github.event.pull_request.html_url }}" --auto --rebase
