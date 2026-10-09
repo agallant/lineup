@@ -11,6 +11,10 @@ export interface InputEvent {
   pitch?: number;
   /** Attack strength, 0..1. */
   velocity?: number;
+  /** Lane id, set by a classifier (percussion timbre, strum direction). */
+  lane?: string;
+  /** Detector features behind the event (spectral centroid, band energies...), for classifiers and debugging. */
+  features?: Readonly<Record<string, number>>;
 }
 
 /** 'onset': a pluck, strum or tap was detected. More kinds arrive with M4+. */
