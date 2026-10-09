@@ -1,5 +1,6 @@
 import workletUrl from './worklet/input-processor.ts?worker&url';
 import type { InputAdapter } from './adapter';
+import { workletSupported } from './capabilities';
 import { audioConstraints } from './constraints';
 import type { InputAnalyzerOptions } from './dsp/analyzer';
 import type { AnalyzerMessage } from './types';
@@ -24,11 +25,7 @@ export interface MicSession extends InputAdapter {
 }
 
 export function micSupported(): boolean {
-  return (
-    !!navigator.mediaDevices?.getUserMedia &&
-    typeof AudioContext !== 'undefined' &&
-    typeof AudioWorkletNode !== 'undefined'
-  );
+  return !!navigator.mediaDevices?.getUserMedia && workletSupported();
 }
 
 /**
