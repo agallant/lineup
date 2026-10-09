@@ -127,9 +127,7 @@ export class PercussionOnsetDetector {
     // The noise-floor estimate is the room's typical level: it tracks frames near it both ways
     // (so it sits at the mean of the fluctuations, not in their troughs) and creeps up only
     // slowly through loud frames, so a hit barely moves it.
-    this.floor +=
-      (db - this.floor) *
-      (db < this.floor ? FLOOR_DOWN : db < this.floor + FLOOR_TRACK_DB ? FLOOR_DOWN : FLOOR_CREEP);
+    this.floor += (db - this.floor) * (db < this.floor + FLOOR_TRACK_DB ? FLOOR_DOWN : FLOOR_CREEP);
 
     // 1. Confirm last frame's candidate: a real hit is still well above its baseline one frame
     //    later; a one-frame noise spike is not.

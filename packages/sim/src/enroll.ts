@@ -37,11 +37,13 @@ export function enrollSynthetic(
     enrollment?: Partial<EnrollmentOptions>;
   } = {},
 ): SyntheticEnrollment {
-  const classes = profile.timbreClasses!;
+  const classes = profile.timbreClasses;
+  if (!classes?.length) throw new Error(`profile "${profile.id}" has no timbre classes`);
   const session = new EnrollmentSession(classes, { perClass, ...enrollment });
   const outcomes: EnrollOutcome[] = [];
   classes.forEach((cls, k) => {
-    const lane = profile.lanes!.find((l) => l.timbre === cls.id)!.id;
+    const lane = profile.lanes?.find((l) => l.timbre === cls.id)?.id;
+    if (!lane) throw new Error(`profile "${profile.id}" has no lane for timbre "${cls.id}"`);
     // extra hits beyond perClass are ignored once the class is complete, so give a few spare
     const chart = chartFromBeats(
       { title: 'enroll', bpm: 100, countInBeats: 1 },

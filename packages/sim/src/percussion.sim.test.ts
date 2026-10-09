@@ -12,7 +12,7 @@ import {
   type Grade,
   type TimbreModel,
 } from '@lineup/core';
-import { clap, drumSlap, hihat, kick, rng, shaker, silence, snare, tap } from '@lineup/testkit';
+import { clap, hihat, kick, rng, shaker, silence, snare, tap } from '@lineup/testkit';
 import { describe, expect, it } from 'vitest';
 import { detectClickBleed } from '@lineup/input';
 import { enrollSynthetic } from './enroll';
@@ -347,6 +347,7 @@ describe('drum kit', () => {
   it('shaker enrolled as an extra hat-like sound is told apart from a snare', () => {
     const e = enrollSynthetic(kit, { kick, snare, hat: shaker });
     expect(e.warnings).toEqual([]);
-    expect(drumSlap(48000, {}).length).toBeGreaterThan(0);
+    const r = play(rockSong, kit, { kick, snare, hat: shaker }, e.model);
+    expect(counts(r).miss).toBe(0);
   });
 });

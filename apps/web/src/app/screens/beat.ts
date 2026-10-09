@@ -267,16 +267,25 @@ export const beatScreen: Screen = (root) => {
     if (enrolling) enrollHit(hit.event);
   };
 
-  const startMic = async (): Promise<MicSession | null> => {
-    if (mic) return mic;
+  /** The open in flight, shared by every caller: a second open would leak the first session. */
+  let micOpening: Promise<MicSession | null> | null = null;
+
+  const openMicSession = async (): Promise<MicSession | null> => {
+    const forProfile = profile;
     micBtn.disabled = true;
     setupStatus.textContent = 'Opening microphone…';
     try {
-      mic = await openMic(undefined, 0, analyzerOptionsFromProfile(profile));
+      const opened = await openMic(undefined, 0, analyzerOptionsFromProfile(forProfile));
       if (disposed) {
-        await mic.close();
+        await opened.close();
         return null;
       }
+      if (forProfile !== profile) {
+        // the mode changed while the mic was opening: its detector has the old settings
+        await opened.close();
+        return openMicSession();
+      }
+      mic = opened;
       mic.onMessage = onSetupMessage;
       micBtn.textContent = 'Mic on';
       leakBtn.disabled = false;
@@ -291,11 +300,19 @@ export const beatScreen: Screen = (root) => {
       return null;
     }
   };
+
+  const startMic = (): Promise<MicSession | null> => {
+    if (mic) return Promise.resolve(mic);
+    micOpening ??= openMicSession().finally(() => {
+      micOpening = null;
+    });
+    return micOpening;
+  };
   micBtn.addEventListener('click', () => void startMic());
 
   // When the mode changes the live worklet must be re-created with the right detector settings.
   const reopenMicIfNeeded = async () => {
-    if (!mic) return;
+    if (!mic) return; // an open in flight checks the profile itself when it lands
     await mic.close();
     mic = null;
     micBtn.disabled = false;

@@ -48,7 +48,7 @@ export class PercussionAnalyzer {
     this.window = window;
     this.pre = Math.round(pre * sampleRate);
     this.frameHop = frameHop;
-    this.size = window * 4;
+    this.size = (window + this.pre) * 4;
     this.ring = new Float32Array(this.size);
   }
 

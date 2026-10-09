@@ -9,12 +9,12 @@ import { mixAt, rng } from './synth';
 export interface HitOptions {
   amplitude?: number;
   seed?: number;
-  /** Hit-to-hit variation of tone and decay, 0 = identical every time. */
+  /** Hit-to-hit variation of tone and decay, 0 = identical every time (symmetric: +-variation, capped at 0.9). */
   variation?: number;
 }
 
 const wobble = (random: () => number, base: number, variation: number): number =>
-  base * (1 + variation * random());
+  base * (1 + Math.min(Math.max(variation, 0), 0.9) * random());
 
 const toSamples = (seconds: number, sampleRate: number): number =>
   Math.max(1, Math.round(seconds * sampleRate));

@@ -84,6 +84,7 @@ export class EnrollmentSession {
     if (event.time - this.lastTime < this.options.doubleWindow) return 'double';
     const features = event.features;
     if (!featureVector(features) || !features) return 'no-features';
+    // a rejected onset (too quiet, outlier) still counts as one physical event for the double window
     this.lastTime = event.time;
 
     const peak = features['peakDb'];

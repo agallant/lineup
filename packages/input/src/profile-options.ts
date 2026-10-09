@@ -30,7 +30,18 @@ export function onsetOptionsFromProfile(profile: InstrumentProfile): OnsetDetect
 
 export function analyzerOptionsFromProfile(profile: InstrumentProfile): InputAnalyzerOptions {
   if (profile.input === 'percussion') {
-    return { percussion: { onset: onsetOptionsFromProfile(profile) } };
+    // the percussion detector names its options differently: lookbackMs is its referenceDelay
+    const o = profile.detector.onset;
+    return {
+      percussion: {
+        onset: {
+          riseDb: o.riseDb,
+          minDb: o.minLevelDb,
+          refractory: o.refractoryMs / 1000,
+          referenceDelay: o.lookbackMs / 1000,
+        },
+      },
+    };
   }
   return { pitch: pitchOptionsFromProfile(profile), onset: onsetOptionsFromProfile(profile) };
 }
