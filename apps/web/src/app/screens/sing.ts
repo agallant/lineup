@@ -131,6 +131,8 @@ export const singScreen: Screen = (root) => {
 
   let mic: MicSession | null = null;
   let live: GameAudio | null = null;
+  /** When the current play-through started: the session log reports this, not the time of the copy. */
+  let sessionStart = new Date();
   let disposed = false;
   /** True while a start is in flight: a double tap must not open two sessions (the first would leak). */
   let beginInFlight = false;
@@ -363,6 +365,7 @@ export const singScreen: Screen = (root) => {
 
   const runGame = (audio: GameAudio, chart: Chart, offset: number, startAt: number) => {
     const { adapter, ctx, demo } = audio;
+    sessionStart = new Date();
     stages.play.innerHTML = PLAY;
     show('play');
     const P = <T extends HTMLElement = HTMLElement>(id: string): T => {
@@ -479,7 +482,7 @@ export const singScreen: Screen = (root) => {
       const text = formatSessionLog({
         build: buildInfoText(),
         mode: 'Singline',
-        at: new Date(),
+        at: sessionStart,
         userAgent: navigator.userAgent,
         profileId: profile.id,
         songTitle: chart.meta.title,

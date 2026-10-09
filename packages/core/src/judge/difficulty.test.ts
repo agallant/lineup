@@ -46,6 +46,37 @@ describe('applyDifficulty', () => {
   });
 });
 
+describe('a short sustain', () => {
+  // on pitch for 24% of a one second note: between Easy's 0.2 and Normal's 0.28 coverage thresholds
+  const n: ChartNote = { t: 1, duration: 1, pitch: 60 };
+  const frames: PitchFrame[] = [];
+  for (let t = 0.95; t < 2.1; t += HOP) {
+    const on = t >= 1.0 && t < 1.24;
+    frames.push({
+      time: t,
+      frequency: on ? C4 : null,
+      clarity: on ? 0.97 : 0.2,
+      level: on ? -25 : -90,
+    });
+  }
+
+  const grade = (d: 'easy' | 'normal' | 'strict') => {
+    const j = new ContinuousJudge([n], applyDifficulty(base, d));
+    for (const f of frames) j.feed(f);
+    j.finish();
+    return j.judgmentFor(0)!;
+  };
+
+  it('is a good note on Easy but a miss on Normal and Strict', () => {
+    const easy = grade('easy');
+    expect(easy.coverage).toBeGreaterThan(0.2);
+    expect(easy.coverage).toBeLessThan(0.28);
+    expect(easy.grade).toBe('good');
+    expect(grade('normal').grade).toBe('miss');
+    expect(grade('strict').grade).toBe('miss');
+  });
+});
+
 describe('what a singer who is 70 cents flat scores', () => {
   const n: ChartNote = { t: 1, duration: 1, pitch: 60 };
   const flat = C4 * 2 ** (-70 / 1200);
