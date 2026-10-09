@@ -79,10 +79,15 @@ Design rules:
 3. **Calibrate timing** (`#/calibrate`): say "ta" or clap on each click. The measured offset is
    saved on this device.
 4. Pick a song and a **key** (the chart can be shifted +/-7 semitones; any octave of the
-   right note counts). _Debug overlay_ shows raw frequency, target, deviation, clarity, level,
+   right note counts). **Scoring** has three levels: _Easy_ (100 cent pitch window, short
+   sustain is enough), _Normal_ (the default, 80 cents) and _Strict_ (60 cents, the profile's own
+   numbers). _Debug overlay_ shows raw frequency, target, deviation, clarity, level,
    frame rate and the applied latency offset.
 5. **Play.** _Watch auto-play demo_ runs a synthetic singer through the same pipeline: a
    quick way to see how the screens behave without singing.
+6. On the results screen, **Copy session log** puts a plain-text report on the clipboard (build,
+   audio latencies, options, score and every note's result). Paste it into the chat when something
+   looks off. Beatline also has _Copy hit log_ next to the hit monitor.
 
 ## Beatline (claps, taps, percussion) on the iPad
 
@@ -137,6 +142,9 @@ Everything goes through PRs. Nothing is pushed directly to `main`.
 - `.github/workflows/preview.yml` builds each PR into `gh-pages:/pr-preview/pr-N/`,
   comments the URL on the PR, and deletes the preview when the PR closes. It
   uses [`rossjrw/pr-preview-action`](https://github.com/rossjrw/pr-preview-action).
+
+`.nojekyll` lives only at the root of `gh-pages` (the deploy workflow adds it); previews don't
+carry their own copy.
 
 The Vite `base` (in `apps/web/vite.config.ts`) is `./` (relative), so one build works both at the site root
 and in a preview subfolder. Routing uses hashes (`#/mic`) for the same reason.

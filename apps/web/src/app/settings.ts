@@ -1,4 +1,4 @@
-import type { KeyValueStore } from '@lineup/core';
+import { isDifficulty, type Difficulty, type KeyValueStore } from '@lineup/core';
 
 export interface Settings {
   /** Show the live debug overlay while playing. */
@@ -9,6 +9,8 @@ export interface Settings {
   metronome: boolean;
   /** Key change in semitones applied to the chart. */
   keyShift: number;
+  /** How forgiving sustained-pitch scoring is (Singline). */
+  difficulty: Difficulty;
   /** Last chosen song id per profile. */
   songs: Record<string, string>;
 }
@@ -18,6 +20,7 @@ export const DEFAULT_SETTINGS: Settings = {
   guideTone: true,
   metronome: true,
   keyShift: 0,
+  difficulty: 'normal',
   songs: {},
 };
 
@@ -72,6 +75,7 @@ function sanitize(raw: unknown): Settings {
       typeof shift === 'number' && Number.isInteger(shift) && Math.abs(shift) <= 12
         ? shift
         : DEFAULT_SETTINGS.keyShift,
+    difficulty: isDifficulty(r['difficulty']) ? r['difficulty'] : DEFAULT_SETTINGS.difficulty,
     songs,
   };
 }

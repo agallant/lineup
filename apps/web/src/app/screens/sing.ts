@@ -9,6 +9,7 @@ import {
   songsFor,
   transposeChart,
   type Chart,
+  type Difficulty,
   type PitchFrame,
 } from '@lineup/core';
 import {
@@ -22,9 +23,12 @@ import {
 import { micSupported, openMic, openSyntheticInput, type MicSession } from '@lineup/input/mic';
 import { createRenderer, drawMeter, fitCanvas, midiName } from '@lineup/render';
 import { renderPerformanceAsync, voicePerformer } from '@lineup/sim';
+import { buildInfoText } from '../build-info';
+import { copyText } from '../clipboard';
 import { escapeHtml, playTone } from '../audio';
 import { planBacking, playBacking, midiToHz, type BackingHandle } from '../game/backing';
 import { micAdvice } from '../game/mic-advice';
+import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { SettingsStore, safeLocalStorage } from '../settings';
 import { formatCents, formatDb } from '../format';
@@ -71,6 +75,13 @@ const SETUP = `
 
   <section class="panel">
     <h2>3. Options</h2>
+    <label>Scoring
+      <select data-id="difficulty">
+        <option value="easy">Easy (wide pitch window)</option>
+        <option value="normal">Normal</option>
+        <option value="strict">Strict</option>
+      </select>
+    </label>
     <label class="check"><input type="checkbox" data-id="opt-guide" /> Guide tone (needs headphones)</label>
     <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks</label>
     <label class="check"><input type="checkbox" data-id="opt-debug" /> Debug overlay while playing</label>
@@ -120,6 +131,8 @@ export const singScreen: Screen = (root) => {
 
   let mic: MicSession | null = null;
   let live: GameAudio | null = null;
+  /** When the current play-through started: the session log reports this, not the time of the copy. */
+  let sessionStart = new Date();
   let disposed = false;
   /** True while a start is in flight: a double tap must not open two sessions (the first would leak). */
   let beginInFlight = false;
@@ -160,6 +173,8 @@ export const singScreen: Screen = (root) => {
       ),
     );
   keySel.value = String(current.keyShift);
+  const difficultySel = S<HTMLSelectElement>('difficulty');
+  difficultySel.value = current.difficulty;
   S<HTMLInputElement>('opt-guide').checked = current.guideTone;
   S<HTMLInputElement>('opt-metronome').checked = current.metronome;
   S<HTMLInputElement>('opt-debug').checked = current.debug;
@@ -195,6 +210,9 @@ export const singScreen: Screen = (root) => {
     settings.update({ keyShift: Number(keySel.value) });
     refreshRange();
   });
+  difficultySel.addEventListener('change', () =>
+    settings.update({ difficulty: difficultySel.value as Difficulty }),
+  );
   S<HTMLInputElement>('opt-guide').addEventListener('change', (e) =>
     settings.update({ guideTone: (e.target as HTMLInputElement).checked }),
   );
@@ -347,6 +365,7 @@ export const singScreen: Screen = (root) => {
 
   const runGame = (audio: GameAudio, chart: Chart, offset: number, startAt: number) => {
     const { adapter, ctx, demo } = audio;
+    sessionStart = new Date();
     stages.play.innerHTML = PLAY;
     show('play');
     const P = <T extends HTMLElement = HTMLElement>(id: string): T => {
@@ -370,6 +389,7 @@ export const singScreen: Screen = (root) => {
       clock,
       latencyOffset: offset,
       hop: profile.detector.hopSize / ctx.sampleRate,
+      difficulty: opts.difficulty,
     });
     adapter.onMessage = (m) => game.handleMessage(m);
     backing = playBacking(
@@ -452,10 +472,46 @@ export const singScreen: Screen = (root) => {
         <div class="row">
           <button data-id="again" class="primary">Play again</button>
           <button data-id="back">Back to setup</button>
+          <button data-id="copy-log">Copy session log</button>
         </div>
+        <p class="status" data-id="copy-status" role="status"></p>
       </section>`;
     show('results');
     const R = (id: string) => stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
+    R('copy-log').addEventListener('click', () => {
+      const text = formatSessionLog({
+        build: buildInfoText(),
+        mode: 'Singline',
+        at: sessionStart,
+        userAgent: navigator.userAgent,
+        profileId: profile.id,
+        songTitle: chart.meta.title,
+        demo: audio.demo,
+        options: {
+          difficulty: settings.get().difficulty,
+          keyShift: Number(keySel.value),
+          guideTone: settings.get().guideTone,
+          metronome: settings.get().metronome,
+        },
+        audio: {
+          sampleRate: audio.ctx.sampleRate,
+          baseLatency: audio.ctx.baseLatency,
+          outputLatency: audio.ctx.outputLatency,
+        },
+        latencyOffsetMs: game.debug(audio.ctx.currentTime).latencyOffsetMs,
+        micSettings: audio.demo ? undefined : mic?.track.getSettings(),
+        score: s,
+        grade,
+        judgments: game.judge.judgments,
+      });
+      void copyText(text).then((ok) => {
+        const status = stages.results.querySelector('[data-id="copy-status"]');
+        if (status)
+          status.textContent = ok
+            ? 'Copied. Paste it into the chat.'
+            : 'Could not copy on this browser.';
+      });
+    });
     R('again').addEventListener('click', () => {
       // each demo run owns an AudioContext: release the finished one before opening another
       if (audio.demo) void audio.adapter.close();
