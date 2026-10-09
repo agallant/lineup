@@ -282,6 +282,7 @@ export const micTestScreen: Screen = (root) => {
       session = s;
       s.onMessage = onMessage(s.ctx);
       s.track.addEventListener('ended', () => {
+        if (session !== s) return; // a stale session's track ended; don't stop the new one
         setStatus('Input disconnected. Tap “Start mic” again.', 'error');
         void stop();
       });
