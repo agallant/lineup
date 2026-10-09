@@ -6,3 +6,5 @@ reviews:
   auto_review:
     ignore_drafts: true
     skip_bot_users: false
+    base_branches:
+      - ".*" # This regex pattern forces CodeRabbit to review PRs targeting ANY branch, including main.
