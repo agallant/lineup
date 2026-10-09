@@ -14,6 +14,7 @@ import {
 import {
   analyzerOptionsFromProfile,
   detectBleed,
+  workletSupported,
   toPitchFrame,
   type AnalysisFrame,
   type InputAdapter,
@@ -120,6 +121,8 @@ export const singScreen: Screen = (root) => {
   let mic: MicSession | null = null;
   let live: GameAudio | null = null;
   let disposed = false;
+  /** True while a start is in flight: a double tap must not open two sessions (the first would leak). */
+  let beginInFlight = false;
   let setupRaf = 0;
   let playRaf = 0;
   let backing: BackingHandle | null = null;
@@ -471,9 +474,11 @@ export const singScreen: Screen = (root) => {
 
   /** Starts a play-through with the live mic, or the auto-play demo. */
   const begin = async (demo: boolean) => {
-    const chart = selectedChart();
-    setupStatus.classList.remove('error');
+    if (beginInFlight) return;
+    beginInFlight = true;
     try {
+      const chart = selectedChart();
+      setupStatus.classList.remove('error');
       if (!demo) {
         const m = await startMic();
         if (!m) return;
@@ -515,17 +520,25 @@ export const singScreen: Screen = (root) => {
     } catch (err) {
       setupStatus.textContent = err instanceof Error ? err.message : String(err);
       setupStatus.classList.add('error');
+    } finally {
+      beginInFlight = false;
     }
   };
 
   S<HTMLButtonElement>('play').addEventListener('click', () => void begin(false));
   S<HTMLButtonElement>('demo').addEventListener('click', () => void begin(true));
 
-  if (!micSupported()) {
+  if (!workletSupported()) {
+    // the microphone path and the demo both run on the AudioWorklet
     micBtn.disabled = true;
     S<HTMLButtonElement>('play').disabled = true;
+    S<HTMLButtonElement>('demo').disabled = true;
     setupStatus.textContent =
-      'This browser lacks microphone or AudioWorklet support. The demo may still work.';
+      'This browser lacks AudioWorklet support, so Singline cannot run here.';
+  } else if (!micSupported()) {
+    micBtn.disabled = true;
+    S<HTMLButtonElement>('play').disabled = true;
+    setupStatus.textContent = 'This browser has no microphone access. The demo still works.';
   }
 
   return () => {
