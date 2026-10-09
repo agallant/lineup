@@ -44,6 +44,27 @@ describe('analyzeCalibration (against simulated players)', () => {
       expect(Math.abs(outcome.estimate.offset - latency)).toBeLessThan(0.008);
   });
 
+  it('a 0.3 s output latency (Bluetooth) is only measured right when the browser-reported latency is the prior', () => {
+    const { sim } = run(0.3);
+    const plan = { clicks: sim.clicks, quiet: 3 };
+    const without = analyzeCalibration(plan, sim.onsets);
+    // KNOWN LIMITATION: 0.3 s is more than half the 0.5 s click spacing, so with no expectation each
+    // response looks like it answers the NEXT click.
+    expect(without.kind === 'ok' && Math.abs(without.estimate.offset - 0.3) > 0.1).toBe(true);
+    const withPrior = analyzeCalibration(plan, sim.onsets, 0.25);
+    expect(withPrior.kind).toBe('ok');
+    if (withPrior.kind === 'ok')
+      expect(Math.abs(withPrior.estimate.offset - 0.3)).toBeLessThan(0.008);
+  });
+
+  it('a sensible prior does not disturb ordinary latencies', () => {
+    for (const latency of [0.03, 0.12, 0.2]) {
+      const { sim } = run(latency);
+      const out = analyzeCalibration({ clicks: sim.clicks, quiet: 3 }, sim.onsets, 0.1);
+      expect(out.kind === 'ok' && Math.abs(out.estimate.offset - latency) < 0.008).toBe(true);
+    }
+  });
+
   it('reports bleed when the mic hears the click track during the quiet clicks', () => {
     // a "speaker leak": onsets right on every click, including the silent ones
     const sim = simulateCalibration({ response, profile, latency: 0.02, jitter: 0.002, seed: 1 });

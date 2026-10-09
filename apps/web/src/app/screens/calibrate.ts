@@ -1,4 +1,9 @@
-import { CalibrationStore, recordFromEstimate, type CalibrationRecord } from '@lineup/core';
+import {
+  CalibrationStore,
+  defaultOffsetFromLatencies,
+  recordFromEstimate,
+  type CalibrationRecord,
+} from '@lineup/core';
 import { micSupported, openMic, type MicSession } from '@lineup/input/mic';
 import { scheduleClicks } from '../audio';
 import { analyzeCalibration, planCalibration, type CalibrationPlan } from '../game/calibration-run';
@@ -63,12 +68,12 @@ export const calibrateScreen: Screen = (root) => {
   };
   showSaved(store.load(deviceKey));
 
-  const finish = (plan: CalibrationPlan, onsets: number[]) => {
+  const finish = (plan: CalibrationPlan, onsets: number[], prior: number) => {
     cancelAnimationFrame(raf);
     beat.className = 'beat';
     stopClicks?.();
     result.hidden = false;
-    const outcome = analyzeCalibration(plan, onsets);
+    const outcome = analyzeCalibration(plan, onsets, prior);
     if (outcome.kind === 'bleed') {
       result.innerHTML = `<h2>Mic hears the clicks</h2><p>The microphone picked up the click track while you were quiet.
         Put on headphones (or turn the volume down) and try again.</p>`;
@@ -106,6 +111,12 @@ export const calibrateScreen: Screen = (root) => {
       deviceKey = mic.track.getSettings().deviceId || 'default';
       showSaved(store.load(deviceKey));
       const ctx = mic.ctx;
+      // What the browser says the output path costs: stops a slow (Bluetooth) output being paired
+      // with the next click instead of its own.
+      const prior = defaultOffsetFromLatencies({
+        baseLatency: ctx.baseLatency,
+        outputLatency: ctx.outputLatency,
+      });
       const plan = planCalibration(ctx.currentTime + 1.2);
       const onsets: number[] = [];
       mic.onMessage = (m) => {
@@ -129,7 +140,7 @@ export const calibrateScreen: Screen = (root) => {
           );
         if (!done && now > lastClick + 0.8) {
           done = true;
-          finish(plan, onsets);
+          finish(plan, onsets, prior);
         }
       };
       raf = requestAnimationFrame(tick);

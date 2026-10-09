@@ -33,6 +33,8 @@ export type CalibrationOutcome =
 export function analyzeCalibration(
   plan: CalibrationPlan,
   onsets: readonly number[],
+  /** The latency the browser reports (see `defaultOffsetFromLatencies`). Keeps a slow output (Bluetooth) from being paired with the next click. */
+  prior = 0,
 ): CalibrationOutcome {
   const quietClicks = plan.clicks.slice(0, plan.quiet);
   const playClicks = plan.clicks.slice(plan.quiet);
@@ -47,6 +49,7 @@ export function analyzeCalibration(
   const estimate = estimateOffset(
     playClicks,
     onsets.filter((o) => o >= quietEnd - 0.2),
+    { prior },
   );
   return estimate.ok ? { kind: 'ok', estimate } : { kind: 'failed', reason: estimate.reason };
 }
