@@ -37,6 +37,38 @@ describe('estimateOffset', () => {
     expect(r.used).toBe(10); // first two clicks skipped
   });
 
+  describe('latency larger than half the click spacing (e.g. a Bluetooth speaker)', () => {
+    const c = clicks(16); // one click every 0.5 s
+    const late = c.map((t) => t + 0.3); // each response is closer to the NEXT click
+
+    it('KNOWN LIMITATION: without an expectation the response is paired with the wrong click', () => {
+      const r = estimateOffset(c, late);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.offset).toBeCloseTo(-0.2, 9);
+    });
+
+    it('is measured correctly when the browser-reported latency is given as the prior', () => {
+      const r = estimateOffset(c, late, { prior: 0.25 });
+      expect(r.ok).toBe(true);
+      if (!r.ok) return;
+      expect(r.offset).toBeCloseTo(0.3, 9);
+      expect(r.quality).toBe('good');
+    });
+
+    it('a roughly right prior is enough; one that is off by under half a click still works', () => {
+      for (const prior of [0.1, 0.2, 0.4, 0.5]) {
+        const r = estimateOffset(c, late, { prior });
+        expect(r.ok && Math.abs(r.offset - 0.3) < 1e-9).toBe(true);
+      }
+    });
+
+    it('a prior does not disturb an ordinary measurement', () => {
+      const ok = c.map((t) => t + 0.083);
+      const r = estimateOffset(c, ok, { prior: 0.1 });
+      expect(r.ok && Math.abs(r.offset - 0.083) < 1e-9).toBe(true);
+    });
+  });
+
   it.each([
     ['output+input latency of 140 ms', 0.14],
     ['an early player (anticipates by 30 ms)', -0.03],
