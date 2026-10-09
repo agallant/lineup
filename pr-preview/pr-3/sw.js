@@ -13,12 +13,17 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(req, { cache: 'no-cache' })
       .then((res) => {
-        if (res.ok) {
+        const noStore = /no-store/i.test(res.headers.get('Cache-Control') ?? '');
+        if (res.ok && !noStore) {
           const copy = res.clone();
           event.waitUntil(caches.open(CACHE).then((c) => c.put(req, copy)));
         }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit ?? Response.error())),
+      .catch(() =>
+        caches
+          .match(req)
+          .then((hit) => hit ?? new Response('Offline', { status: 503, statusText: 'Offline' })),
+      ),
   );
 });
