@@ -21,7 +21,8 @@ export const builtinProfiles: Readonly<Record<string, InstrumentProfile>> = Obje
 );
 
 export function getProfile(id: string): InstrumentProfile {
-  const p = builtinProfiles[id];
+  // own keys only: "constructor" / "toString" must read as unknown ids, not Object.prototype members
+  const p = Object.hasOwn(builtinProfiles, id) ? builtinProfiles[id] : undefined;
   if (!p)
     throw new Error(
       `unknown instrument profile "${id}" (have: ${Object.keys(builtinProfiles).join(', ')})`,

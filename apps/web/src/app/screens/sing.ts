@@ -453,7 +453,11 @@ export const singScreen: Screen = (root) => {
       </section>`;
     show('results');
     const R = (id: string) => stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
-    R('again').addEventListener('click', () => void begin(audio.demo));
+    R('again').addEventListener('click', () => {
+      // each demo run owns an AudioContext: release the finished one before opening another
+      if (audio.demo) void audio.adapter.close();
+      void begin(audio.demo);
+    });
     R('back').addEventListener('click', () => {
       if (audio.demo) void audio.adapter.close();
       adapterToSetup();

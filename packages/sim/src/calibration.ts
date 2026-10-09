@@ -54,7 +54,8 @@ export function simulateCalibration({
 
   clicks.forEach((c, i) => {
     if (skipped.has(i)) return;
-    const jit = Math.max(-3, Math.min(3, (random() + random() + random()) * Math.SQRT2)) * jitter; // ~gaussian
+    // Three uniforms on [-1, 1] sum to unit variance: ~standard normal, clamped at 3 sigma like renderPerformance.
+    const jit = Math.max(-3, Math.min(3, random() + random() + random())) * jitter;
     mixAt(total, response(i, sampleRate), c + latency + jit - ctxStart, sampleRate);
   });
   if (noise) addInto(total, roomNoise(total.length / sampleRate, sampleRate, noise));
