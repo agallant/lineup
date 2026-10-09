@@ -1,0 +1,49 @@
+{
+  "id": "voice",
+  "name": "Voice",
+  "mode": "singline",
+  "input": "pitch",
+  "renderer": "pitch-highway",
+  "range": {
+    "lowMidi": 40,
+    "highMidi": 84
+  },
+  "transposition": {
+    "writtenMinusSounding": 0
+  },
+  "detector": {
+    "windowSize": 2048,
+    "hopSize": 256,
+    "clarityThreshold": 0.55,
+    "minLevelDb": -55,
+    "minHz": 70,
+    "maxHz": 1100,
+    "stabilityGateMs": 0,
+    "foldIntoRange": true,
+    "onset": {
+      "riseDb": 10,
+      "refractoryMs": 70,
+      "lookbackMs": 30,
+      "minLevelDb": -60
+    }
+  },
+  "judgment": {
+    "strategy": "continuous",
+    "timing": {
+      "perfectMs": 180,
+      "goodMs": 400
+    },
+    "pitch": {
+      "toleranceCents": 60,
+      "octaveForgiving": true,
+      "vibratoSmoothingMs": 180,
+      "coverageGood": 0.35,
+      "coveragePerfect": 0.75
+    },
+    "match": {
+      "lane": false,
+      "pitch": false,
+      "chord": false
+    }
+  }
+}

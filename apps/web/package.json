@@ -12,6 +12,7 @@
   "dependencies": {
     "@lineup/core": "*",
     "@lineup/input": "*",
-    "@lineup/render": "*"
+    "@lineup/render": "*",
+    "@lineup/sim": "*"
   }
 }

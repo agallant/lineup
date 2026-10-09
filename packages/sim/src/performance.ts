@@ -30,7 +30,7 @@ export interface PerformanceOptions {
   /** Background room noise; null for a silent room. */
   noise?: RoomNoiseOptions | null;
   /** Extra signal mixed in over the whole performance (backing-track bleed, claps next door...). */
-  extra?: (totalSamples: number, sampleRate: number) => Float32Array;
+  extra?: (totalSamples: number, sampleRate: number, songStart: number) => Float32Array;
   seed?: number;
   /** Arbitrary AudioContext time of sample 0, to prove nothing depends on it starting at 0. */
   ctxStart?: number;
@@ -69,8 +69,12 @@ function gaussian(random: () => number): number {
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
-/** Renders a player performing `chart` with `performer`, as the mic would hear it. */
-export function renderPerformance(
+/**
+ * Renders a player performing `chart` with `performer`, as the mic would hear
+ * it. A generator so callers can yield between notes: yields the fraction done
+ * after each note and returns the finished performance.
+ */
+function* performanceSteps(
   chart: Chart,
   performer: Performer,
   {
@@ -86,7 +90,7 @@ export function renderPerformance(
     tail = 1.5,
     leadSamples = 0,
   }: PerformanceOptions = {},
-): RenderedPerformance {
+): Generator<number, RenderedPerformance> {
   // The real worklet's clock advances in whole sample frames (currentFrame / sampleRate).
   const ctxStart = Math.round(requestedCtxStart * sampleRate) / sampleRate;
   const random = rng(seed);
@@ -98,7 +102,7 @@ export function renderPerformance(
   const signal = silence(total / sampleRate, sampleRate);
   const plan: PlayedNote[] = [];
 
-  chart.notes.forEach((note, i) => {
+  for (const [i, note] of chart.notes.entries()) {
     const jit = Math.max(-3, Math.min(3, gaussian(random))) * jitter;
     const soundTime = note.t + latency + jit;
     const actual = override ? override(note, i) : note;
@@ -106,9 +110,42 @@ export function renderPerformance(
       skipped.has(i) || actual === null ? null : performer(actual, i, sampleRate, random);
     plan.push({ noteIndex: i, played: sound !== null, soundTime });
     if (sound) mixAt(signal, sound, soundTime - songStart, sampleRate);
-  });
+    yield (i + 1) / chart.notes.length;
+  }
 
   if (noise) addInto(signal, roomNoise(signal.length / sampleRate, sampleRate, noise));
-  if (extra) addInto(signal, extra(signal.length, sampleRate));
+  if (extra) addInto(signal, extra(signal.length, sampleRate, songStart));
   return { signal, sampleRate, ctxStart, songStart, plan };
+}
+
+/** Renders synchronously. */
+export function renderPerformance(
+  chart: Chart,
+  performer: Performer,
+  options: PerformanceOptions = {},
+): RenderedPerformance {
+  const steps = performanceSteps(chart, performer, options);
+  for (;;) {
+    const next = steps.next();
+    if (next.done) return next.value;
+  }
+}
+
+/**
+ * Renders while yielding to the event loop between notes (so a browser UI can
+ * show progress instead of freezing). Same result as renderPerformance.
+ */
+export async function renderPerformanceAsync(
+  chart: Chart,
+  performer: Performer,
+  options: PerformanceOptions = {},
+  onProgress?: (fraction: number) => void,
+): Promise<RenderedPerformance> {
+  const steps = performanceSteps(chart, performer, options);
+  for (;;) {
+    const next = steps.next();
+    if (next.done) return next.value;
+    onProgress?.(next.value);
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  }
 }

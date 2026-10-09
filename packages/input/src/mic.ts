@@ -1,5 +1,8 @@
 import workletUrl from './worklet/input-processor.ts?worker&url';
+import type { InputAdapter } from './adapter';
+import { workletSupported } from './capabilities';
 import { audioConstraints } from './constraints';
+import type { InputAnalyzerOptions } from './dsp/analyzer';
 import type { AnalyzerMessage } from './types';
 import {
   INPUT_PROCESSOR_NAME,
@@ -8,7 +11,8 @@ import {
   type ProcessorCommand,
 } from './worklet/protocol';
 
-export interface MicSession {
+export interface MicSession extends InputAdapter {
+  readonly kind: 'mic';
   readonly ctx: AudioContext;
   readonly stream: MediaStream;
   readonly track: MediaStreamTrack;
@@ -21,11 +25,7 @@ export interface MicSession {
 }
 
 export function micSupported(): boolean {
-  return (
-    !!navigator.mediaDevices?.getUserMedia &&
-    typeof AudioContext !== 'undefined' &&
-    typeof AudioWorkletNode !== 'undefined'
-  );
+  return !!navigator.mediaDevices?.getUserMedia && workletSupported();
 }
 
 /**
@@ -39,6 +39,7 @@ export function micSupported(): boolean {
 export async function openMic(
   deviceId?: string,
   channel: ChannelSelection = 0,
+  analyzer?: InputAnalyzerOptions,
 ): Promise<MicSession> {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints(deviceId) });
   const track = stream.getAudioTracks()[0];
@@ -49,7 +50,7 @@ export async function openMic(
     await ctx.audioWorklet.addModule(workletUrl);
     const source = ctx.createMediaStreamSource(stream);
 
-    const processorOptions: InputProcessorOptions = { channel };
+    const processorOptions: InputProcessorOptions = { channel, ...(analyzer ? { analyzer } : {}) };
     const node = new AudioWorkletNode(ctx, INPUT_PROCESSOR_NAME, {
       numberOfInputs: 1,
       numberOfOutputs: 1,
@@ -68,7 +69,9 @@ export async function openMic(
     source.connect(analyser);
 
     const session: MicSession = {
+      kind: 'mic',
       ctx,
+      clock: ctx,
       stream,
       track,
       analyser,
@@ -99,4 +102,79 @@ export async function openMic(
 export async function listAudioInputs(): Promise<MediaDeviceInfo[]> {
   const devices = await navigator.mediaDevices.enumerateDevices();
   return devices.filter((d) => d.kind === 'audioinput');
+}
+
+/** A synthetic performer as an input adapter: a rendered signal played into the same worklet the mic feeds. */
+export interface SyntheticSession extends InputAdapter {
+  readonly kind: 'synthetic';
+  readonly ctx: AudioContext;
+  /** Starts the performance so that sample 0 reaches the worklet at AudioContext time `at`. */
+  start(at: number): void;
+}
+
+/**
+ * Plays `signal` (mono, at `signalRate`) through the real AudioWorklet input
+ * chain. Used by the auto-play demo and for end-to-end tests in a real browser:
+ * everything downstream (worklet, clock, judge, renderer) is the production
+ * code, only the microphone is replaced. `listen` also sends the performer to
+ * the speakers so you can hear the demo.
+ */
+export async function openSyntheticInput(
+  signal: Float32Array,
+  signalRate: number,
+  { analyzer, listen = true }: { analyzer?: InputAnalyzerOptions; listen?: boolean } = {},
+): Promise<SyntheticSession> {
+  const ctx = new AudioContext({ latencyHint: 'interactive' });
+  try {
+    await ctx.audioWorklet.addModule(workletUrl);
+    const buffer = ctx.createBuffer(1, signal.length, signalRate);
+    buffer.copyToChannel(signal as Float32Array<ArrayBuffer>, 0);
+
+    const processorOptions: InputProcessorOptions = analyzer ? { analyzer } : {};
+    const node = new AudioWorkletNode(ctx, INPUT_PROCESSOR_NAME, {
+      numberOfInputs: 1,
+      numberOfOutputs: 1,
+      outputChannelCount: [1],
+      processorOptions,
+    });
+    const mute = ctx.createGain();
+    mute.gain.value = 0;
+    node.connect(mute).connect(ctx.destination);
+
+    let source: AudioBufferSourceNode | null = null;
+    const session: SyntheticSession = {
+      kind: 'synthetic',
+      ctx,
+      clock: ctx,
+      onMessage: () => undefined,
+      start(at) {
+        if (source) throw new Error('SyntheticSession already started'); // a second source would never be stopped by close()
+        source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(node);
+        if (listen) {
+          const out = ctx.createGain();
+          out.gain.value = 0.5;
+          source.connect(out).connect(ctx.destination);
+        }
+        source.start(at);
+      },
+      async close() {
+        node.port.onmessage = null;
+        try {
+          source?.stop();
+        } catch {
+          // already stopped
+        }
+        node.disconnect();
+        if (ctx.state !== 'closed') await ctx.close();
+      },
+    };
+    node.port.onmessage = (e: MessageEvent<AnalyzerMessage>) => session.onMessage(e.data);
+    await ctx.resume().catch(() => undefined);
+    return session;
+  } catch (err) {
+    void ctx.close();
+    throw err;
+  }
 }

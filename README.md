@@ -36,6 +36,7 @@ npm run dev        # Vite dev server for apps/web
 npm run check      # typecheck + lint + test + build + dist check (what CI runs)
 npm test           # Vitest, all packages
 npm run format     # Prettier
+npm run e2e        # real-browser checks in headless Chromium (needs Playwright; not in CI)
 ```
 
 Mic access needs a secure context (HTTPS or `localhost`).
@@ -67,12 +68,35 @@ Design rules:
 - `packages/core` and `packages/testkit` are DOM-free, enforced by TypeScript
   (no DOM lib) and an ESLint rule.
 
+## Singline (voice) on the iPad
+
+`#/sing` (home screen -> Singline):
+
+1. **Setup:** _Start mic_, sing a long "ah". You'll see the note, a clarity bar (green when
+   the tracker is confident) and advice ("quiet", "clipping", "can't find a steady pitch").
+2. **Headphones:** the guide tone and clicks play from the speaker and your mic hears them. Use
+   headphones; _Check for speaker leak_ verifies it (stay quiet while it runs).
+3. **Calibrate timing** (`#/calibrate`): say "ta" or clap on each click. The measured offset is
+   saved on this device.
+4. Pick a song and a **key** (the chart can be shifted +/-7 semitones; any octave of the
+   right note counts). _Debug overlay_ shows raw frequency, target, deviation, clarity, level,
+   frame rate and the applied latency offset.
+5. **Play.** _Watch auto-play demo_ runs a synthetic singer through the same pipeline: a
+   quick way to see how the screens behave without singing.
+
 ## Limitations (known)
 
 - **Overlapping ringing notes confuse single-note pitch tracking.** Two notes
   sounding at once blend into one ambiguous pitch (659 Hz + 880 Hz reads as
   220 Hz). Timing is unaffected; pitch matching on wide leaps over ringing
   notes can be wrong. Covered by explicit "KNOWN LIMITATION" tests.
+- **Very breathy or whispered singing loses notes.** Aspiration noise lowers
+  pitch clarity below the gate (the clarity meter on the setup screen shows
+  this). Clean and moderately breathy voices are fine; covered by a
+  "KNOWN LIMITATION" test.
+- **Speaker bleed gives free points.** If the guide tone leaks into the mic at a
+  level the game can hear, a silent player scores. Use headphones; a
+  headphones check measures leakage (`detectBleed`).
 - **Simulations are synthetic.** They prove the software chain; real strings,
   microphones, rooms and iOS audio behaviour are listed per PR under
   "Unverified on real hardware".

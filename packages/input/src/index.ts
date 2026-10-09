@@ -1,6 +1,9 @@
 // DOM-free surface of the input package: detectors, analyzer, message types.
 // Browser-only capture (getUserMedia, AudioContext, worklet loading) lives
 // behind '@lineup/input/mic' so Node tests never import it.
+export * from './adapter';
+export * from './bleed';
+export * from './capabilities';
 export * from './constraints';
 export * from './dsp/analyzer';
 export * from './dsp/level';

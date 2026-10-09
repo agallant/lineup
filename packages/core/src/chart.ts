@@ -277,3 +277,17 @@ export function chartPitchRange(chart: Chart): { low: number; high: number } | n
 export function chartEnd(chart: Chart): number {
   return chart.notes.reduce((end, n) => Math.max(end, n.t + n.duration), 0);
 }
+
+/**
+ * Index of the note being played at song time `t` (inside [t0, t0+duration),
+ * with `slack` seconds of grace before it so the UI can prepare), or null.
+ * Notes are time-sorted; if several overlap the earliest-starting one wins.
+ */
+export function activeNoteIndex(chart: Pick<Chart, 'notes'>, t: number, slack = 0): number | null {
+  for (let i = 0; i < chart.notes.length; i++) {
+    const n = chart.notes[i]!;
+    if (n.t - slack > t) return null; // sorted: nothing later can be active
+    if (t < n.t + Math.max(n.duration, 0.2)) return i;
+  }
+  return null;
+}

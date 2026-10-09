@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { midiToFrequency, nearestOpenString, noteFromFrequency, UKULELE_GCEA } from './notes';
+import {
+  deviationCents,
+  midiToFrequency,
+  nearestOpenString,
+  noteFromFrequency,
+  UKULELE_GCEA,
+} from './notes';
 
 describe('notes', () => {
   it('maps the GCEA open strings to the right frequencies', () => {
@@ -26,5 +32,27 @@ describe('notes', () => {
     expect(nearestOpenString(392).string.label).toBe('G4');
     expect(nearestOpenString(259).string.label).toBe('C4');
     expect(nearestOpenString(259).cents).toBeLessThan(0);
+  });
+});
+
+describe('deviationCents', () => {
+  const c4 = midiToFrequency(60);
+  it.each([
+    [c4, 0],
+    [c4 * 2 ** (30 / 1200), 30],
+    [c4 * 2 ** (-45 / 1200), -45],
+    [c4 * 2, 1200],
+    [c4 / 2, -1200],
+  ])('%d Hz is %d cents from C4', (hz, cents) => {
+    expect(deviationCents(hz, 60)).toBeCloseTo(cents, 6);
+  });
+
+  it('octave-forgiving folds to the nearest octave', () => {
+    expect(deviationCents(c4 * 2, 60, true)).toBeCloseTo(0, 6);
+    expect(deviationCents(c4 / 2, 60, true)).toBeCloseTo(0, 6);
+    expect(deviationCents(c4 * 4 * 2 ** (20 / 1200), 60, true)).toBeCloseTo(20, 6);
+    expect(deviationCents((c4 / 2) * 2 ** (-35 / 1200), 60, true)).toBeCloseTo(-35, 6);
+    // a different pitch class stays different
+    expect(deviationCents(midiToFrequency(62) * 2, 60, true)).toBeCloseTo(200, 6);
   });
 });

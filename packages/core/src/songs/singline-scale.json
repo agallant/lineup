@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "C major scale (quick test)",
+    "artist": "Lineup",
+    "bpm": 80,
+    "countInBeats": 4,
+    "instruments": ["voice"]
+  },
+  "notes": [
+    {
+      "t": 0.0,
+      "duration": 0.66,
+      "pitch": 60
+    },
+    {
+      "t": 0.75,
+      "duration": 0.66,
+      "pitch": 62
+    },
+    {
+      "t": 1.5,
+      "duration": 0.66,
+      "pitch": 64
+    },
+    {
+      "t": 2.25,
+      "duration": 0.66,
+      "pitch": 65
+    },
+    {
+      "t": 3.0,
+      "duration": 0.66,
+      "pitch": 67
+    },
+    {
+      "t": 3.75,
+      "duration": 0.66,
+      "pitch": 69
+    },
+    {
+      "t": 4.5,
+      "duration": 1.41,
+      "pitch": 69
+    },
+    {
+      "t": 6.0,
+      "duration": 0.66,
+      "pitch": 67
+    },
+    {
+      "t": 6.75,
+      "duration": 0.66,
+      "pitch": 65
+    },
+    {
+      "t": 7.5,
+      "duration": 0.66,
+      "pitch": 64
+    },
+    {
+      "t": 8.25,
+      "duration": 0.66,
+      "pitch": 62
+    },
+    {
+      "t": 9.0,
+      "duration": 1.41,
+      "pitch": 60
+    }
+  ]
+}

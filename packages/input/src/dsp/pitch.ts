@@ -12,6 +12,14 @@ export interface PitchTrackerOptions {
   minDb?: number;
   minHz?: number;
   maxHz?: number;
+  /**
+   * When the detector reports a pitch exactly one octave outside
+   * [minHz, maxHz], shift it into range instead of discarding it. Voices with
+   * a weak fundamental (phone mics high-pass the lows) often read an octave
+   * high; folding keeps the frame and the right pitch class. Only one octave:
+   * anything farther out is noise and stays rejected. Default off.
+   */
+  foldIntoRange?: boolean;
 }
 
 export interface PitchEstimate {
@@ -36,6 +44,7 @@ export class PitchTracker {
   private readonly minDb: number;
   private readonly minHz: number;
   private readonly maxHz: number;
+  private readonly foldIntoRange: boolean;
   private readonly detector: PitchDetector<Float32Array>;
   private readonly ring: Float32Array;
   private readonly window: Float32Array;
@@ -54,6 +63,7 @@ export class PitchTracker {
       // Covers low-G tuning (G3 = 196 Hz) up to ~C6 at the top of the neck.
       minHz = 150,
       maxHz = 1400,
+      foldIntoRange = false,
     }: PitchTrackerOptions = {},
   ) {
     this.windowSize = windowSize;
@@ -62,6 +72,7 @@ export class PitchTracker {
     this.minDb = minDb;
     this.minHz = minHz;
     this.maxHz = maxHz;
+    this.foldIntoRange = foldIntoRange;
     this.detector = PitchDetector.forFloat32Array(windowSize);
     this.detector.minVolumeDecibels = -120;
     this.ring = new Float32Array(windowSize);
@@ -95,8 +106,21 @@ export class PitchTracker {
     const rmsDb = toDb(rms(window));
     const centerFrame = this.position - windowSize / 2;
     if (rmsDb < this.minDb) return { centerFrame, hz: null, clarity: 0, rmsDb };
-    const [hz, clarity] = this.detector.findPitch(window, this.sampleRate);
+    const [raw, clarity] = this.detector.findPitch(window, this.sampleRate);
+    const hz = this.foldIntoRange ? this.fold(raw) : raw;
     const ok = clarity >= this.minClarity && hz >= this.minHz && hz <= this.maxHz;
     return { centerFrame, hz: ok ? hz : null, clarity, rmsDb };
+  }
+
+  /**
+   * Shifts a detection that is exactly one octave outside [minHz, maxHz] back in.
+   * One octave only: octave errors are 2x, while far-out-of-range readings
+   * (hiss, HF noise) are garbage that must stay rejected, not be halved until
+   * they look like a pitch.
+   */
+  private fold(hz: number): number {
+    if (hz > this.maxHz && hz / 2 <= this.maxHz && hz / 2 >= this.minHz) return hz / 2;
+    if (hz < this.minHz && hz * 2 >= this.minHz && hz * 2 <= this.maxHz) return hz * 2;
+    return hz;
   }
 }

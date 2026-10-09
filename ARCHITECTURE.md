@@ -59,11 +59,35 @@ in song time and subtract the calibrated latency offset themselves.
   an instrument different - input kind, renderer, range, transposition, tuning,
   lanes, detector settings, judgment settings. Validated at load.
 - **Judge** (`judge/`): a pure state machine behind one interface
-  (`feed`, `advance`, `finish`, `judgments`). `DiscreteJudge` does onset timing
-  (+ lane/pitch match). A continuous judge for sustained pitch arrives with voice.
+  (`feed`, `advance`, `finish`, `judgments`, `judgmentFor`). `DiscreteJudge` does
+  onset timing (+ lane/pitch match). `ContinuousJudge` (voice) takes `PitchFrame`s
+  and scores each note by the **fraction of its sustain within N cents** of the
+  target, after a late-entry check. It folds octaves (octave-forgiving), takes a
+  _median_ over a short window so vibrato and stray frames don't count against
+  you, ignores frames under the clarity/level gates, and exposes `peek()` for
+  live "am I on pitch right now" feedback.
+- **Voice** (`profiles/voice.json`): McLeod pitch tracker with a 2048-sample window
+  and 256-sample hop, 70-1100 Hz, clarity gate 0.55, `foldIntoRange` (one octave
+  only: hiss must not become a pitch), octave-forgiving continuous judging.
+  `detectBleed` checks whether the speaker leaks into the mic (headphones check).
 - **Calibration** (`calibration.ts`): `estimateOffset` finds the latency offset
   from clicks and responses; `CalibrationStore` persists it over an injected
   key-value store (no DOM in core).
+
+## App layer (`apps/web`)
+
+- `app/game/` holds the DOM-free game logic, each unit-tested: `SinglineGame` (analyzer
+  messages -> judge input + pitch trail + render state + debug info), `backing`
+  (count-in/metronome/guide-tone plan, scheduled on the audio clock), `calibration-run`,
+  `mic-advice`. Screens (`app/screens/`) are thin DOM wrappers around these.
+- **Input adapters** (`@lineup/input` `InputAdapter`): the game only needs a clock, a message
+  callback and `close()`. `MicSession` (getUserMedia) and `SyntheticSession` (a rendered
+  performance played into the same worklet) implement it; desktop MIDI/pad input can too.
+- **Renderers** (`@lineup/render` `Renderer`): `draw(g, size, view)` where `view` = clock time,
+  notes, per-note status, profile, and (pitched modes) trail/live feedback. `createRenderer`
+  picks one from the profile; `pitch-highway` exists, the others arrive with their modes.
+- `npm run e2e` drives the built app in headless Chromium (demo player, calibration with a fake
+  clapping mic, live-mic Singline, speaker-leak check).
 
 ## Testing strategy
 

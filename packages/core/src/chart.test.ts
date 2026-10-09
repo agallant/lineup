@@ -2,6 +2,7 @@ import Ajv from 'ajv';
 import { describe, expect, it } from 'vitest';
 import {
   CHART_VERSION,
+  activeNoteIndex,
   chartEnd,
   chartFromBeats,
   chartPitchRange,
@@ -344,5 +345,31 @@ describe('JSON Schema agrees with the hand-written loader', () => {
 
   it.each(fixtures)('%s', (_name, input) => {
     expect(validate(input)).toBe(loadChart(input).ok);
+  });
+});
+
+describe('activeNoteIndex', () => {
+  const chart: Chart = chartFromBeats({ title: 'T', bpm: 60 }, [
+    { beat: 1, beats: 1 },
+    { beat: 3, beats: 2 },
+    { beat: 6 }, // instantaneous: judged over the 0.2 s minimum
+  ]);
+  it.each([
+    [0, null],
+    [1, 0],
+    [1.99, 0],
+    [2, null],
+    [3.5, 1],
+    [4.99, 1],
+    [5, null],
+    [6.1, 2],
+    [6.3, null],
+  ])('t=%d -> %s', (t, expected) => {
+    expect(activeNoteIndex(chart, t)).toBe(expected);
+  });
+
+  it('slack looks ahead to the next note', () => {
+    expect(activeNoteIndex(chart, 0.8, 0.25)).toBe(0);
+    expect(activeNoteIndex(chart, 0.7, 0.25)).toBeNull();
   });
 });

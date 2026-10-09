@@ -1,5 +1,5 @@
 import type { ChartNote } from '../chart';
-import { centsBetween, midiToFrequency } from '../notes';
+import { deviationCents } from '../notes';
 import type { InputEvent } from '../types';
 import type { Grade, Judge, Judgment, MissReason } from './types';
 
@@ -156,9 +156,7 @@ export class DiscreteJudge implements Judge<InputEvent> {
   /** Signed cents of the event vs. the note, or null if either has no pitch. */
   private pitchCents(note: ChartNote, event: InputEvent): number | null {
     if (note.pitch === undefined || event.pitch === undefined || !(event.pitch > 0)) return null;
-    let cents = centsBetween(event.pitch, midiToFrequency(note.pitch));
-    if (this.config.octaveForgiving) cents -= 1200 * Math.round(cents / 1200);
-    return cents;
+    return deviationCents(event.pitch, note.pitch, this.config.octaveForgiving);
   }
 
   private missed(index: number, now: number): Judgment {

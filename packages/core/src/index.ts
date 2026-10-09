@@ -6,6 +6,7 @@ export * from './notes';
 export * from './profile';
 export * from './profiles';
 export * from './scoring';
+export * from './session';
 export * from './songs';
 export * from './types';
 export * from './validate';

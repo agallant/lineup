@@ -8,7 +8,9 @@ import {
   type InstrumentProfile,
 } from './profile';
 import { builtinProfiles, getProfile } from './profiles';
+import ukuleleNote from './profiles/ukulele-note.json';
 import ukuleleStrum from './profiles/ukulele-strum.json';
+import voice from './profiles/voice.json';
 
 /** A minimal valid percussion-style profile, mutated by the error table below. */
 const base = () =>
@@ -45,7 +47,17 @@ const base = () =>
 
 describe('built-in profiles', () => {
   it('all validate (they are checked when the module loads)', () => {
-    expect(Object.keys(builtinProfiles).sort()).toEqual(['ukulele-note', 'ukulele-strum']);
+    expect(Object.keys(builtinProfiles).sort()).toEqual(['ukulele-note', 'ukulele-strum', 'voice']);
+  });
+
+  it.each([
+    ['ukulele-strum', ukuleleStrum],
+    ['ukulele-note', ukuleleNote],
+    ['voice', voice],
+  ])('%s loads with no warnings (every field it uses is a known one)', (_id, raw) => {
+    const r = loadProfile(raw);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.warnings).toEqual([]);
   });
 
   it('ukulele profiles use GCEA re-entrant tuning', () => {
@@ -70,7 +82,7 @@ describe('built-in profiles', () => {
 
   it('getProfile explains an unknown id', () => {
     expect(() => getProfile('kazoo')).toThrow(
-      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note\)/,
+      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, voice\)/,
     );
   });
 

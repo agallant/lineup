@@ -73,6 +73,8 @@ export interface DetectorSettings {
    * (Windline segmentation, used from L3). 0 disables the gate.
    */
   stabilityGateMs: number;
+  /** Shift out-of-range detections by octaves into [minHz, maxHz] instead of dropping them (voice). */
+  foldIntoRange: boolean;
   onset: OnsetSettings;
 }
 
@@ -270,6 +272,7 @@ export function loadProfile(input: unknown): Loaded<InstrumentProfile> {
         'minHz',
         'maxHz',
         'stabilityGateMs',
+        'foldIntoRange',
         'onset',
       ],
       'detector',
@@ -318,6 +321,7 @@ export function loadProfile(input: unknown): Loaded<InstrumentProfile> {
       min: 0,
       max: 500,
     });
+    const foldIntoRange = readBoolean(detRaw, 'foldIntoRange', 'detector', p) ?? false;
     let onset: OnsetSettings | undefined;
     const onsetRaw = readObject(detRaw, 'onset', 'detector', p, { required: true });
     if (onsetRaw) {
@@ -370,6 +374,7 @@ export function loadProfile(input: unknown): Loaded<InstrumentProfile> {
         minHz,
         maxHz,
         stabilityGateMs,
+        foldIntoRange,
         onset,
       };
     }
