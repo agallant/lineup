@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Characterization tests: lock in the CURRENT behaviour of the ukulele audio
  * pipeline (pitch tracker, onset detector, analyzer, note math) on fully
