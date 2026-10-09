@@ -21,7 +21,7 @@ export const builtinSongs: Readonly<Record<string, Chart>> = Object.fromEntries(
 );
 
 export function getSong(id: string): Chart {
-  const c = builtinSongs[id];
+  const c = Object.hasOwn(builtinSongs, id) ? builtinSongs[id] : undefined;
   if (!c) throw new Error(`unknown song "${id}" (have: ${Object.keys(builtinSongs).join(', ')})`);
   return c;
 }

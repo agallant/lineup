@@ -14,6 +14,12 @@ export interface OffsetOptions {
   maxResidual?: number;
   /** Need at least this many matched responses. */
   minUsed?: number;
+  /**
+   * The offset to expect (seconds), e.g. `defaultOffsetFromLatencies()`. Responses are matched to
+   * the click nearest to `response - prior`, so a latency of more than half the click spacing (a
+   * Bluetooth speaker, say) is not mistaken for a response to the NEXT click. Default 0.
+   */
+  prior?: number;
 }
 
 export type CalibrationQuality = 'good' | 'ok' | 'poor';
@@ -47,7 +53,7 @@ function median(values: readonly number[]): number {
 export function estimateOffset(
   clicks: readonly number[],
   responses: readonly number[],
-  { skipFirst = 2, maxResidual = 0.25, minUsed = 4 }: OffsetOptions = {},
+  { skipFirst = 2, maxResidual = 0.25, minUsed = 4, prior = 0 }: OffsetOptions = {},
 ): OffsetEstimate | OffsetFailure {
   const usableClicks = clicks.slice(skipFirst);
   if (usableClicks.length === 0) return { ok: false, reason: 'No clicks to compare against.' };
@@ -58,16 +64,17 @@ export function estimateOffset(
     let ci = -1;
     let cd = Infinity;
     usableClicks.forEach((c, i) => {
-      const d = Math.abs(r - c);
+      const d = Math.abs(r - c - prior);
       if (d < cd) {
         cd = d;
         ci = i;
       }
     });
-    if (ci < 0 || cd > maxResidual) continue;
+    if (ci < 0 || cd > maxResidual) continue; // cd: distance from the expected position
     const residual = r - usableClicks[ci]!;
     const prev = best.get(ci);
-    if (prev === undefined || Math.abs(residual) < Math.abs(prev)) best.set(ci, residual);
+    if (prev === undefined || Math.abs(residual - prior) < Math.abs(prev - prior))
+      best.set(ci, residual);
   }
   const residuals = [...best.values()];
   const matched = residuals.length;
