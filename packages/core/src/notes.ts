@@ -68,3 +68,13 @@ export function nearestOpenString(hz: number): { string: UkuleleString; cents: n
   }
   return { string: best, cents: bestCents };
 }
+
+/**
+ * Signed cents of a sung/played frequency from a target MIDI pitch. With
+ * `octaveForgiving` the right pitch class in any octave counts as zero.
+ */
+export function deviationCents(hz: number, targetMidi: number, octaveForgiving = false): number {
+  let cents = centsBetween(hz, midiToFrequency(targetMidi));
+  if (octaveForgiving) cents -= 1200 * Math.round(cents / 1200);
+  return cents;
+}

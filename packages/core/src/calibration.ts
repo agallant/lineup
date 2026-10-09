@@ -104,12 +104,29 @@ export function defaultOffsetFromLatencies(info: {
   return Number.isFinite(v) ? Math.min(Math.max(v, 0), 0.5) : 0;
 }
 
+/**
+ * Did the click track leak from the speaker into the mic? `onsets` were heard
+ * while the player was asked to stay silent. Responses right on top of the
+ * clicks (within `window` seconds) for most clicks mean the mic is hearing the
+ * speaker, which would corrupt calibration: use headphones.
+ */
+export function detectClickBleed(
+  clicks: readonly number[],
+  onsets: readonly number[],
+  { window = 0.08, fraction = 0.5 }: { window?: number; fraction?: number } = {},
+): boolean {
+  if (clicks.length === 0) return false;
+  const heard = clicks.filter((c) => onsets.some((o) => o >= c - 0.01 && o <= c + window)).length;
+  return heard / clicks.length >= fraction;
+}
+
 // ---- persistence ----------------------------------------------------------
 
 /** The subset of Storage we need, so core stays DOM-free. */
 export interface KeyValueStore {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
+  removeItem(key: string): void;
 }
 
 export interface CalibrationRecord {
@@ -172,6 +189,17 @@ export class CalibrationStore {
       return isRecord(parsed) ? parsed : null;
     } catch {
       return null;
+    }
+  }
+
+  /** Forgets the saved calibration for a device. Returns whether storage accepted it. */
+  clear(deviceKey = 'default'): boolean {
+    try {
+      if (!this.store) return false;
+      this.store.removeItem(this.key(deviceKey));
+      return true;
+    } catch {
+      return false;
     }
   }
 

@@ -1,5 +1,5 @@
 import type { ChartNote } from '../chart';
-import { centsBetween, midiToFrequency } from '../notes';
+import { deviationCents } from '../notes';
 import type { InstrumentProfile } from '../profile';
 import type { PitchFrame } from '../types';
 import type { Grade, Judge, Judgment, MissReason } from './types';
@@ -177,9 +177,7 @@ export class ContinuousJudge implements Judge<PitchFrame> {
   /** Signed cents of `hz` against the note, folded to the nearest octave if forgiving. */
   private deviation(note: ChartNote, hz: number): number | null {
     if (note.pitch === undefined) return null;
-    let cents = centsBetween(hz, midiToFrequency(note.pitch));
-    if (this.config.octaveForgiving) cents -= 1200 * Math.round(cents / 1200);
-    return cents;
+    return deviationCents(hz, note.pitch, this.config.octaveForgiving);
   }
 
   private stats(note: ChartNote, upTo: number): NoteStats {

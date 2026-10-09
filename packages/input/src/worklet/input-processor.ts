@@ -21,14 +21,15 @@ declare class AudioWorkletProcessorBase {
 declare const AudioWorkletProcessor: typeof AudioWorkletProcessorBase;
 
 class InputProcessor extends AudioWorkletProcessor {
-  private readonly analyzer = new InputAnalyzer(sampleRate);
+  private readonly analyzer: InputAnalyzer;
   private channel: ChannelSelection = 0;
   private mixBuffer = new Float32Array(128);
 
   constructor(options: AudioWorkletNodeOptions) {
     super();
-    const initial = (options.processorOptions as InputProcessorOptions | undefined)?.channel;
-    if (initial !== undefined) this.channel = initial;
+    const opts = options.processorOptions as InputProcessorOptions | undefined;
+    this.analyzer = new InputAnalyzer(sampleRate, opts?.analyzer);
+    if (opts?.channel !== undefined) this.channel = opts.channel;
     this.port.onmessage = (e: MessageEvent<ProcessorCommand>) => {
       if (e.data.type === 'channel') this.channel = e.data.value;
     };

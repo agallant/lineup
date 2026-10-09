@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CalibrationStore,
   defaultOffsetFromLatencies,
+  detectClickBleed,
   estimateOffset,
   recordFromEstimate,
   type KeyValueStore,
@@ -146,6 +147,9 @@ class MemoryStore implements KeyValueStore {
   setItem(k: string, v: string) {
     this.data.set(k, v);
   }
+  removeItem(k: string) {
+    this.data.delete(k);
+  }
 }
 
 describe('CalibrationStore', () => {
@@ -175,6 +179,15 @@ describe('CalibrationStore', () => {
     expect(s.load('mic-b')).toBeNull();
   });
 
+  it('clear forgets one device and leaves the others', () => {
+    const s = new CalibrationStore(new MemoryStore());
+    s.save(record, 'a');
+    s.save(record, 'b');
+    expect(s.clear('a')).toBe(true);
+    expect(s.load('a')).toBeNull();
+    expect(s.load('b')).toEqual(record);
+  });
+
   it('treats corrupt or out-of-range data as not calibrated', () => {
     const mem = new MemoryStore();
     const s = new CalibrationStore(mem);
@@ -199,12 +212,57 @@ describe('CalibrationStore', () => {
       setItem() {
         throw new Error('QuotaExceededError');
       },
+      removeItem() {
+        throw new Error('SecurityError');
+      },
     };
     const s = new CalibrationStore(throwing);
     expect(s.load()).toBeNull();
     expect(s.save(record)).toBe(false);
+    expect(s.clear()).toBe(false);
     const none = new CalibrationStore(null);
     expect(none.load()).toBeNull();
     expect(none.save(record)).toBe(false);
+    expect(none.clear()).toBe(false);
+  });
+});
+
+describe('detectClickBleed', () => {
+  const c = clicks(6);
+  it('flags onsets sitting on the clicks (speaker leaking into the mic)', () => {
+    expect(
+      detectClickBleed(
+        c,
+        c.map((t) => t + 0.03),
+      ),
+    ).toBe(true);
+  });
+  it('passes a quiet room', () => {
+    expect(detectClickBleed(c, [])).toBe(false);
+  });
+  it('ignores onsets that are not near the clicks', () => {
+    expect(
+      detectClickBleed(
+        c,
+        c.map((t) => t + 0.25),
+      ),
+    ).toBe(false);
+  });
+  it('needs at least half the clicks (default) to flag', () => {
+    expect(
+      detectClickBleed(
+        c,
+        c.slice(0, 3).map((t) => t + 0.02),
+      ),
+    ).toBe(true);
+    expect(
+      detectClickBleed(
+        c,
+        c.slice(0, 2).map((t) => t + 0.02),
+      ),
+    ).toBe(false);
+  });
+  it('no clicks, no bleed', () => {
+    expect(detectClickBleed([], [1, 2])).toBe(false);
   });
 });

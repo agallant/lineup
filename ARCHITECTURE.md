@@ -74,6 +74,21 @@ in song time and subtract the calibrated latency offset themselves.
   from clicks and responses; `CalibrationStore` persists it over an injected
   key-value store (no DOM in core).
 
+## App layer (`apps/web`)
+
+- `app/game/` holds the DOM-free game logic, each unit-tested: `SinglineGame` (analyzer
+  messages -> judge input + pitch trail + render state + debug info), `backing`
+  (count-in/metronome/guide-tone plan, scheduled on the audio clock), `calibration-run`,
+  `mic-advice`. Screens (`app/screens/`) are thin DOM wrappers around these.
+- **Input adapters** (`@lineup/input` `InputAdapter`): the game only needs a clock, a message
+  callback and `close()`. `MicSession` (getUserMedia) and `SyntheticSession` (a rendered
+  performance played into the same worklet) implement it; desktop MIDI/pad input can too.
+- **Renderers** (`@lineup/render` `Renderer`): `draw(g, size, view)` where `view` = clock time,
+  notes, per-note status, profile, and (pitched modes) trail/live feedback. `createRenderer`
+  picks one from the profile; `pitch-highway` exists, the others arrive with their modes.
+- `npm run e2e` drives the built app in headless Chromium (demo player, calibration with a fake
+  clapping mic, live-mic Singline, speaker-leak check).
+
 ## Testing strategy
 
 1. **Unit tests**, table-driven where there are many cases.

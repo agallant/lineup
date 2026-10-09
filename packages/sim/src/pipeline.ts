@@ -1,7 +1,7 @@
 import {
   ContinuousJudge,
   DiscreteJudge,
-  Scoreboard,
+  GameSession,
   SongClock,
   continuousConfigFromProfile,
   discreteConfigFromProfile,
@@ -31,6 +31,7 @@ class ManualTime implements TimeSource {
 
 export interface PipelineConfig<I> {
   performance: RenderedPerformance;
+  chart: Chart;
   profile: InstrumentProfile;
   judge: Judge<I>;
   /** Turns an analyzer message (AudioContext time) into judge inputs (song time). */
@@ -66,7 +67,7 @@ export interface PipelineResult<I> {
  * judge advanced on a fixed "frame" cadence.
  */
 export function runPipeline<I>(config: PipelineConfig<I>): PipelineResult<I> {
-  const { performance, profile, judge, adapt, flush } = config;
+  const { performance, chart, profile, judge, adapt, flush } = config;
   const { signal, sampleRate, ctxStart, songStart } = performance;
   const blockSize = config.blockSize ?? 128;
   const frameInterval = config.frameInterval ?? 1 / 60;
@@ -78,7 +79,7 @@ export function runPipeline<I>(config: PipelineConfig<I>): PipelineResult<I> {
   clock.start(songStart);
 
   const analyzer = new InputAnalyzer(sampleRate, analyzerOptionsFromProfile(profile));
-  const board = new Scoreboard(config.scoring);
+  const session = new GameSession(chart, judge, clock, config.scoring);
   const inputs: I[] = [];
   const messages: AnalyzerMessage[] = [];
   const startFrame = Math.round(ctxStart * sampleRate);
@@ -89,11 +90,9 @@ export function runPipeline<I>(config: PipelineConfig<I>): PipelineResult<I> {
   const deliver = (message: AnalyzerMessage) => {
     for (const input of adapt(message, clock)) {
       inputs.push(input);
-      judge.feed(input);
+      session.feed(input);
     }
   };
-
-  const settle = (judgments: Judgment[]) => judgments.forEach((j) => board.add(j));
 
   for (let n = 0; n < signal.length; n += blockSize) {
     const block = signal.subarray(n, Math.min(n + blockSize, signal.length));
@@ -106,18 +105,18 @@ export function runPipeline<I>(config: PipelineConfig<I>): PipelineResult<I> {
     while (inFlight.length && inFlight[0]!.deliverAt <= time.currentTime)
       deliver(inFlight.shift()!.message);
     while (time.currentTime >= nextFrameAt) {
-      settle(judge.advance(clock.now()));
+      session.update();
       nextFrameAt += frameInterval;
     }
   }
   for (const { message } of inFlight.splice(0)) deliver(message);
   for (const input of flush?.(clock) ?? []) {
     inputs.push(input);
-    judge.feed(input);
+    session.feed(input);
   }
-  settle(judge.advance(clock.now()));
-  settle(judge.finish());
-  return { judgments: judge.judgments, score: board.state, inputs, messages };
+  session.update();
+  session.finish();
+  return { judgments: judge.judgments, score: session.score, inputs, messages };
 }
 
 export interface DiscreteRunOptions {
@@ -152,6 +151,7 @@ export function runDiscrete(
 
   const result = runPipeline<InputEvent>({
     performance,
+    chart,
     profile,
     judge,
     adapt: (message, clock) => {
@@ -184,6 +184,7 @@ export function runContinuous(
   );
   const result = runPipeline<PitchFrame>({
     performance,
+    chart,
     profile,
     judge,
     adapt: (message, clock) =>
