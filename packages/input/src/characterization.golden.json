@@ -1,181 +1,405 @@
 {
-  "pitchStrings": [
-    {
-      "midi": 67,
-      "kind": "pluck",
-      "count": 90,
-      "voiced": 90,
-      "firstVoicedCenter": 1024,
-      "medianHz": 391.997,
-      "minClarity": 0.994,
-      "maxClarity": 1,
-      "lastCenter": 46592
-    },
-    {
-      "midi": 67,
-      "kind": "ks",
-      "count": 90,
-      "voiced": 90,
-      "firstVoicedCenter": 1024,
-      "medianHz": 391.995,
-      "minClarity": 0.956,
-      "maxClarity": 1,
-      "lastCenter": 46592
-    },
-    {
-      "midi": 60,
-      "kind": "pluck",
-      "count": 90,
-      "voiced": 90,
-      "firstVoicedCenter": 1024,
-      "medianHz": 261.626,
-      "minClarity": 0.994,
-      "maxClarity": 1,
-      "lastCenter": 46592
-    },
-    {
-      "midi": 60,
-      "kind": "ks",
-      "count": 90,
-      "voiced": 90,
-      "firstVoicedCenter": 1024,
-      "medianHz": 261.626,
-      "minClarity": 0.944,
-      "maxClarity": 1,
-      "lastCenter": 46592
-    },
-    {
-      "midi": 64,
-      "kind": "pluck",
-      "count": 90,
-      "voiced": 90,
-      "firstVoicedCenter": 1024,
-      "medianHz": 329.628,
-      "minClarity": 0.995,
-      "maxClarity": 1,
-      "lastCenter": 46592
-    },
-    {
-      "midi": 64,
-      "kind": "ks",
-      "count": 90,
-      "voiced": 90,
-      "firstVoicedCenter": 1024,
-      "medianHz": 329.626,
-      "minClarity": 0.965,
-      "maxClarity": 1,
-      "lastCenter": 46592
-    },
-    {
-      "midi": 69,
-      "kind": "pluck",
-      "count": 90,
-      "voiced": 90,
-      "firstVoicedCenter": 1024,
-      "medianHz": 440.001,
-      "minClarity": 0.995,
-      "maxClarity": 1,
-      "lastCenter": 46592
-    },
-    {
-      "midi": 69,
-      "kind": "ks",
-      "count": 90,
-      "voiced": 90,
-      "firstVoicedCenter": 1024,
-      "medianHz": 439.997,
-      "minClarity": 0.971,
-      "maxClarity": 1,
-      "lastCenter": 46592
-    }
+ "pitchStrings": [
+  {
+   "midi": 67,
+   "kind": "pluck",
+   "count": 90,
+   "voiced": 90,
+   "firstVoicedCenter": 1024,
+   "medianHz": 391.997,
+   "minClarity": 0.994,
+   "maxClarity": 1,
+   "lastCenter": 46592
+  },
+  {
+   "midi": 67,
+   "kind": "ks",
+   "count": 90,
+   "voiced": 90,
+   "firstVoicedCenter": 1024,
+   "medianHz": 391.995,
+   "minClarity": 0.956,
+   "maxClarity": 1,
+   "lastCenter": 46592
+  },
+  {
+   "midi": 60,
+   "kind": "pluck",
+   "count": 90,
+   "voiced": 90,
+   "firstVoicedCenter": 1024,
+   "medianHz": 261.626,
+   "minClarity": 0.994,
+   "maxClarity": 1,
+   "lastCenter": 46592
+  },
+  {
+   "midi": 60,
+   "kind": "ks",
+   "count": 90,
+   "voiced": 90,
+   "firstVoicedCenter": 1024,
+   "medianHz": 261.626,
+   "minClarity": 0.944,
+   "maxClarity": 1,
+   "lastCenter": 46592
+  },
+  {
+   "midi": 64,
+   "kind": "pluck",
+   "count": 90,
+   "voiced": 90,
+   "firstVoicedCenter": 1024,
+   "medianHz": 329.628,
+   "minClarity": 0.995,
+   "maxClarity": 1,
+   "lastCenter": 46592
+  },
+  {
+   "midi": 64,
+   "kind": "ks",
+   "count": 90,
+   "voiced": 90,
+   "firstVoicedCenter": 1024,
+   "medianHz": 329.626,
+   "minClarity": 0.965,
+   "maxClarity": 1,
+   "lastCenter": 46592
+  },
+  {
+   "midi": 69,
+   "kind": "pluck",
+   "count": 90,
+   "voiced": 90,
+   "firstVoicedCenter": 1024,
+   "medianHz": 440.001,
+   "minClarity": 0.995,
+   "maxClarity": 1,
+   "lastCenter": 46592
+  },
+  {
+   "midi": 69,
+   "kind": "ks",
+   "count": 90,
+   "voiced": 90,
+   "firstVoicedCenter": 1024,
+   "medianHz": 439.997,
+   "minClarity": 0.971,
+   "maxClarity": 1,
+   "lastCenter": 46592
+  }
+ ],
+ "pitchBoundaries": {
+  "clarity0_93": {
+   "count": 43,
+   "voiced": 43,
+   "medianClarity": 0.932
+  },
+  "clarity0_86": {
+   "count": 43,
+   "voiced": 0,
+   "medianClarity": 0.861
+  },
+  "level_minus58dB": {
+   "count": 34,
+   "voiced": 34,
+   "medianClarity": 1
+  },
+  "level_minus62dB": {
+   "count": 34,
+   "voiced": 0,
+   "medianClarity": 0
+  }
+ },
+ "onsets": {
+  "fourStrings": [
+   [
+    9600,
+    0.654,
+    -20.73
+   ],
+   [
+    33602,
+    0.609,
+    -23.47
+   ],
+   [
+    57601,
+    0.622,
+    -22.68
+   ],
+   [
+    81601,
+    0.638,
+    -21.71
+   ]
   ],
-  "pitchBoundaries": {
-    "clarity0_93": {
-      "count": 43,
-      "voiced": 43,
-      "medianClarity": 0.932
-    },
-    "clarity0_86": {
-      "count": 43,
-      "voiced": 0,
-      "medianClarity": 0.861
-    },
-    "level_minus58dB": {
-      "count": 34,
-      "voiced": 34,
-      "medianClarity": 1
-    },
-    "level_minus62dB": {
-      "count": 34,
-      "voiced": 0,
-      "medianClarity": 0
-    }
-  },
-  "onsets": {
-    "fourStrings": [
-      [9600, 0.654, -20.73],
-      [33602, 0.609, -23.47],
-      [57601, 0.622, -22.68],
-      [81601, 0.638, -21.71]
-    ],
-    "replucks": [
-      [4801, 0.81, -11.43],
-      [19209, 0.89, -6.61],
-      [31201, 0.773, -13.59],
-      [43201, 0.82, -10.82],
-      [55202, 0.865, -8.09]
-    ],
-    "strum": [[14401, 0.704, -17.74]],
-    "sixteenths": [
-      [4809, 0.807, -11.55],
-      [10806, 0.821, -10.75],
-      [16802, 0.858, -8.53],
-      [22812, 0.848, -9.11],
-      [28807, 0.868, -7.91],
-      [34805, 0.693, -18.4],
-      [40801, 0.785, -12.92],
-      [46801, 0.803, -11.81]
-    ],
-    "sustained": [[12001, 0.325, -40.52]],
-    "overNoise": [
-      [1, 0.208, -47.53],
-      [19200, 0.654, -20.73]
-    ],
-    "dynamics": [
-      [4801, 0.305, -41.71],
-      [33601, 0.665, -20.12]
-    ],
-    "softReplucks_rise_between_10_and_12": [
-      [4800, 0.815, -11.12],
-      [38405, 0.358, -38.51]
-    ],
-    "softReplucks_rise_between_8_and_10": [[4800, 0.815, -11.12]],
-    "pluckGap_60ms": [[4801, 0.81, -11.43]],
-    "pluckGap_75ms": [
-      [4801, 0.81, -11.43],
-      [8409, 0.838, -9.7]
-    ]
-  },
-  "analyzer": {
-    "events": [[10.5, "onset", 0.815]],
-    "frameCount": 140,
-    "samples": [
-      [10.2027, -120, -120, null, 0],
-      [10.5973, -20.2, -11.94, 261.625, 0.999],
-      [10.896, -25.78, -18.07, 261.626, 1],
-      [11.3013, -31.32, -24.49, 261.626, 1]
-    ]
-  },
-  "notes": [
-    [82.41, "E2", 40, 0.065, "C4", -1999.935],
-    [196, "G3", 55, 0.02, "C4", -499.98],
-    [261.626, "C4", 60, 0.003, "C4", 0.003],
-    [329.628, "E4", 64, 0.002, "E4", 0.002],
-    [391.995, "G4", 67, -0.002, "G4", -0.002],
-    [440, "A4", 69, 0, "A4", 0],
-    [466.164, "A#4", 70, 0.001, "A4", 100.001],
-    [880, "A5", 81, 0, "A4", 1200],
-    [1000, "B5", 83, 21.309, "A4", 1421.309],
-    [1318.5, "E6", 88, -0.013, "A4", 1899.987]
+  "replucks": [
+   [
+    4801,
+    0.81,
+    -11.43
+   ],
+   [
+    19209,
+    0.89,
+    -6.61
+   ],
+   [
+    31201,
+    0.773,
+    -13.59
+   ],
+   [
+    43201,
+    0.82,
+    -10.82
+   ],
+   [
+    55202,
+    0.865,
+    -8.09
+   ]
+  ],
+  "strum": [
+   [
+    14401,
+    0.704,
+    -17.74
+   ]
+  ],
+  "sixteenths": [
+   [
+    4809,
+    0.807,
+    -11.55
+   ],
+   [
+    10806,
+    0.821,
+    -10.75
+   ],
+   [
+    16802,
+    0.858,
+    -8.53
+   ],
+   [
+    22812,
+    0.848,
+    -9.11
+   ],
+   [
+    28807,
+    0.868,
+    -7.91
+   ],
+   [
+    34805,
+    0.693,
+    -18.4
+   ],
+   [
+    40801,
+    0.785,
+    -12.92
+   ],
+   [
+    46801,
+    0.803,
+    -11.81
+   ]
+  ],
+  "sustained": [
+   [
+    12001,
+    0.325,
+    -40.52
+   ]
+  ],
+  "overNoise": [
+   [
+    1,
+    0.208,
+    -47.53
+   ],
+   [
+    19200,
+    0.654,
+    -20.73
+   ]
+  ],
+  "dynamics": [
+   [
+    4801,
+    0.305,
+    -41.71
+   ],
+   [
+    33601,
+    0.665,
+    -20.12
+   ]
+  ],
+  "softReplucks_rise_between_10_and_12": [
+   [
+    4800,
+    0.815,
+    -11.12
+   ],
+   [
+    38405,
+    0.358,
+    -38.51
+   ]
+  ],
+  "softReplucks_rise_between_8_and_10": [
+   [
+    4800,
+    0.815,
+    -11.12
+   ]
+  ],
+  "pluckGap_60ms": [
+   [
+    4801,
+    0.81,
+    -11.43
+   ]
+  ],
+  "pluckGap_75ms": [
+   [
+    4801,
+    0.81,
+    -11.43
+   ],
+   [
+    8409,
+    0.838,
+    -9.7
+   ]
   ]
+ },
+ "analyzer": {
+  "events": [
+   [
+    10.5,
+    "onset",
+    0.815
+   ]
+  ],
+  "frameCount": 140,
+  "samples": [
+   [
+    10.2027,
+    -120,
+    -120,
+    null,
+    0
+   ],
+   [
+    10.5973,
+    -20.2,
+    -11.94,
+    261.625,
+    0.999
+   ],
+   [
+    10.896,
+    -25.78,
+    -18.07,
+    261.626,
+    1
+   ],
+   [
+    11.3013,
+    -31.32,
+    -24.49,
+    261.626,
+    1
+   ]
+  ]
+ },
+ "notes": [
+  [
+   82.41,
+   "E2",
+   40,
+   0.065,
+   "C4",
+   -1999.935
+  ],
+  [
+   196,
+   "G3",
+   55,
+   0.02,
+   "C4",
+   -499.98
+  ],
+  [
+   261.626,
+   "C4",
+   60,
+   0.003,
+   "C4",
+   0.003
+  ],
+  [
+   329.628,
+   "E4",
+   64,
+   0.002,
+   "E4",
+   0.002
+  ],
+  [
+   391.995,
+   "G4",
+   67,
+   -0.002,
+   "G4",
+   -0.002
+  ],
+  [
+   440,
+   "A4",
+   69,
+   0,
+   "A4",
+   0
+  ],
+  [
+   466.164,
+   "A#4",
+   70,
+   0.001,
+   "A4",
+   100.001
+  ],
+  [
+   880,
+   "A5",
+   81,
+   0,
+   "A4",
+   1200
+  ],
+  [
+   1000,
+   "B5",
+   83,
+   21.309,
+   "A4",
+   1421.309
+  ],
+  [
+   1318.5,
+   "E6",
+   88,
+   -0.013,
+   "A4",
+   1899.987
+  ]
+ ]
 }

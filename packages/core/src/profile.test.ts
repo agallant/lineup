@@ -61,6 +61,13 @@ describe('built-in profiles', () => {
     }
   });
 
+  it.each(['constructor', 'toString', '__proto__', 'hasOwnProperty'])(
+    'getProfile treats inherited Object.prototype names like "%s" as unknown ids',
+    (id) => {
+      expect(() => getProfile(id)).toThrow(/unknown instrument profile/);
+    },
+  );
+
   it('getProfile explains an unknown id', () => {
     expect(() => getProfile('kazoo')).toThrow(
       /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note\)/,
