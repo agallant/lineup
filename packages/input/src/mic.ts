@@ -151,6 +151,7 @@ export async function openSyntheticInput(
       clock: ctx,
       onMessage: () => undefined,
       start(at) {
+        if (source) throw new Error('SyntheticSession already started'); // a second source would never be stopped by close()
         source = ctx.createBufferSource();
         source.buffer = buffer;
         source.connect(node);

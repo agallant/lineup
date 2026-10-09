@@ -272,6 +272,7 @@ export function loadProfile(input: unknown): Loaded<InstrumentProfile> {
         'minHz',
         'maxHz',
         'stabilityGateMs',
+        'foldIntoRange',
         'onset',
       ],
       'detector',

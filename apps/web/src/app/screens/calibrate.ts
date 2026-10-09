@@ -126,7 +126,6 @@ export const calibrateScreen: Screen = (root) => {
       const lastClick = plan.clicks[plan.clicks.length - 1]!;
       let done = false;
       const tick = () => {
-        raf = requestAnimationFrame(tick);
         const now = ctx.currentTime;
         let idx = -1;
         for (let i = 0; i < plan.clicks.length; i++) if (plan.clicks[i]! <= now) idx = i;
@@ -141,7 +140,9 @@ export const calibrateScreen: Screen = (root) => {
         if (!done && now > lastClick + 0.8) {
           done = true;
           finish(plan, onsets, prior);
+          return; // finished: do not schedule another frame (it would overwrite the result text and stack up on "Run again")
         }
+        raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
     } catch (err) {

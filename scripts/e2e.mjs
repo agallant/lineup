@@ -8,7 +8,7 @@
 //
 //   node scripts/e2e.mjs [demo|calibrate|live|bleed|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -25,6 +25,7 @@ async function loadPlaywright() {
   );
 }
 
+const SANDBOX_CHROMIUM = '/opt/pw-browsers/chromium';
 const args = process.argv.slice(2);
 const shotsIdx = args.indexOf('--shots');
 const shotsDir = shotsIdx >= 0 ? args[shotsIdx + 1] : null;
@@ -124,8 +125,11 @@ async function session(wavPath, run) {
       '--use-fake-device-for-media-stream',
       `--use-file-for-fake-audio-capture=${wavPath}`,
     );
+  // CHROMIUM_PATH wins; the sandbox's preinstalled build is used when present; otherwise Playwright's own.
+  const executablePath =
+    process.env.CHROMIUM_PATH || (existsSync(SANDBOX_CHROMIUM) ? SANDBOX_CHROMIUM : undefined);
   const browser = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium',
+    ...(executablePath ? { executablePath } : {}),
     args: flags,
   });
   const page = await browser.newPage({ viewport: { width: 820, height: 1180 } });
@@ -181,13 +185,21 @@ const scenarios = {
     console.log('\n# Calibration screen with a fake clapping microphone');
     await session(fixtures.claps, async (page) => {
       await page.goto(URL_BASE + '#/calibrate');
-      await page.click('[data-id=start]');
-      await page.waitForFunction(
-        () => !document.querySelector('[data-id=result]')?.hasAttribute('hidden'),
-        null,
-        { timeout: 30000 },
-      );
-      const result = await page.innerText('[data-id=result]');
+      // The fake mic claps every 0.5 s, the same period as the clicks, so about one start phase in six
+      // puts a clap within 80 ms of a silent click and the (correct) bleed check refuses. Retry that.
+      let result = '';
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        await page.click('[data-id=start]');
+        await page.waitForFunction(
+          () => !document.querySelector('[data-id=result]')?.hasAttribute('hidden'),
+          null,
+          { timeout: 30000 },
+        );
+        result = await page.innerText('[data-id=result]');
+        if (!/Mic hears the clicks/i.test(result)) break;
+        console.log(`  (attempt ${attempt}: unlucky fake-mic phase, retrying)`);
+        await page.waitForSelector('[data-id=start]:not([disabled])');
+      }
       check(
         /Quality: good/.test(result) && /Saved on this device/.test(result),
         `measures and saves a calibration (${result.replace(/\n+/g, ' | ')})`,

@@ -62,6 +62,6 @@ describe('renderPerformanceAsync', () => {
     expect(async_.plan).toEqual(sync.plan);
     expect(async_.signal.length).toBe(sync.signal.length);
     expect(async_.signal.every((v, i) => v === sync.signal[i])).toBe(true);
-    expect(yielded).toBeGreaterThanOrEqual(0);
+    expect(yielded).toBeGreaterThan(0); // the timer fired while rendering: it really yields to the event loop
   });
 });
