@@ -1,0 +1,40 @@
+# Builds each PR and publishes it to gh-pages under pr-preview/pr-<N>/, then
+# comments the URL on the PR. The preview is removed when the PR closes.
+name: PR preview
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# One queue per PR. Pushes to gh-pages from different PRs/main can still
+# race; the deploy action rebases and retries on a rejected push.
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    # Fork PRs get a read-only token and can't push to gh-pages.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        if: github.event.action != 'closed'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: github.event.action != 'closed'
+      - run: npm run build
+        if: github.event.action != 'closed'
+        env:
+          BUILD_SHA: ${{ github.event.pull_request.head.sha }}
+          BUILD_LABEL: 'PR #${{ github.event.pull_request.number }}'
+      - uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: dist
