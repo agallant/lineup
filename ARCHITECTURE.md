@@ -101,9 +101,13 @@ in song time and subtract the calibrated latency offset themselves.
   performance played into the same worklet) implement it; desktop MIDI/pad input can too.
 - **Renderers** (`@lineup/render` `Renderer`): `draw(g, size, view)` where `view` = clock time,
   notes, per-note status, profile, and (pitched modes) trail/live feedback. `createRenderer`
-  picks one from the profile; `pitch-highway` exists, the others arrive with their modes.
+  picks one from the profile; `pitch-highway` (voice) and `percussion-lanes` (Beatline: per-lane
+  colours, judged-note rings, hit flashes, grey bar for rejected sounds) exist; `lane-highway` is for Strumline.
+- `BeatlineGame` / `HitMonitor` (`app/game/beatline-game.ts`): analyzer messages -> classified hits
+  -> judge input + flashes + the debug text. `enroll-messages.ts` words each enrollment outcome.
 - `npm run e2e` drives the built app in headless Chromium (demo player, calibration with a fake
-  clapping mic, live-mic Singline, speaker-leak check).
+  clapping mic, live-mic Singline, speaker-leak check; Beatline: demo players in both lane modes,
+  live fake-mic enrollment + classification + persistence, click-leak check).
 
 ## Testing strategy
 

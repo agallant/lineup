@@ -7,6 +7,7 @@ import {
   type RenderView,
   type Renderer,
 } from './renderer';
+import { PercussionLanesRenderer } from './percussion-lanes';
 
 export interface HighwayLayout {
   /** x of the "now" line. */
@@ -314,5 +315,6 @@ export function describePitch(hz: number | null): { name: string; cents: number 
 /** Creates the renderer a profile asks for. */
 export function createRenderer(kind: Renderer['kind']): Renderer {
   if (kind === 'pitch-highway') return new PitchHighwayRenderer();
+  if (kind === 'percussion-lanes') return new PercussionLanesRenderer();
   throw new Error(`renderer "${kind}" is not implemented yet`);
 }
