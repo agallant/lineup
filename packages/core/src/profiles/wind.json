@@ -1,0 +1,48 @@
+{
+  "id": "wind",
+  "name": "Whistle / recorder / ocarina",
+  "mode": "windline",
+  "input": "pitch",
+  "renderer": "pitch-highway",
+  "range": {
+    "lowMidi": 67,
+    "highMidi": 96
+  },
+  "transposition": {
+    "writtenMinusSounding": 0
+  },
+  "detector": {
+    "windowSize": 1024,
+    "hopSize": 256,
+    "clarityThreshold": 0.6,
+    "minLevelDb": -55,
+    "minHz": 350,
+    "maxHz": 2400,
+    "stabilityGateMs": 0,
+    "onset": {
+      "riseDb": 9,
+      "refractoryMs": 80,
+      "lookbackMs": 30,
+      "minLevelDb": -60
+    }
+  },
+  "judgment": {
+    "strategy": "continuous",
+    "timing": {
+      "perfectMs": 160,
+      "goodMs": 380
+    },
+    "pitch": {
+      "toleranceCents": 60,
+      "octaveForgiving": false,
+      "vibratoSmoothingMs": 120,
+      "coverageGood": 0.35,
+      "coveragePerfect": 0.7
+    },
+    "match": {
+      "lane": false,
+      "pitch": false,
+      "chord": false
+    }
+  }
+}

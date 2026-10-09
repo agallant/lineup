@@ -12,6 +12,7 @@ import { builtinProfiles, getProfile } from './profiles';
 import ukuleleNote from './profiles/ukulele-note.json';
 import ukuleleStrum from './profiles/ukulele-strum.json';
 import voice from './profiles/voice.json';
+import wind from './profiles/wind.json';
 
 /** A minimal valid percussion-style profile, mutated by the error table below. */
 const base = () =>
@@ -55,6 +56,7 @@ describe('built-in profiles', () => {
       'ukulele-note',
       'ukulele-strum',
       'voice',
+      'wind',
     ]);
   });
 
@@ -62,6 +64,7 @@ describe('built-in profiles', () => {
     ['ukulele-strum', ukuleleStrum],
     ['ukulele-note', ukuleleNote],
     ['voice', voice],
+    ['wind', wind],
   ])('%s loads with no warnings (every field it uses is a known one)', (_id, raw) => {
     const r = loadProfile(raw);
     expect(r.ok).toBe(true);
@@ -90,7 +93,7 @@ describe('built-in profiles', () => {
 
   it('getProfile explains an unknown id', () => {
     expect(() => getProfile('kazoo')).toThrow(
-      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, voice, clap, hand-percussion, drum-kit\)/,
+      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, voice, wind, clap, hand-percussion, drum-kit\)/,
     );
   });
 

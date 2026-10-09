@@ -6,6 +6,7 @@ import { calibrateScreen } from './app/screens/calibrate';
 import { homeScreen } from './app/screens/home';
 import { micTestScreen } from './app/screens/mic-test';
 import { singScreen } from './app/screens/sing';
+import { windScreen } from './app/screens/wind';
 
 const app = document.getElementById('app');
 if (!app) throw new Error('#app missing');
@@ -20,6 +21,7 @@ startRouter(
     mic: micTestScreen,
     calibrate: calibrateScreen,
     sing: singScreen,
+    wind: windScreen,
     beat: beatScreen,
   },
   '',

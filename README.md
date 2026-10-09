@@ -7,7 +7,7 @@ that you play by performing on a real instrument. One mode per instrument family
 | ------------- | ---------------------------------- | -------------------------- |
 | **Strumline** | ukulele (GCEA re-entrant)          | mic test + detectors exist |
 | **Singline**  | voice                              | playable (`#/sing`)        |
-| **Windline**  | ocarina, recorder, penny whistle   | planned (L3, later)        |
+| **Windline**  | ocarina, recorder, penny whistle   | playable (`#/wind`)        |
 | **Beatline**  | claps, taps, hand drums, kit, pads | playable (`#/beat`)        |
 
 It's a static web app, built for Safari on iOS/iPadOS first and also tested in
@@ -89,6 +89,22 @@ Design rules:
    audio latencies, options, score and every note's result). Paste it into the chat when something
    looks off. Beatline also has _Copy hit log_ next to the hit monitor.
 
+## Windline (whistle, recorder, ocarina) on the iPad
+
+`#/wind` (home screen -> Windline). It is Singline's pitch pipeline with a wind profile: range
+G4 to C7, a shorter analysis window for high notes, and **octaves count** (a fingering has one
+register, so an octave off is wrong, unlike singing).
+
+1. **Start mic** and play a long steady note: you should see the note name and a green clarity
+   bar. Hold the instrument a little to the side of the mic: a breath straight into it
+   overloads it (the level meter warns about clipping).
+2. Use **Key** to move the song to where your instrument plays (a D whistle: +2; a 12-hole
+   ocarina or a soprano recorder: original key or +/-). Songs: a C major scale, Twinkle Twinkle,
+   Ode to Joy, all within C5 to A5 before the key shift.
+3. Use headphones (the guide tone is otherwise heard by the mic), calibrate timing if the first
+   notes always feel early or late, pick **Scoring**, and **Play**. _Watch auto-play demo_
+   plays a synthetic recorder through the same pipeline.
+
 ## Beatline (claps, taps, percussion) on the iPad
 
 `#/beat` (home screen -> Beatline). Three modes: **Clap (any hit)**, one lane where any sound
@@ -110,6 +126,9 @@ counts; **Clap + tap**, two lanes where you teach it your two sounds first; **Dr
 
 ## Limitations (known)
 
+- **Windline is simulation-verified only.** The wind profile and synthetic whistle/recorder/ocarina
+  prove the software chain (high notes, chiff, drift, airy breath); a real whistle's shrill peaks,
+  breath blasts into the mic and room reflections are untested.
 - **Overlapping ringing notes confuse single-note pitch tracking.** Two notes
   sounding at once blend into one ambiguous pitch (659 Hz + 880 Hz reads as
   220 Hz). Timing is unaffected; pitch matching on wide leaps over ringing
