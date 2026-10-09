@@ -66,6 +66,10 @@ in song time and subtract the calibrated latency offset themselves.
   _median_ over a short window so vibrato and stray frames don't count against
   you, ignores frames under the clarity/level gates, and exposes `peek()` for
   live "am I on pitch right now" feedback.
+  `applyDifficulty(config, 'easy' | 'normal' | 'strict')` loosens the tolerance,
+  timing windows and coverage thresholds on top of the profile's numbers (it never
+  tightens one); the app stores the player's choice in settings, and simulations use
+  the profile's own ("strict") numbers.
 - **Voice** (`profiles/voice.json`): McLeod pitch tracker with a 2048-sample window
   and 256-sample hop, 70-1100 Hz, clarity gate 0.55, `foldIntoRange` (one octave
   only: hiss must not become a pitch), octave-forgiving continuous judging.

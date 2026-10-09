@@ -29,6 +29,9 @@ jobs:
         env:
           BUILD_SHA: ${{ github.sha }}
           BUILD_LABEL: main
+      # Only the site root needs .nojekyll (it turns Jekyll off for the whole branch, previews
+      # included), so it is added here rather than shipped in every build.
+      - run: touch apps/web/dist/.nojekyll
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: apps/web/dist

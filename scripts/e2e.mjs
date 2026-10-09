@@ -183,6 +183,25 @@ const shot = (page, name) =>
   shotsDir ? page.screenshot({ path: join(shotsDir, `${name}.png`), fullPage: true }) : null;
 const text = async (page, id) => ((await page.textContent(`[data-id=${id}]`)) ?? '').trim();
 
+/** Clicks "Copy session log" on the results screen and checks what landed on the clipboard. */
+async function checkCopyLog(page, mode, perfectNotes) {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.click('[data-id=copy-log]');
+  await page.waitForFunction(
+    () =>
+      /Copied|Could not/.test(document.querySelector('[data-id=copy-status]')?.textContent ?? ''),
+    null,
+    { timeout: 5000 },
+  );
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  check(
+    copied.startsWith(`Lineup session log: ${mode} (auto-play demo)`) &&
+      new RegExp(`perfect ${perfectNotes}\\b`).test(copied) &&
+      /notes \(time/.test(copied),
+    `${mode}: "Copy session log" puts a full report on the clipboard (${copied.split('\n').length} lines)`,
+  );
+}
+
 // ---- scenarios --------------------------------------------------------------
 const scenarios = {
   async demo() {
@@ -210,6 +229,7 @@ const scenarios = {
         `demo singer scores 12/12 perfect (got ${perfect} perfect, ${miss} missed, grade ${await text(page, 'grade')})`,
       );
       await shot(page, 'demo-results');
+      await checkCopyLog(page, 'Singline', 12);
     });
   },
 
@@ -344,6 +364,7 @@ const scenarios = {
           `${mode}: demo player hits all ${notes} notes (${perfect} perfect, ${good} good, ${miss} missed, ${strays} extra, grade ${await text(page, 'grade')})`,
         );
         await shot(page, `beat-${mode}-results`);
+        if (mode === 'clap') await checkCopyLog(page, 'Beatline', notes);
       });
     }
   },

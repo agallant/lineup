@@ -57,6 +57,16 @@ describe('SettingsStore', () => {
     expect(s.update({ keyShift: 12 }).keyShift).toBe(12);
   });
 
+  it('defaults to normal scoring and only accepts known difficulties', () => {
+    const s = new SettingsStore(new Mem());
+    expect(s.get().difficulty).toBe('normal');
+    expect(s.update({ difficulty: 'easy' }).difficulty).toBe('easy');
+    expect(s.update({ difficulty: 'impossible' as never }).difficulty).toBe('normal');
+    const mem = new Mem();
+    mem.setItem('lineup.settings.v1', JSON.stringify({ difficulty: 'strict' }));
+    expect(new SettingsStore(mem).get().difficulty).toBe('strict');
+  });
+
   it('keeps working in memory when storage throws or is missing', () => {
     const throwing: KeyValueStore = {
       getItem() {

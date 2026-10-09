@@ -1,11 +1,13 @@
 import {
   ContinuousJudge,
+  applyDifficulty,
   GameSession,
   activeNoteIndex,
   continuousConfigFromProfile,
   deviationCents,
   noteFromFrequency,
   type Chart,
+  type Difficulty,
   type InstrumentProfile,
   type Judgment,
   type PitchFrame,
@@ -45,6 +47,8 @@ export interface SinglineGameOptions {
   latencyOffset: number;
   /** Seconds between pitch frames (hop / sample rate). */
   hop: number;
+  /** How forgiving scoring is; the profile's own numbers when omitted ("strict"). */
+  difficulty?: Difficulty;
 }
 
 /**
@@ -66,17 +70,20 @@ export class SinglineGame {
   private last: { frame: PitchFrame; ctxTime: number } | null = null;
   private recent: number[] = [];
 
-  constructor({ chart, profile, clock, latencyOffset, hop }: SinglineGameOptions) {
+  constructor({ chart, profile, clock, latencyOffset, hop, difficulty }: SinglineGameOptions) {
     this.chart = chart;
     this.profile = profile;
     this.clock = clock;
     this.offset = latencyOffset;
     this.judge = new ContinuousJudge(
       chart.notes,
-      continuousConfigFromProfile(profile, latencyOffset, hop),
+      applyDifficulty(
+        continuousConfigFromProfile(profile, latencyOffset, hop),
+        difficulty ?? 'strict',
+      ),
     );
     this.session = new GameSession(chart, this.judge, clock);
-    this.tolerance = profile.judgment.pitch?.toleranceCents ?? 50;
+    this.tolerance = this.judge.config.toleranceCents;
     this.forgiving = profile.judgment.pitch?.octaveForgiving ?? false;
   }
 

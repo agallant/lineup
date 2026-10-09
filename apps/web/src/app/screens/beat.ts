@@ -29,9 +29,12 @@ import {
 } from '@lineup/sim';
 import { clap, hihat, kick, snare, tap } from '@lineup/testkit';
 import { scheduleClicks } from '../audio';
+import { buildInfoText } from '../build-info';
+import { copyText } from '../clipboard';
 import { planBacking, playBacking, type BackingHandle } from '../game/backing';
 import { BeatlineGame, HitMonitor, formatHits } from '../game/beatline-game';
 import { enrollMessage } from '../game/enroll-messages';
+import { formatSessionLog } from '../game/session-log';
 import { SettingsStore, safeLocalStorage } from '../settings';
 import type { Screen } from '../router';
 
@@ -84,6 +87,7 @@ const SETUP = `
     <div class="row">
       <button data-id="mic-start">Start mic</button>
       <button data-id="leak-check" disabled>Check for click leak</button>
+      <button data-id="copy-hits" disabled>Copy hit log</button>
     </div>
     <canvas class="meter" data-id="meter"></canvas>
     <p class="status" data-id="advice">Tap “Start mic”, then clap or tap near the device. Every hit appears below.</p>
@@ -186,6 +190,7 @@ export const beatScreen: Screen = (root) => {
   };
   const micBtn = S<HTMLButtonElement>('mic-start');
   const leakBtn = S<HTMLButtonElement>('leak-check');
+  const copyHitsBtn = S<HTMLButtonElement>('copy-hits');
   const modeSel = S<HTMLSelectElement>('mode');
   const songSel = S<HTMLSelectElement>('song');
   const meter = S<HTMLCanvasElement>('meter');
@@ -297,6 +302,7 @@ export const beatScreen: Screen = (root) => {
       mic.onMessage = onSetupMessage;
       micBtn.textContent = 'Mic on';
       leakBtn.disabled = false;
+      copyHitsBtn.disabled = false;
       setupStatus.textContent = '';
       refreshCalibration();
       refreshModelStatus();
@@ -318,6 +324,16 @@ export const beatScreen: Screen = (root) => {
     return micOpening;
   };
   micBtn.addEventListener('click', () => void startMic());
+  copyHitsBtn.addEventListener('click', () => {
+    if (!mic) return;
+    const text = `Lineup hit log: ${profile.id}\n${buildInfoText()}\n${navigator.userAgent}\n\n${formatHits(monitor, mic.ctx.currentTime)}`;
+    void copyText(text).then((ok) => {
+      setupStatus.classList.toggle('error', !ok);
+      setupStatus.textContent = ok
+        ? 'Hit log copied. Paste it into the chat.'
+        : 'Could not copy on this browser.';
+    });
+  });
 
   // When the mode changes the live worklet must be re-created with the right detector settings.
   const reopenMicIfNeeded = async () => {
@@ -329,6 +345,7 @@ export const beatScreen: Screen = (root) => {
     micBtn.disabled = false;
     micBtn.textContent = 'Start mic';
     leakBtn.disabled = true;
+    copyHitsBtn.disabled = true;
     // a demo that started meanwhile owns the audio; the mic must stay closed
     if (disposed || beginInFlight || live?.demo) return;
     await startMic();
@@ -605,10 +622,43 @@ export const beatScreen: Screen = (root) => {
         <div class="row">
           <button data-id="again" class="primary">Play again</button>
           <button data-id="back">Back to setup</button>
+          <button data-id="copy-log">Copy session log</button>
         </div>
+        <p class="status" data-id="copy-status" role="status"></p>
       </section>`;
     show('results');
     const R = (id: string) => stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
+    R('copy-log').addEventListener('click', () => {
+      const text = formatSessionLog({
+        build: buildInfoText(),
+        mode: 'Beatline',
+        at: new Date(),
+        userAgent: navigator.userAgent,
+        profileId: profile.id,
+        songTitle: chart.meta.title,
+        demo: audio.demo,
+        options: { metronome: settings.get().metronome, enrolled: audio.model !== null },
+        audio: {
+          sampleRate: audio.ctx.sampleRate,
+          baseLatency: audio.ctx.baseLatency,
+          outputLatency: audio.ctx.outputLatency,
+        },
+        latencyOffsetMs: game.latencyOffsetMs,
+        micSettings: audio.demo ? undefined : mic?.track.getSettings(),
+        score: s,
+        grade,
+        judgments: game.judge.judgments,
+        strays: game.strays,
+        hits: formatHits(game.monitor, audio.ctx.currentTime),
+      });
+      void copyText(text).then((ok) => {
+        const status = stages.results.querySelector('[data-id="copy-status"]');
+        if (status)
+          status.textContent = ok
+            ? 'Copied. Paste it into the chat.'
+            : 'Could not copy on this browser.';
+      });
+    });
     R('again').addEventListener('click', () => {
       // each demo run owns an AudioContext: release the finished one before opening another
       if (audio.demo) void audio.adapter.close();
@@ -654,6 +704,7 @@ export const beatScreen: Screen = (root) => {
         micBtn.disabled = false;
         micBtn.textContent = 'Start mic';
         leakBtn.disabled = true;
+        copyHitsBtn.disabled = true;
         enrollBtn.disabled = true;
       }
       setupStatus.textContent = 'Preparing the demo player… 0%';

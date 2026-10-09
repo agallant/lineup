@@ -152,6 +152,11 @@ export class BeatlineGame {
     };
   }
 
+  /** The calibrated latency offset the judge applies, ms. */
+  get latencyOffsetMs(): number {
+    return this.offset * 1000;
+  }
+
   /** Hits that matched no note (stray taps, double triggers, wrong lane). */
   get strays(): number {
     return this.judge.strays;
