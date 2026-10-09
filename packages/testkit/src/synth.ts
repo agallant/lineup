@@ -45,6 +45,11 @@ export interface PluckOptions {
   /** Decay time constant of the fundamental, seconds. */
   decay?: number;
   harmonics?: number;
+  /**
+   * String stiffness B: partial n sits at n*f0*sqrt(1 + B*n^2), so overtones
+   * run slightly sharp like a real string. 0 = perfectly harmonic.
+   */
+  inharmonicity?: number;
 }
 
 /**
@@ -55,13 +60,13 @@ export function pluck(
   hz: number,
   seconds: number,
   sampleRate: number,
-  { amplitude = 0.5, decay = 0.6, harmonics = 8 }: PluckOptions = {},
+  { amplitude = 0.5, decay = 0.6, harmonics = 8, inharmonicity = 0 }: PluckOptions = {},
 ): Float32Array {
   const out = new Float32Array(Math.round(seconds * sampleRate));
   let norm = 0;
   for (let n = 1; n <= harmonics; n++) norm += 1 / n;
   for (let n = 1; n <= harmonics; n++) {
-    const f = hz * n;
+    const f = hz * n * Math.sqrt(1 + inharmonicity * n * n);
     if (f >= sampleRate / 2) break;
     const a = amplitude / n / norm;
     const tau = decay / n;

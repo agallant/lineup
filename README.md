@@ -44,10 +44,11 @@ Mic access needs a secure context (HTTPS or `localhost`).
 
 ```
 packages/
-  core/      pure TypeScript, no DOM: notes, InputEvent, (chart, judge, clock, profiles in L1c)
+  core/      pure TypeScript, no DOM: notes, chart format, profiles, clock, calibration, judges, scoring
   input/     detectors (pitch, onset), analyzer, AudioWorklet, mic capture
   render/    canvas helpers and renderers
   testkit/   synthetic signals for tests (dev-only)
+  sim/       headless end-to-end harness: synthetic player -> real pipeline -> score (dev-only)
 apps/
   web/       the PWA: screens, router, styles, manifest, service worker
 ```
@@ -65,6 +66,16 @@ Design rules:
   need a mic.
 - `packages/core` and `packages/testkit` are DOM-free, enforced by TypeScript
   (no DOM lib) and an ESLint rule.
+
+## Limitations (known)
+
+- **Overlapping ringing notes confuse single-note pitch tracking.** Two notes
+  sounding at once blend into one ambiguous pitch (659 Hz + 880 Hz reads as
+  220 Hz). Timing is unaffected; pitch matching on wide leaps over ringing
+  notes can be wrong. Covered by explicit "KNOWN LIMITATION" tests.
+- **Simulations are synthetic.** They prove the software chain; real strings,
+  microphones, rooms and iOS audio behaviour are listed per PR under
+  "Unverified on real hardware".
 
 ## Deploy
 

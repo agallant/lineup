@@ -20,6 +20,8 @@ export function discreteConfigFromProfile(
       ? (pitch?.toleranceCents ?? DEFAULT_PITCH_TOLERANCE_CENTS)
       : null,
     octaveForgiving: pitch?.octaveForgiving ?? false,
-    settle: 0.05,
+    // Pitch-matched events are emitted only after the pitch frames after the
+    // attack have arrived (~0.14 s + a hop), so wait longer before declaring a miss.
+    settle: match.pitch ? 0.2 : 0.05,
   };
 }

@@ -359,5 +359,6 @@ describe('discreteConfigFromProfile', () => {
     expect(c.pitchToleranceCents).toBe(60);
     expect(c.perfectWindow).toBe(0.05);
     expect(c.goodWindow).toBe(0.12);
+    expect(c.settle).toBe(0.2); // pitch is attached ~0.14 s after the onset
   });
 });

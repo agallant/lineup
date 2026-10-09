@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Ode to Joy (demo)",
+    "artist": "Beethoven",
+    "bpm": 90,
+    "countInBeats": 4,
+    "instruments": ["ukulele-note"]
+  },
+  "notes": [
+    {
+      "t": 0.0,
+      "duration": 0.467,
+      "pitch": 64
+    },
+    {
+      "t": 0.667,
+      "duration": 0.467,
+      "pitch": 64
+    },
+    {
+      "t": 1.333,
+      "duration": 0.467,
+      "pitch": 65
+    },
+    {
+      "t": 2.0,
+      "duration": 0.467,
+      "pitch": 67
+    },
+    {
+      "t": 2.667,
+      "duration": 0.467,
+      "pitch": 67
+    },
+    {
+      "t": 3.333,
+      "duration": 0.467,
+      "pitch": 65
+    },
+    {
+      "t": 4.0,
+      "duration": 0.467,
+      "pitch": 64
+    },
+    {
+      "t": 4.667,
+      "duration": 0.467,
+      "pitch": 62
+    },
+    {
+      "t": 5.333,
+      "duration": 0.467,
+      "pitch": 60
+    },
+    {
+      "t": 6.0,
+      "duration": 0.467,
+      "pitch": 60
+    },
+    {
+      "t": 6.667,
+      "duration": 0.467,
+      "pitch": 62
+    },
+    {
+      "t": 7.333,
+      "duration": 0.467,
+      "pitch": 64
+    },
+    {
+      "t": 8.0,
+      "duration": 0.467,
+      "pitch": 64
+    },
+    {
+      "t": 9.0,
+      "duration": 0.233,
+      "pitch": 62
+    },
+    {
+      "t": 9.333,
+      "duration": 0.467,
+      "pitch": 62
+    },
+    {
+      "t": 10.667,
+      "duration": 0.467,
+      "pitch": 64
+    },
+    {
+      "t": 11.333,
+      "duration": 0.467,
+      "pitch": 64
+    },
+    {
+      "t": 12.0,
+      "duration": 0.467,
+      "pitch": 65
+    },
+    {
+      "t": 12.667,
+      "duration": 0.467,
+      "pitch": 67
+    },
+    {
+      "t": 13.333,
+      "duration": 0.467,
+      "pitch": 67
+    },
+    {
+      "t": 14.0,
+      "duration": 0.467,
+      "pitch": 65
+    },
+    {
+      "t": 14.667,
+      "duration": 0.467,
+      "pitch": 64
+    },
+    {
+      "t": 15.333,
+      "duration": 0.467,
+      "pitch": 62
+    },
+    {
+      "t": 16.0,
+      "duration": 0.467,
+      "pitch": 60
+    },
+    {
+      "t": 16.667,
+      "duration": 0.467,
+      "pitch": 60
+    },
+    {
+      "t": 17.333,
+      "duration": 0.467,
+      "pitch": 62
+    },
+    {
+      "t": 18.0,
+      "duration": 0.467,
+      "pitch": 64
+    },
+    {
+      "t": 18.667,
+      "duration": 0.467,
+      "pitch": 62
+    },
+    {
+      "t": 19.667,
+      "duration": 0.233,
+      "pitch": 60
+    },
+    {
+      "t": 20.0,
+      "duration": 0.467,
+      "pitch": 60
+    }
+  ]
+}

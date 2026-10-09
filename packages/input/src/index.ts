@@ -6,6 +6,7 @@ export * from './dsp/analyzer';
 export * from './dsp/level';
 export * from './dsp/onset';
 export * from './dsp/pitch';
+export * from './onset-pitch';
 export * from './profile-options';
 export * from './types';
 export * from './worklet/protocol';
