@@ -313,11 +313,15 @@ export const beatScreen: Screen = (root) => {
   // When the mode changes the live worklet must be re-created with the right detector settings.
   const reopenMicIfNeeded = async () => {
     if (!mic) return; // an open in flight checks the profile itself when it lands
-    await mic.close();
+    // clear the shared reference first: a second mode change during the close must not close it twice
+    const old = mic;
     mic = null;
+    await old.close();
     micBtn.disabled = false;
     micBtn.textContent = 'Start mic';
     leakBtn.disabled = true;
+    // a demo that started meanwhile owns the audio; the mic must stay closed
+    if (disposed || beginInFlight || live?.demo) return;
     await startMic();
   };
   modeSel.addEventListener('change', () => void reopenMicIfNeeded());
@@ -634,8 +638,9 @@ export const beatScreen: Screen = (root) => {
         return;
       }
       if (mic) {
-        await mic.close();
+        const old = mic;
         mic = null;
+        await old.close();
         micBtn.disabled = false;
         micBtn.textContent = 'Start mic';
         leakBtn.disabled = true;
@@ -655,6 +660,10 @@ export const beatScreen: Screen = (root) => {
         analyzer: analyzerOptionsFromProfile(profile),
         listen: true,
       });
+      if (disposed) {
+        void synth.close();
+        return;
+      }
       setupStatus.textContent = '';
       const ctx = synth.ctx;
       const countIn = chart.meta.countInBeats * (60 / chart.meta.bpm);

@@ -84,6 +84,10 @@ describe('PercussionAnalyzer', () => {
     const odd: AnalyzerMessage[] = [];
     for (const [b, s] of blocks(sig, 313)) odd.push(...a.process(b, s));
     expect(events(odd)[0]!.features!['centroid']).toBeCloseTo(base[0]!.features!['centroid']!, 6);
+    // one block much larger than the ring gives the same features
+    const whole = new PercussionAnalyzer(SR).process(sig, 0).filter((m) => m.type === 'input');
+    expect(events(whole)).toHaveLength(1);
+    expect(events(whole)[0]!.features!['centroid']).toBeCloseTo(base[0]!.features!['centroid']!, 6);
   });
 
   it('features do not depend on loudness (a quiet clap looks like a loud clap)', () => {

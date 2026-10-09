@@ -53,6 +53,15 @@ export class PercussionAnalyzer {
   }
 
   process(block: Float32Array, startFrame: number): AnalyzerMessage[] {
+    // a pending window must never be overwritten by the rest of the same block
+    const maxBlock = this.size - this.window;
+    if (block.length > maxBlock) {
+      const all: AnalyzerMessage[] = [];
+      for (let at = 0; at < block.length; at += maxBlock) {
+        all.push(...this.process(block.subarray(at, at + maxBlock), startFrame + at));
+      }
+      return all;
+    }
     if (this.streamStart === null) this.streamStart = startFrame;
     const out: AnalyzerMessage[] = [];
 
