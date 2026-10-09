@@ -1,0 +1,8 @@
+# .coderabbit.yaml
+reviews:
+  profile: "quiet"
+  request_changes_workflow: true
+  collapse_walkthrough: true
+  auto_review:
+    ignore_drafts: true
+    skip_bot_users: false
