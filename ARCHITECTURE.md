@@ -69,7 +69,23 @@ in song time and subtract the calibrated latency offset themselves.
 - **Voice** (`profiles/voice.json`): McLeod pitch tracker with a 2048-sample window
   and 256-sample hop, 70-1100 Hz, clarity gate 0.55, `foldIntoRange` (one octave
   only: hiss must not become a pitch), octave-forgiving continuous judging.
-  `detectBleed` checks whether the speaker leaks into the mic (headphones check).
+  `detectBleed` checks whether the speaker leaks into the mic (headphones check);
+  `detectClickBleed` does the same for percussion with clicks and onsets.
+- **Percussion** (Beatline): `PercussionAnalyzer` (in `InputAnalyzer` when the profile's input is
+  `percussion`) runs `PercussionOnsetDetector` - 128-sample RMS frames against a delayed peak-hold
+  envelope (600 dB/s release, so a sound's own tail never re-triggers) and a slow noise-floor
+  estimate, one-to-two-frame confirmation, refined to the first sample past half the frame peak -
+  and then `extractFeatures` over the 2048 samples after the attack: spectral centroid, low/mid/high
+  band fractions (<400 Hz, 400-2500 Hz, >2500 Hz), decay time (-12 dB), zero-crossing rate, flatness.
+  All are level-independent, so soft and loud versions of a sound classify alike. No pitch tracker
+  runs. The onset is delivered ~43 ms after it happened (the feature window); the attack time is exact.
+- **Timbre classification** (`timbre.ts`, `enrollment.ts`, `classify-event.ts`): nearest centroid on
+  standardized features, with an "unknown" rejection radius per class (a cough or door slam is no
+  note) and `MIN_SEPARATION` to warn when two enrolled sounds are too alike. `EnrollmentSession`
+  collects N hits per class and rejects double triggers, too-quiet hits and outliers.
+  `TimbreModelStore` persists the model per profile in localStorage behind try/catch. A
+  single-class profile (`clap`) is a pure any-hit mode with no classification. Judges with
+  `match.laneStrict` (hand-percussion, drum-kit) refuse hits with no lane (unknown sounds).
 - **Calibration** (`calibration.ts`): `estimateOffset` finds the latency offset
   from clicks and responses; `CalibrationStore` persists it over an injected
   key-value store (no DOM in core).

@@ -1,6 +1,6 @@
 import type { PitchFrame } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
-import { detectBleed } from './bleed';
+import { detectBleed, detectClickBleed } from './bleed';
 
 const TONE = 523.25;
 const frame = (frequency: number | null, level = -30): PitchFrame => ({
@@ -94,5 +94,37 @@ describe('detectBleed', () => {
 
   it('no frames at all is no bleed', () => {
     expect(detectBleed([], TONE)).toEqual({ fraction: 0, meanLevelDb: null, bleeding: false });
+  });
+});
+
+describe('detectClickBleed', () => {
+  const clicks = [1, 1.5, 2, 2.5];
+
+  it('flags a mic that hears the clicks', () => {
+    const r = detectClickBleed([1.03, 1.52, 2.04, 2.51], clicks);
+    expect(r).toEqual({ fraction: 1, unrelated: 0, bleeding: true });
+  });
+
+  it('passes a quiet mic, and counts stray onsets separately', () => {
+    expect(detectClickBleed([], clicks)).toEqual({ fraction: 0, unrelated: 0, bleeding: false });
+    expect(detectClickBleed([1.8], clicks)).toEqual({ fraction: 0, unrelated: 1, bleeding: false });
+  });
+
+  it('half the clicks heard is the threshold; one in four is not bleed', () => {
+    expect(detectClickBleed([1.02, 2.02], clicks).bleeding).toBe(true);
+    expect(detectClickBleed([1.02], clicks).bleeding).toBe(false);
+  });
+
+  it('counts each onset for one click only, and respects the window edges', () => {
+    // one onset between two close clicks answers just one of them
+    expect(detectClickBleed([1.05], [1, 1.04]).fraction).toBe(0.5);
+    expect(detectClickBleed([1.12], [1], { window: 0.12 }).fraction).toBe(1);
+    expect(detectClickBleed([1.13], [1], { window: 0.12 }).fraction).toBe(0);
+    expect(detectClickBleed([0.98], [1]).fraction).toBe(1); // clock rounding just before the click
+    expect(detectClickBleed([0.97], [1]).fraction).toBe(0);
+  });
+
+  it('no clicks means no verdict', () => {
+    expect(detectClickBleed([1, 2], [])).toEqual({ fraction: 0, unrelated: 2, bleeding: false });
   });
 });

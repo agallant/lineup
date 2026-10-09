@@ -4,6 +4,7 @@ import {
   ukeNote,
   ukeStrum,
   voiceNote,
+  type HitOptions,
   type MelodyOptions,
 } from '@lineup/testkit';
 import type { Performer } from './performance';
@@ -55,5 +56,30 @@ export function voicePerformer({
       seed: 300 + index,
       ...melody,
     });
+  };
+}
+
+/** A synthetic percussion sound (clap, tap, kick...), as exported by @lineup/testkit. */
+export type HitSound = (sampleRate: number, options: HitOptions) => Float32Array;
+
+export interface PercussionPerformerOptions {
+  /** Hit loudness: a multiplier on each sound's natural level, or a function of the note index. */
+  gain?: number | ((index: number) => number);
+  /** Per-hit variation of tone and decay (0..1). */
+  variation?: number;
+}
+
+/** Plays each note with the sound registered for its lane; lanes without a sound stay silent. */
+export function percussionPerformer(
+  sounds: Readonly<Record<string, HitSound>>,
+  { gain = 1, variation = 0.15 }: PercussionPerformerOptions = {},
+): Performer {
+  return (note, index, sampleRate) => {
+    const sound = sounds[note.lane ?? ''];
+    if (!sound) return null;
+    const g = typeof gain === 'function' ? gain(index) : gain;
+    const out = sound(sampleRate, { seed: 500 + index, variation });
+    if (g !== 1) for (let i = 0; i < out.length; i++) out[i]! *= g;
+    return out;
   };
 }

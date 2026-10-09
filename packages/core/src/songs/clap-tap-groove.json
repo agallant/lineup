@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Clap & Tap (demo)",
+    "artist": "Lineup",
+    "bpm": 90,
+    "countInBeats": 4,
+    "instruments": ["hand-percussion"]
+  },
+  "notes": [
+    {
+      "t": 0.0,
+      "lane": "clap"
+    },
+    {
+      "t": 0.6667,
+      "lane": "tap"
+    },
+    {
+      "t": 1.3333,
+      "lane": "clap"
+    },
+    {
+      "t": 2.0,
+      "lane": "tap"
+    },
+    {
+      "t": 2.6667,
+      "lane": "clap"
+    },
+    {
+      "t": 3.0,
+      "lane": "tap"
+    },
+    {
+      "t": 3.3333,
+      "lane": "tap"
+    },
+    {
+      "t": 4.0,
+      "lane": "clap"
+    },
+    {
+      "t": 4.6667,
+      "lane": "tap"
+    },
+    {
+      "t": 5.3333,
+      "lane": "clap"
+    },
+    {
+      "t": 6.0,
+      "lane": "tap"
+    },
+    {
+      "t": 6.6667,
+      "lane": "clap"
+    },
+    {
+      "t": 7.0,
+      "lane": "clap"
+    },
+    {
+      "t": 7.3333,
+      "lane": "tap"
+    },
+    {
+      "t": 8.0,
+      "lane": "clap"
+    },
+    {
+      "t": 8.3333,
+      "lane": "tap"
+    },
+    {
+      "t": 8.6667,
+      "lane": "clap"
+    },
+    {
+      "t": 9.3333,
+      "lane": "tap"
+    },
+    {
+      "t": 9.6667,
+      "lane": "tap"
+    },
+    {
+      "t": 10.0,
+      "lane": "clap"
+    }
+  ]
+}

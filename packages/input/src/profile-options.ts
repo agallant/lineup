@@ -29,5 +29,8 @@ export function onsetOptionsFromProfile(profile: InstrumentProfile): OnsetDetect
 }
 
 export function analyzerOptionsFromProfile(profile: InstrumentProfile): InputAnalyzerOptions {
+  if (profile.input === 'percussion') {
+    return { percussion: { onset: onsetOptionsFromProfile(profile) } };
+  }
   return { pitch: pitchOptionsFromProfile(profile), onset: onsetOptionsFromProfile(profile) };
 }

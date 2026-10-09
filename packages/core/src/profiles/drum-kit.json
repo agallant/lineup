@@ -1,0 +1,32 @@
+{
+  "id": "drum-kit",
+  "name": "Drum kit (kick / snare / hat)",
+  "mode": "beatline",
+  "input": "percussion",
+  "renderer": "percussion-lanes",
+  "lanes": [
+    { "id": "kick", "label": "Kick", "color": "#ef476f", "timbre": "kick" },
+    { "id": "snare", "label": "Snare", "color": "#ffd166", "timbre": "snare" },
+    { "id": "hat", "label": "Hat", "color": "#06d6a0", "timbre": "hat" }
+  ],
+  "timbreClasses": [
+    { "id": "kick", "label": "Kick", "prompt": "Kick drum" },
+    { "id": "snare", "label": "Snare", "prompt": "Snare drum" },
+    { "id": "hat", "label": "Hat", "prompt": "Closed hi-hat" }
+  ],
+  "detector": {
+    "windowSize": 2048,
+    "hopSize": 128,
+    "clarityThreshold": 0.5,
+    "minLevelDb": -62,
+    "minHz": 20,
+    "maxHz": 8000,
+    "stabilityGateMs": 0,
+    "onset": { "riseDb": 9, "refractoryMs": 60, "lookbackMs": 13, "minLevelDb": -62 }
+  },
+  "judgment": {
+    "strategy": "discrete",
+    "timing": { "perfectMs": 50, "goodMs": 120 },
+    "match": { "lane": true, "pitch": false, "chord": false, "laneStrict": true }
+  }
+}

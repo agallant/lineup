@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Rock Beat (demo)",
+    "artist": "Lineup",
+    "bpm": 90,
+    "countInBeats": 4,
+    "instruments": ["drum-kit"]
+  },
+  "notes": [
+    {
+      "t": 0.0,
+      "lane": "kick"
+    },
+    {
+      "t": 0.3333,
+      "lane": "hat"
+    },
+    {
+      "t": 0.6667,
+      "lane": "snare"
+    },
+    {
+      "t": 1.0,
+      "lane": "hat"
+    },
+    {
+      "t": 1.3333,
+      "lane": "kick"
+    },
+    {
+      "t": 1.6667,
+      "lane": "hat"
+    },
+    {
+      "t": 2.0,
+      "lane": "snare"
+    },
+    {
+      "t": 2.3333,
+      "lane": "hat"
+    },
+    {
+      "t": 2.6667,
+      "lane": "kick"
+    },
+    {
+      "t": 3.0,
+      "lane": "hat"
+    },
+    {
+      "t": 3.3333,
+      "lane": "snare"
+    },
+    {
+      "t": 3.6667,
+      "lane": "hat"
+    },
+    {
+      "t": 4.0,
+      "lane": "kick"
+    },
+    {
+      "t": 4.3333,
+      "lane": "hat"
+    },
+    {
+      "t": 4.6667,
+      "lane": "snare"
+    },
+    {
+      "t": 5.0,
+      "lane": "hat"
+    },
+    {
+      "t": 5.3333,
+      "lane": "kick"
+    },
+    {
+      "t": 5.6667,
+      "lane": "hat"
+    },
+    {
+      "t": 6.0,
+      "lane": "snare"
+    },
+    {
+      "t": 6.3333,
+      "lane": "hat"
+    },
+    {
+      "t": 6.6667,
+      "lane": "kick"
+    },
+    {
+      "t": 7.0,
+      "lane": "hat"
+    },
+    {
+      "t": 7.3333,
+      "lane": "snare"
+    },
+    {
+      "t": 7.6667,
+      "lane": "hat"
+    },
+    {
+      "t": 8.0,
+      "lane": "kick"
+    },
+    {
+      "t": 8.3333,
+      "lane": "hat"
+    },
+    {
+      "t": 8.6667,
+      "lane": "snare"
+    },
+    {
+      "t": 9.0,
+      "lane": "hat"
+    },
+    {
+      "t": 9.3333,
+      "lane": "kick"
+    },
+    {
+      "t": 9.6667,
+      "lane": "hat"
+    },
+    {
+      "t": 10.0,
+      "lane": "snare"
+    },
+    {
+      "t": 10.3333,
+      "lane": "hat"
+    }
+  ]
+}

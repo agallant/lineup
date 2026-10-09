@@ -1,0 +1,30 @@
+{
+  "id": "hand-percussion",
+  "name": "Hand percussion (clap + tap)",
+  "mode": "beatline",
+  "input": "percussion",
+  "renderer": "percussion-lanes",
+  "lanes": [
+    { "id": "clap", "label": "Clap", "color": "#ffd166", "timbre": "clap" },
+    { "id": "tap", "label": "Tap", "color": "#4cc9f0", "timbre": "tap" }
+  ],
+  "timbreClasses": [
+    { "id": "clap", "label": "Clap", "prompt": "Clap" },
+    { "id": "tap", "label": "Tap", "prompt": "Tap a table or your knee with a finger" }
+  ],
+  "detector": {
+    "windowSize": 2048,
+    "hopSize": 128,
+    "clarityThreshold": 0.5,
+    "minLevelDb": -62,
+    "minHz": 20,
+    "maxHz": 8000,
+    "stabilityGateMs": 0,
+    "onset": { "riseDb": 9, "refractoryMs": 60, "lookbackMs": 13, "minLevelDb": -62 }
+  },
+  "judgment": {
+    "strategy": "discrete",
+    "timing": { "perfectMs": 50, "goodMs": 120 },
+    "match": { "lane": true, "pitch": false, "chord": false, "laneStrict": true }
+  }
+}

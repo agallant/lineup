@@ -1,11 +1,17 @@
 import type { AnalyzerMessage } from '../types';
 import { MIN_DB, toDb } from './level';
 import { OnsetDetector, type OnsetDetectorOptions } from './onset';
+import { PercussionAnalyzer, type PercussionAnalyzerOptions } from './percussion-analyzer';
 import { PitchTracker, type PitchTrackerOptions } from './pitch';
 
 export interface InputAnalyzerOptions {
   pitch?: PitchTrackerOptions;
   onset?: OnsetDetectorOptions;
+  /**
+   * Percussion mode: onsets with timbre features instead of pitch tracking
+   * (no PitchTracker runs). Level `frame` messages are still emitted.
+   */
+  percussion?: PercussionAnalyzerOptions;
 }
 
 /**
@@ -14,8 +20,9 @@ export interface InputAnalyzerOptions {
  * AudioWorklet globals so it runs under Vitest.
  */
 export class InputAnalyzer {
-  private readonly pitch: PitchTracker;
-  private readonly onsets: OnsetDetector;
+  private readonly pitch: PitchTracker | null;
+  private readonly onsets: OnsetDetector | null;
+  private readonly percussion: PercussionAnalyzer | null;
   private peakSinceFrame = 0;
   private hopSumSq = 0;
   private hopCount = 0;
@@ -24,12 +31,17 @@ export class InputAnalyzer {
     private readonly sampleRate: number,
     options: InputAnalyzerOptions = {},
   ) {
-    this.pitch = new PitchTracker(sampleRate, options.pitch);
-    this.onsets = new OnsetDetector(sampleRate, options.onset);
+    this.percussion = options.percussion
+      ? new PercussionAnalyzer(sampleRate, options.percussion)
+      : null;
+    this.pitch = this.percussion ? null : new PitchTracker(sampleRate, options.pitch);
+    this.onsets = this.percussion ? null : new OnsetDetector(sampleRate, options.onset);
   }
 
   process(block: Float32Array, startFrame: number): AnalyzerMessage[] {
+    if (this.percussion) return this.percussion.process(block, startFrame);
     const out: AnalyzerMessage[] = [];
+    if (!this.onsets || !this.pitch) return out;
 
     for (const o of this.onsets.process(block, startFrame)) {
       out.push({

@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Clap Along (demo)",
+    "artist": "Lineup",
+    "bpm": 90,
+    "countInBeats": 4,
+    "instruments": ["clap"]
+  },
+  "notes": [
+    {
+      "t": 0.0,
+      "lane": "hit"
+    },
+    {
+      "t": 0.6667,
+      "lane": "hit"
+    },
+    {
+      "t": 1.3333,
+      "lane": "hit"
+    },
+    {
+      "t": 2.0,
+      "lane": "hit"
+    },
+    {
+      "t": 2.6667,
+      "lane": "hit"
+    },
+    {
+      "t": 3.3333,
+      "lane": "hit"
+    },
+    {
+      "t": 3.6667,
+      "lane": "hit"
+    },
+    {
+      "t": 4.0,
+      "lane": "hit"
+    },
+    {
+      "t": 4.6667,
+      "lane": "hit"
+    },
+    {
+      "t": 5.3333,
+      "lane": "hit"
+    },
+    {
+      "t": 6.0,
+      "lane": "hit"
+    },
+    {
+      "t": 6.6667,
+      "lane": "hit"
+    },
+    {
+      "t": 7.0,
+      "lane": "hit"
+    },
+    {
+      "t": 7.3333,
+      "lane": "hit"
+    },
+    {
+      "t": 8.0,
+      "lane": "hit"
+    },
+    {
+      "t": 8.3333,
+      "lane": "hit"
+    },
+    {
+      "t": 8.6667,
+      "lane": "hit"
+    },
+    {
+      "t": 9.3333,
+      "lane": "hit"
+    },
+    {
+      "t": 10.0,
+      "lane": "hit"
+    }
+  ]
+}

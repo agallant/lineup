@@ -48,3 +48,47 @@ export function detectBleed(
     bleeding: fraction >= threshold,
   };
 }
+
+export interface ClickBleedResult {
+  /** Fraction of the played clicks that were followed by a detected onset, 0..1. */
+  fraction: number;
+  /** Onsets heard that did not follow any click (room noise, a restless player). */
+  unrelated: number;
+  /** True when the clicks leak into the mic enough to register as hits. */
+  bleeding: boolean;
+}
+
+export interface ClickBleedOptions {
+  /** An onset this soon after a click (seconds) counts as that click leaking. */
+  window?: number;
+  /** Fraction of clicks that must be heard to call it bleed. */
+  threshold?: number;
+}
+
+/**
+ * Percussion version of the speaker-to-mic check: the app plays a few clicks
+ * (or the count-in) while the player stays silent. `onsetTimes` are the
+ * onsets the ordinary percussion detector reported, `clickTimes` when the
+ * clicks sounded, both on the AudioContext clock and including output
+ * latency in `clickTimes` (pass the audible time). If the detector hears the
+ * clicks, a silent player could score off the backing track: use headphones.
+ */
+export function detectClickBleed(
+  onsetTimes: readonly number[],
+  clickTimes: readonly number[],
+  { window = 0.12, threshold = 0.5 }: ClickBleedOptions = {},
+): ClickBleedResult {
+  if (clickTimes.length === 0)
+    return { fraction: 0, unrelated: onsetTimes.length, bleeding: false };
+  const used = new Set<number>();
+  let heard = 0;
+  for (const c of clickTimes) {
+    const i = onsetTimes.findIndex((t, k) => !used.has(k) && t >= c - 0.02 && t <= c + window);
+    if (i >= 0) {
+      used.add(i);
+      heard++;
+    }
+  }
+  const fraction = heard / clickTimes.length;
+  return { fraction, unrelated: onsetTimes.length - used.size, bleeding: fraction >= threshold };
+}

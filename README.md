@@ -97,6 +97,12 @@ Design rules:
 - **Speaker bleed gives free points.** If the guide tone leaks into the mic at a
   level the game can hear, a silent player scores. Use headphones; a
   headphones check measures leakage (`detectBleed`).
+- **Layered drum hits are one hit.** Two drums struck at the same instant produce one onset and one
+  lane; stagger them. (Test: "KNOWN LIMITATION: two drums struck at once".)
+- **Steady room noise starts a false hit now and then** (measured about once per 30 s of loud pink
+  noise in simulation). Strays only matter within 120 ms of a note.
+- **Percussion bleed gives free points.** A click or backing track the mic can hear registers as
+  hits (`detectClickBleed` checks it before a song). Use headphones.
 - **Simulations are synthetic.** They prove the software chain; real strings,
   microphones, rooms and iOS audio behaviour are listed per PR under
   "Unverified on real hardware".
