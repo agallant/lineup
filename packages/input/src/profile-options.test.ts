@@ -15,6 +15,11 @@ const SR = 48000;
 describe('profile -> detector options', () => {
   const uke = getProfile('ukulele-strum');
 
+  it('maps percussion onset fields to the percussion detector names (lookbackMs -> referenceDelay)', () => {
+    const o = analyzerOptionsFromProfile(getProfile('clap')).percussion!.onset!;
+    expect(o).toEqual({ riseDb: 9, minDb: -62, refractory: 0.06, referenceDelay: 0.013 });
+  });
+
   it('maps units (ms -> s) and names', () => {
     expect(pitchOptionsFromProfile(uke)).toEqual({
       windowSize: 2048,

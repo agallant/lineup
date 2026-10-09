@@ -6,9 +6,9 @@ that you play by performing on a real instrument. One mode per instrument family
 | Mode          | Instrument                         | Status                     |
 | ------------- | ---------------------------------- | -------------------------- |
 | **Strumline** | ukulele (GCEA re-entrant)          | mic test + detectors exist |
-| **Singline**  | voice                              | planned (L2)               |
+| **Singline**  | voice                              | playable (`#/sing`)        |
 | **Windline**  | ocarina, recorder, penny whistle   | planned (L3, later)        |
-| **Beatline**  | claps, taps, hand drums, kit, pads | planned (L4)               |
+| **Beatline**  | claps, taps, hand drums, kit, pads | playable (`#/beat`)        |
 
 It's a static web app, built for Safari on iOS/iPadOS first and also tested in
 desktop Chrome. You can install it as a PWA. There's no backend.
@@ -84,6 +84,25 @@ Design rules:
 5. **Play.** _Watch auto-play demo_ runs a synthetic singer through the same pipeline: a
    quick way to see how the screens behave without singing.
 
+## Beatline (claps, taps, percussion) on the iPad
+
+`#/beat` (home screen -> Beatline). Three modes: **Clap (any hit)**, one lane where any sound
+counts; **Clap + tap**, two lanes where you teach it your two sounds first; **Drum kit**
+(experimental, simulated only).
+
+1. **Mic & hit monitor:** _Start mic_ and clap or tap. Every detected hit is listed (newest
+   first) with its time, velocity, spectral centroid, low/mid/high energy %, decay, ZCR and the
+   **lane it was put in** (`UNKNOWN` = the classifier did not recognise it; `d=` is its distance
+   from the nearest enrolled sound, small is confident).
+2. **Teach it my sounds** (two-lane mode): clap 6 times, then tap 6 times. It rejects double
+   triggers, too-quiet hits and hits unlike your others, and warns if the two sounds are too
+   alike. Saved per mode on this device.
+3. **Check for click leak** with the metronome on: stay quiet; it plays four clicks and tells
+   you if the mic hears them (use headphones, or the click scores for you).
+4. Optionally **calibrate timing** (`#/calibrate`), pick a song, **Play**. _Debug overlay_ shows
+   the monitor live. Hits flash on the "now" line in the lane they were classified into.
+   _Watch auto-play demo_ plays a synthetic clapper through the same pipeline.
+
 ## Limitations (known)
 
 - **Overlapping ringing notes confuse single-note pitch tracking.** Two notes
@@ -97,6 +116,12 @@ Design rules:
 - **Speaker bleed gives free points.** If the guide tone leaks into the mic at a
   level the game can hear, a silent player scores. Use headphones; a
   headphones check measures leakage (`detectBleed`).
+- **Layered drum hits are one hit.** Two drums struck at the same instant produce one onset and one
+  lane; stagger them. (Test: "KNOWN LIMITATION: two drums struck at once".)
+- **Steady room noise starts a false hit now and then** (measured about once per 30 s of loud pink
+  noise in simulation). Strays only matter within 120 ms of a note.
+- **Percussion bleed gives free points.** A click or backing track the mic can hear registers as
+  hits (`detectClickBleed` checks it before a song). Use headphones.
 - **Simulations are synthetic.** They prove the software chain; real strings,
   microphones, rooms and iOS audio behaviour are listed per PR under
   "Unverified on real hardware".

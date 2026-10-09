@@ -348,9 +348,19 @@ describe('discreteConfigFromProfile', () => {
       latencyOffset: 0.12,
       goodCredit: 0.5,
       matchLane: false,
+      requireLane: false,
       pitchToleranceCents: null,
       octaveForgiving: false,
       settle: 0.05,
+    });
+  });
+
+  it('maps strict lane matching and waits longer for classified hits', () => {
+    const c = discreteConfigFromProfile(getProfile('hand-percussion'), 0);
+    expect(c).toMatchObject({ matchLane: true, requireLane: true, settle: 0.2 });
+    expect(discreteConfigFromProfile(getProfile('clap'), 0)).toMatchObject({
+      matchLane: false,
+      requireLane: false,
     });
   });
 
@@ -360,5 +370,42 @@ describe('discreteConfigFromProfile', () => {
     expect(c.perfectWindow).toBe(0.05);
     expect(c.goodWindow).toBe(0.12);
     expect(c.settle).toBe(0.2); // pitch is attached ~0.14 s after the onset
+  });
+});
+
+describe('requireLane (classified percussion)', () => {
+  const cfg = { ...CFG, matchLane: true, requireLane: true };
+  const laned = [note(1, { lane: 'clap' }), note(2, { lane: 'tap' })];
+
+  it('an unclassified ("unknown") event does not hit a laned note', () => {
+    const j = new DiscreteJudge(laned, cfg);
+    j.feed(ev(1)); // no lane
+    j.finish();
+    expect(j.judgmentFor(0)!.reason).toBe('wrong-lane');
+    expect(j.strays).toBe(1);
+  });
+
+  it('without requireLane the same event hits (any-hit behaviour)', () => {
+    const j = new DiscreteJudge(laned, { ...CFG, matchLane: true });
+    j.feed(ev(1));
+    expect(j.judgmentFor(0)!.grade).toBe('perfect');
+  });
+
+  it('the right lane hits and the wrong lane is flagged', () => {
+    const j = new DiscreteJudge(laned, cfg);
+    j.feed(ev(1, { lane: 'clap' }));
+    j.feed(ev(2, { lane: 'clap' }));
+    j.finish();
+    expect(j.judgmentFor(0)!.grade).toBe('perfect');
+    expect(j.judgmentFor(1)!.reason).toBe('wrong-lane');
+  });
+
+  it('simultaneous notes in two lanes each take their own event', () => {
+    const both = [note(1, { lane: 'clap' }), note(1, { lane: 'tap' })];
+    const j = new DiscreteJudge(both, cfg);
+    j.feed(ev(1.01, { lane: 'tap' }));
+    j.feed(ev(1.02, { lane: 'clap' }));
+    expect(j.judgmentFor(0)!.timingError).toBeCloseTo(0.02);
+    expect(j.judgmentFor(1)!.timingError).toBeCloseTo(0.01);
   });
 });

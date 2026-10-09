@@ -1,4 +1,7 @@
 import { loadChart, type Chart } from '../chart';
+import clapBasic from './clap-basic.json';
+import clapTapGroove from './clap-tap-groove.json';
+import drumRock from './drum-rock.json';
 import singlineDemo from './singline-demo.json';
 import singlineScale from './singline-scale.json';
 import ukuleleNotesDemo from './ukulele-notes-demo.json';
@@ -9,6 +12,9 @@ const RAW: Record<string, unknown> = {
   'ukulele-notes-demo': ukuleleNotesDemo,
   'singline-demo': singlineDemo,
   'singline-scale': singlineScale,
+  'clap-basic': clapBasic,
+  'clap-tap-groove': clapTapGroove,
+  'drum-rock': drumRock,
 };
 
 /** Built-in songs, validated when this module loads (a bad one fails every test). */

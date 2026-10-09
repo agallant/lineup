@@ -96,7 +96,7 @@ export interface JudgmentSettings {
   timing: { perfectMs: number; goodMs: number };
   pitch?: PitchJudgeSettings;
   /** What an input must match, besides timing, for a note to be hit. */
-  match: { lane: boolean; pitch: boolean; chord: boolean };
+  match: { lane: boolean; pitch: boolean; chord: boolean; laneStrict?: boolean };
 }
 
 export interface InstrumentProfile {
@@ -462,8 +462,10 @@ export function loadProfile(input: unknown): Loaded<InstrumentProfile> {
       const lane = readBoolean(matchRaw, 'lane', 'judgment.match', p, { required: true });
       const pitchMatch = readBoolean(matchRaw, 'pitch', 'judgment.match', p, { required: true });
       const chord = readBoolean(matchRaw, 'chord', 'judgment.match', p, { required: true });
+      const laneStrict = readBoolean(matchRaw, 'laneStrict', 'judgment.match', p);
       if (lane !== undefined && pitchMatch !== undefined && chord !== undefined) {
         match = { lane, pitch: pitchMatch, chord };
+        if (laneStrict !== undefined) match.laneStrict = laneStrict;
       }
     }
     if (strategy === 'continuous' && !pitchRaw) {
@@ -489,6 +491,9 @@ export function loadProfile(input: unknown): Loaded<InstrumentProfile> {
     p.error('timbreClasses', 'required for percussion input');
   if (judgment?.match.pitch && kind !== 'pitch') {
     p.error('judgment.match.pitch', 'only valid for pitch input');
+  }
+  if (judgment?.match.laneStrict && !judgment.match.lane) {
+    p.error('judgment.match.laneStrict', 'needs judgment.match.lane to be true');
   }
 
   if (!p.ok) return { ok: false, errors: p.report() };

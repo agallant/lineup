@@ -1,6 +1,8 @@
 export * from './calibration';
 export * from './chart';
+export * from './classify-event';
 export * from './clock';
+export * from './enrollment';
 export * from './judge';
 export * from './notes';
 export * from './profile';
@@ -8,5 +10,6 @@ export * from './profiles';
 export * from './scoring';
 export * from './session';
 export * from './songs';
+export * from './timbre';
 export * from './types';
 export * from './validate';

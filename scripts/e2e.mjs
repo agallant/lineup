@@ -6,7 +6,7 @@
 // Not part of CI (needs a Chromium + Playwright); run with `npm run e2e` after
 // `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|calibrate|live|bleed|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -86,7 +86,38 @@ function claps(seconds, phase) {
   }
   return out;
 }
+/** A hand clap: a few ms of broadband noise bursts. */
+function clapHit(rnd) {
+  const out = new Float32Array(0.08 * SR);
+  for (let b = 0; b < 3; b++) {
+    const s0 = Math.floor(b * 0.009 * SR);
+    for (let i = 0; i < 0.05 * SR; i++)
+      if (s0 + i < out.length) out[s0 + i] += rnd() * 0.5 * Math.exp(-i / (0.007 * SR));
+  }
+  return out;
+}
+/** A finger tap on a table: a damped low thump. */
+function tapHit() {
+  const out = new Float32Array(0.08 * SR);
+  for (let i = 0; i < out.length; i++)
+    out[i] = 0.45 * Math.sin((2 * Math.PI * 260 * i) / SR) * Math.exp(-i / (0.009 * SR));
+  return out;
+}
+/** Six claps (0.6 s apart), a 2.5 s gap, six taps, a 2.5 s gap, repeating: ~12.4 s per cycle. */
+function clapTapLoop(cycles) {
+  let seed = 9;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32) * 2 - 1;
+  const cycle = 12.4;
+  const out = new Float32Array(Math.ceil(cycles * cycle * SR));
+  const put = (hit, t) => hit.forEach((v, i) => (out[Math.floor(t * SR) + i] += v));
+  for (let c = 0; c < cycles; c++) {
+    for (let k = 0; k < 6; k++) put(clapHit(rnd), c * cycle + 0.5 + k * 0.6);
+    for (let k = 0; k < 6; k++) put(tapHit(), c * cycle + 6.6 + k * 0.6);
+  }
+  return out;
+}
 const fixtures = {
+  clapTap: join(tmp, 'clap-tap.wav'),
   sung: join(tmp, 'sung-c4.wav'),
   silence: join(tmp, 'silence.wav'),
   claps: join(tmp, 'claps.wav'),
@@ -94,6 +125,7 @@ const fixtures = {
 wav(fixtures.sung, sung(261.626, 16));
 wav(fixtures.silence, new Float32Array(10 * SR));
 wav(fixtures.claps, claps(14, 0.3));
+wav(fixtures.clapTap, clapTapLoop(6));
 
 // ---- harness ----------------------------------------------------------------
 const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
@@ -275,6 +307,149 @@ const scenarios = {
         check(
           expected.test(await text(page, 'bleed-result')),
           `${label}: ${await text(page, 'bleed-result')}`,
+        );
+      });
+    }
+  },
+  async 'beat-demo'() {
+    console.log(
+      '\n# Beatline auto-play demos (synthetic hands -> worklet -> classifier -> judge -> canvas)',
+    );
+    for (const [mode, song, notes] of [
+      ['clap', 'clap-basic', 19],
+      ['hand-percussion', 'clap-tap-groove', 20],
+    ]) {
+      await session(null, async (page) => {
+        await page.goto(URL_BASE + '#/beat');
+        await page.selectOption('[data-id=mode]', mode);
+        await page.selectOption('[data-id=song]', song);
+        await page.check('[data-id=opt-debug]');
+        await page.uncheck('[data-id=opt-metronome]');
+        await page.click('[data-id=demo]');
+        await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+        await page.waitForTimeout(6000);
+        const dbg = await text(page, 'debug');
+        check(
+          /hits\s+\d+/.test(dbg) && /(clap|tap|hit)/.test(dbg),
+          `${mode}: debug overlay lists classified hits (${dbg.split('\n').find((l) => l.startsWith('hits'))})`,
+        );
+        await shot(page, `beat-${mode}-play`);
+        await page.waitForSelector('[data-id=r-score]', { timeout: 60000 });
+        const perfect = Number(await text(page, 'r-perfect'));
+        const good = Number(await text(page, 'r-good'));
+        const miss = Number(await text(page, 'r-miss'));
+        const strays = Number(await text(page, 'r-strays'));
+        check(
+          miss === 0 && perfect + good === notes,
+          `${mode}: demo player hits all ${notes} notes (${perfect} perfect, ${good} good, ${miss} missed, ${strays} extra, grade ${await text(page, 'grade')})`,
+        );
+        await shot(page, `beat-${mode}-results`);
+      });
+    }
+  },
+
+  async 'beat-live'() {
+    console.log('\n# Beatline with a live (fake) microphone: monitor, enrollment, classification');
+    await session(fixtures.clapTap, async (page) => {
+      await page.goto(URL_BASE + '#/beat');
+      await page.selectOption('[data-id=mode]', 'hand-percussion');
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () => /hits\s+[1-9]/.test(document.querySelector('[data-id=monitor]')?.textContent ?? ''),
+        null,
+        { timeout: 20000 },
+      );
+      check(true, 'hit monitor sees hits from the microphone');
+
+      // Start enrolling in the quiet gap after a run of taps, so claps come first.
+      await page.waitForFunction(
+        () => {
+          const t = document.querySelector('[data-id=monitor]')?.textContent ?? '';
+          const n = Number(/hits\s+(\d+)/.exec(t)?.[1] ?? 0);
+          const w = window;
+          if (n !== w.__n) {
+            w.__n = n;
+            w.__t = performance.now();
+          }
+          const centroid = Number(
+            /(\d+) Hz/.exec(t.split('\n').find((l) => /Hz/.test(l)) ?? '')?.[1] ?? 9999,
+          );
+          return n >= 6 && centroid < 900 && performance.now() - (w.__t ?? 0) > 1300;
+        },
+        null,
+        { timeout: 40000, polling: 100 },
+      );
+      await page.click('[data-id=enroll-start]');
+      await page.waitForFunction(
+        () => /Learned/.test(document.querySelector('[data-id=model-status]')?.textContent ?? ''),
+        null,
+        { timeout: 30000 },
+      );
+      const status = await text(page, 'model-status');
+      check(
+        /Learned: Clap, Tap/.test(status) && !/Warning/.test(status),
+        `enrollment learns clap and tap (${status})`,
+      );
+      await shot(page, 'beat-enrolled');
+
+      await page.reload();
+      await page.selectOption('[data-id=mode]', 'hand-percussion');
+      check(
+        /saved/.test(await text(page, 'model-status')),
+        `enrolled sounds survive a reload (${await text(page, 'model-status')})`,
+      );
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () => {
+          const t = document.querySelector('[data-id=monitor]')?.textContent ?? '';
+          return (
+            /\d s v[\d.]+ clap/.test(t.replace(/\d+\.\d+s/g, '1 s')) ||
+            (/ clap/.test(t) && / tap/.test(t))
+          );
+        },
+        null,
+        { timeout: 40000, polling: 200 },
+      );
+      const seen = new Set();
+      for (let i = 0; i < 80 && seen.size < 2; i++) {
+        const t = await text(page, 'monitor');
+        for (const line of t.split('\n')) {
+          const m = /^\d+\.\d+s v[\d.]+ (clap|tap|UNKNOWN)/.exec(line);
+          if (m) seen.add(m[1]);
+        }
+        await page.waitForTimeout(250);
+      }
+      check(
+        seen.has('clap') && seen.has('tap'),
+        `live hits land in both lanes (${[...seen].join(', ')})`,
+      );
+      await shot(page, 'beat-monitor');
+    });
+  },
+
+  async 'beat-leak'() {
+    console.log('\n# Beatline click-leak check');
+    for (const [wavPath, label, expected] of [
+      [fixtures.silence, 'silent room', /No click leak/],
+      [fixtures.claps, 'someone clapping', /already hear hits/],
+    ]) {
+      await session(wavPath, async (page) => {
+        await page.goto(URL_BASE + '#/beat');
+        await page.click('[data-id=mic-start]');
+        await page.waitForSelector('[data-id=leak-check]:not([disabled])');
+        await page.waitForTimeout(500);
+        await page.click('[data-id=leak-check]');
+        await page.waitForFunction(
+          () =>
+            /No click leak|mic hears the clicks|already hear hits/.test(
+              document.querySelector('[data-id=leak-result]')?.textContent ?? '',
+            ),
+          null,
+          { timeout: 20000 },
+        );
+        check(
+          expected.test(await text(page, 'leak-result')),
+          `${label}: ${await text(page, 'leak-result')}`,
         );
       });
     }

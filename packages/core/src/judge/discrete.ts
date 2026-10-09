@@ -15,6 +15,11 @@ export interface DiscreteJudgeConfig {
   /** Notes must match the event's lane when both have one. */
   matchLane: boolean;
   /**
+   * With matchLane: an event with no lane (a classifier that rejected the hit
+   * as "unknown") does not match a laned note. Off: lane-less events match anything.
+   */
+  requireLane: boolean;
+  /**
    * Compare event pitch to the note's pitch, within this many cents. Events
    * without a pitch are not compared (nothing to compare). Null disables.
    */
@@ -31,6 +36,7 @@ export const DEFAULT_DISCRETE_CONFIG: DiscreteJudgeConfig = {
   latencyOffset: 0,
   goodCredit: 0.5,
   matchLane: false,
+  requireLane: false,
   pitchToleranceCents: null,
   octaveForgiving: false,
   settle: 0.05,
@@ -137,11 +143,11 @@ export class DiscreteJudge implements Judge<InputEvent> {
   // ---- internals ----
 
   private mismatch(note: ChartNote, event: InputEvent): MissReason | null {
-    const { matchLane, pitchToleranceCents } = this.config;
+    const { matchLane, requireLane, pitchToleranceCents } = this.config;
     if (
       matchLane &&
       note.lane !== undefined &&
-      event.lane !== undefined &&
+      (event.lane !== undefined || requireLane) &&
       note.lane !== event.lane
     ) {
       return 'wrong-lane';

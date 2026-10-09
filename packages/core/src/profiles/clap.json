@@ -1,0 +1,24 @@
+{
+  "id": "clap",
+  "name": "Clap (any hit)",
+  "mode": "beatline",
+  "input": "percussion",
+  "renderer": "percussion-lanes",
+  "lanes": [{ "id": "hit", "label": "Clap", "color": "#ffd166", "timbre": "clap" }],
+  "timbreClasses": [{ "id": "clap", "label": "Clap", "prompt": "Clap" }],
+  "detector": {
+    "windowSize": 2048,
+    "hopSize": 128,
+    "clarityThreshold": 0.5,
+    "minLevelDb": -62,
+    "minHz": 20,
+    "maxHz": 8000,
+    "stabilityGateMs": 0,
+    "onset": { "riseDb": 9, "refractoryMs": 60, "lookbackMs": 13, "minLevelDb": -62 }
+  },
+  "judgment": {
+    "strategy": "discrete",
+    "timing": { "perfectMs": 50, "goodMs": 120 },
+    "match": { "lane": false, "pitch": false, "chord": false }
+  }
+}

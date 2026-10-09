@@ -1,3 +1,4 @@
+import handPercussion from './profiles/hand-percussion.json';
 /* eslint-disable @typescript-eslint/no-explicit-any -- the mutation table pokes at untyped JSON on purpose */
 import { describe, expect, it } from 'vitest';
 import {
@@ -47,7 +48,14 @@ const base = () =>
 
 describe('built-in profiles', () => {
   it('all validate (they are checked when the module loads)', () => {
-    expect(Object.keys(builtinProfiles).sort()).toEqual(['ukulele-note', 'ukulele-strum', 'voice']);
+    expect(Object.keys(builtinProfiles).sort()).toEqual([
+      'clap',
+      'drum-kit',
+      'hand-percussion',
+      'ukulele-note',
+      'ukulele-strum',
+      'voice',
+    ]);
   });
 
   it.each([
@@ -82,7 +90,7 @@ describe('built-in profiles', () => {
 
   it('getProfile explains an unknown id', () => {
     expect(() => getProfile('kazoo')).toThrow(
-      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, voice\)/,
+      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, voice, clap, hand-percussion, drum-kit\)/,
     );
   });
 
@@ -207,6 +215,28 @@ describe('loadProfile: readable errors', () => {
     const r = loadProfile(p);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.warnings).toContain('judgement: unknown field (did you mean "judgment"?)');
+  });
+});
+
+describe('percussion profiles', () => {
+  it('clap is a single any-hit lane; the others classify by timbre', () => {
+    const clap = getProfile('clap');
+    expect(clap.lanes).toHaveLength(1);
+    expect(clap.judgment.match.lane).toBe(false);
+    for (const id of ['hand-percussion', 'drum-kit']) {
+      const p = getProfile(id);
+      expect(p.judgment.match).toMatchObject({ lane: true, laneStrict: true });
+      expect(p.lanes!.map((l) => l.timbre)).toEqual(p.timbreClasses!.map((t) => t.id));
+    }
+    expect(getProfile('drum-kit').lanes!.map((l) => l.id)).toEqual(['kick', 'snare', 'hat']);
+  });
+
+  it('laneStrict without lane matching is an error', () => {
+    const raw = JSON.parse(JSON.stringify(handPercussion)) as Record<string, any>;
+    raw['judgment'].match.lane = false;
+    const r = loadProfile(raw);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.join('\n')).toMatch(/laneStrict/);
   });
 });
 

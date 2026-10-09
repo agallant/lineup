@@ -1,6 +1,7 @@
 import './style.css';
 import { buildInfoText } from './app/build-info';
 import { startRouter } from './app/router';
+import { beatScreen } from './app/screens/beat';
 import { calibrateScreen } from './app/screens/calibrate';
 import { homeScreen } from './app/screens/home';
 import { micTestScreen } from './app/screens/mic-test';
@@ -14,7 +15,13 @@ if (footer) footer.textContent = buildInfoText();
 
 startRouter(
   app,
-  { '': homeScreen, mic: micTestScreen, calibrate: calibrateScreen, sing: singScreen },
+  {
+    '': homeScreen,
+    mic: micTestScreen,
+    calibrate: calibrateScreen,
+    sing: singScreen,
+    beat: beatScreen,
+  },
   '',
 );
 

@@ -1,5 +1,8 @@
 import {
   ContinuousJudge,
+  classifyEvent,
+  type Classification,
+  type TimbreModel,
   DiscreteJudge,
   GameSession,
   SongClock,
@@ -125,10 +128,14 @@ export interface DiscreteRunOptions {
   blockSize?: number;
   frameInterval?: number;
   deliveryDelay?: number;
+  /** Percussion: the enrolled timbre model that assigns each hit to a lane. Null/omitted: no classification. */
+  timbreModel?: TimbreModel | null;
 }
 
 export interface DiscreteRunResult extends PipelineResult<InputEvent> {
   strays: number;
+  /** One per percussion hit that had features, in order (null id = rejected as unknown). */
+  classifications: Classification[];
 }
 
 /**
@@ -140,8 +147,9 @@ export function runDiscrete(
   performance: RenderedPerformance,
   chart: Chart,
   profile: InstrumentProfile,
-  { latencyOffset, blockSize, frameInterval, deliveryDelay }: DiscreteRunOptions,
+  { latencyOffset, blockSize, frameInterval, deliveryDelay, timbreModel }: DiscreteRunOptions,
 ): DiscreteRunResult {
+  const classifications: Classification[] = [];
   const judge = new DiscreteJudge(chart.notes, discreteConfigFromProfile(profile, latencyOffset));
   const attacher = profile.judgment.match.pitch ? new OnsetPitchAttacher() : null;
   const toSongTime = (e: InputEvent, clock: SongClock): InputEvent => ({
@@ -156,14 +164,17 @@ export function runDiscrete(
     judge,
     adapt: (message, clock) => {
       if (attacher) return attacher.push(message).map((e) => toSongTime(e, clock));
-      return message.type === 'input' ? [toSongTime(message.event, clock)] : [];
+      if (message.type !== 'input') return [];
+      const { event, classification } = classifyEvent(profile, timbreModel ?? null, message.event);
+      if (classification) classifications.push(classification);
+      return [toSongTime(event, clock)];
     },
     flush: (clock) => (attacher ? attacher.flush().map((e) => toSongTime(e, clock)) : []),
     ...(blockSize !== undefined ? { blockSize } : {}),
     ...(frameInterval !== undefined ? { frameInterval } : {}),
     ...(deliveryDelay !== undefined ? { deliveryDelay } : {}),
   });
-  return { ...result, strays: judge.strays };
+  return { ...result, strays: judge.strays, classifications };
 }
 
 export interface ContinuousRunResult extends PipelineResult<PitchFrame> {
