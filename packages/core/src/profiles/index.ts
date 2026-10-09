@@ -1,8 +1,9 @@
 import { loadProfile, type InstrumentProfile } from '../profile';
 import ukuleleNote from './ukulele-note.json';
+import voice from './voice.json';
 import ukuleleStrum from './ukulele-strum.json';
 
-const RAW: readonly unknown[] = [ukuleleStrum, ukuleleNote];
+const RAW: readonly unknown[] = [ukuleleStrum, ukuleleNote, voice];
 
 /** Built-in profiles, validated when this module loads (a bad one fails every test). */
 export const builtinProfiles: Readonly<Record<string, InstrumentProfile>> = Object.fromEntries(

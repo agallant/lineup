@@ -1,8 +1,11 @@
 import {
+  ContinuousJudge,
   DiscreteJudge,
   Scoreboard,
   SongClock,
+  continuousConfigFromProfile,
   discreteConfigFromProfile,
+  type PitchFrame,
   type Chart,
   type InputEvent,
   type InstrumentProfile,
@@ -16,6 +19,7 @@ import {
   InputAnalyzer,
   OnsetPitchAttacher,
   analyzerOptionsFromProfile,
+  toPitchFrame,
   type AnalyzerMessage,
 } from '@lineup/input';
 import type { RenderedPerformance } from './performance';
@@ -160,4 +164,35 @@ export function runDiscrete(
     ...(deliveryDelay !== undefined ? { deliveryDelay } : {}),
   });
   return { ...result, strays: judge.strays };
+}
+
+export interface ContinuousRunResult extends PipelineResult<PitchFrame> {
+  judge: ContinuousJudge;
+}
+
+/** The continuous (sustained pitch) game: voice, later winds. Pitch frames go straight to the judge. */
+export function runContinuous(
+  performance: RenderedPerformance,
+  chart: Chart,
+  profile: InstrumentProfile,
+  { latencyOffset, blockSize, frameInterval, deliveryDelay }: DiscreteRunOptions,
+): ContinuousRunResult {
+  const hop = profile.detector.hopSize / performance.sampleRate;
+  const judge = new ContinuousJudge(
+    chart.notes,
+    continuousConfigFromProfile(profile, latencyOffset, hop),
+  );
+  const result = runPipeline<PitchFrame>({
+    performance,
+    profile,
+    judge,
+    adapt: (message, clock) =>
+      message.type === 'frame'
+        ? [{ ...toPitchFrame(message.frame), time: clock.toSongTime(message.frame.time) }]
+        : [],
+    ...(blockSize !== undefined ? { blockSize } : {}),
+    ...(frameInterval !== undefined ? { frameInterval } : {}),
+    ...(deliveryDelay !== undefined ? { deliveryDelay } : {}),
+  });
+  return { ...result, judge };
 }

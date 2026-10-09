@@ -30,7 +30,7 @@ export interface PerformanceOptions {
   /** Background room noise; null for a silent room. */
   noise?: RoomNoiseOptions | null;
   /** Extra signal mixed in over the whole performance (backing-track bleed, claps next door...). */
-  extra?: (totalSamples: number, sampleRate: number) => Float32Array;
+  extra?: (totalSamples: number, sampleRate: number, songStart: number) => Float32Array;
   seed?: number;
   /** Arbitrary AudioContext time of sample 0, to prove nothing depends on it starting at 0. */
   ctxStart?: number;
@@ -109,6 +109,6 @@ export function renderPerformance(
   });
 
   if (noise) addInto(signal, roomNoise(signal.length / sampleRate, sampleRate, noise));
-  if (extra) addInto(signal, extra(signal.length, sampleRate));
+  if (extra) addInto(signal, extra(signal.length, sampleRate, songStart));
   return { signal, sampleRate, ctxStart, songStart, plan };
 }

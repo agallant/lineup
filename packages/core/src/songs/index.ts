@@ -1,10 +1,12 @@
 import { loadChart, type Chart } from '../chart';
+import singlineDemo from './singline-demo.json';
 import ukuleleNotesDemo from './ukulele-notes-demo.json';
 import ukuleleStrumDemo from './ukulele-strum-demo.json';
 
 const RAW: Record<string, unknown> = {
   'ukulele-strum-demo': ukuleleStrumDemo,
   'ukulele-notes-demo': ukuleleNotesDemo,
+  'singline-demo': singlineDemo,
 };
 
 /** Built-in songs, validated when this module loads (a bad one fails every test). */

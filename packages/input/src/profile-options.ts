@@ -13,6 +13,7 @@ export function pitchOptionsFromProfile(profile: InstrumentProfile): PitchTracke
     minDb: d.minLevelDb,
     minHz: d.minHz,
     maxHz: d.maxHz,
+    ...(d.foldIntoRange ? { foldIntoRange: true } : {}),
   };
 }
 

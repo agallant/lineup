@@ -19,3 +19,18 @@ export interface InputEvent {
 
 /** 'onset': a pluck, strum or tap was detected. More kinds arrive with M4+. */
 export type InputEventKind = 'onset';
+
+/**
+ * One reading from the continuous pitch tracker, emitted every hop whether or
+ * not anything is being sung. Times are on the same clock as InputEvent.
+ */
+export interface PitchFrame {
+  /** Seconds; the centre of the analysis window. */
+  time: number;
+  /** Fundamental in Hz, or null when nothing clear is sounding (unvoiced, too quiet, out of range). */
+  frequency: number | null;
+  /** Detector confidence 0..1 (reported even when frequency is null). */
+  clarity: number;
+  /** RMS level of the window, dBFS. */
+  level: number;
+}

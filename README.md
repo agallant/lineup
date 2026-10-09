@@ -73,6 +73,13 @@ Design rules:
   sounding at once blend into one ambiguous pitch (659 Hz + 880 Hz reads as
   220 Hz). Timing is unaffected; pitch matching on wide leaps over ringing
   notes can be wrong. Covered by explicit "KNOWN LIMITATION" tests.
+- **Very breathy or whispered singing loses notes.** Aspiration noise lowers
+  pitch clarity below the gate (the clarity meter on the setup screen shows
+  this). Clean and moderately breathy voices are fine; covered by a
+  "KNOWN LIMITATION" test.
+- **Speaker bleed gives free points.** If the guide tone leaks into the mic at a
+  level the game can hear, a silent player scores. Use headphones; a
+  headphones check measures leakage (`detectBleed`).
 - **Simulations are synthetic.** They prove the software chain; real strings,
   microphones, rooms and iOS audio behaviour are listed per PR under
   "Unverified on real hardware".

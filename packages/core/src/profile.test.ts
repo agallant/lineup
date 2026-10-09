@@ -45,7 +45,7 @@ const base = () =>
 
 describe('built-in profiles', () => {
   it('all validate (they are checked when the module loads)', () => {
-    expect(Object.keys(builtinProfiles).sort()).toEqual(['ukulele-note', 'ukulele-strum']);
+    expect(Object.keys(builtinProfiles).sort()).toEqual(['ukulele-note', 'ukulele-strum', 'voice']);
   });
 
   it('ukulele profiles use GCEA re-entrant tuning', () => {
@@ -63,7 +63,7 @@ describe('built-in profiles', () => {
 
   it('getProfile explains an unknown id', () => {
     expect(() => getProfile('kazoo')).toThrow(
-      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note\)/,
+      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, voice\)/,
     );
   });
 

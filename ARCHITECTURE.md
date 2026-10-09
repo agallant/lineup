@@ -59,8 +59,17 @@ in song time and subtract the calibrated latency offset themselves.
   an instrument different - input kind, renderer, range, transposition, tuning,
   lanes, detector settings, judgment settings. Validated at load.
 - **Judge** (`judge/`): a pure state machine behind one interface
-  (`feed`, `advance`, `finish`, `judgments`). `DiscreteJudge` does onset timing
-  (+ lane/pitch match). A continuous judge for sustained pitch arrives with voice.
+  (`feed`, `advance`, `finish`, `judgments`, `judgmentFor`). `DiscreteJudge` does
+  onset timing (+ lane/pitch match). `ContinuousJudge` (voice) takes `PitchFrame`s
+  and scores each note by the **fraction of its sustain within N cents** of the
+  target, after a late-entry check. It folds octaves (octave-forgiving), takes a
+  _median_ over a short window so vibrato and stray frames don't count against
+  you, ignores frames under the clarity/level gates, and exposes `peek()` for
+  live "am I on pitch right now" feedback.
+- **Voice** (`profiles/voice.json`): McLeod pitch tracker with a 2048-sample window
+  and 256-sample hop, 70-1100 Hz, clarity gate 0.55, `foldIntoRange` (one octave
+  only: hiss must not become a pitch), octave-forgiving continuous judging.
+  `detectBleed` checks whether the speaker leaks into the mic (headphones check).
 - **Calibration** (`calibration.ts`): `estimateOffset` finds the latency offset
   from clicks and responses; `CalibrationStore` persists it over an injected
   key-value store (no DOM in core).
