@@ -4,11 +4,9 @@
  * (re-record). Do not change a scenario without re-recording and calling it
  * out in the PR.
  */
-import { InputAnalyzer } from './audio/dsp/analyzer';
-import { OnsetDetector } from './audio/dsp/onset';
-import { PitchTracker } from './audio/dsp/pitch';
-import { midiToFrequency, nearestOpenString, noteFromFrequency } from './audio/notes';
-import { blocks, karplusStrong, mixAt, pluck, silence, sine, whiteNoise } from './test-utils/synth';
+import { midiToFrequency, nearestOpenString, noteFromFrequency } from '@lineup/core';
+import { InputAnalyzer, OnsetDetector, PitchTracker } from './index';
+import { blocks, karplusStrong, mixAt, pluck, silence, sine, whiteNoise } from '@lineup/testkit';
 
 export const SR = 48000;
 const GCEA_MIDI = [67, 60, 64, 69];

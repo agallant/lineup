@@ -4,7 +4,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const dist = new URL('../dist/', import.meta.url).pathname;
+const dist = new URL('../apps/web/dist/', import.meta.url).pathname;
 const errors = [];
 const html = readFileSync(join(dist, 'index.html'), 'utf8');
 

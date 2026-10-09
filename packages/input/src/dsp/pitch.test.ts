@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { blocks, karplusStrong, pluck, sine, whiteNoise } from '../../test-utils/synth';
-import { centsBetween, midiToFrequency, noteFromFrequency, UKULELE_GCEA } from '../notes';
+import { blocks, karplusStrong, pluck, sine, whiteNoise } from '@lineup/testkit';
+import { centsBetween, midiToFrequency, noteFromFrequency, UKULELE_GCEA } from '@lineup/core';
 import { PitchTracker, type PitchEstimate } from './pitch';
 
 const RATES = [44100, 48000];

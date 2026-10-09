@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite';
 
 // Build metadata shown in the app footer, so it's obvious on the iPad which
 // build Safari is actually running. CI sets these; local builds say "dev".
@@ -16,9 +16,5 @@ export default defineConfig({
   },
   build: {
     target: 'safari15',
-  },
-  test: {
-    include: ['src/**/*.test.ts'],
-    environment: 'node',
   },
 });

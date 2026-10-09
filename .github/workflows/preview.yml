@@ -37,4 +37,4 @@ jobs:
           BUILD_LABEL: 'PR #${{ github.event.pull_request.number }}'
       - uses: rossjrw/pr-preview-action@v1
         with:
-          source-dir: dist
+          source-dir: apps/web/dist

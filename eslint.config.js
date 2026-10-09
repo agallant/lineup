@@ -15,6 +15,30 @@ export default tseslint.config(
     },
   },
   {
+    // core is pure logic: it must never touch the DOM or Web Audio.
+    files: ['packages/core/**', 'packages/testkit/**'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        ...[
+          'window',
+          'document',
+          'navigator',
+          'localStorage',
+          'AudioContext',
+          'AudioWorkletNode',
+          'requestAnimationFrame',
+          'HTMLElement',
+          'HTMLCanvasElement',
+          'performance',
+        ].map((name) => ({
+          name,
+          message: 'core/testkit must stay DOM-free; pass what you need in through an interface.',
+        })),
+      ],
+    },
+  },
+  {
     files: ['scripts/**', '*.config.*'],
     languageOptions: { globals: { ...globals.node } },
   },

@@ -1,14 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  blocks,
-  karplusStrong,
-  mixAt,
-  pluck,
-  silence,
-  sine,
-  whiteNoise,
-} from '../../test-utils/synth';
-import { midiToFrequency, UKULELE_GCEA } from '../notes';
+import { blocks, karplusStrong, mixAt, pluck, silence, sine, whiteNoise } from '@lineup/testkit';
+import { midiToFrequency, UKULELE_GCEA } from '@lineup/core';
 import { OnsetDetector, type Onset } from './onset';
 
 const SR = 48000;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { blocks, karplusStrong, mixAt, silence } from '../../test-utils/synth';
-import { midiToFrequency, noteFromFrequency } from '../notes';
-import type { AnalysisFrame, AnalyzerMessage, InputEvent } from '../types';
+import { blocks, karplusStrong, mixAt, silence } from '@lineup/testkit';
+import { midiToFrequency, noteFromFrequency, type InputEvent } from '@lineup/core';
+import type { AnalysisFrame, AnalyzerMessage } from '../types';
 import { InputAnalyzer } from './analyzer';
 
 describe('InputAnalyzer', () => {

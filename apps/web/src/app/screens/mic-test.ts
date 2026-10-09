@@ -1,9 +1,12 @@
-import { constraintReport, type ConstraintRow } from '../../audio/constraints';
-import { listAudioInputs, micSupported, openMic, type MicSession } from '../../audio/mic';
-import { nearestOpenString, noteFromFrequency } from '../../audio/notes';
-import type { AnalysisFrame, InputEvent } from '../../audio/types';
-import type { ChannelSelection } from '../../audio/worklet/protocol';
-import { drawMeter, drawWaveform } from '../../render/scope';
+import { nearestOpenString, noteFromFrequency, type InputEvent } from '@lineup/core';
+import {
+  constraintReport,
+  type AnalysisFrame,
+  type ChannelSelection,
+  type ConstraintRow,
+} from '@lineup/input';
+import { listAudioInputs, micSupported, openMic, type MicSession } from '@lineup/input/mic';
+import { drawMeter, drawWaveform } from '@lineup/render';
 import { buildInfoText } from '../build-info';
 import { formatCents, formatDb, formatMs } from '../format';
 import type { Screen } from '../router';

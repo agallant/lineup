@@ -28,13 +28,13 @@ Home Screen**.
 
 ## Develop
 
-Requires Node 22+.
+Requires Node 22+. This is an npm-workspaces monorepo.
 
 ```sh
 npm ci
-npm run dev        # Vite dev server
-npm run check      # typecheck + lint + test + build (what CI runs)
-npm test           # Vitest unit tests
+npm run dev        # Vite dev server for apps/web
+npm run check      # typecheck + lint + test + build + dist check (what CI runs)
+npm test           # Vitest, all packages
 npm run format     # Prettier
 ```
 
@@ -43,14 +43,16 @@ Mic access needs a secure context (HTTPS or `localhost`).
 ## Layout
 
 ```
-src/
-  app/      screens, hash router, app state
-  audio/    mic capture, AudioWorklet, pitch + onset detection -> InputEvent   (M1)
-  chart/    chart JSON format + loader                                         (M3)
-  judge/    pure timing judge: InputEvents vs chart notes -> perfect/good/miss (M3)
-  render/   canvas 2D highway                                                  (M3)
-public/     manifest, icons, service worker (copied verbatim)
+packages/
+  core/      pure TypeScript, no DOM: notes, InputEvent, (chart, judge, clock, profiles in L1c)
+  input/     detectors (pitch, onset), analyzer, AudioWorklet, mic capture
+  render/    canvas helpers and renderers
+  testkit/   synthetic signals for tests (dev-only)
+apps/
+  web/       the PWA: screens, router, styles, manifest, service worker
 ```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for data flow and how each piece fits.
 
 Design rules:
 
@@ -61,6 +63,8 @@ Design rules:
 - A calibrated input-latency offset is subtracted by the judge.
 - DSP and the judge are pure and tested with synthetic audio, so tests don't
   need a mic.
+- `packages/core` and `packages/testkit` are DOM-free, enforced by TypeScript
+  (no DOM lib) and an ESLint rule.
 
 ## Deploy
 
@@ -74,7 +78,7 @@ Everything goes through PRs. Nothing is pushed directly to `main`.
   comments the URL on the PR, and deletes the preview when the PR closes. It
   uses [`rossjrw/pr-preview-action`](https://github.com/rossjrw/pr-preview-action).
 
-The Vite `base` is `./` (relative), so one build works both at the site root
+The Vite `base` (in `apps/web/vite.config.ts`) is `./` (relative), so one build works both at the site root
 and in a preview subfolder. Routing uses hashes (`#/mic`) for the same reason.
 
 **One-time setup (done in the GitHub UI):** Settings → Pages → Build and
