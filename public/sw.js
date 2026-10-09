@@ -2,7 +2,7 @@
 // HTTP cache) so new deploys show up immediately; fall back to the last
 // cached copy only when offline. Deliberately no precache list: this exists
 // for installability and basic offline support, not aggressive caching.
-const CACHE = 'strumline-v1';
+const CACHE = 'lineup-v1';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));

@@ -1,7 +1,7 @@
 // Shared between the main thread and the input worklet. Must not import
 // anything that touches worklet-only globals.
 
-export const INPUT_PROCESSOR_NAME = 'strumline-input';
+export const INPUT_PROCESSOR_NAME = 'lineup-input';
 
 /** Which input channel to analyze. 'mix' averages all channels. */
 export type ChannelSelection = number | 'mix';

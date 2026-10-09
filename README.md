@@ -1,16 +1,22 @@
-# Strumline
+# Lineup
 
-A rhythm game (DDR / Elite Beat Agents style) that you play by strumming a real
-ukulele instead of stomping on pads. Ukulele only for now, in standard
-re-entrant GCEA tuning (G4 C4 E4 A4).
+An umbrella platform of rhythm games (DDR / Elite Beat Agents / SingStar style)
+that you play by performing on a real instrument. One mode per instrument family:
+
+| Mode          | Instrument                         | Status                     |
+| ------------- | ---------------------------------- | -------------------------- |
+| **Strumline** | ukulele (GCEA re-entrant)          | mic test + detectors exist |
+| **Singline**  | voice                              | planned (L2)               |
+| **Windline**  | ocarina, recorder, penny whistle   | planned (L3, later)        |
+| **Beatline**  | claps, taps, hand drums, kit, pads | planned (L4)               |
 
 It's a static web app, built for Safari on iOS/iPadOS first and also tested in
 desktop Chrome. You can install it as a PWA. There's no backend.
 
 ## Play / test
 
-- **Main:** https://agallant.github.io/strumline/
-- **PR previews:** https://agallant.github.io/strumline/pr-preview/pr-N/. A bot
+- **Main:** https://agallant.github.io/lineup/
+- **PR previews:** https://agallant.github.io/lineup/pr-preview/pr-N/. A bot
   comments the exact link on each PR.
 
 The footer shows which build you're looking at (`main` or `PR #N`, the commit
