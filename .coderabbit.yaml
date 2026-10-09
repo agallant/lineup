@@ -3,6 +3,21 @@ reviews:
   profile: 'quiet'
   request_changes_workflow: true
   collapse_walkthrough: true
+  # Report a failing CodeRabbit status when a PR could NOT be reviewed (rate limit, too many
+  # files, ...). Without this the skipped review still posts a green "CodeRabbit" check.
+  fail_commit_status: true
+  # Keep generated data and config out of the 100-file review cap; real code and tests stay in.
+  path_filters:
+    - '!**/package-lock.json'
+    - '!**/*.golden.json'
+    - '!**/songs/*.json'
+    - '!**/*.schema.json'
+    - '!**/tsconfig*.json'
+    - '!**/.nojekyll'
+    - '!.gitignore'
+    - '!.prettierignore'
+    - '!.prettierrc.json'
+    - '!**/public/icons/**'
   auto_review:
     ignore_drafts: true
     skip_bot_users: false
