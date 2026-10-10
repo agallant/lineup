@@ -390,8 +390,11 @@ const scenarios = {
       // timing-only: the same strums, no chord names
       await page.uncheck('[data-id=opt-chords]');
       await page.waitForFunction(
-        () =>
-          /strum {2}chord –/.test(document.querySelector('[data-id=monitor]')?.textContent ?? ''),
+        () => {
+          const t = document.querySelector('[data-id=monitor]')?.textContent ?? '';
+          const strums = t.split('\n').filter((l) => /strum {2}chord/.test(l));
+          return strums.length > 0 && strums.every((l) => /strum {2}chord –/.test(l));
+        },
         null,
         { timeout: 30000 },
       );
@@ -415,7 +418,10 @@ const scenarios = {
           const names = await caches.keys();
           if (!names.length) return false;
           const urls = (await (await caches.open(names[0])).keys()).map((r) => r.url);
-          return urls.some((u) => /input-processor/.test(u)) && urls.some((u) => /\.js$/.test(u));
+          return (
+            urls.some((u) => /input-processor/.test(u)) &&
+            urls.some((u) => /\.js$/.test(u) && !/input-processor/.test(u))
+          );
         },
         null,
         { timeout: 15000 },

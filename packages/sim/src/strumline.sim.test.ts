@@ -63,9 +63,9 @@ describe('strumline: a calibrated player who strums the right chords', () => {
     const r = play(chart);
     expect(r.score.counts).toEqual({ perfect: 48, good: 0, miss: 0 });
     expect(r.score.accuracy).toBeGreaterThan(0.98);
-    // every event carried the chord the analyzer recognised, or none at all: never a wrong one
-    const wrong = r.inputs.filter((e) => e.chord !== undefined).length;
-    expect(wrong).toBeGreaterThan(40);
+    // most strums carry a recognised chord (the 48/48 perfect score shows none was wrong)
+    const named = r.inputs.filter((e) => e.chord !== undefined).length;
+    expect(named).toBeGreaterThan(40);
   });
 
   it.each([70, 130, 160, 200])('keeps up at %d bpm', (bpm) => {

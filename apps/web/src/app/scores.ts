@@ -13,6 +13,8 @@ export interface BestScore {
 const KEY = 'lineup.scores.v1';
 /** Entries kept; the oldest are dropped past this so storage cannot grow without bound. */
 const MAX_ENTRIES = 300;
+/** Far above anything a song can score (100 points a note times a combo multiplier). */
+const MAX_SCORE = 10_000_000;
 
 /**
  * Where a result is filed. Scores are only comparable within one profile, song and "variant"
@@ -30,9 +32,11 @@ function sanitize(raw: unknown): Map<string, BestScore> {
     const r = v as Record<string, unknown>;
     if (
       typeof r['score'] === 'number' &&
-      Number.isFinite(r['score']) &&
+      r['score'] >= 0 &&
+      r['score'] <= MAX_SCORE &&
       typeof r['accuracy'] === 'number' &&
-      Number.isFinite(r['accuracy']) &&
+      r['accuracy'] >= 0 &&
+      r['accuracy'] <= 1 &&
       typeof r['grade'] === 'string' &&
       typeof r['at'] === 'string'
     ) {
@@ -63,6 +67,7 @@ export class ScoreStore {
     result: Omit<BestScore, 'at'>,
     now = new Date(),
   ): { isNewBest: boolean; best: BestScore } {
+    this.reconcile();
     const previous = this.best(key);
     if (previous && previous.score >= result.score) return { isNewBest: false, best: previous };
     const best: BestScore = { ...result, at: now.toISOString() };
@@ -77,6 +82,17 @@ export class ScoreStore {
       // private window / quota: keep working in memory
     }
     return { isNewBest: true, best: { ...best } };
+  }
+
+  /**
+   * Folds in what another tab saved since this one loaded, keeping the higher score per key, so
+   * writing never erases a result this instance has not seen.
+   */
+  private reconcile(): void {
+    for (const [k, stored] of this.read()) {
+      const mine = this.value.get(k);
+      if (!mine || stored.score > mine.score) this.value.set(k, stored);
+    }
   }
 
   /** Forgets every score. */

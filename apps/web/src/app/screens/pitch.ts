@@ -35,12 +35,12 @@ import { copyText } from '../clipboard';
 import { escapeHtml, playTone } from '../audio';
 import { planBacking, playBacking, midiToHz, type BackingHandle } from '../game/backing';
 import { fingeringChartHtml, fingeringStripHtml } from '../game/fingering-view';
-import { micAdvice } from '../game/mic-advice';
+import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
-import { SettingsStore, safeLocalStorage } from '../settings';
+import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
 import { formatCents, formatDb } from '../format';
 import type { Screen } from '../router';
 
@@ -54,6 +54,8 @@ export interface PitchScreenConfig {
   subtitle: string;
   /** Shown under the mic meter before anything is played. */
   micPrompt: string;
+  /** Per-status mic advice wording; statuses not listed use the voice wording from `micAdvice`. */
+  adviceText?: Partial<Record<MicStatus, string>>;
   /** "singing, humming or a TV": what the quiet-baseline check might be hearing. */
   quietExamples: string;
   /** The range line under the song picker. */
@@ -228,7 +230,7 @@ export const createPitchScreen =
     songSel.value = songs.some((s) => s.id === current.songs[c.profileId])
       ? current.songs[c.profileId]!
       : songs[0]!.id;
-    for (let k = -7; k <= 7; k++)
+    for (let k = -12; k <= 12; k++)
       keySel.add(
         new Option(
           k === 0 ? 'Original key' : `${k > 0 ? '+' : '−'}${Math.abs(k)} semitones`,
@@ -240,7 +242,7 @@ export const createPitchScreen =
       findWindInstrument(settings.get().windInstrument) ??
       findWindInstrument(DEFAULT_WIND_INSTRUMENT)!;
 
-    keySel.value = String(current.keyShift);
+    keySel.value = String(keyShiftFor(current, c.profileId));
     if (c.instruments) {
       const instrumentSel = S<HTMLSelectElement>('instrument');
       for (const i of WIND_INSTRUMENTS) instrumentSel.add(new Option(i.label, i.id));
@@ -291,6 +293,11 @@ export const createPitchScreen =
       const chart = selectedChart();
       const r = chartPitchRange(chart);
       let text = r ? c.rangeText(midiName(r.low), midiName(r.high)) : '';
+      // Voices are folded into range; an instrument has one register, so a key that pushes
+      // the song past what the detector hears would silently miss every note.
+      const d = profile.detector;
+      if (r && !d.foldIntoRange && (midiToHz(r.low) < d.minHz || midiToHz(r.high) > d.maxHz))
+        text += ` ${c.mode} cannot hear every note in this key: try another.`;
       if (c.instruments) {
         const fit = checkFit(
           chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch])),
@@ -329,7 +336,9 @@ export const createPitchScreen =
       refreshRange();
     });
     keySel.addEventListener('change', () => {
-      settings.update({ keyShift: Number(keySel.value) });
+      settings.update({
+        keyShifts: { ...settings.get().keyShifts, [c.profileId]: Number(keySel.value) },
+      });
       refreshRange();
     });
     difficultySel.addEventListener('change', () => {
@@ -461,7 +470,9 @@ export const createPitchScreen =
       S('clarity-bar').classList.toggle('good', f.clarity >= profile.detector.clarityThreshold);
       const advice = micAdvice({ levelDb: f.rmsDb, peakDb: peakHold, voicedFraction });
       const adviceEl = S('advice');
-      adviceEl.textContent = advice.message;
+      // only touch the live region when the message changes, so it is not re-announced every frame
+      const adviceMessage = c.adviceText?.[advice.status] ?? advice.message;
+      if (adviceEl.textContent !== adviceMessage) adviceEl.textContent = adviceMessage;
       adviceEl.className = `status ${advice.status === 'good' ? 'ok' : advice.status === 'silent' ? '' : 'error'}`;
     };
     setupRaf = requestAnimationFrame(setupTick);
@@ -594,6 +605,7 @@ export const createPitchScreen =
       const best = audio.demo
         ? null
         : scores.record(bestKey(), { score: s.score, accuracy: s.accuracy, grade });
+      refreshRange(); // the setup screen's best-score line now shows this result
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'
         : best!.isNewBest
@@ -715,6 +727,10 @@ export const createPitchScreen =
           analyzer: analyzerOptionsFromProfile(profile),
           listen: true,
         });
+        if (disposed) {
+          await synth.close();
+          return;
+        }
         setupStatus.textContent = '';
         const ctx = synth.ctx;
         const countIn = chart.meta.countInBeats * (60 / chart.meta.bpm);
