@@ -6,8 +6,8 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
 ## Done
 
 - **Singline** (voice): sustained-pitch game, three scoring levels, key menu.
-- **Windline** (whistles, recorders, ocarina): the same pipeline with octave-strict judging; an
-  instrument menu for tin whistles in seven keys, recorders and an ocarina, songs moved into the
+- **Windline** (whistles, recorders): the same pipeline with octave-strict judging; an
+  instrument menu for tin whistles in seven keys, recorders, and a generic instrument whose key you set, songs moved into the
   instrument's key, fingering chart and in-play fingering strip, practice speed.
 - **Beatline** (claps, taps, hand drums, kit): onset classification with a sound-training step.
 - **Strumline** (ukulele): strum detection and chord recognition; four string lanes showing the fret
@@ -55,7 +55,7 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
 
 ### 4. Quality and plumbing
 
-- Real-device verification: whistles, recorders, ocarinas, ukuleles, hand drums and the iPad
+- Real-device verification: whistles, recorders, ukuleles, hand drums and the iPad
   microphone have only been tried as simulated sounds. The fingering tables need checking against
   your instruments.
 - Accessibility audit (VoiceOver, contrast, touch targets).

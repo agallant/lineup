@@ -4,7 +4,6 @@ import { fingeringChartHtml, fingeringStripHtml, holesHtml } from './fingering-v
 
 const dWhistle = findWindInstrument('whistle-d')!;
 const recorder = findWindInstrument('recorder-soprano')!;
-const ocarina = findWindInstrument('ocarina-c12')!;
 
 /** The scale song moved into the instrument's key, as the screen plays it. */
 const played = (inst: typeof dWhistle) => {
@@ -51,10 +50,6 @@ describe('fingeringChartHtml', () => {
     expect(fingeringChartHtml(recorder, new Set())).toMatch(/thumb hole/);
     expect(fingeringChartHtml(dWhistle, new Set())).not.toMatch(/thumb hole/);
   });
-
-  it('says there is no chart for an instrument without one', () => {
-    expect(fingeringChartHtml(ocarina, new Set())).toMatch(/No fingering chart/);
-  });
 });
 
 describe('fingeringStripHtml', () => {
@@ -89,9 +84,5 @@ describe('fingeringStripHtml', () => {
   it("shows a dash for a note outside the instrument's scale", () => {
     const odd = { notes: [{ t: 0, duration: 1, pitch: 73 }] }; // C#5 is not in D major
     expect(fingeringStripHtml(dWhistle, odd, 0.1)).toContain('holes-none');
-  });
-
-  it('shows nothing for an instrument with no chart', () => {
-    expect(fingeringStripHtml(ocarina, chart, 1)).toBe('');
   });
 });

@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { loadChart } from './chart';
 import {
+  DEFAULT_WIND_INSTRUMENT,
+  GENERIC_WIND_INSTRUMENT,
   WIND_INSTRUMENTS,
   checkFit,
   findWindInstrument,
   fingeringFor,
   holeGroups,
+  inKey,
+  isGenericWind,
   shiftForInstrument,
   windScale,
   type WindInstrument,
@@ -126,10 +130,8 @@ describe('hole groups', () => {
       for (const n of windScale(i)) expect(n.fingering.holes, i.id).toHaveLength(total);
     }
   });
-  it('a family without a chart has no holes to draw', () => {
-    expect(holeGroups('ocarina')).toEqual([]);
-    expect(windScale(inst('ocarina-c12'))).toEqual([]);
-    expect(fingeringFor(inst('ocarina-c12'), 72)).toBeNull();
+  it('every instrument offered has a fingering chart', () => {
+    for (const i of WIND_INSTRUMENTS) expect(windScale(i).length, i.id).toBeGreaterThan(0);
   });
 });
 
@@ -143,7 +145,7 @@ describe("moving a song into the instrument's key", () => {
     expect(shiftForInstrument(chart, inst('whistle-c'))).toBe(0);
     expect(shiftForInstrument(chart, inst('whistle-bb'))).toBe(-2);
     expect(shiftForInstrument(chart, inst('recorder-alto'))).toBe(-7);
-    expect(shiftForInstrument(chart, inst('ocarina-c12'))).toBe(0);
+    expect(shiftForInstrument(chart, inst('generic'))).toBe(0);
   });
 
   it('leaves a song with no stated key where it is', () => {
@@ -175,7 +177,31 @@ describe('checkFit', () => {
     const d = inst('whistle-d');
     expect(checkFit([74, 75, 60, 100, 76], d)).toEqual({ outOfRange: [60, 100], notInScale: [75] });
   });
-  it("does not call an ocarina's chromatic notes out of scale", () => {
-    expect(checkFit([70, 71, 72], inst('ocarina-c12'))).toEqual({ outOfRange: [], notInScale: [] });
+});
+
+describe('the generic instrument', () => {
+  it('is the default, in C, and first in the list', () => {
+    expect(DEFAULT_WIND_INSTRUMENT).toBe('generic');
+    expect(WIND_INSTRUMENTS[0]).toBe(GENERIC_WIND_INSTRUMENT);
+    expect(GENERIC_WIND_INSTRUMENT.tonic).toBe(72);
+    expect(isGenericWind(inst('generic'))).toBe(true);
+    expect(isGenericWind(inst('whistle-d'))).toBe(false);
+  });
+
+  it('set to a key it is that whistle: same tonic, range and fingerings', () => {
+    const d = inKey(GENERIC_WIND_INSTRUMENT, 2);
+    const whistleD = inst('whistle-d');
+    expect(d.tonic).toBe(whistleD.tonic - 0); // C5 + 2 = D5
+    expect(d.tonic).toBe(74);
+    expect(d.range).toEqual(whistleD.range);
+    expect(windScale(d).map((n) => n.fingering)).toEqual(
+      windScale(whistleD).map((n) => n.fingering),
+    );
+    // a song in C moved up 2 fits it
+    expect(checkFit([74, 76, 78, 79], d)).toEqual({ outOfRange: [], notInScale: [] });
+  });
+
+  it('keeps the top of its range at the highest note the pitch tracker handles', () => {
+    expect(inKey(GENERIC_WIND_INSTRUMENT, 12).range.high).toBe(96);
   });
 });

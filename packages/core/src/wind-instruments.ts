@@ -2,7 +2,7 @@ import type { Chart } from './chart';
 import { midiLabel } from './notes';
 
 /** The kinds of simple wind instrument Windline knows. */
-export type WindFamily = 'whistle' | 'recorder' | 'ocarina';
+export type WindFamily = 'whistle' | 'recorder';
 
 /**
  * A simple wind instrument in a particular key. Whistles and recorders are diatonic: their
@@ -37,8 +37,18 @@ const recorder = (id: string, label: string, tonic: number): WindInstrument => (
   range: { low: tonic, high: tonic + 14 },
 });
 
-/** The instruments offered, most common first. */
+/**
+ * The instrument chosen until you pick a specific one: a diatonic instrument in C whose key you
+ * set yourself with the semitone shift (+2 is a whistle in D, see {@link inKey}). Its fingering
+ * chart is the whistle's.
+ */
+export const GENERIC_WIND_INSTRUMENT = whistle('generic', 'Generic (C, set your own key)', 72);
+
+export const DEFAULT_WIND_INSTRUMENT = GENERIC_WIND_INSTRUMENT.id;
+
+/** The generic instrument first, then specific instruments (presets), most common first. */
 export const WIND_INSTRUMENTS: readonly WindInstrument[] = [
+  GENERIC_WIND_INSTRUMENT,
   whistle('whistle-d', 'Tin whistle in D', 74),
   whistle('whistle-c', 'Tin whistle in C', 72),
   whistle('whistle-bb', 'Tin whistle in B♭', 70),
@@ -51,16 +61,23 @@ export const WIND_INSTRUMENTS: readonly WindInstrument[] = [
   recorder('recorder-alto', 'Alto recorder (F)', 65),
   recorder('recorder-tenor', 'Tenor recorder (C)', 60),
   recorder('recorder-sopranino', 'Sopranino recorder (F)', 77),
-  {
-    id: 'ocarina-c12',
-    label: '12-hole ocarina (C)',
-    family: 'ocarina',
-    tonic: 72,
-    range: { low: 69, high: 89 },
-  },
 ];
 
-export const DEFAULT_WIND_INSTRUMENT = 'whistle-d';
+/** True for the generic instrument, whose key is the semitone shift you set. */
+export const isGenericWind = (instrument: Pick<WindInstrument, 'id'>): boolean =>
+  instrument.id === GENERIC_WIND_INSTRUMENT.id;
+
+/** The instrument with its key moved up (or down) by `semitones`: range and tonic move together. */
+export function inKey(instrument: WindInstrument, semitones: number): WindInstrument {
+  return {
+    ...instrument,
+    tonic: instrument.tonic + semitones,
+    range: {
+      low: instrument.range.low + semitones,
+      high: Math.min(instrument.range.high + semitones, TOP_NOTE),
+    },
+  };
+}
 
 /** The instrument with this id, or null. */
 export function findWindInstrument(id: string): WindInstrument | null {
@@ -85,9 +102,9 @@ export interface Fingering {
 
 /** How the holes are grouped for drawing, in the order of {@link Fingering.holes}. */
 export function holeGroups(family: WindFamily): number[] {
-  if (family === 'whistle') return [3, 3]; // top hand, bottom hand
-  if (family === 'recorder') return [1, 3, 4]; // thumb, then the left and right hands
-  return [];
+  return family === 'whistle'
+    ? [3, 3] // top hand, bottom hand
+    : [1, 3, 4]; // recorder: thumb, then the left and right hands
 }
 
 /** Semitones above the tonic of the notes of a major scale over two octaves and a bit. */
@@ -135,7 +152,6 @@ const RECORDER: readonly Fingering[] = [
 const TABLES: Record<WindFamily, readonly Fingering[]> = {
   whistle: WHISTLE,
   recorder: RECORDER,
-  ocarina: [],
 };
 
 /** One note of the instrument's scale, with the fingering to play it. */
@@ -174,8 +190,7 @@ export function checkFit(notes: Iterable<number>, instrument: WindInstrument): F
   const notInScale = new Set<number>();
   for (const m of notes) {
     if (m < instrument.range.low || m > instrument.range.high) outOfRange.add(m);
-    else if (instrument.family !== 'ocarina' && fingeringFor(instrument, m) === null)
-      notInScale.add(m);
+    else if (fingeringFor(instrument, m) === null) notInScale.add(m);
   }
   const byPitch = (a: number, b: number) => a - b;
   return { outOfRange: [...outOfRange].sort(byPitch), notInScale: [...notInScale].sort(byPitch) };

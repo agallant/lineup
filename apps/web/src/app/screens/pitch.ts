@@ -14,6 +14,8 @@ import {
   findWindInstrument,
   generateMelody,
   getProfile,
+  inKey,
+  isGenericWind,
   isSeed,
   letterGrade,
   melodyId,
@@ -82,6 +84,11 @@ export interface PitchScreenConfig {
   instruments?: boolean;
 }
 
+const KEY_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'] as const;
+
+/** The key a generic C instrument is in after moving up `semitones`: "D" for +2. */
+const keyName = (semitones: number): string => `Key of ${KEY_NAMES[((semitones % 12) + 12) % 12]}`;
+
 const template = (c: PitchScreenConfig) => `
   <p><a href="#/">← Back</a></p>
   <h1>${c.title} <small>${c.subtitle}</small></h1>
@@ -116,7 +123,7 @@ const setup = (c: PitchScreenConfig) => `
     <div class="row">
       ${c.instruments ? '<label>Instrument <select data-id="instrument"></select></label>' : ''}
       <label>Song <select data-id="song"></select></label>
-      <label>${c.instruments ? 'Extra shift' : 'Key'} <select data-id="key"></select></label>
+      <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
     </div>
     <div class="row" data-id="challenge" hidden>
@@ -251,25 +258,47 @@ export const createPitchScreen =
       savedSong === RANDOM_MELODY || songs.some((s) => s.id === savedSong)
         ? savedSong!
         : songs[0]!.id;
-    for (let k = -12; k <= 12; k++)
-      keySel.add(
-        new Option(
-          k === 0 ? 'Original key' : `${k > 0 ? '+' : '−'}${Math.abs(k)} semitones`,
-          String(k),
-        ),
-      );
-    /** The instrument chosen on a Windline screen. */
-    const instrument = (): WindInstrument =>
-      findWindInstrument(settings.get().windInstrument) ??
-      findWindInstrument(DEFAULT_WIND_INSTRUMENT)!;
+    /** The instrument chosen on a Windline screen. The generic one takes its key from the shift. */
+    const instrument = (): WindInstrument => {
+      const base =
+        findWindInstrument(settings.get().windInstrument) ??
+        findWindInstrument(DEFAULT_WIND_INSTRUMENT)!;
+      return isGenericWind(base) ? inKey(base, keyShiftFor(settings.get(), c.profileId)) : base;
+    };
+    /** The shift applied on top of moving the song into the instrument's key (none for the generic one, which is the shift). */
+    const extraShift = (): number =>
+      c.instruments && isGenericWind(instrument()) ? 0 : Number(keySel.value);
 
-    keySel.value = String(keyShiftFor(current, c.profileId));
+    /** The key menu: semitones from the original key, or, for a generic instrument, the key itself. */
+    const fillKeyMenu = () => {
+      const generic = c.instruments && isGenericWind(instrument());
+      S('key-label').textContent = generic ? 'Key' : c.instruments ? 'Extra shift' : 'Key';
+      keySel.replaceChildren();
+      for (let k = -12; k <= 12; k++) {
+        const sign = `${k > 0 ? '+' : '−'}${Math.abs(k)} semitones`;
+        const label = generic
+          ? `${keyName(k)}${k === 0 ? '' : ` (${sign})`}`
+          : k === 0
+            ? c.instruments
+              ? 'None'
+              : 'Original key'
+            : sign;
+        keySel.add(new Option(label, String(k)));
+      }
+      keySel.value = String(keyShiftFor(settings.get(), c.profileId));
+    };
+    fillKeyMenu();
     if (c.instruments) {
       const instrumentSel = S<HTMLSelectElement>('instrument');
       for (const i of WIND_INSTRUMENTS) instrumentSel.add(new Option(i.label, i.id));
       instrumentSel.value = instrument().id;
       instrumentSel.addEventListener('change', () => {
-        settings.update({ windInstrument: instrumentSel.value });
+        // a new instrument starts from its own key: the old shift belongs to the old instrument
+        settings.update({
+          windInstrument: instrumentSel.value,
+          keyShifts: { ...settings.get().keyShifts, [c.profileId]: 0 },
+        });
+        fillKeyMenu();
         refreshRange();
       });
       const speedSel = S<HTMLSelectElement>('speed');
@@ -318,8 +347,8 @@ export const createPitchScreen =
     /** The chart as played: moved into the instrument's key, shifted, and at the practice speed. */
     const selectedChart = (): Chart => {
       const song = songEntry().chart;
-      const inKey = c.instruments ? shiftForInstrument(song, instrument()) : 0;
-      const moved = transposeChart(song, inKey + Number(keySel.value));
+      const toInstrument = c.instruments ? shiftForInstrument(song, instrument()) : 0;
+      const moved = transposeChart(song, toInstrument + extraShift());
       return c.instruments ? rescaleChart(moved, settings.get().speed) : moved;
     };
 

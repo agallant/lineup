@@ -280,8 +280,19 @@ const scenarios = {
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/wind');
       await page.selectOption('[data-id=song]', 'wind-scale');
-      // a diatonic instrument in another key: the song moves into G and the chart follows
+      // the default is a generic instrument in C whose key is the shift: +2 makes it a D whistle
+      check(
+        (await page.inputValue('[data-id=instrument]')) === 'generic',
+        'the generic instrument is the default',
+      );
+      await page.selectOption('[data-id=key]', '2');
+      const generic = await page.$$eval('[data-id=chart] .fing-row', (r) => r[0]?.textContent);
+      check(/^D5/.test(generic ?? ''), `generic set to +2 has a D whistle's chart (${generic})`);
+      // a preset starts from its own key: the old shift does not carry over
       await page.selectOption('[data-id=instrument]', 'whistle-g');
+      const shift = await page.inputValue('[data-id=key]');
+      check(shift === '0', `choosing an instrument resets the shift to None (${shift})`);
+      // a diatonic instrument in another key: the song moves into G and the chart follows
       const rows = await page.$$eval('[data-id=chart] .fing-row', (r) =>
         r.map((x) => x.textContent),
       );
@@ -340,8 +351,8 @@ const scenarios = {
         await page.goto(URL_BASE + '#/' + route);
         const groups = await page.$$eval('[data-id=song] optgroup', (g) => g.map((x) => x.label));
         check(
-          groups.join() === 'Songs,Exercises',
-          `${route}: the song menu has Songs and Exercises (${groups.join(', ')})`,
+          groups.join() === 'Songs,Exercises,Random',
+          `${route}: the song menu has Songs, Exercises and Random (${groups.join(', ')})`,
         );
         await page.selectOption('[data-id=song]', id);
         await page.uncheck('[data-id=opt-metronome]');

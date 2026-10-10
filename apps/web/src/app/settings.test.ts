@@ -72,12 +72,13 @@ describe('SettingsStore', () => {
 
   it('remembers the wind instrument and the fingering option, and ignores unknown instruments', () => {
     const s = new SettingsStore(new Mem());
-    expect(s.get()).toMatchObject({ windInstrument: 'whistle-d', showFingerings: true });
+    expect(s.get()).toMatchObject({ windInstrument: 'generic', showFingerings: true });
     expect(s.update({ windInstrument: 'recorder-alto', showFingerings: false })).toMatchObject({
       windInstrument: 'recorder-alto',
       showFingerings: false,
     });
-    expect(s.update({ windInstrument: 'kazoo' }).windInstrument).toBe('whistle-d');
+    expect(s.update({ windInstrument: 'kazoo' }).windInstrument).toBe('generic');
+    expect(s.update({ windInstrument: 'ocarina-c12' }).windInstrument).toBe('generic'); // dropped
     expect(s.update({ showFingerings: 1 as never }).showFingerings).toBe(true);
   });
 

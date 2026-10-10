@@ -60,8 +60,8 @@ in song time and subtract the calibrated latency offset themselves.
   lanes, detector settings, judgment settings. Validated at load.
 - **Chords** (`chords.ts`): ukulele fingerings -> the MIDI notes a chord sounds on the profile's
   tuning, plus `chartChords` / `chordShapesFor` to get just the chords a song uses.
-- **Wind instruments** (`wind-instruments.ts`): a list of diatonic instruments (whistles, recorders,
-  an ocarina), each a family, a tonic (its lowest note) and a range. Fingerings are tables by SCALE
+- **Wind instruments** (`wind-instruments.ts`): a list of diatonic instruments (a generic one in C whose key is the
+  semitone setting, `inKey`, then whistles and recorders), each a family, a tonic (its lowest note) and a range. Fingerings are tables by SCALE
   DEGREE per family, so one chart serves every key of whistle; `shiftForInstrument` uses the chart's
   `meta.tonic` to move a song into the instrument's key, `fingeringFor` / `windScale` give the holes,
   and `checkFit` names notes out of range or outside the scale. The app draws them in
@@ -120,7 +120,7 @@ in song time and subtract the calibrated latency offset themselves.
   (count-in/metronome/guide-tone plan, scheduled on the audio clock), `calibration-run`,
   `mic-advice`, `session-log` (the copy-to-clipboard report). Screens (`app/screens/`) are thin DOM
   wrappers around these. `screens/pitch.ts` is the shared pitch game screen: `sing.ts` (voice) and
-  `wind.ts` (whistle, recorder, ocarina) are just a config object each, so a new pitched
+  `wind.ts` (whistle, recorder) are just a config object each, so a new pitched
   instrument is a profile, songs, a synthetic performer and ~15 lines.
 - `scores.ts` (`ScoreStore`): best score per profile + song + variant in localStorage, capped,
   corrupt-tolerant. `game/song-info.ts`: the artist / bpm / length / notes line under a song picker.

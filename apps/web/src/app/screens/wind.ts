@@ -5,7 +5,7 @@ export const windScreen = createPitchScreen({
   mode: 'Windline',
   profileId: 'wind',
   title: 'Windline',
-  subtitle: 'whistle, recorder, ocarina',
+  subtitle: 'whistle, recorder',
   micPrompt: 'Tap “Start mic”, then play a long steady note.',
   adviceText: {
     clipping: 'Too loud: the signal is clipping. Move back from the mic or blow more gently.',
@@ -17,7 +17,7 @@ export const windScreen = createPitchScreen({
   quietExamples: 'someone humming, a whistling kettle or a TV',
   instruments: true,
   rangeText: (low, high) =>
-    `Plays from ${low} to ${high}. The song is moved into your instrument's key; the octave matters (a fingering has one register), so use Extra shift if it sits too low or high.`,
+    `Plays from ${low} to ${high}. The song is moved into your instrument's key; the octave matters (a fingering has one register), so use the key or shift setting if it sits too low or high.`,
   demoWho: 'player',
   demoPerformer: () =>
     windPerformer({

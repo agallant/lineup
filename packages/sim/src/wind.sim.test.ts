@@ -69,7 +69,7 @@ describe('wind: an in-tune player', () => {
 });
 
 describe("wind: the song moved into each instrument's key", () => {
-  // every whistle, recorder and ocarina the app offers, from the low whistle (D4) to the sopranino (F5 up)
+  // every whistle and recorder the app offers, from the low whistle (D4) to the sopranino (F5 up)
   it.each(WIND_INSTRUMENTS.map((i) => [i.label, i] as const))(
     '%s plays the scale perfectly in its own key',
     (_label, instrument) => {

@@ -7,7 +7,7 @@ that you play by performing on a real instrument. One mode per instrument family
 | ------------- | ---------------------------------- | -------------------- |
 | **Strumline** | ukulele (GCEA re-entrant)          | playable (`#/strum`) |
 | **Singline**  | voice                              | playable (`#/sing`)  |
-| **Windline**  | ocarina, recorder, penny whistle   | playable (`#/wind`)  |
+| **Windline**  | recorder, tin whistle              | playable (`#/wind`)  |
 | **Beatline**  | claps, taps, hand drums, kit, pads | playable (`#/beat`)  |
 
 It's a static web app, built for Safari on iOS/iPadOS first and also tested in
@@ -127,7 +127,7 @@ the direction arrow is a guide, since direction is not detected (see Limitations
 4. Use headphones for the metronome, check for a click leak, calibrate timing, **Play**. _Watch
    auto-play demo_ plays a synthetic ukulele through the same pipeline.
 
-## Windline (whistle, recorder, ocarina) on the iPad
+## Windline (whistle, recorder) on the iPad
 
 `#/wind` (home screen -> Windline). It is Singline's pitch pipeline with a wind profile: range
 C4 to C7, a shorter analysis window for high notes, and **octaves count** (a fingering has one
@@ -136,12 +136,14 @@ register, so an octave off is wrong, unlike singing).
 1. **Start mic** and play a long steady note: you should see the note name and a green clarity
    bar. Hold the instrument a little to the side of the mic: a breath straight into it
    overloads it (the level meter warns about clipping).
-2. Pick your **Instrument**: tin whistles in D, C, B-flat, A, G, F and E-flat, a low D whistle,
-   soprano, alto, tenor and sopranino recorders, or a 12-hole ocarina. Whistles and recorders are
-   diatonic, so **the song is moved into the instrument's key** (a C-major song becomes D major on a
-   D whistle) and its notes then use only the instrument's own scale. _Extra shift_ nudges it further
-   (an octave problem, or a lower or higher register). A warning appears if some notes fall outside
-   the instrument's range or scale.
+2. Pick your **Instrument**. The default is a **generic** diatonic instrument in C: choose its
+   **Key** yourself (+2 is a D whistle). Or pick a **preset**: tin whistles in D, C, B-flat, A, G, F
+   and E-flat, a low D whistle, or soprano, alto, tenor and sopranino recorders. Whistles and
+   recorders are diatonic, so **the song is moved into the instrument's key** (a C-major song becomes
+   D major on a D whistle) and its notes then use only the instrument's own scale. On a preset,
+   _Extra shift_ nudges it further (an octave problem, or a lower or higher register) and starts at
+   None whenever you change instrument. A warning appears if some notes fall outside the
+   instrument's range or scale.
 3. The **fingering chart** lists the instrument's scale with the holes drawn (filled = covered),
    the notes of the chosen song highlighted, and "blow harder" for a whistle's second octave. While
    playing, the **current and next note's fingering** are shown under the highway (switch it off under
@@ -153,7 +155,7 @@ register, so an octave off is wrong, unlike singing).
 
 **Exercises** (under the song menu): the same scales, modes, thirds, patterns, arpeggios, long
 tones and interval ladder as Singline, in the instrument's key. Every one fits every whistle; the
-minor, mixolydian and minor-pentatonic ones run above a recorder's or the ocarina's range, where
+minor, mixolydian and minor-pentatonic ones run above a recorder's range, where
 the range warning appears.
 
 **🎲 Random melody**: as in Singline, in the instrument's key. In a major key, every random
@@ -165,8 +167,8 @@ move into your key).
 **About the fingerings:** they are the standard six-hole whistle fingerings (the same by scale degree
 in every key) and the Baroque (English) recorder fingerings for the major scale. Sharps and flats
 outside the key are left out because they vary between instruments (cross-fingerings, half-holes); the
-chart says "use your instrument's own chart" for those. Recorder notes above D6 and ocarina fingerings
-(which differ between makers) are not shown. Check them against your own instrument's chart, and tell
+chart says "use your instrument's own chart" for those. Recorder notes above D6 are not shown. There is
+no ocarina: its fingerings differ between makers, so there is no chart to show. Check them against your own instrument's chart, and tell
 me if one is wrong.
 
 ## Beatline (claps, taps, percussion) on the iPad
@@ -206,7 +208,7 @@ counts; **Clap + tap**, two lanes where you teach it your two sounds first; **Dr
   reliably at realistic strum speeds (gaps of 4 to 10 ms between strings: 55 to 80% right), so the
   charts show the arrows as a guide and only timing and the chord are judged.
 - **Windline is simulation-verified only, and its fingerings are from standard charts, not checked on
-  every make.** The wind profile and synthetic whistle/recorder/ocarina
+  every make.** The wind profile and synthetic whistle/recorder
   prove the software chain (high notes, chiff, drift, airy breath); a real whistle's shrill peaks,
   breath blasts into the mic and room reflections are untested.
 - **Overlapping ringing notes confuse single-note pitch tracking.** Two notes
