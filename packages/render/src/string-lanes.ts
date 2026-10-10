@@ -5,6 +5,9 @@ import { COLORS, type Canvas2D, type RenderSize, type RenderView, type Renderer 
 /** Height of the band above the strings where each note's chord and strum direction are written. */
 export const HEADER_PX = 24;
 
+/** An open string's ring, as a fraction of a fretted string's disc. */
+const OPEN_RADIUS = 0.5;
+
 /** String colours, indexed like the profile's tuning (ukulele: G C E A). */
 const STRING_COLORS = ['#4cc9f0', '#ff9f43', '#c77dff', '#8fb0ff'] as const;
 
@@ -46,7 +49,8 @@ const arrow = (n: ChartNote): string =>
 /**
  * String lanes ("tab highway"): one horizontal line per string, time scrolling toward a "now"
  * line on the left. Each note shows what to do with the left hand: the fret number to hold on
- * every string it uses (a hollow ring and 0 for an open string). A strum has marks on several
+ * every string it uses (an open string is a small hollow ring with no number, so the held strings
+ * stand out). A strum has marks on several
  * strings joined by a bar; a plucked note has one mark. Above the strings, the chord name and
  * the stroke direction are written. Once judged, a note is dimmed and ringed green / yellow /
  * red, and every detected hit flashes the now line.
@@ -186,30 +190,31 @@ export class StringLanesRenderer implements Renderer {
     g.textBaseline = 'middle';
     for (const m of marks) {
       const y = rowY(m.row);
-      g.globalAlpha = alpha;
+      const open = m.fret === 0;
+      const r = open ? radius * OPEN_RADIUS : radius;
+      g.globalAlpha = alpha * (open ? 0.85 : 1);
       g.beginPath();
-      g.arc(x, y, radius, 0, Math.PI * 2);
-      if (m.fret === 0) {
-        // open string: a hollow ring
+      g.arc(x, y, r, 0, Math.PI * 2);
+      if (open) {
+        // nothing to hold: a small hollow ring, quiet next to the numbered discs
         g.fillStyle = COLORS.bg;
         g.fill();
         g.strokeStyle = m.color;
-        g.lineWidth = 2.5;
+        g.lineWidth = 2;
         g.stroke();
-        g.fillStyle = m.color;
       } else {
         g.fillStyle = m.color;
         g.fill();
         g.fillStyle = COLORS.bg;
+        g.fillText(String(m.fret), x, y);
       }
-      g.fillText(String(m.fret), x, y);
       const ring = statusRing(status);
       if (ring) {
         g.globalAlpha = 1;
         g.strokeStyle = ring;
         g.lineWidth = 3;
         g.beginPath();
-        g.arc(x, y, radius + 2, 0, Math.PI * 2);
+        g.arc(x, y, r + 2, 0, Math.PI * 2);
         g.stroke();
       }
     }

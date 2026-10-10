@@ -169,21 +169,20 @@ describe('StringLanesRenderer', () => {
     expect(labels.map((t) => t.fill)).toEqual(stringRows(profile).map((r) => r.color));
   });
 
-  it('writes the fret to hold on each string for a chord, highest string on top', () => {
+  it('writes the fret to hold on the held string and leaves open strings unnumbered', () => {
     // C: G 0, C 0, E 0, A 3
     const g = draw(view([note(1, { chord: 'C', direction: 'down' })]));
     const x = noteX(1);
-    const marks = g
-      .texts()
-      .filter((t) => t.x === x && /^\d$/.test(t.text))
-      .sort((p, q) => p.y - q.y);
-    expect(marks.map((t) => [t.text, t.y])).toEqual([
-      ['3', rowY(0)], // A string, the top line
-      ['0', rowY(1)],
-      ['0', rowY(2)],
-      ['0', rowY(3)], // G string, the bottom line
-    ]);
-    expect(g.discs().filter((d) => d.x === x)).toHaveLength(4);
+    const numbers = g.texts().filter((t) => t.x === x && /^\d+$/.test(t.text));
+    expect(numbers.map((t) => [t.text, t.y])).toEqual([['3', rowY(0)]]); // A string, the top line
+    // all four strings still have a mark
+    expect(
+      g
+        .discs()
+        .filter((d) => d.x === x)
+        .map((d) => d.y)
+        .sort((p, q) => p - q),
+    ).toEqual([0, 1, 2, 3].map(rowY));
   });
 
   it('joins a strum with a bar across the strings it uses', () => {
@@ -191,19 +190,29 @@ describe('StringLanesRenderer', () => {
     expect(g.verticalLines(noteX(1))).toContainEqual([rowY(0), rowY(3)]);
   });
 
-  it('draws open strings as hollow rings and fretted strings as filled discs', () => {
+  it('draws open strings as small hollow rings and fretted strings as bigger filled discs', () => {
     const g = draw(view([note(1, { chord: 'C' })]));
     const x = noteX(1);
     const discs = g.discs().filter((d) => d.x === x);
     // the A-string fret 3 is filled with the string's colour; the open strings are filled with the
-    // background and outlined in theirs
-    expect(discs.find((d) => d.y === rowY(0))!.fill).toBe(stringColor(3));
-    for (const row of [1, 2, 3]) expect(discs.find((d) => d.y === rowY(row))!.fill).toBe(COLORS.bg);
+    // background, outlined in theirs, and smaller
+    const held = discs.find((d) => d.y === rowY(0))!;
+    expect(held.fill).toBe(stringColor(3));
+    for (const row of [1, 2, 3]) {
+      const open = discs.find((d) => d.y === rowY(row))!;
+      expect(open.fill).toBe(COLORS.bg);
+      expect(open.r).toBeLessThan(held.r * 0.7);
+    }
     const outlines = g
       .hollow()
       .filter((r) => r.x === x)
       .sort((p, q) => p.y - q.y);
     expect(outlines.map((r) => r.stroke)).toEqual([stringColor(2), stringColor(1), stringColor(0)]);
+  });
+
+  it('never writes a 0: an open string has no number', () => {
+    const g = draw(view([note(1, { chord: 'C' }), note(2, { frets: [0, 0, 0, 0] })]));
+    expect(g.texts().filter((t) => t.text === '0')).toEqual([]);
   });
 
   it('shows a plucked note as a single mark with no bar and nothing on the other strings', () => {
@@ -212,7 +221,7 @@ describe('StringLanesRenderer', () => {
     expect(g.discs().filter((d) => d.x === x)).toHaveLength(1);
     expect(g.discs().find((d) => d.x === x)!.y).toBe(rowY(2)); // C is the third line from the top
     expect(g.verticalLines(x)).toEqual([]);
-    expect(g.texts().filter((t) => t.x === x)).toEqual([expect.objectContaining({ text: '0' })]);
+    expect(g.texts().filter((t) => t.x === x)).toEqual([]); // an open string: a ring, no number
   });
 
   it("uses the chart's own frets over the chord's, and leaves unplayed strings blank", () => {
@@ -254,9 +263,7 @@ describe('StringLanesRenderer', () => {
       [2, COLORS.good],
       [3, COLORS.miss],
     ] as const) {
-      const rings = g
-        .rings()
-        .filter((r) => r.x === noteX(t) && r.stroke === color && r.r > layout.radius * 0.5);
+      const rings = g.rings().filter((r) => r.x === noteX(t) && r.stroke === color);
       expect(rings.length, `t=${t}`).toBe(4);
     }
     const dimmed = g.calls.filter((c) => c.op === 'fill' && c.alpha < 1);
