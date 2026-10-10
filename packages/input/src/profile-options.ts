@@ -2,6 +2,7 @@ import type { InstrumentProfile } from '@lineup/core';
 import type { OnsetDetectorOptions } from './dsp/onset';
 import type { PitchTrackerOptions } from './dsp/pitch';
 import type { InputAnalyzerOptions } from './dsp/analyzer';
+import type { ChordShapes } from './dsp/chord';
 
 /** Detector options for the profile's pitch window and gates. */
 export function pitchOptionsFromProfile(profile: InstrumentProfile): PitchTrackerOptions {
@@ -28,7 +29,18 @@ export function onsetOptionsFromProfile(profile: InstrumentProfile): OnsetDetect
   };
 }
 
-export function analyzerOptionsFromProfile(profile: InstrumentProfile): InputAnalyzerOptions {
+export interface AnalyzerExtras {
+  /** For a strum profile: the chords the song uses (name -> sounding MIDI notes). Turns on chord recognition. */
+  chords?: ChordShapes;
+}
+
+export function analyzerOptionsFromProfile(
+  profile: InstrumentProfile,
+  { chords }: AnalyzerExtras = {},
+): InputAnalyzerOptions {
+  if (profile.input === 'strum' && chords && Object.keys(chords).length > 0) {
+    return { strum: { onset: onsetOptionsFromProfile(profile), chords } };
+  }
   if (profile.input === 'percussion') {
     // the percussion detector names its options differently: lookbackMs is its referenceDelay
     const o = profile.detector.onset;

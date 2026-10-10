@@ -1,0 +1,396 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Four chords (C Am F G)",
+    "artist": "Lineup",
+    "bpm": 100,
+    "countInBeats": 4,
+    "instruments": ["ukulele-strum"]
+  },
+  "notes": [
+    {
+      "t": 0.0,
+      "lane": "down",
+      "expected": {
+        "chord": "C",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 0.6,
+      "lane": "down",
+      "expected": {
+        "chord": "C",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 0.9,
+      "lane": "up",
+      "expected": {
+        "chord": "C",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 1.5,
+      "lane": "up",
+      "expected": {
+        "chord": "C",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 1.8,
+      "lane": "down",
+      "expected": {
+        "chord": "C",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 2.1,
+      "lane": "up",
+      "expected": {
+        "chord": "C",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 2.4,
+      "lane": "down",
+      "expected": {
+        "chord": "C",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 3.0,
+      "lane": "down",
+      "expected": {
+        "chord": "C",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 3.3,
+      "lane": "up",
+      "expected": {
+        "chord": "C",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 3.9,
+      "lane": "up",
+      "expected": {
+        "chord": "C",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 4.2,
+      "lane": "down",
+      "expected": {
+        "chord": "C",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 4.5,
+      "lane": "up",
+      "expected": {
+        "chord": "C",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 4.8,
+      "lane": "down",
+      "expected": {
+        "chord": "Am",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 5.4,
+      "lane": "down",
+      "expected": {
+        "chord": "Am",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 5.7,
+      "lane": "up",
+      "expected": {
+        "chord": "Am",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 6.3,
+      "lane": "up",
+      "expected": {
+        "chord": "Am",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 6.6,
+      "lane": "down",
+      "expected": {
+        "chord": "Am",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 6.9,
+      "lane": "up",
+      "expected": {
+        "chord": "Am",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 7.2,
+      "lane": "down",
+      "expected": {
+        "chord": "Am",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 7.8,
+      "lane": "down",
+      "expected": {
+        "chord": "Am",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 8.1,
+      "lane": "up",
+      "expected": {
+        "chord": "Am",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 8.7,
+      "lane": "up",
+      "expected": {
+        "chord": "Am",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 9.0,
+      "lane": "down",
+      "expected": {
+        "chord": "Am",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 9.3,
+      "lane": "up",
+      "expected": {
+        "chord": "Am",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 9.6,
+      "lane": "down",
+      "expected": {
+        "chord": "F",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 10.2,
+      "lane": "down",
+      "expected": {
+        "chord": "F",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 10.5,
+      "lane": "up",
+      "expected": {
+        "chord": "F",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 11.1,
+      "lane": "up",
+      "expected": {
+        "chord": "F",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 11.4,
+      "lane": "down",
+      "expected": {
+        "chord": "F",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 11.7,
+      "lane": "up",
+      "expected": {
+        "chord": "F",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 12.0,
+      "lane": "down",
+      "expected": {
+        "chord": "F",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 12.6,
+      "lane": "down",
+      "expected": {
+        "chord": "F",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 12.9,
+      "lane": "up",
+      "expected": {
+        "chord": "F",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 13.5,
+      "lane": "up",
+      "expected": {
+        "chord": "F",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 13.8,
+      "lane": "down",
+      "expected": {
+        "chord": "F",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 14.1,
+      "lane": "up",
+      "expected": {
+        "chord": "F",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 14.4,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 15.0,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 15.3,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 15.9,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 16.2,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 16.5,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 16.8,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 17.4,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 17.7,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 18.3,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 18.6,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 18.9,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    }
+  ]
+}

@@ -126,6 +126,18 @@ counts; **Clap + tap**, two lanes where you teach it your two sounds first; **Dr
 
 ## Limitations (known)
 
+- **Strumline chord recognition is simulation-verified only.** A synthetic ukulele (Karplus-Strong
+  strings) is recognised in all twelve fingerings, in room noise and at 44.1 and 48 kHz, but a real
+  ukulele, strumming hand and microphone are untested.
+- **Chords are picked from the song's own chords, not named from scratch.** Choosing among four
+  or five is reliable; **Am, F and C share notes** and are the closest trio (the analyzer says
+  "no chord" rather than guess when two fit about equally, and a strum with no recognised chord
+  still counts for timing).
+- **The first strum right after a quick chord change can read as the old chord**, because that chord
+  is still ringing (about one strum in 24 at 160 bpm in the demo song; pinned by a test).
+- **Strum direction (down vs up) is not detected.** In simulation it could not be told from the audio
+  reliably at realistic strum speeds (gaps of 4 to 10 ms between strings: 55 to 80% right), so the
+  charts show the arrows as a guide and only timing and the chord are judged.
 - **Windline is simulation-verified only.** The wind profile and synthetic whistle/recorder/ocarina
   prove the software chain (high notes, chiff, drift, airy breath); a real whistle's shrill peaks,
   breath blasts into the mic and room reflections are untested.

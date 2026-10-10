@@ -126,7 +126,8 @@ describe('ukulele strum mode: full pipeline', () => {
   it.each([100, 140, 180, 220, 260])('keeps up at %d bpm (strums as close as 115 ms)', (bpm) => {
     const chart = rescale(strumChart, bpm);
     const perf = renderPerformance(chart, ukuleleStrumPerformer, { latency: 0.1 });
-    const r = runDiscrete(perf, chart, strum, { latencyOffset: 0.1 });
+    // timing only: chord recognition is covered by strumline.sim.test.ts
+    const r = runDiscrete(perf, chart, strum, { latencyOffset: 0.1, chords: {} });
     expect(r.score.counts).toEqual({ perfect: 24, good: 0, miss: 0 });
   });
 

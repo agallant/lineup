@@ -1,0 +1,396 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Folk strum (G C D)",
+    "artist": "Lineup",
+    "bpm": 96,
+    "countInBeats": 4,
+    "instruments": ["ukulele-strum"]
+  },
+  "notes": [
+    {
+      "t": 0.0,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 0.625,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 0.938,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 1.562,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 1.875,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 2.188,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 2.5,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 3.125,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 3.438,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 4.062,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 4.375,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 4.688,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 5.0,
+      "lane": "down",
+      "expected": {
+        "chord": "C",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 5.625,
+      "lane": "down",
+      "expected": {
+        "chord": "C",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 5.938,
+      "lane": "up",
+      "expected": {
+        "chord": "C",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 6.562,
+      "lane": "up",
+      "expected": {
+        "chord": "C",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 6.875,
+      "lane": "down",
+      "expected": {
+        "chord": "C",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 7.188,
+      "lane": "up",
+      "expected": {
+        "chord": "C",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 7.5,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 8.125,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 8.438,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 9.062,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 9.375,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 9.688,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 10.0,
+      "lane": "down",
+      "expected": {
+        "chord": "D",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 10.625,
+      "lane": "down",
+      "expected": {
+        "chord": "D",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 10.938,
+      "lane": "up",
+      "expected": {
+        "chord": "D",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 11.562,
+      "lane": "up",
+      "expected": {
+        "chord": "D",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 11.875,
+      "lane": "down",
+      "expected": {
+        "chord": "D",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 12.188,
+      "lane": "up",
+      "expected": {
+        "chord": "D",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 12.5,
+      "lane": "down",
+      "expected": {
+        "chord": "D",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 13.125,
+      "lane": "down",
+      "expected": {
+        "chord": "D",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 13.438,
+      "lane": "up",
+      "expected": {
+        "chord": "D",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 14.062,
+      "lane": "up",
+      "expected": {
+        "chord": "D",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 14.375,
+      "lane": "down",
+      "expected": {
+        "chord": "D",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 14.688,
+      "lane": "up",
+      "expected": {
+        "chord": "D",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 15.0,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 15.625,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 15.938,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 16.562,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 16.875,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 17.188,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 17.5,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 18.125,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 18.438,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 19.062,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    },
+    {
+      "t": 19.375,
+      "lane": "down",
+      "expected": {
+        "chord": "G",
+        "direction": "down"
+      }
+    },
+    {
+      "t": 19.688,
+      "lane": "up",
+      "expected": {
+        "chord": "G",
+        "direction": "up"
+      }
+    }
+  ]
+}

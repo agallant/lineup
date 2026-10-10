@@ -1,5 +1,7 @@
 import {
   ContinuousJudge,
+  chartChords,
+  chordShapesFor,
   classifyEvent,
   type Classification,
   type TimbreModel,
@@ -23,6 +25,7 @@ import {
   OnsetPitchAttacher,
   analyzerOptionsFromProfile,
   toPitchFrame,
+  type AnalyzerExtras,
   type AnalyzerMessage,
 } from '@lineup/input';
 import type { RenderedPerformance } from './performance';
@@ -41,6 +44,8 @@ export interface PipelineConfig<I> {
   adapt: (message: AnalyzerMessage, clock: SongClock) => I[];
   /** Called once at the end for inputs still held back (e.g. pitch-attachment waits). */
   flush?: (clock: SongClock) => I[];
+  /** Extra analyzer settings (e.g. the chords for a strum profile). */
+  analyzer?: AnalyzerExtras;
   /** Samples per AudioWorklet render quantum. */
   blockSize?: number;
   /** How often the simulated game loop calls advance(), seconds (a 60 fps rAF by default). */
@@ -81,7 +86,10 @@ export function runPipeline<I>(config: PipelineConfig<I>): PipelineResult<I> {
   time.currentTime = ctxStart;
   clock.start(songStart);
 
-  const analyzer = new InputAnalyzer(sampleRate, analyzerOptionsFromProfile(profile));
+  const analyzer = new InputAnalyzer(
+    sampleRate,
+    analyzerOptionsFromProfile(profile, config.analyzer),
+  );
   const session = new GameSession(chart, judge, clock, config.scoring);
   const inputs: I[] = [];
   const messages: AnalyzerMessage[] = [];
@@ -128,6 +136,8 @@ export interface DiscreteRunOptions {
   blockSize?: number;
   frameInterval?: number;
   deliveryDelay?: number;
+  /** Strum: chord shapes to recognise. Default: every chord the chart expects (when the profile matches chords). */
+  chords?: Record<string, number[]>;
   /** Percussion: the enrolled timbre model that assigns each hit to a lane. Null/omitted: no classification. */
   timbreModel?: TimbreModel | null;
 }
@@ -147,8 +157,20 @@ export function runDiscrete(
   performance: RenderedPerformance,
   chart: Chart,
   profile: InstrumentProfile,
-  { latencyOffset, blockSize, frameInterval, deliveryDelay, timbreModel }: DiscreteRunOptions,
+  {
+    latencyOffset,
+    blockSize,
+    frameInterval,
+    deliveryDelay,
+    timbreModel,
+    chords,
+  }: DiscreteRunOptions,
 ): DiscreteRunResult {
+  const chordShapes =
+    chords ??
+    (profile.input === 'strum' && profile.judgment.match.chord
+      ? chordShapesFor(profile, chartChords(chart))
+      : undefined);
   const classifications: Classification[] = [];
   const judge = new DiscreteJudge(chart.notes, discreteConfigFromProfile(profile, latencyOffset));
   const attacher = profile.judgment.match.pitch ? new OnsetPitchAttacher() : null;
@@ -162,6 +184,7 @@ export function runDiscrete(
     chart,
     profile,
     judge,
+    ...(chordShapes ? { analyzer: { chords: chordShapes } } : {}),
     adapt: (message, clock) => {
       if (attacher) return attacher.push(message).map((e) => toSongTime(e, clock));
       if (message.type !== 'input') return [];

@@ -3,6 +3,7 @@ import { MIN_DB, toDb } from './level';
 import { OnsetDetector, type OnsetDetectorOptions } from './onset';
 import { PercussionAnalyzer, type PercussionAnalyzerOptions } from './percussion-analyzer';
 import { PitchTracker, type PitchTrackerOptions } from './pitch';
+import { StrumAnalyzer, type StrumAnalyzerOptions } from './strum-analyzer';
 
 export interface InputAnalyzerOptions {
   pitch?: PitchTrackerOptions;
@@ -12,6 +13,11 @@ export interface InputAnalyzerOptions {
    * (no PitchTracker runs). Level `frame` messages are still emitted.
    */
   percussion?: PercussionAnalyzerOptions;
+  /**
+   * Strum mode: onsets with chord recognition (no PitchTracker runs). Level
+   * `frame` messages are still emitted.
+   */
+  strum?: StrumAnalyzerOptions;
 }
 
 /**
@@ -23,6 +29,7 @@ export class InputAnalyzer {
   private readonly pitch: PitchTracker | null;
   private readonly onsets: OnsetDetector | null;
   private readonly percussion: PercussionAnalyzer | null;
+  private readonly strum: StrumAnalyzer | null;
   private peakSinceFrame = 0;
   private hopSumSq = 0;
   private hopCount = 0;
@@ -34,12 +41,15 @@ export class InputAnalyzer {
     this.percussion = options.percussion
       ? new PercussionAnalyzer(sampleRate, options.percussion)
       : null;
-    this.pitch = this.percussion ? null : new PitchTracker(sampleRate, options.pitch);
-    this.onsets = this.percussion ? null : new OnsetDetector(sampleRate, options.onset);
+    this.strum = options.strum ? new StrumAnalyzer(sampleRate, options.strum) : null;
+    const windowed = this.percussion || this.strum;
+    this.pitch = windowed ? null : new PitchTracker(sampleRate, options.pitch);
+    this.onsets = windowed ? null : new OnsetDetector(sampleRate, options.onset);
   }
 
   process(block: Float32Array, startFrame: number): AnalyzerMessage[] {
     if (this.percussion) return this.percussion.process(block, startFrame);
+    if (this.strum) return this.strum.process(block, startFrame);
     const out: AnalyzerMessage[] = [];
     if (!this.onsets || !this.pitch) return out;
 
