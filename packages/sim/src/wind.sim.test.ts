@@ -6,10 +6,12 @@
  * real instruments, breath or rooms.
  */
 import {
+  WIND_INSTRUMENTS,
   applyDifficulty,
   getProfile,
   getSong,
   loadChart,
+  shiftForInstrument,
   transposeChart,
   type Chart,
 } from '@lineup/core';
@@ -63,6 +65,31 @@ describe('wind: an in-tune player', () => {
     const r = play(up);
     expect(r.score.counts.miss).toBe(0);
     expect(r.score.counts.perfect).toBe(12);
+  });
+});
+
+describe("wind: the song moved into each instrument's key", () => {
+  // every whistle, recorder and ocarina the app offers, from the low whistle (D4) to the sopranino (F5 up)
+  it.each(WIND_INSTRUMENTS.map((i) => [i.label, i] as const))(
+    '%s plays the scale perfectly in its own key',
+    (_label, instrument) => {
+      const song = getSong('wind-scale');
+      const moved = transposeChart(song, shiftForInstrument(song, instrument));
+      const first = moved.notes[0]!.pitch!;
+      expect(first).toBe(instrument.tonic);
+      const r = play(take(moved, 12));
+      expect(r.score.counts, instrument.id).toEqual({ perfect: 12, good: 0, miss: 0 });
+    },
+  );
+
+  it('Ode to Joy on the lowest and highest instruments', () => {
+    const song = getSong('wind-ode');
+    for (const id of ['whistle-low-d', 'recorder-sopranino']) {
+      const inst = WIND_INSTRUMENTS.find((i) => i.id === id)!;
+      const moved = transposeChart(take(song, 15), shiftForInstrument(song, inst));
+      const r = play(moved);
+      expect(r.score.counts.miss, id).toBe(0);
+    }
   });
 });
 

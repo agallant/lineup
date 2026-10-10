@@ -49,6 +49,11 @@ export interface ChartMeta {
   audio?: string;
   /** Profile ids this chart is intended for, e.g. ["voice"]. */
   instruments?: string[];
+  /**
+   * MIDI note of the tonic of the major key the song is written in (72 = C5, a song in C). Lets
+   * diatonic instruments (a whistle in D, a recorder in F...) move the song into their own key.
+   */
+  tonic?: number;
 }
 
 export interface Chart {
@@ -57,7 +62,15 @@ export interface Chart {
   notes: ChartNote[];
 }
 
-const META_KEYS = ['title', 'artist', 'bpm', 'countInBeats', 'audio', 'instruments'] as const;
+const META_KEYS = [
+  'title',
+  'artist',
+  'bpm',
+  'countInBeats',
+  'audio',
+  'instruments',
+  'tonic',
+] as const;
 const NOTE_KEYS = ['t', 'duration', 'lane', 'pitch', 'expected'] as const;
 const TOP_KEYS = ['version', 'meta', 'notes'] as const;
 
@@ -131,6 +144,7 @@ export function loadChart(input: unknown): Loaded<Chart> {
     });
     const artist = readString(metaRaw, 'artist', 'meta', p, { maxLength: 80 });
     const audio = readString(metaRaw, 'audio', 'meta', p);
+    const tonic = readNumber(metaRaw, 'tonic', 'meta', p, { min: 0, max: 127, integer: true });
     let instruments: string[] | undefined;
     const instrumentsRaw = readArray(metaRaw, 'instruments', 'meta', p);
     if (instrumentsRaw) {
@@ -149,6 +163,7 @@ export function loadChart(input: unknown): Loaded<Chart> {
       if (artist !== undefined) meta.artist = artist;
       if (audio !== undefined) meta.audio = audio;
       if (instruments !== undefined) meta.instruments = instruments;
+      if (tonic !== undefined) meta.tonic = tonic;
     }
   }
 
@@ -259,6 +274,12 @@ export function transposeChart(chart: Chart, semitones: number): Chart {
       n.pitch === undefined ? n : { ...n, pitch: n.pitch + semitones },
     ),
   };
+}
+
+/** Index of the first note that starts after `t`, or null when none is left. */
+export function nextNoteIndex(chart: Pick<Chart, 'notes'>, t: number): number | null {
+  const i = chart.notes.findIndex((n) => n.t > t);
+  return i < 0 ? null : i;
 }
 
 /**

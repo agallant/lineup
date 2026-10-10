@@ -8,8 +8,9 @@ export const windScreen = createPitchScreen({
   subtitle: 'whistle, recorder, ocarina',
   micPrompt: 'Tap “Start mic”, then play a long steady note.',
   quietExamples: 'someone humming, a whistling kettle or a TV',
+  instruments: true,
   rangeText: (low, high) =>
-    `Play from ${low} to ${high}. The right octave matters, so use the Key menu to move the song to where your instrument sounds best.`,
+    `Plays from ${low} to ${high}. The song is moved into your instrument's key; the octave matters (a fingering has one register), so use Extra shift if it sits too low or high.`,
   demoWho: 'player',
   demoPerformer: () =>
     windPerformer({

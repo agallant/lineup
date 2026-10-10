@@ -1,4 +1,10 @@
-import { isDifficulty, type Difficulty, type KeyValueStore } from '@lineup/core';
+import {
+  DEFAULT_WIND_INSTRUMENT,
+  findWindInstrument,
+  isDifficulty,
+  type Difficulty,
+  type KeyValueStore,
+} from '@lineup/core';
 
 export interface Settings {
   /** Show the live debug overlay while playing. */
@@ -11,6 +17,10 @@ export interface Settings {
   keyShift: number;
   /** How forgiving sustained-pitch scoring is (Singline). */
   difficulty: Difficulty;
+  /** Windline: which instrument you play (decides the key the song is moved into and the fingerings). */
+  windInstrument: string;
+  /** Windline: show the fingering of the current and next note while playing. */
+  showFingerings: boolean;
   /** Strumline: also check that the right chord is strummed (experimental), not just the timing. */
   checkChords: boolean;
   /** Strumline: tempo multiplier for practice (1 = the song's own tempo). */
@@ -25,6 +35,8 @@ export const DEFAULT_SETTINGS: Settings = {
   metronome: true,
   keyShift: 0,
   difficulty: 'normal',
+  windInstrument: DEFAULT_WIND_INSTRUMENT,
+  showFingerings: true,
   checkChords: false,
   speed: 1,
   songs: {},
@@ -82,6 +94,14 @@ function sanitize(raw: unknown): Settings {
         ? shift
         : DEFAULT_SETTINGS.keyShift,
     difficulty: isDifficulty(r['difficulty']) ? r['difficulty'] : DEFAULT_SETTINGS.difficulty,
+    windInstrument:
+      typeof r['windInstrument'] === 'string' && findWindInstrument(r['windInstrument'])
+        ? r['windInstrument']
+        : DEFAULT_SETTINGS.windInstrument,
+    showFingerings:
+      typeof r['showFingerings'] === 'boolean'
+        ? r['showFingerings']
+        : DEFAULT_SETTINGS.showFingerings,
     checkChords:
       typeof r['checkChords'] === 'boolean' ? r['checkChords'] : DEFAULT_SETTINGS.checkChords,
     speed:

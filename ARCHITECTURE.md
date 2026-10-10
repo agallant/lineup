@@ -60,6 +60,12 @@ in song time and subtract the calibrated latency offset themselves.
   lanes, detector settings, judgment settings. Validated at load.
 - **Chords** (`chords.ts`): ukulele fingerings -> the MIDI notes a chord sounds on the profile's
   tuning, plus `chartChords` / `chordShapesFor` to get just the chords a song uses.
+- **Wind instruments** (`wind-instruments.ts`): a list of diatonic instruments (whistles, recorders,
+  an ocarina), each a family, a tonic (its lowest note) and a range. Fingerings are tables by SCALE
+  DEGREE per family, so one chart serves every key of whistle; `shiftForInstrument` uses the chart's
+  `meta.tonic` to move a song into the instrument's key, `fingeringFor` / `windScale` give the holes,
+  and `checkFit` names notes out of range or outside the scale. The app draws them in
+  `game/fingering-view.ts` (chart rows, and the now/next strip while playing).
 - **Judge** (`judge/`): a pure state machine behind one interface
   (`feed`, `advance`, `finish`, `judgments`, `judgmentFor`). `DiscreteJudge` does
   onset timing (+ lane/pitch match). `ContinuousJudge` (voice, winds) takes `PitchFrame`s

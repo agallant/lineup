@@ -70,6 +70,17 @@ describe('SettingsStore', () => {
     expect(s.update({ checkChords: 'yes' as never }).checkChords).toBe(false);
   });
 
+  it('remembers the wind instrument and the fingering option, and ignores unknown instruments', () => {
+    const s = new SettingsStore(new Mem());
+    expect(s.get()).toMatchObject({ windInstrument: 'whistle-d', showFingerings: true });
+    expect(s.update({ windInstrument: 'recorder-alto', showFingerings: false })).toMatchObject({
+      windInstrument: 'recorder-alto',
+      showFingerings: false,
+    });
+    expect(s.update({ windInstrument: 'kazoo' }).windInstrument).toBe('whistle-d');
+    expect(s.update({ showFingerings: 1 as never }).showFingerings).toBe(true);
+  });
+
   it('defaults to normal scoring and only accepts known difficulties', () => {
     const s = new SettingsStore(new Mem());
     expect(s.get().difficulty).toBe('normal');

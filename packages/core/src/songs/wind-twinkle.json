@@ -5,7 +5,8 @@
     "artist": "Traditional",
     "bpm": 90,
     "countInBeats": 4,
-    "instruments": ["wind"]
+    "instruments": ["wind"],
+    "tonic": 72
   },
   "notes": [
     {

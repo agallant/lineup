@@ -272,6 +272,20 @@ const scenarios = {
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/wind');
       await page.selectOption('[data-id=song]', 'wind-scale');
+      // a diatonic instrument in another key: the song moves into G and the chart follows
+      await page.selectOption('[data-id=instrument]', 'whistle-g');
+      const rows = await page.$$eval('[data-id=chart] .fing-row', (r) =>
+        r.map((x) => x.textContent),
+      );
+      check(
+        rows.length === 14 && /^G4/.test(rows[0] ?? ''),
+        `the fingering chart lists a G whistle from G4 (${rows.length} notes, first "${rows[0]}")`,
+      );
+      const used = await page.$$eval('[data-id=chart] .fing-row.used', (r) => r.length);
+      check(used === 6, `the notes of the song are highlighted in the chart (${used})`);
+      const range = await text(page, 'range');
+      check(!/⚠/.test(range), `the scale fits a G whistle (${range})`);
+      await shot(page, 'wind-setup');
       await page.check('[data-id=opt-debug]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
@@ -288,6 +302,13 @@ const scenarios = {
         /VOICED/.test(dbg) && /frames\s+1[5-9]\d\/s/.test(dbg),
         `debug overlay shows live pitched frames (${dbg.split('\n').find((l) => l.startsWith('frames'))})`,
       );
+      await page.waitForSelector('[data-id=fingering] .fing-now', { timeout: 20000 });
+      const strip = await text(page, 'fingering');
+      check(
+        /[A-G]#?\d/.test(strip) && (await page.$$('[data-id=fingering] .hole')).length >= 6,
+        `the play screen shows the fingering of the current note (${strip.replace(/\s+/g, ' ')})`,
+      );
+      await shot(page, 'wind-play');
       await page.waitForSelector('[data-id=r-score]', { timeout: 40000 });
       const perfect = Number(await text(page, 'r-perfect'));
       const miss = Number(await text(page, 'r-miss'));

@@ -453,3 +453,85 @@ pre.debug {
   margin: 8px 0;
   color: var(--accent);
 }
+
+/* Windline: fingering charts (filled circle = hole covered) */
+.holes {
+  display: inline-flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.hole-group {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.hole {
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--text);
+}
+
+.hole.on {
+  background: var(--text);
+}
+
+.holes-none {
+  color: var(--muted);
+}
+
+.fingering-chart .fing-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  opacity: 0.6;
+}
+
+.fingering-chart .fing-row.used {
+  opacity: 1;
+  background: var(--panel);
+  outline: 1px solid var(--line);
+}
+
+.fing-note {
+  min-width: 3.2em;
+  font-weight: 700;
+}
+
+.fing-hint,
+.fing-key {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.fingering {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.fingering .fing-now {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 22px;
+}
+
+.fingering .fing-now .hole {
+  width: 28px;
+  height: 28px;
+}
+
+.fingering .fing-next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.65;
+}
