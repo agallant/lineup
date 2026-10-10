@@ -2,8 +2,12 @@ import {
   DEFAULT_WIND_INSTRUMENT,
   findWindInstrument,
   isDifficulty,
+  isMelodyLevel,
+  isScaleId,
+  isSeed,
   type Difficulty,
   type KeyValueStore,
+  type MelodySpec,
 } from '@lineup/core';
 
 export interface Settings {
@@ -29,6 +33,8 @@ export interface Settings {
   speed: number;
   /** Last chosen song id per profile. */
   songs: Record<string, string>;
+  /** The random melody on offer in the song menu (Singline and Windline). */
+  challenge: MelodySpec;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -43,6 +49,7 @@ export const DEFAULT_SETTINGS: Settings = {
   checkChords: false,
   speed: 1,
   songs: {},
+  challenge: { seed: 1, scale: 'major', level: 'easy' },
 };
 
 const KEY = 'lineup.settings.v1';
@@ -60,6 +67,7 @@ export class SettingsStore {
       ...this.value,
       songs: { ...this.value.songs },
       keyShifts: { ...this.value.keyShifts },
+      challenge: { ...this.value.challenge },
     };
   }
 
@@ -78,9 +86,19 @@ export class SettingsStore {
       const text = this.store?.getItem(KEY);
       return text
         ? sanitize(JSON.parse(text) as unknown)
-        : { ...DEFAULT_SETTINGS, songs: {}, keyShifts: {} };
+        : {
+            ...DEFAULT_SETTINGS,
+            songs: {},
+            keyShifts: {},
+            challenge: { ...DEFAULT_SETTINGS.challenge },
+          };
     } catch {
-      return { ...DEFAULT_SETTINGS, songs: {}, keyShifts: {} };
+      return {
+        ...DEFAULT_SETTINGS,
+        songs: {},
+        keyShifts: {},
+        challenge: { ...DEFAULT_SETTINGS.challenge },
+      };
     }
   }
 }
@@ -102,6 +120,14 @@ function sanitize(raw: unknown): Settings {
     }
   }
   const shift = r['keyShift'];
+  const ch = (
+    typeof r['challenge'] === 'object' && r['challenge'] !== null ? r['challenge'] : {}
+  ) as Record<string, unknown>;
+  const challenge: MelodySpec = {
+    seed: isSeed(ch['seed']) ? ch['seed'] : DEFAULT_SETTINGS.challenge.seed,
+    scale: isScaleId(ch['scale']) ? ch['scale'] : DEFAULT_SETTINGS.challenge.scale,
+    level: isMelodyLevel(ch['level']) ? ch['level'] : DEFAULT_SETTINGS.challenge.level,
+  };
   return {
     debug: typeof r['debug'] === 'boolean' ? r['debug'] : DEFAULT_SETTINGS.debug,
     guideTone: typeof r['guideTone'] === 'boolean' ? r['guideTone'] : DEFAULT_SETTINGS.guideTone,
@@ -124,6 +150,7 @@ function sanitize(raw: unknown): Settings {
         ? r['speed']
         : DEFAULT_SETTINGS.speed,
     songs,
+    challenge,
   };
 }
 

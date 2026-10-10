@@ -125,4 +125,30 @@ describe('SettingsStore', () => {
     expect(keyShiftFor(s.get(), 'voice')).toBe(5);
     expect(s.get().keyShifts).toEqual({ wind: 2, voice: 5 });
   });
+
+  it('keeps a valid random-melody spec and repairs a bad one', () => {
+    const mem = new Map<string, string>();
+    const store = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, v),
+      removeItem: (k: string) => void mem.delete(k),
+    };
+    const settings = new SettingsStore(store);
+    expect(settings.get().challenge).toEqual({ seed: 1, scale: 'major', level: 'easy' });
+    settings.update({ challenge: { seed: 4242, scale: 'dorian', level: 'hard' } });
+    expect(new SettingsStore(store).get().challenge).toEqual({
+      seed: 4242,
+      scale: 'dorian',
+      level: 'hard',
+    });
+    mem.set(
+      'lineup.settings.v1',
+      JSON.stringify({ challenge: { seed: 1e9, scale: 'locrian', level: 'hard' } }),
+    );
+    expect(new SettingsStore(store).get().challenge).toEqual({
+      seed: 1,
+      scale: 'major',
+      level: 'hard',
+    });
+  });
 });

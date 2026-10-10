@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -352,6 +352,43 @@ const scenarios = {
         check(
           perfect === count && miss === 0,
           `${route}: the demo plays the exercise ${id} perfectly (${perfect} perfect, ${miss} missed)`,
+        );
+      }
+    });
+  },
+
+  async melody() {
+    console.log('\n# Random melody: a seeded challenge in the song menu plays to a perfect score');
+    await session(null, async (page) => {
+      for (const route of ['sing', 'wind']) {
+        await page.goto(URL_BASE + '#/' + route);
+        await page.selectOption('[data-id=song]', 'random-melody');
+        check(
+          await page.isVisible('[data-id=challenge]'),
+          `${route}: choosing the random melody shows its scale, level and seed`,
+        );
+        await page.selectOption('[data-id=challenge-scale]', 'major');
+        await page.selectOption('[data-id=challenge-level]', 'easy');
+        await page.fill('[data-id=challenge-seed]', '7');
+        await page.dispatchEvent('[data-id=challenge-seed]', 'change');
+        const info = await text(page, 'song-info');
+        check(/Random melody 7/.test(info), `${route}: the song info names the seed (${info})`);
+        await page.click('[data-id=challenge-new]');
+        const seed = await page.inputValue('[data-id=challenge-seed]');
+        check(
+          seed !== '7' || Math.random() < 0.001,
+          `${route}: New melody rolls another seed (${seed})`,
+        );
+        await page.fill('[data-id=challenge-seed]', '7');
+        await page.dispatchEvent('[data-id=challenge-seed]', 'change');
+        await page.uncheck('[data-id=opt-metronome]');
+        await page.click('[data-id=demo]');
+        await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+        const perfect = Number(await text(page, 'r-perfect'));
+        const miss = Number(await text(page, 'r-miss'));
+        check(
+          perfect >= 20 && miss === 0,
+          `${route}: the demo plays random melody 7 perfectly (${perfect} perfect, ${miss} missed)`,
         );
       }
     });

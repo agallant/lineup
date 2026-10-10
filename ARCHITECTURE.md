@@ -174,6 +174,13 @@ in song time and subtract the calibrated latency offset themselves.
 - `exercises.ts`: practice patterns as sequences of scale degrees (`EXERCISE_KINDS`: up and down,
   thirds, patterns, arpeggios, long tones, interval ladder) and a plan of which scales get which.
   `exerciseCharts(profileId)` returns ready charts for voice and wind.
+- `melody.ts`: `generateMelody(profile, {seed, scale, level})`. Four phrases of eight beats in a form
+  such as AABA (a repeat is the same phrase, with its ending changed); each phrase is a rhythm from
+  the level's table and a walk over the scale that moves mostly by step, steps back after a leap,
+  starts every bar on a chord tone and stays in range. Phrase ends are held (dominant, second
+  degree, then home) and the last note is the tonic held for a bar. `melodyId`/`parseMelodyId`
+  name a melody as `gen-<profile>-<scale>-<level>-<seed>`, which `getSong` can build, so scores
+  and session logs treat it like any song.
 
 `songs/index.ts` registers the exercises next to the hand-written songs; `songsFor` reports each
 entry's `category` (`song` or `exercise`), and the web app's `song-menu.ts` groups the menu by it.
@@ -186,6 +193,9 @@ playable through the real analyzer) rather than note by note.
   `profiles/index.ts`, add a built-in song in `songs/` if it has one, add a
   `Performer` in `packages/sim/src/performers.ts`, and a `*.sim.test.ts` that
   plays the song and asserts the score.
+- **A melody level or form:** edit the `LEVELS` table in `generate/melody.ts` (tempo, rhythms,
+  move weights, largest leap, forms); the property tests in `melody.test.ts` run over every
+  scale and level and fail if the result stops sounding like a tune.
 - **An exercise:** add a kind to `EXERCISE_KINDS` (a function from the scale's length to degrees)
   and list it under a scale in the plan in `generate/exercises.ts`; it appears in the menus.
 - **A test signal:** add it to `@lineup/testkit`; keep it deterministic (seeded).

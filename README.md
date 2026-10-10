@@ -95,6 +95,10 @@ Design rules:
    The menu lists **Songs** and **Exercises**: scales and modes (major, natural minor, dorian,
    mixolydian, the pentatonics), thirds, 1-2-3-1 patterns, arpeggios, long tones and an interval
    ladder. Exercises are built from small descriptions in the code, not hand-written charts.
+   **🎲 Random melody** (under "Random") makes a new tune from a seed: pick a scale and a level
+   (easy, medium, hard), press _New melody_ for another, or type a seed to play one again. The seed
+   is shown in the song info; the same seed, scale and level always give the same melody. Best
+   scores are kept per seed.
 5. **Play.** _Watch auto-play demo_ runs a synthetic singer through the same pipeline: a
    quick way to see how the screens behave without singing.
 6. On the results screen, **Copy session log** puts a plain-text report on the clipboard (build,
@@ -151,6 +155,9 @@ register, so an octave off is wrong, unlike singing).
 tones and interval ladder as Singline, in the instrument's key. Every one fits every whistle; the
 minor, mixolydian and minor-pentatonic ones run above a recorder's or the ocarina's range, where
 the range warning appears.
+
+**🎲 Random melody**: as in Singline, in the instrument's key. In a major key, every random
+melody fits every whistle.
 
 Songs: a C major scale, Twinkle Twinkle, Ode to Joy (written in C, all within C5 to A5 before the
 move into your key).

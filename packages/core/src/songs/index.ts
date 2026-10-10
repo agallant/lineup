@@ -1,5 +1,6 @@
 import { loadChart, type Chart } from '../chart';
 import { exerciseCharts } from '../generate/exercises';
+import { generateMelody, parseMelodyId } from '../generate/melody';
 import clapBasic from './clap-basic.json';
 import clapTapGroove from './clap-tap-groove.json';
 import drumRock from './drum-rock.json';
@@ -57,7 +58,10 @@ export type SongCategory = 'song' | 'exercise';
 export const songCategory = (id: string): SongCategory =>
   Object.hasOwn(EXERCISES, id) ? 'exercise' : 'song';
 
+/** A built-in song, or a generated melody named by its id (`gen-<profile>-<scale>-<level>-<seed>`). */
 export function getSong(id: string): Chart {
+  const generated = parseMelodyId(id);
+  if (generated) return generateMelody(generated.profileId, generated.spec);
   const c = Object.hasOwn(builtinSongs, id) ? builtinSongs[id] : undefined;
   if (!c) throw new Error(`unknown song "${id}" (have: ${Object.keys(builtinSongs).join(', ')})`);
   return c;

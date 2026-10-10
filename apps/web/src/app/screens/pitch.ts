@@ -1,6 +1,10 @@
 import {
   CalibrationStore,
   DEFAULT_WIND_INSTRUMENT,
+  MAX_SEED,
+  MELODY_LEVELS,
+  SCALES,
+  SCALE_IDS,
   SongClock,
   WIND_INSTRUMENTS,
   checkFit,
@@ -8,15 +12,22 @@ import {
   chartPitchRange,
   defaultOffsetFromLatencies,
   findWindInstrument,
+  generateMelody,
   getProfile,
+  isSeed,
   letterGrade,
+  melodyId,
+  randomSeed,
   rescaleChart,
   shiftForInstrument,
   songsFor,
   transposeChart,
   type Chart,
   type Difficulty,
+  type MelodyLevel,
+  type MelodySpec,
   type PitchFrame,
+  type ScaleId,
   type WindInstrument,
 } from '@lineup/core';
 import {
@@ -41,7 +52,7 @@ import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
-import { fillSongMenu } from '../song-menu';
+import { RANDOM_MELODY, addRandomMelodyOption, fillSongMenu } from '../song-menu';
 import { formatCents, formatDb } from '../format';
 import type { Screen } from '../router';
 
@@ -107,6 +118,12 @@ const setup = (c: PitchScreenConfig) => `
       <label>Song <select data-id="song"></select></label>
       <label>${c.instruments ? 'Extra shift' : 'Key'} <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
+    </div>
+    <div class="row" data-id="challenge" hidden>
+      <label>Scale <select data-id="challenge-scale"></select></label>
+      <label>Level <select data-id="challenge-level"></select></label>
+      <label>Seed <input data-id="challenge-seed" type="number" min="0" max="${MAX_SEED}" step="1" inputmode="numeric" /></label>
+      <button data-id="challenge-new">New melody</button>
     </div>
     <p data-id="range"></p>
     <p data-id="song-info"></p>
@@ -228,9 +245,12 @@ export const createPitchScreen =
 
     const current = settings.get();
     fillSongMenu(songSel, songs);
-    songSel.value = songs.some((s) => s.id === current.songs[c.profileId])
-      ? current.songs[c.profileId]!
-      : songs[0]!.id;
+    addRandomMelodyOption(songSel);
+    const savedSong = current.songs[c.profileId];
+    songSel.value =
+      savedSong === RANDOM_MELODY || songs.some((s) => s.id === savedSong)
+        ? savedSong!
+        : songs[0]!.id;
     for (let k = -12; k <= 12; k++)
       keySel.add(
         new Option(
@@ -270,7 +290,30 @@ export const createPitchScreen =
     S<HTMLInputElement>('opt-metronome').checked = current.metronome;
     S<HTMLInputElement>('opt-debug').checked = current.debug;
 
-    const songEntry = () => songs.find((s) => s.id === songSel.value) ?? songs[0]!;
+    // the random melody: its spec lives in the settings, and the seed is shown so it can be replayed
+    const challengeRow = S('challenge');
+    const scaleSel = S<HTMLSelectElement>('challenge-scale');
+    const levelSel = S<HTMLSelectElement>('challenge-level');
+    const seedInput = S<HTMLInputElement>('challenge-seed');
+    for (const id of SCALE_IDS) scaleSel.add(new Option(SCALES[id].label, id));
+    for (const level of MELODY_LEVELS)
+      levelSel.add(new Option(level[0]!.toUpperCase() + level.slice(1), level));
+    const showChallenge = () => {
+      const spec = settings.get().challenge;
+      scaleSel.value = spec.scale;
+      levelSel.value = spec.level;
+      seedInput.value = String(spec.seed);
+      challengeRow.hidden = songSel.value !== RANDOM_MELODY;
+    };
+    showChallenge();
+
+    const songEntry = () =>
+      songSel.value === RANDOM_MELODY
+        ? {
+            id: melodyId(c.profileId, settings.get().challenge),
+            chart: generateMelody(c.profileId, settings.get().challenge),
+          }
+        : (songs.find((s) => s.id === songSel.value) ?? songs[0]!);
 
     /** The chart as played: moved into the instrument's key, shifted, and at the practice speed. */
     const selectedChart = (): Chart => {
@@ -284,7 +327,7 @@ export const createPitchScreen =
     const bestKey = () =>
       scoreKey(
         c.profileId,
-        songSel.value,
+        songEntry().id,
         c.instruments
           ? `${settings.get().difficulty}|x${settings.get().speed}`
           : settings.get().difficulty,
@@ -311,7 +354,11 @@ export const createPitchScreen =
           text += ` ⚠ Not in this instrument's scale: ${names(fit.notInScale)} (a note that needs special fingering).`;
       }
       S('range').textContent = text;
-      S('song-info').textContent = songSummary(chart);
+      // a random melody has no fixed title to find in the menu: say which one this is
+      S('song-info').textContent =
+        songSel.value === RANDOM_MELODY
+          ? `${chart.meta.title} · ${songSummary(chart)}`
+          : songSummary(chart);
       S('best').textContent = describeBest(scores.best(bestKey()));
       if (c.instruments) {
         S('chart').innerHTML = fingeringChartHtml(
@@ -334,8 +381,25 @@ export const createPitchScreen =
 
     songSel.addEventListener('change', () => {
       settings.update({ songs: { ...settings.get().songs, [c.profileId]: songSel.value } });
+      showChallenge();
       refreshRange();
     });
+    const updateChallenge = (patch: Partial<MelodySpec>) => {
+      settings.update({ challenge: { ...settings.get().challenge, ...patch } });
+      showChallenge();
+      refreshRange();
+    };
+    scaleSel.addEventListener('change', () =>
+      updateChallenge({ scale: scaleSel.value as ScaleId }),
+    );
+    levelSel.addEventListener('change', () =>
+      updateChallenge({ level: levelSel.value as MelodyLevel }),
+    );
+    seedInput.addEventListener('change', () => {
+      const seed = Number(seedInput.value);
+      updateChallenge(isSeed(seed) ? { seed } : {}); // an invalid entry snaps back to the current seed
+    });
+    S('challenge-new').addEventListener('click', () => updateChallenge({ seed: randomSeed() }));
     keySel.addEventListener('change', () => {
       settings.update({
         keyShifts: { ...settings.get().keyShifts, [c.profileId]: Number(keySel.value) },
