@@ -101,8 +101,8 @@ Design rules:
 
 `#/strum` (home screen -> Strumline). The song scrolls toward the now line on **four lines, one per
 string** (A on top, then E, C, G, like written tab). The number on a line is **the fret to hold on that
-string** (0 is an open string, a hollow ring). A bar across the strings is a strum, so a chord shows
-as its fingering; a single number is a plucked note. The chord name and the stroke direction are
+string**; an open string has no number, just a small hollow ring. A bar across the strings is a
+strum, so a chord shows as its fingering; a single mark is a plucked note. The chord name and the stroke direction are
 written above. **The timing of each note is what is judged** (and optionally the chord of a strum);
 the direction arrow is a guide, since direction is not detected (see Limitations).
 

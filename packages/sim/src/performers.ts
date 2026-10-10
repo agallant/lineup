@@ -16,7 +16,9 @@ import type { Performer } from './performance';
 export const ukuleleStrumPerformer: Performer = (note, index, sampleRate) => {
   // a chart that names one string and fret is a plucked note, not a strum
   const played = (note.expected?.frets ?? []).flatMap((fret, string) =>
-    fret === null || fret === undefined ? [] : [{ string, fret }],
+    fret === null || fret === undefined || UKE_OPEN_MIDI[string] === undefined
+      ? []
+      : [{ string, fret }],
   );
   if (played.length === 1) {
     const { string, fret } = played[0]!;

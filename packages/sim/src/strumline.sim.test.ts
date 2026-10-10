@@ -81,6 +81,17 @@ describe('strumline: a calibrated player who strums the right chords', () => {
     expect(r.score.counts).toEqual({ perfect: 32, good: 0, miss: 0 });
   });
 
+  it('the synthetic player ignores a string the ukulele does not have', () => {
+    const stray: ChartNote = {
+      t: 0,
+      duration: 0,
+      expected: { chord: 'G', frets: [null, null, null, null, 5] },
+    };
+    const audio = ukuleleStrumPerformer(stray, 0, 16000, () => 0);
+    expect(audio).not.toBeNull();
+    expect(Array.from(audio!).every(Number.isFinite)).toBe(true);
+  });
+
   it('a pluck that is missing is a miss', () => {
     const r = play(picking, { skip: new Set([5, 6]) });
     expect(r.score.counts).toEqual({ perfect: 30, good: 0, miss: 2 });
