@@ -11,7 +11,8 @@ that you play by performing on a real instrument. One mode per instrument family
 | **Beatline**  | claps, taps, hand drums, kit, pads | playable (`#/beat`)  |
 
 It's a static web app, built for Safari on iOS/iPadOS first and also tested in
-desktop Chrome. You can install it as a PWA. There's no backend.
+desktop Chrome. You can install it as a PWA. There's no backend. Where it is going next:
+[ROADMAP.md](ROADMAP.md).
 
 ## Play / test
 
@@ -91,6 +92,9 @@ Design rules:
    sustain is enough), _Normal_ (the default, 80 cents) and _Strict_ (60 cents, the profile's own
    numbers). _Debug overlay_ shows raw frequency, target, deviation, clarity, level,
    frame rate and the applied latency offset.
+   The menu lists **Songs** and **Exercises**: scales and modes (major, natural minor, dorian,
+   mixolydian, the pentatonics), thirds, 1-2-3-1 patterns, arpeggios, long tones and an interval
+   ladder. Exercises are built from small descriptions in the code, not hand-written charts.
 5. **Play.** _Watch auto-play demo_ runs a synthetic singer through the same pipeline: a
    quick way to see how the screens behave without singing.
 6. On the results screen, **Copy session log** puts a plain-text report on the clipboard (build,
@@ -142,6 +146,11 @@ register, so an octave off is wrong, unlike singing).
 4. Use headphones (the guide tone is otherwise heard by the mic), calibrate timing if the first
    notes always feel early or late, pick **Scoring**, and **Play**. _Watch auto-play demo_
    plays a synthetic recorder through the same pipeline.
+
+**Exercises** (under the song menu): the same scales, modes, thirds, patterns, arpeggios, long
+tones and interval ladder as Singline, in the instrument's key. Every one fits every whistle; the
+minor, mixolydian and minor-pentatonic ones run above a recorder's or the ocarina's range, where
+the range warning appears.
 
 Songs: a C major scale, Twinkle Twinkle, Ode to Joy (written in C, all within C5 to A5 before the
 move into your key).

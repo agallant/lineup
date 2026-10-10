@@ -35,6 +35,7 @@ import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { SettingsStore, safeLocalStorage } from '../settings';
+import { fillSongMenu } from '../song-menu';
 import type { Screen } from '../router';
 
 /** What differs between the hit-based games (Beatline, Strumline); everything else is shared. */
@@ -239,9 +240,9 @@ export const createHitScreen =
 
     /** Re-reads everything that depends on the chosen mode. */
     const applyMode = () => {
-      songSel.length = 0;
+      songSel.replaceChildren(); // also removes group headings
       const songs = songsFor(profile.id);
-      for (const s of songs) songSel.add(new Option(s.chart.meta.title, s.id));
+      fillSongMenu(songSel, songs);
       const saved = settings.get().songs[`${c.keyPrefix}:${profile.id}`];
       songSel.value = songs.some((s) => s.id === saved) ? saved! : (songs[0]?.id ?? '');
       S('mode-note').textContent = c.modes.find((m) => m.id === profile.id)?.note ?? '';

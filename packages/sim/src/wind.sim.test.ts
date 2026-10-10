@@ -168,3 +168,25 @@ describe('wind: wrong playing is marked wrong', () => {
     expect(r.score.counts.miss).toBe(12);
   });
 });
+
+describe('wind: the built-in exercises', () => {
+  it.each([
+    ['ex-wind-major-thirds', 12],
+    ['ex-wind-minor-up-down', 12],
+    ['ex-wind-major-pentatonic-up-down', 11],
+    ['ex-wind-mixolydian-up-down', 12],
+    ['ex-wind-major-arpeggios', 12],
+  ])('%s: a steady player scores every note perfect', (id, n) => {
+    const chart = take(getSong(id), n);
+    const r = play(chart);
+    expect(r.score.counts, id).toEqual({ perfect: n, good: 0, miss: 0 });
+  });
+
+  it('moved into a D whistle key, an exercise still scores perfect', () => {
+    const chart = getSong('ex-wind-minor-pentatonic-up-down');
+    const whistle = WIND_INSTRUMENTS.find((i) => i.id === 'whistle-d')!;
+    const moved = transposeChart(take(chart, 11), shiftForInstrument(chart, whistle));
+    const r = play(moved);
+    expect(r.score.counts).toEqual({ perfect: 11, good: 0, miss: 0 });
+  });
+});

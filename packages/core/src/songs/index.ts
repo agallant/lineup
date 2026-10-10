@@ -1,4 +1,5 @@
 import { loadChart, type Chart } from '../chart';
+import { exerciseCharts } from '../generate/exercises';
 import clapBasic from './clap-basic.json';
 import clapTapGroove from './clap-tap-groove.json';
 import drumRock from './drum-rock.json';
@@ -29,14 +30,32 @@ const RAW: Record<string, unknown> = {
   'drum-rock': drumRock,
 };
 
+/**
+ * Practice material built from small descriptions (scales, patterns...), as opposed to the
+ * hand-written songs above. Charts from the generators are validated as they are built.
+ */
+const EXERCISES: Record<string, Chart> = {
+  ...exerciseCharts('voice'),
+  ...exerciseCharts('wind'),
+};
+
 /** Built-in songs, validated when this module loads (a bad one fails every test). */
-export const builtinSongs: Readonly<Record<string, Chart>> = Object.fromEntries(
-  Object.entries(RAW).map(([id, raw]) => {
-    const r = loadChart(raw);
-    if (!r.ok) throw new Error(`built-in song "${id}" is invalid:\n${r.errors.join('\n')}`);
-    return [id, r.value] as const;
-  }),
-);
+export const builtinSongs: Readonly<Record<string, Chart>> = {
+  ...Object.fromEntries(
+    Object.entries(RAW).map(([id, raw]) => {
+      const r = loadChart(raw);
+      if (!r.ok) throw new Error(`built-in song "${id}" is invalid:\n${r.errors.join('\n')}`);
+      return [id, r.value] as const;
+    }),
+  ),
+  ...EXERCISES,
+};
+
+/** What a menu entry is: a song, or practice material such as a scale. */
+export type SongCategory = 'song' | 'exercise';
+
+export const songCategory = (id: string): SongCategory =>
+  Object.hasOwn(EXERCISES, id) ? 'exercise' : 'song';
 
 export function getSong(id: string): Chart {
   const c = Object.hasOwn(builtinSongs, id) ? builtinSongs[id] : undefined;
@@ -45,8 +64,10 @@ export function getSong(id: string): Chart {
 }
 
 /** Built-in songs meant for a profile, in menu order. */
-export function songsFor(profileId: string): { id: string; chart: Chart }[] {
+export function songsFor(
+  profileId: string,
+): { id: string; chart: Chart; category: SongCategory }[] {
   return Object.entries(builtinSongs)
     .filter(([, chart]) => chart.meta.instruments?.includes(profileId))
-    .map(([id, chart]) => ({ id, chart }));
+    .map(([id, chart]) => ({ id, chart, category: songCategory(id) }));
 }

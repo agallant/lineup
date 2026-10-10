@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -327,6 +327,33 @@ const scenarios = {
       );
       await shot(page, 'wind-results');
       await checkCopyLog(page, 'Windline', 12);
+    });
+  },
+
+  async exercises() {
+    console.log('\n# Exercises: grouped menus, and a scale exercise plays to a perfect score');
+    await session(null, async (page) => {
+      for (const [route, id, count] of [
+        ['sing', 'ex-voice-major-pentatonic-up-down', 11],
+        ['wind', 'ex-wind-major-pentatonic-up-down', 11],
+      ]) {
+        await page.goto(URL_BASE + '#/' + route);
+        const groups = await page.$$eval('[data-id=song] optgroup', (g) => g.map((x) => x.label));
+        check(
+          groups.join() === 'Songs,Exercises',
+          `${route}: the song menu has Songs and Exercises (${groups.join(', ')})`,
+        );
+        await page.selectOption('[data-id=song]', id);
+        await page.uncheck('[data-id=opt-metronome]');
+        await page.click('[data-id=demo]');
+        await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+        const perfect = Number(await text(page, 'r-perfect'));
+        const miss = Number(await text(page, 'r-miss'));
+        check(
+          perfect === count && miss === 0,
+          `${route}: the demo plays the exercise ${id} perfectly (${perfect} perfect, ${miss} missed)`,
+        );
+      }
     });
   },
 

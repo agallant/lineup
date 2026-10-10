@@ -135,7 +135,7 @@ describe('hole groups', () => {
 
 describe("moving a song into the instrument's key", () => {
   const [song] = songsFor('wind');
-  const chart = song!.chart; // written in C, tonic C5
+  const chart = song!.chart; // written in C, tonic C5 (the first song, not an exercise)
 
   it("uses the song's stated tonic", () => {
     expect(chart.meta.tonic).toBe(72);
@@ -157,7 +157,7 @@ describe("moving a song into the instrument's key", () => {
   });
 
   it('every built-in wind song fits every instrument once moved into its key', () => {
-    for (const { id, chart: c } of songsFor('wind')) {
+    for (const { id, chart: c } of songsFor('wind').filter((s) => s.category === 'song')) {
       for (const i of WIND_INSTRUMENTS) {
         const shift = shiftForInstrument(c, i);
         const fit = checkFit(
