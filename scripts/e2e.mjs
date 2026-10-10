@@ -397,7 +397,10 @@ const scenarios = {
           const names = await caches.keys();
           if (!names.length) return false;
           const urls = (await (await caches.open(names[0])).keys()).map((r) => r.url);
-          return urls.some((u) => /input-processor/.test(u)) && urls.some((u) => /\.js$/.test(u));
+          return (
+            urls.some((u) => /input-processor/.test(u)) &&
+            urls.some((u) => /\.js$/.test(u) && !/input-processor/.test(u))
+          );
         },
         null,
         { timeout: 15000 },

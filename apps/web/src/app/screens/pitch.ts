@@ -383,7 +383,9 @@ export const createPitchScreen =
       S('clarity-bar').classList.toggle('good', f.clarity >= profile.detector.clarityThreshold);
       const advice = micAdvice({ levelDb: f.rmsDb, peakDb: peakHold, voicedFraction });
       const adviceEl = S('advice');
-      adviceEl.textContent = c.adviceText?.[advice.status] ?? advice.message;
+      // only touch the live region when the message changes, so it is not re-announced every frame
+      const adviceMessage = c.adviceText?.[advice.status] ?? advice.message;
+      if (adviceEl.textContent !== adviceMessage) adviceEl.textContent = adviceMessage;
       adviceEl.className = `status ${advice.status === 'good' ? 'ok' : advice.status === 'silent' ? '' : 'error'}`;
     };
     setupRaf = requestAnimationFrame(setupTick);
@@ -500,6 +502,7 @@ export const createPitchScreen =
       const best = audio.demo
         ? null
         : scores.record(bestKey(), { score: s.score, accuracy: s.accuracy, grade });
+      refreshRange(); // the setup screen's best-score line now shows this result
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'
         : best!.isNewBest

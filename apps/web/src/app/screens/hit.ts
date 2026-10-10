@@ -665,6 +665,7 @@ export const createHitScreen =
       const best = audio.demo
         ? null
         : scores.record(bestKey(), { score: s.score, accuracy: s.accuracy, grade });
+      refreshSong(); // the setup screen's best-score line now shows this result
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'
         : best!.isNewBest

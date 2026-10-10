@@ -126,3 +126,45 @@ describe('describeBest', () => {
     expect(describeBest(null)).toMatch(/No score yet/);
   });
 });
+
+describe('ScoreStore across tabs and bad data', () => {
+  it('does not erase a score another tab saved since this one loaded', () => {
+    const mem = new Mem();
+    const tabA = new ScoreStore(mem);
+    const tabB = new ScoreStore(mem); // both loaded before anything was played
+    tabA.record(KEY, result(500));
+    tabB.record(scoreKey('voice', 'other-song', 'normal'), result(300));
+    const fresh = new ScoreStore(mem);
+    expect(fresh.best(KEY)?.score).toBe(500);
+    expect(fresh.best(scoreKey('voice', 'other-song', 'normal'))?.score).toBe(300);
+  });
+
+  it('keeps the higher score when both tabs played the same song', () => {
+    const mem = new Mem();
+    const tabA = new ScoreStore(mem);
+    const tabB = new ScoreStore(mem);
+    tabA.record(KEY, result(900));
+    expect(tabB.record(KEY, result(400)).isNewBest).toBe(false);
+    expect(new ScoreStore(mem).best(KEY)?.score).toBe(900);
+  });
+
+  it('ignores stored records outside the scoring bounds', () => {
+    const mem = new Mem();
+    const rec = (score: number, accuracy: number) => ({ score, accuracy, grade: 'A', at: 'x' });
+    mem.setItem(
+      'lineup.scores.v1',
+      JSON.stringify({
+        ok: rec(1200, 0.9),
+        accuracyTooHigh: rec(1200, 2),
+        negativeAccuracy: rec(1200, -0.1),
+        negativeScore: rec(-5, 0.5),
+        absurdScore: rec(1e12, 0.5),
+      }),
+    );
+    const store = new ScoreStore(mem);
+    expect(store.best('ok')?.score).toBe(1200);
+    for (const k of ['accuracyTooHigh', 'negativeAccuracy', 'negativeScore', 'absurdScore']) {
+      expect(store.best(k)).toBeNull();
+    }
+  });
+});
