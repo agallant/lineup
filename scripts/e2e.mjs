@@ -246,7 +246,14 @@ const scenarios = {
       await page.check('[data-id=opt-debug]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
-      await page.waitForTimeout(5000);
+      // notes are separated by short gaps, so wait until one is sounding rather than sampling at a fixed time
+      await page
+        .waitForFunction(
+          () => /VOICED/.test(document.querySelector('[data-id=debug]')?.textContent ?? ''),
+          null,
+          { timeout: 15000 },
+        )
+        .catch(() => {});
       const dbg = await text(page, 'debug');
       check(
         /VOICED/.test(dbg) && /frames\s+1[5-9]\d\/s/.test(dbg),
