@@ -116,16 +116,48 @@ function clapTapLoop(cycles) {
   }
   return out;
 }
+/**
+ * A ukulele strummed every 0.8 s: three strums each of C, Am, F, G in turn (~9.6 s per cycle).
+ * Each string is a decaying harmonic series with a short noise pluck, started 7 ms after the last.
+ */
+function strumLoop(cycles) {
+  const open = [67, 60, 64, 69]; // G C E A
+  const chords = { C: [0, 0, 0, 3], Am: [2, 0, 0, 0], F: [2, 0, 1, 0], G: [0, 2, 3, 2] };
+  let seed = 11;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32) * 2 - 1;
+  const out = new Float32Array(Math.ceil(cycles * 9.6 * SR) + SR);
+  let t = 0.6;
+  for (let c = 0; c < cycles; c++) {
+    for (const name of ['C', 'Am', 'F', 'G']) {
+      for (let k = 0; k < 3; k++, t += 0.8) {
+        chords[name].forEach((fret, string) => {
+          const hz = 440 * 2 ** ((open[string] + fret - 69) / 12);
+          const s0 = Math.floor((t + string * 0.007) * SR);
+          for (let i = 0; i < 0.9 * SR && s0 + i < out.length; i++) {
+            const x = i / SR;
+            let v = 0;
+            for (let h = 1; h <= 6; h++) v += Math.sin(2 * Math.PI * h * hz * x) / h ** 1.2;
+            const pluck = i < 0.01 * SR ? rnd() * 0.6 * (1 - i / (0.01 * SR)) : 0;
+            out[s0 + i] += 0.12 * v * Math.exp(-x / 0.5) + 0.2 * pluck;
+          }
+        });
+      }
+    }
+  }
+  return out;
+}
 const fixtures = {
   clapTap: join(tmp, 'clap-tap.wav'),
   sung: join(tmp, 'sung-c4.wav'),
   silence: join(tmp, 'silence.wav'),
   claps: join(tmp, 'claps.wav'),
+  strums: join(tmp, 'strums.wav'),
 };
 wav(fixtures.sung, sung(261.626, 16));
 wav(fixtures.silence, new Float32Array(10 * SR));
 wav(fixtures.claps, claps(14, 0.3));
 wav(fixtures.clapTap, clapTapLoop(6));
+wav(fixtures.strums, strumLoop(4));
 
 // ---- harness ----------------------------------------------------------------
 const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
@@ -265,6 +297,87 @@ const scenarios = {
       );
       await shot(page, 'wind-results');
       await checkCopyLog(page, 'Windline', 12);
+    });
+  },
+
+  async 'strum-demo'() {
+    console.log(
+      '\n# Strumline auto-play demo with chord checking (synthetic ukulele -> worklet -> chords -> judge)',
+    );
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/strum');
+      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await page.check('[data-id=opt-chords]');
+      await page.check('[data-id=opt-debug]');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page
+        .waitForFunction(
+          () => /chord [A-G]/.test(document.querySelector('[data-id=debug]')?.textContent ?? ''),
+          null,
+          { timeout: 20000 },
+        )
+        .catch(() => {});
+      const dbg = await text(page, 'debug');
+      check(
+        /strum {2}chord [A-G]/.test(dbg),
+        `debug overlay names the chords it hears (${dbg.split('\n').find((l) => /strum/.test(l))})`,
+      );
+      await shot(page, 'strum-play');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 90000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      const wrong = Number(await text(page, 'r-wrongchord'));
+      check(
+        perfect === 48 && miss === 0 && wrong === 0,
+        `demo ukulele hits all 48 strums with the right chords (${perfect} perfect, ${miss} missed, ${wrong} wrong chord, grade ${await text(page, 'grade')})`,
+      );
+      await shot(page, 'strum-results');
+      await checkCopyLog(page, 'Strumline', 48);
+    });
+  },
+
+  async 'strum-live'() {
+    console.log(
+      '\n# Strumline with a live (fake) microphone: strums, chord names, reopening for a song',
+    );
+    await session(fixtures.strums, async (page) => {
+      await page.goto(URL_BASE + '#/strum');
+      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await page.check('[data-id=opt-chords]');
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () =>
+          /strum {2}chord [A-G]/.test(
+            document.querySelector('[data-id=monitor]')?.textContent ?? '',
+          ),
+        null,
+        { timeout: 30000 },
+      );
+      // collect what the monitor says over a few strums
+      const seen = new Set();
+      for (let i = 0; i < 24; i++) {
+        const m = await text(page, 'monitor');
+        for (const [, name] of m.matchAll(/strum {2}chord ([A-G]m?)/g)) seen.add(name);
+        await page.waitForTimeout(500);
+      }
+      check(
+        seen.has('C') && seen.has('F') && seen.has('G'),
+        `the live mic names the chords of the strums (${[...seen].join(', ')})`,
+      );
+      // timing-only: the same strums, no chord names
+      await page.uncheck('[data-id=opt-chords]');
+      await page.waitForFunction(
+        () =>
+          /strum {2}chord –/.test(document.querySelector('[data-id=monitor]')?.textContent ?? ''),
+        null,
+        { timeout: 30000 },
+      );
+      check(
+        true,
+        'turning chord checking off reopens the mic: strums are listed without chord names',
+      );
     });
   },
 

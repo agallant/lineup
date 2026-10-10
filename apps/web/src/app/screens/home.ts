@@ -10,7 +10,7 @@ export const homeScreen: Screen = (root) => {
       <li><a href="#/calibrate">Calibrate timing</a></li>
       <li><a href="#/mic">Mic &amp; latency test</a></li>
       <li><a href="#/beat">Beatline: claps, taps and percussion</a></li>
-      <li><span>Strumline: ukulele (coming)</span></li>
+      <li><a href="#/strum">Strumline: ukulele strumming</a></li>
     </ul>
   `;
 };

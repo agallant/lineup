@@ -57,6 +57,19 @@ describe('SettingsStore', () => {
     expect(s.update({ keyShift: 12 }).keyShift).toBe(12);
   });
 
+  it('keeps the Strumline options (chord checking off, normal speed) and rejects bad values', () => {
+    const s = new SettingsStore(new Mem());
+    expect(s.get()).toMatchObject({ checkChords: false, speed: 1 });
+    expect(s.update({ checkChords: true, speed: 0.75 })).toMatchObject({
+      checkChords: true,
+      speed: 0.75,
+    });
+    expect(s.update({ speed: 3 }).speed).toBe(1);
+    expect(s.update({ speed: 0 }).speed).toBe(1);
+    expect(s.update({ speed: Number.NaN }).speed).toBe(1);
+    expect(s.update({ checkChords: 'yes' as never }).checkChords).toBe(false);
+  });
+
   it('defaults to normal scoring and only accepts known difficulties', () => {
     const s = new SettingsStore(new Mem());
     expect(s.get().difficulty).toBe('normal');

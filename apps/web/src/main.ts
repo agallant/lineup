@@ -6,6 +6,7 @@ import { calibrateScreen } from './app/screens/calibrate';
 import { homeScreen } from './app/screens/home';
 import { micTestScreen } from './app/screens/mic-test';
 import { singScreen } from './app/screens/sing';
+import { strumScreen } from './app/screens/strum';
 import { windScreen } from './app/screens/wind';
 
 const app = document.getElementById('app');
@@ -23,6 +24,7 @@ startRouter(
     sing: singScreen,
     wind: windScreen,
     beat: beatScreen,
+    strum: strumScreen,
   },
   '',
 );

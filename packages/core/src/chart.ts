@@ -261,6 +261,25 @@ export function transposeChart(chart: Chart, semitones: number): Chart {
   };
 }
 
+/**
+ * Plays the chart at `speed` times its tempo (0.5 = half speed, for practice): every time and
+ * duration is divided by it and the bpm is multiplied. Returns a new chart.
+ */
+export function rescaleChart(chart: Chart, speed: number): Chart {
+  if (!(speed > 0) || !Number.isFinite(speed))
+    throw new Error(`speed must be positive (got ${speed})`);
+  if (speed === 1) return chart;
+  return {
+    ...chart,
+    meta: { ...chart.meta, bpm: round6(chart.meta.bpm * speed) },
+    notes: chart.notes.map((n) => ({
+      ...n,
+      t: round6(n.t / speed),
+      duration: round6(n.duration / speed),
+    })),
+  };
+}
+
 /** Lowest and highest concert pitch in the chart, or null if it has no pitched notes. */
 export function chartPitchRange(chart: Chart): { low: number; high: number } | null {
   let low = Infinity;

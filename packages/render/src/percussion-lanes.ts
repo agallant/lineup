@@ -58,6 +58,9 @@ export const laneCenterY = (l: LaneLayout, laneIndex: number): number =>
 export const hitTimeToX = (l: LaneLayout, t: number, now: number): number =>
   l.nowX + (t - now) * l.pxPerSec;
 
+/** Flash lane meaning "no particular lane": the whole now line lights up. */
+export const ANY_LANE = '*';
+
 /** How long a hit flash lasts, seconds. */
 export const FLASH_SECONDS = 0.28;
 
@@ -160,6 +163,17 @@ export class PercussionLanesRenderer implements Renderer {
         g.stroke();
       }
       g.globalAlpha = 1;
+      const chord = n.expected?.chord;
+      if (chord) {
+        // strum charts: which chord to play, written on the note
+        g.fillStyle = COLORS.bg;
+        g.font = `700 ${Math.max(9, Math.round(l.radius * 0.75))}px system-ui, sans-serif`;
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.globalAlpha = status === 'pending' ? 1 : 0.8;
+        g.fillText(chord, x, y);
+        g.globalAlpha = 1;
+      }
     });
   }
 
@@ -187,6 +201,17 @@ export class PercussionLanesRenderer implements Renderer {
       if (p === null) continue;
       const strength = 0.4 + 0.6 * Math.min(1, Math.max(0, flash.velocity));
       const alpha = (1 - p) * strength;
+      if (flash.lane === ANY_LANE) {
+        // a hit with no lane of its own (a strum: direction is not detected): flash the whole now line
+        g.globalAlpha = alpha;
+        g.fillStyle = COLORS.active;
+        g.shadowColor = COLORS.active;
+        g.shadowBlur = 16;
+        g.fillRect(l.nowX - 5, 0, 10, size.height);
+        g.shadowBlur = 0;
+        g.globalAlpha = 1;
+        continue;
+      }
       const li = laneIndex.get(flash.lane);
       if (li === undefined) {
         // unrecognised sound: a grey bar over the whole now line

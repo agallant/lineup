@@ -13,6 +13,10 @@ export interface Settings {
   keyShifts: Record<string, number>;
   /** How forgiving sustained-pitch scoring is (Singline). */
   difficulty: Difficulty;
+  /** Strumline: also check that the right chord is strummed (experimental), not just the timing. */
+  checkChords: boolean;
+  /** Strumline: tempo multiplier for practice (1 = the song's own tempo). */
+  speed: number;
   /** Last chosen song id per profile. */
   songs: Record<string, string>;
 }
@@ -24,6 +28,8 @@ export const DEFAULT_SETTINGS: Settings = {
   keyShift: 0,
   keyShifts: {},
   difficulty: 'normal',
+  checkChords: false,
+  speed: 1,
   songs: {},
 };
 
@@ -91,6 +97,12 @@ function sanitize(raw: unknown): Settings {
     keyShift: validShift(shift) ? shift : DEFAULT_SETTINGS.keyShift,
     keyShifts,
     difficulty: isDifficulty(r['difficulty']) ? r['difficulty'] : DEFAULT_SETTINGS.difficulty,
+    checkChords:
+      typeof r['checkChords'] === 'boolean' ? r['checkChords'] : DEFAULT_SETTINGS.checkChords,
+    speed:
+      typeof r['speed'] === 'number' && r['speed'] >= 0.5 && r['speed'] <= 1.25
+        ? r['speed']
+        : DEFAULT_SETTINGS.speed,
     songs,
   };
 }
