@@ -116,6 +116,12 @@ in song time and subtract the calibrated latency offset themselves.
   wrappers around these. `screens/pitch.ts` is the shared pitch game screen: `sing.ts` (voice) and
   `wind.ts` (whistle, recorder, ocarina) are just a config object each, so a new pitched
   instrument is a profile, songs, a synthetic performer and ~15 lines.
+- `scores.ts` (`ScoreStore`): best score per profile + song + variant in localStorage, capped,
+  corrupt-tolerant. `game/song-info.ts`: the artist / bpm / length / notes line under a song picker.
+- **Offline:** `public/sw.js` is network-first with a cache fallback; after registering, `main.ts`
+  tells it which files the page used (resource timing, plus the worklet URL from `@lineup/input/mic`
+  and the manifest and icons) and it caches them, so the first visit is enough. The `offline` e2e
+  scenario goes offline and reloads.
 - **Input adapters** (`@lineup/input` `InputAdapter`): the game only needs a clock, a message
   callback and `close()`. `MicSession` (getUserMedia) and `SyntheticSession` (a rendered
   performance played into the same worklet) implement it; desktop MIDI/pad input can too.

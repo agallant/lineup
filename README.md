@@ -26,6 +26,14 @@ HTML for up to 10 minutes.
 To install it as an app on iPad: open it in Safari, tap Share, then **Add to
 Home Screen**.
 
+**Offline:** after one visit the app starts without a network (a service worker keeps a copy of the
+files the page used, including the audio worklet, and still prefers the network when there is one,
+so new deploys show up straight away).
+
+**Scores:** each song keeps its best score on this device, per scoring level (Singline, Windline)
+or per practice speed and chord checking (Strumline). The results screen says "New best!" or shows
+the current best; the auto-play demo never counts.
+
 ## Develop
 
 Requires Node 22+. This is an npm-workspaces monorepo.
@@ -36,7 +44,7 @@ npm run dev        # Vite dev server for apps/web
 npm run check      # typecheck + lint + test + build + dist check (what CI runs)
 npm test           # Vitest, all packages
 npm run format     # Prettier
-npm run e2e        # real-browser checks in headless Chromium (needs Playwright; not in CI)
+npm run e2e        # real-browser checks in headless Chromium (needs Playwright; CI runs it as its own job)
 ```
 
 Mic access needs a secure context (HTTPS or `localhost`).
@@ -183,7 +191,8 @@ counts; **Clap + tap**, two lanes where you teach it your two sounds first; **Dr
 
 Everything goes through PRs. Nothing is pushed directly to `main`.
 
-- `.github/workflows/ci.yml` runs typecheck, lint, test and build on every PR
+- `.github/workflows/ci.yml` runs typecheck, lint, test and build on every PR (job `check`) and the
+  headless-Chromium end-to-end checks (job `e2e`, which installs Playwright just for that job)
   and on `main`.
 - `.github/workflows/deploy.yml` builds `main` and publishes it to the root of
   the `gh-pages` branch. It leaves `pr-preview/` alone.
