@@ -36,7 +36,7 @@ export interface VoicePerformerOptions extends MelodyOptions {
   octaveShift?: number;
   /** Constant detune, cents. */
   detuneCents?: number;
-  /** Random per-note detune, cents (standard deviation). */
+  /** Random per-note detune, cents (uniform in ± this). */
   detuneSigma?: number;
   /** Per-note pitch error added on top (indexed), e.g. wrong notes. */
   semitoneErrors?: ReadonlyMap<number, number>;
@@ -66,7 +66,7 @@ export interface WindPerformerOptions extends WindOptions {
   octaveShift?: number;
   /** Constant detune, cents. */
   detuneCents?: number;
-  /** Random per-note detune, cents (standard deviation-ish: uniform in +/- this). */
+  /** Random per-note detune, cents (uniform in ± this). */
   detuneSigma?: number;
   /** Per-note pitch error added on top (indexed), e.g. wrong notes. */
   semitoneErrors?: ReadonlyMap<number, number>;
