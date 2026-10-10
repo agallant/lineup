@@ -4,8 +4,10 @@ import {
   ukeNote,
   ukeStrum,
   voiceNote,
+  windNote,
   type HitOptions,
   type MelodyOptions,
+  type WindOptions,
 } from '@lineup/testkit';
 import type { Performer } from './performance';
 
@@ -34,7 +36,7 @@ export interface VoicePerformerOptions extends MelodyOptions {
   octaveShift?: number;
   /** Constant detune, cents. */
   detuneCents?: number;
-  /** Random per-note detune, cents (standard deviation). */
+  /** Random per-note detune, cents (uniform in ± this). */
   detuneSigma?: number;
   /** Per-note pitch error added on top (indexed), e.g. wrong notes. */
   semitoneErrors?: ReadonlyMap<number, number>;
@@ -55,6 +57,36 @@ export function voicePerformer({
     return voiceNote(midiToHz(midi), Math.max(note.duration, 0.2), sampleRate, {
       seed: 300 + index,
       ...melody,
+    });
+  };
+}
+
+export interface WindPerformerOptions extends WindOptions {
+  /** Semitones added to every note (12: the player overblew into the next octave). */
+  octaveShift?: number;
+  /** Constant detune, cents. */
+  detuneCents?: number;
+  /** Random per-note detune, cents (uniform in ± this). */
+  detuneSigma?: number;
+  /** Per-note pitch error added on top (indexed), e.g. wrong notes. */
+  semitoneErrors?: ReadonlyMap<number, number>;
+}
+
+/** A synthetic whistle / recorder / ocarina player: one steady breath-driven tone per note. */
+export function windPerformer({
+  octaveShift = 0,
+  detuneCents = 0,
+  detuneSigma = 0,
+  semitoneErrors,
+  ...tone
+}: WindPerformerOptions = {}): Performer {
+  return (note, index, sampleRate, random) => {
+    if (note.pitch === undefined) return null;
+    const detune = detuneCents + detuneSigma * random();
+    const midi = note.pitch + octaveShift + (semitoneErrors?.get(index) ?? 0) + detune / 100;
+    return windNote(midiToHz(midi), Math.max(note.duration, 0.2), sampleRate, {
+      seed: 700 + index,
+      ...tone,
     });
   };
 }

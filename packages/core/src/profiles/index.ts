@@ -4,9 +4,18 @@ import clap from './clap.json';
 import drumKit from './drum-kit.json';
 import handPercussion from './hand-percussion.json';
 import voice from './voice.json';
+import wind from './wind.json';
 import ukuleleStrum from './ukulele-strum.json';
 
-const RAW: readonly unknown[] = [ukuleleStrum, ukuleleNote, voice, clap, handPercussion, drumKit];
+const RAW: readonly unknown[] = [
+  ukuleleStrum,
+  ukuleleNote,
+  voice,
+  wind,
+  clap,
+  handPercussion,
+  drumKit,
+];
 
 /** Built-in profiles, validated when this module loads (a bad one fails every test). */
 export const builtinProfiles: Readonly<Record<string, InstrumentProfile>> = Object.fromEntries(

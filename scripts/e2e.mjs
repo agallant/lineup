@@ -233,6 +233,41 @@ const scenarios = {
     });
   },
 
+  async 'wind-demo'() {
+    console.log(
+      '\n# Windline auto-play demo (synthetic recorder -> real worklet -> clock -> judge -> canvas)',
+    );
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/wind');
+      await page.selectOption('[data-id=song]', 'wind-scale');
+      await page.check('[data-id=opt-debug]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      // notes are separated by short gaps, so wait until one is sounding rather than sampling at a fixed time
+      await page
+        .waitForFunction(
+          () => /VOICED/.test(document.querySelector('[data-id=debug]')?.textContent ?? ''),
+          null,
+          { timeout: 15000 },
+        )
+        .catch(() => {});
+      const dbg = await text(page, 'debug');
+      check(
+        /VOICED/.test(dbg) && /frames\s+1[5-9]\d\/s/.test(dbg),
+        `debug overlay shows live pitched frames (${dbg.split('\n').find((l) => l.startsWith('frames'))})`,
+      );
+      await page.waitForSelector('[data-id=r-score]', { timeout: 40000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        perfect === 12 && miss === 0,
+        `demo recorder scores 12/12 perfect (got ${perfect} perfect, ${miss} missed, grade ${await text(page, 'grade')})`,
+      );
+      await shot(page, 'wind-results');
+      await checkCopyLog(page, 'Windline', 12);
+    });
+  },
+
   async calibrate() {
     console.log('\n# Calibration screen with a fake clapping microphone');
     await session(fixtures.claps, async (page) => {

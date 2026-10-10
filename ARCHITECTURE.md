@@ -60,7 +60,7 @@ in song time and subtract the calibrated latency offset themselves.
   lanes, detector settings, judgment settings. Validated at load.
 - **Judge** (`judge/`): a pure state machine behind one interface
   (`feed`, `advance`, `finish`, `judgments`, `judgmentFor`). `DiscreteJudge` does
-  onset timing (+ lane/pitch match). `ContinuousJudge` (voice) takes `PitchFrame`s
+  onset timing (+ lane/pitch match). `ContinuousJudge` (voice, winds) takes `PitchFrame`s
   and scores each note by the **fraction of its sustain within N cents** of the
   target, after a late-entry check. It folds octaves (octave-forgiving), takes a
   _median_ over a short window so vibrato and stray frames don't count against
@@ -99,18 +99,21 @@ in song time and subtract the calibrated latency offset themselves.
 - `app/game/` holds the DOM-free game logic, each unit-tested: `SinglineGame` (analyzer
   messages -> judge input + pitch trail + render state + debug info), `backing`
   (count-in/metronome/guide-tone plan, scheduled on the audio clock), `calibration-run`,
-  `mic-advice`. Screens (`app/screens/`) are thin DOM wrappers around these.
+  `mic-advice`, `session-log` (the copy-to-clipboard report). Screens (`app/screens/`) are thin DOM
+  wrappers around these. `screens/pitch.ts` is the shared pitch game screen: `sing.ts` (voice) and
+  `wind.ts` (whistle, recorder, ocarina) are just a config object each, so a new pitched
+  instrument is a profile, songs, a synthetic performer and ~15 lines.
 - **Input adapters** (`@lineup/input` `InputAdapter`): the game only needs a clock, a message
   callback and `close()`. `MicSession` (getUserMedia) and `SyntheticSession` (a rendered
   performance played into the same worklet) implement it; desktop MIDI/pad input can too.
 - **Renderers** (`@lineup/render` `Renderer`): `draw(g, size, view)` where `view` = clock time,
   notes, per-note status, profile, and (pitched modes) trail/live feedback. `createRenderer`
-  picks one from the profile; `pitch-highway` (voice) and `percussion-lanes` (Beatline: per-lane
+  picks one from the profile; `pitch-highway` (voice, winds) and `percussion-lanes` (Beatline: per-lane
   colours, judged-note rings, hit flashes, grey bar for rejected sounds) exist; `lane-highway` is for Strumline.
 - `BeatlineGame` / `HitMonitor` (`app/game/beatline-game.ts`): analyzer messages -> classified hits
   -> judge input + flashes + the debug text. `enroll-messages.ts` words each enrollment outcome.
 - `npm run e2e` drives the built app in headless Chromium (demo player, calibration with a fake
-  clapping mic, live-mic Singline, speaker-leak check; Beatline: demo players in both lane modes,
+  clapping mic, live-mic Singline, Windline demo, speaker-leak check; Beatline: demo players in both lane modes,
   live fake-mic enrollment + classification + persistence, click-leak check).
 
 ## Testing strategy
