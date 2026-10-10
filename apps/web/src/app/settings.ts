@@ -9,6 +9,8 @@ export interface Settings {
   metronome: boolean;
   /** Key change in semitones applied to the chart. */
   keyShift: number;
+  /** Key change per profile (an instrument's key is not a singer's); wins over `keyShift`. */
+  keyShifts: Record<string, number>;
   /** How forgiving sustained-pitch scoring is (Singline). */
   difficulty: Difficulty;
   /** Last chosen song id per profile. */
@@ -20,6 +22,7 @@ export const DEFAULT_SETTINGS: Settings = {
   guideTone: true,
   metronome: true,
   keyShift: 0,
+  keyShifts: {},
   difficulty: 'normal',
   songs: {},
 };
@@ -35,7 +38,11 @@ export class SettingsStore {
   }
 
   get(): Settings {
-    return { ...this.value, songs: { ...this.value.songs } };
+    return {
+      ...this.value,
+      songs: { ...this.value.songs },
+      keyShifts: { ...this.value.keyShifts },
+    };
   }
 
   update(patch: Partial<Settings>): Settings {
@@ -51,9 +58,11 @@ export class SettingsStore {
   private read(): Settings {
     try {
       const text = this.store?.getItem(KEY);
-      return text ? sanitize(JSON.parse(text) as unknown) : { ...DEFAULT_SETTINGS, songs: {} };
+      return text
+        ? sanitize(JSON.parse(text) as unknown)
+        : { ...DEFAULT_SETTINGS, songs: {}, keyShifts: {} };
     } catch {
-      return { ...DEFAULT_SETTINGS, songs: {} };
+      return { ...DEFAULT_SETTINGS, songs: {}, keyShifts: {} };
     }
   }
 }
@@ -66,18 +75,29 @@ function sanitize(raw: unknown): Settings {
       if (typeof v === 'string') songs[k] = v;
     }
   }
+  const validShift = (v: unknown): v is number =>
+    typeof v === 'number' && Number.isInteger(v) && Math.abs(v) <= 12;
+  const keyShifts: Record<string, number> = {};
+  if (typeof r['keyShifts'] === 'object' && r['keyShifts'] !== null) {
+    for (const [k, v] of Object.entries(r['keyShifts'] as Record<string, unknown>)) {
+      if (validShift(v)) keyShifts[k] = v;
+    }
+  }
   const shift = r['keyShift'];
   return {
     debug: typeof r['debug'] === 'boolean' ? r['debug'] : DEFAULT_SETTINGS.debug,
     guideTone: typeof r['guideTone'] === 'boolean' ? r['guideTone'] : DEFAULT_SETTINGS.guideTone,
     metronome: typeof r['metronome'] === 'boolean' ? r['metronome'] : DEFAULT_SETTINGS.metronome,
-    keyShift:
-      typeof shift === 'number' && Number.isInteger(shift) && Math.abs(shift) <= 12
-        ? shift
-        : DEFAULT_SETTINGS.keyShift,
+    keyShift: validShift(shift) ? shift : DEFAULT_SETTINGS.keyShift,
+    keyShifts,
     difficulty: isDifficulty(r['difficulty']) ? r['difficulty'] : DEFAULT_SETTINGS.difficulty,
     songs,
   };
+}
+
+/** The key change for a profile; the old single `keyShift` still applies to the voice. */
+export function keyShiftFor(s: Settings, profileId: string): number {
+  return s.keyShifts[profileId] ?? (profileId === 'voice' ? s.keyShift : 0);
 }
 
 /** localStorage, or null when access is blocked (private windows, some embedded contexts). */

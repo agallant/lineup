@@ -27,10 +27,10 @@ import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
 import { escapeHtml, playTone } from '../audio';
 import { planBacking, playBacking, midiToHz, type BackingHandle } from '../game/backing';
-import { micAdvice } from '../game/mic-advice';
+import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
-import { SettingsStore, safeLocalStorage } from '../settings';
+import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
 import { formatCents, formatDb } from '../format';
 import type { Screen } from '../router';
 
@@ -44,6 +44,8 @@ export interface PitchScreenConfig {
   subtitle: string;
   /** Shown under the mic meter before anything is played. */
   micPrompt: string;
+  /** Per-status mic advice wording; statuses not listed use the voice wording from `micAdvice`. */
+  adviceText?: Partial<Record<MicStatus, string>>;
   /** "singing, humming or a TV": what the quiet-baseline check might be hearing. */
   quietExamples: string;
   /** The range line under the song picker. */
@@ -193,7 +195,7 @@ export const createPitchScreen =
           String(k),
         ),
       );
-    keySel.value = String(current.keyShift);
+    keySel.value = String(keyShiftFor(current, c.profileId));
     const difficultySel = S<HTMLSelectElement>('difficulty');
     difficultySel.value = current.difficulty;
     S<HTMLInputElement>('opt-guide').checked = current.guideTone;
@@ -226,7 +228,9 @@ export const createPitchScreen =
       refreshRange();
     });
     keySel.addEventListener('change', () => {
-      settings.update({ keyShift: Number(keySel.value) });
+      settings.update({
+        keyShifts: { ...settings.get().keyShifts, [c.profileId]: Number(keySel.value) },
+      });
       refreshRange();
     });
     difficultySel.addEventListener('change', () =>
@@ -357,7 +361,7 @@ export const createPitchScreen =
       S('clarity-bar').classList.toggle('good', f.clarity >= profile.detector.clarityThreshold);
       const advice = micAdvice({ levelDb: f.rmsDb, peakDb: peakHold, voicedFraction });
       const adviceEl = S('advice');
-      adviceEl.textContent = advice.message;
+      adviceEl.textContent = c.adviceText?.[advice.status] ?? advice.message;
       adviceEl.className = `status ${advice.status === 'good' ? 'ok' : advice.status === 'silent' ? '' : 'error'}`;
     };
     setupRaf = requestAnimationFrame(setupTick);
