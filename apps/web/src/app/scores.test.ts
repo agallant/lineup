@@ -167,4 +167,17 @@ describe('ScoreStore across tabs and bad data', () => {
       expect(store.best(k)).toBeNull();
     }
   });
+
+  it('keeps an improved score from another tab safe from eviction when the store is full', () => {
+    const mem = new Mem();
+    const tabA = new ScoreStore(mem);
+    for (let i = 0; i < 300; i++)
+      tabA.record(scoreKey('voice', `song-${i}`, 'normal'), result(100));
+    const tabB = new ScoreStore(mem); // loaded with all 300; song-0 is its oldest
+    tabA.record(scoreKey('voice', 'song-0', 'normal'), result(900)); // tab A improves the oldest
+    tabB.record(scoreKey('voice', 'brand-new', 'normal'), result(50)); // tab B adds one past the cap
+    const fresh = new ScoreStore(mem);
+    expect(fresh.best(scoreKey('voice', 'song-0', 'normal'))?.score).toBe(900);
+    expect(fresh.best(scoreKey('voice', 'brand-new', 'normal'))?.score).toBe(50);
+  });
 });

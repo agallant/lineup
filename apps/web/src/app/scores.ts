@@ -91,7 +91,10 @@ export class ScoreStore {
   private reconcile(): void {
     for (const [k, stored] of this.read()) {
       const mine = this.value.get(k);
-      if (!mine || stored.score > mine.score) this.value.set(k, stored);
+      if (!mine || stored.score > mine.score) {
+        this.value.delete(k); // newest last, so an improved score is not the first to be evicted
+        this.value.set(k, stored);
+      }
     }
   }
 

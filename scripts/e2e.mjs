@@ -247,14 +247,15 @@ const scenarios = {
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
       // notes are separated by short gaps, so wait until one is sounding rather than sampling at a fixed time
-      await page
-        .waitForFunction(
-          () => /VOICED/.test(document.querySelector('[data-id=debug]')?.textContent ?? ''),
-          null,
-          { timeout: 15000 },
-        )
-        .catch(() => {});
-      const dbg = await text(page, 'debug');
+      const dbgHandle = await page.waitForFunction(
+        () => {
+          const value = document.querySelector('[data-id=debug]')?.textContent ?? '';
+          return /VOICED/.test(value) ? value : false;
+        },
+        null,
+        { timeout: 15000 },
+      );
+      const dbg = await dbgHandle.jsonValue();
       check(
         /VOICED/.test(dbg) && /frames\s+1[5-9]\d\/s/.test(dbg),
         `debug overlay shows live voiced frames (${dbg.split('\n').find((l) => l.startsWith('frames'))})`,
@@ -283,14 +284,15 @@ const scenarios = {
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
       // notes are separated by short gaps, so wait until one is sounding rather than sampling at a fixed time
-      await page
-        .waitForFunction(
-          () => /VOICED/.test(document.querySelector('[data-id=debug]')?.textContent ?? ''),
-          null,
-          { timeout: 15000 },
-        )
-        .catch(() => {});
-      const dbg = await text(page, 'debug');
+      const dbgHandle = await page.waitForFunction(
+        () => {
+          const value = document.querySelector('[data-id=debug]')?.textContent ?? '';
+          return /VOICED/.test(value) ? value : false;
+        },
+        null,
+        { timeout: 15000 },
+      );
+      const dbg = await dbgHandle.jsonValue();
       check(
         /VOICED/.test(dbg) && /frames\s+1[5-9]\d\/s/.test(dbg),
         `debug overlay shows live pitched frames (${dbg.split('\n').find((l) => l.startsWith('frames'))})`,
