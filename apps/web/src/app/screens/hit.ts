@@ -32,6 +32,8 @@ import { planBacking, playBacking, type BackingHandle } from '../game/backing';
 import { BeatlineGame, HitMonitor, formatHits } from '../game/beatline-game';
 import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
+import { songSummary } from '../game/song-info';
+import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { SettingsStore, safeLocalStorage } from '../settings';
 import type { Screen } from '../router';
 
@@ -75,6 +77,8 @@ const setup = (c: HitScreenConfig) => `
       <label>Song <select data-id="song"></select></label>
     </div>
     <p data-id="mode-note"></p>
+    <p data-id="song-info"></p>
+    <p data-id="best"></p>
   </section>
 
   <section class="panel">
@@ -84,10 +88,10 @@ const setup = (c: HitScreenConfig) => `
       <button data-id="leak-check" disabled>Check for click leak</button>
       <button data-id="copy-hits" disabled>Copy hit log</button>
     </div>
-    <canvas class="meter" data-id="meter"></canvas>
-    <p class="status" data-id="advice">${c.micPrompt}</p>
+    <canvas class="meter" data-id="meter" role="img" aria-label="Live microphone level"></canvas>
+    <p class="status" data-id="advice" role="status">${c.micPrompt}</p>
     <pre class="debug" data-id="monitor">–</pre>
-    <p class="status" data-id="leak-result"></p>
+    <p class="status" data-id="leak-result" role="status"></p>
   </section>
 
   <section class="panel" data-id="enroll-panel">
@@ -100,7 +104,7 @@ const setup = (c: HitScreenConfig) => `
     <div data-id="enroll-run" hidden>
       <div class="enroll-prompt" data-id="enroll-prompt"></div>
       <div class="strip" data-id="enroll-dots"></div>
-      <p class="status" data-id="enroll-msg"></p>
+      <p class="status" data-id="enroll-msg" role="status"></p>
       <button data-id="enroll-cancel">Cancel</button>
     </div>
   </section>
@@ -128,7 +132,7 @@ const setup = (c: HitScreenConfig) => `
     <button data-id="play" class="primary">Play</button>
     <button data-id="demo">Watch auto-play demo (no mic)</button>
   </div>
-  <p class="status" data-id="setup-status"></p>
+  <p class="status" data-id="setup-status" role="status"></p>
 `;
 
 const PLAY = `
@@ -139,8 +143,8 @@ const PLAY = `
     <button data-id="stop">Stop</button>
   </div>
   <div class="stage-wrap">
-    <canvas class="stage" data-id="stage"></canvas>
-    <div class="overlay" data-id="overlay"></div>
+    <canvas class="stage" data-id="stage" role="img" aria-label="The song: notes scrolling toward the now line"></canvas>
+    <div class="overlay" data-id="overlay" aria-live="assertive"></div>
   </div>
   <pre class="debug" data-id="debug" hidden></pre>
 `;
@@ -168,6 +172,7 @@ export const createHitScreen =
 
     const settings = new SettingsStore(safeLocalStorage());
     const calibration = new CalibrationStore(safeLocalStorage());
+    const scores = new ScoreStore(safeLocalStorage());
     const models = new TimbreModelStore(() => safeLocalStorage() ?? undefined);
 
     let profile: InstrumentProfile = getProfile(
@@ -220,6 +225,18 @@ export const createHitScreen =
 
     const classCount = () => profile.timbreClasses?.length ?? 1;
 
+    /** Best-score bucket: the song, and for Strumline the practice speed and whether chords count. */
+    const bestKey = () =>
+      scoreKey(
+        profile.id,
+        songSel.value,
+        c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}` : '',
+      );
+    const refreshSong = () => {
+      S('song-info').textContent = songSummary(songChart());
+      S('best').textContent = describeBest(scores.best(bestKey()));
+    };
+
     /** Re-reads everything that depends on the chosen mode. */
     const applyMode = () => {
       songSel.length = 0;
@@ -238,6 +255,7 @@ export const createHitScreen =
       monitor = new HitMonitor(profile, model);
       S('enroll-panel').hidden = classCount() < 2;
       refreshModelStatus();
+      refreshSong();
       if (mic) mic.onMessage = onSetupMessage;
     };
 
@@ -267,11 +285,12 @@ export const createHitScreen =
       settings.update({ songs: { ...settings.get().songs, [`${c.keyPrefix}-mode`]: profile.id } });
       applyMode();
     });
-    songSel.addEventListener('change', () =>
+    songSel.addEventListener('change', () => {
       settings.update({
         songs: { ...settings.get().songs, [`${c.keyPrefix}:${profile.id}`]: songSel.value },
-      }),
-    );
+      });
+      refreshSong();
+    });
     S<HTMLInputElement>('opt-metronome').addEventListener('change', (e) =>
       settings.update({ metronome: (e.target as HTMLInputElement).checked }),
     );
@@ -379,16 +398,20 @@ export const createHitScreen =
       leakBtn.disabled = true;
       copyHitsBtn.disabled = true;
       // a demo that started meanwhile owns the audio; the mic must stay closed
-      if (disposed || beginInFlight || live?.demo) return;
+      if (disposed || beginInFlight || demoClaimed) return;
       await startMic();
     };
     modeSel.addEventListener('change', () => void reopenMicIfNeeded());
     songSel.addEventListener('change', () => void reopenMicIfNeeded());
     chordsBox.addEventListener('change', () => {
       settings.update({ checkChords: chordsBox.checked });
+      refreshSong();
       void reopenMicIfNeeded();
     });
-    speedSel.addEventListener('change', () => settings.update({ speed: Number(speedSel.value) }));
+    speedSel.addEventListener('change', () => {
+      settings.update({ speed: Number(speedSel.value) });
+      refreshSong();
+    });
 
     // ------------------------------------------------------------ enrollment
 
@@ -638,6 +661,16 @@ export const createHitScreen =
     const showResults = (game: BeatlineGame, chart: Chart, audio: GameAudio) => {
       const s = game.session.score;
       const grade = letterGrade(s.accuracy);
+      // the auto-play demo is a synthetic player: it never sets a high score
+      const best = audio.demo
+        ? null
+        : scores.record(bestKey(), { score: s.score, accuracy: s.accuracy, grade });
+      refreshSong(); // the setup screen's best-score line now shows this result
+      const bestLine = audio.demo
+        ? 'Demo run: not saved as a score.'
+        : best!.isNewBest
+          ? 'New best!'
+          : describeBest(best!.best);
       const timing = game.judge.judgments
         .filter((j) => j.timingError !== null && j.grade !== 'miss')
         .map((j) => j.timingError!);
@@ -645,6 +678,7 @@ export const createHitScreen =
       stages.results.innerHTML = `
       <section class="panel results">
         <div class="grade" data-id="grade">${grade}</div>
+        <p class="status" data-id="best-line" role="status">${bestLine}</p>
         <dl>
           <dt>Score</dt><dd data-id="r-score">${s.score}</dd>
           <dt>Accuracy</dt><dd data-id="r-acc">${Math.round(s.accuracy * 100)}%</dd>

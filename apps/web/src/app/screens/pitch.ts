@@ -30,6 +30,8 @@ import { planBacking, playBacking, midiToHz, type BackingHandle } from '../game/
 import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
+import { songSummary } from '../game/song-info';
+import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
 import { formatCents, formatDb } from '../format';
 import type { Screen } from '../router';
@@ -74,13 +76,13 @@ const setup = (c: PitchScreenConfig) => `
       <button data-id="mic-start">Start mic</button>
       <button data-id="bleed-check" disabled>Check for speaker leak</button>
     </div>
-    <canvas class="meter" data-id="meter"></canvas>
+    <canvas class="meter" data-id="meter" role="img" aria-label="Live microphone level"></canvas>
     <dl>
       <dt>Note</dt><dd data-id="note">–</dd>
       <dt>Clarity</dt><dd><span class="bar"><span data-id="clarity-bar"></span></span> <span data-id="clarity">–</span></dd>
       <dt>Level</dt><dd data-id="level">–</dd>
     </dl>
-    <p class="status" data-id="advice">${c.micPrompt}</p>
+    <p class="status" data-id="advice" role="status">${c.micPrompt}</p>
     <p class="status" data-id="bleed-result"></p>
   </section>
 
@@ -92,6 +94,8 @@ const setup = (c: PitchScreenConfig) => `
       <button data-id="hear">Hear first note</button>
     </div>
     <p data-id="range"></p>
+    <p data-id="song-info"></p>
+    <p data-id="best"></p>
   </section>
 
   <section class="panel">
@@ -114,7 +118,7 @@ const setup = (c: PitchScreenConfig) => `
     <button data-id="play" class="primary">Play</button>
     <button data-id="demo">Watch auto-play demo (no mic)</button>
   </div>
-  <p class="status" data-id="setup-status"></p>
+  <p class="status" data-id="setup-status" role="status"></p>
 `;
 
 const PLAY = `
@@ -125,8 +129,8 @@ const PLAY = `
     <button data-id="stop">Stop</button>
   </div>
   <div class="stage-wrap">
-    <canvas class="stage" data-id="stage"></canvas>
-    <div class="overlay" data-id="overlay"></div>
+    <canvas class="stage" data-id="stage" role="img" aria-label="The song: notes scrolling toward the now line"></canvas>
+    <div class="overlay" data-id="overlay" aria-live="assertive"></div>
   </div>
   <pre class="debug" data-id="debug" hidden></pre>
 `;
@@ -151,6 +155,7 @@ export const createPitchScreen =
     const songs = songsFor(c.profileId);
     const settings = new SettingsStore(safeLocalStorage());
     const calibration = new CalibrationStore(safeLocalStorage());
+    const scores = new ScoreStore(safeLocalStorage());
 
     let mic: MicSession | null = null;
     let live: GameAudio | null = null;
@@ -207,8 +212,13 @@ export const createPitchScreen =
       return transposeChart(song.chart, Number(keySel.value));
     };
 
+    /** Best-score bucket for the chosen song at the chosen scoring level. */
+    const bestKey = () => scoreKey(c.profileId, songSel.value, settings.get().difficulty);
+
     const refreshRange = () => {
       const r = chartPitchRange(selectedChart());
+      S('song-info').textContent = songSummary(selectedChart());
+      S('best').textContent = describeBest(scores.best(bestKey()));
       if (!r) {
         S('range').textContent = '';
         return;
@@ -244,9 +254,10 @@ export const createPitchScreen =
       });
       refreshRange();
     });
-    difficultySel.addEventListener('change', () =>
-      settings.update({ difficulty: difficultySel.value as Difficulty }),
-    );
+    difficultySel.addEventListener('change', () => {
+      settings.update({ difficulty: difficultySel.value as Difficulty });
+      refreshRange();
+    });
     S<HTMLInputElement>('opt-guide').addEventListener('change', (e) =>
       settings.update({ guideTone: (e.target as HTMLInputElement).checked }),
     );
@@ -372,7 +383,9 @@ export const createPitchScreen =
       S('clarity-bar').classList.toggle('good', f.clarity >= profile.detector.clarityThreshold);
       const advice = micAdvice({ levelDb: f.rmsDb, peakDb: peakHold, voicedFraction });
       const adviceEl = S('advice');
-      adviceEl.textContent = c.adviceText?.[advice.status] ?? advice.message;
+      // only touch the live region when the message changes, so it is not re-announced every frame
+      const adviceMessage = c.adviceText?.[advice.status] ?? advice.message;
+      if (adviceEl.textContent !== adviceMessage) adviceEl.textContent = adviceMessage;
       adviceEl.className = `status ${advice.status === 'good' ? 'ok' : advice.status === 'silent' ? '' : 'error'}`;
     };
     setupRaf = requestAnimationFrame(setupTick);
@@ -485,9 +498,20 @@ export const createPitchScreen =
     const showResults = (game: SinglineGame, chart: Chart, audio: GameAudio) => {
       const s = game.session.score;
       const grade = letterGrade(s.accuracy);
+      // the auto-play demo is a synthetic player: it never sets a high score
+      const best = audio.demo
+        ? null
+        : scores.record(bestKey(), { score: s.score, accuracy: s.accuracy, grade });
+      refreshRange(); // the setup screen's best-score line now shows this result
+      const bestLine = audio.demo
+        ? 'Demo run: not saved as a score.'
+        : best!.isNewBest
+          ? 'New best!'
+          : describeBest(best!.best);
       stages.results.innerHTML = `
       <section class="panel results">
         <div class="grade" data-id="grade">${grade}</div>
+        <p class="status" data-id="best-line" role="status">${bestLine}</p>
         <dl>
           <dt>Score</dt><dd data-id="r-score">${s.score}</dd>
           <dt>Accuracy</dt><dd data-id="r-acc">${Math.round(s.accuracy * 100)}%</dd>

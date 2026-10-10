@@ -82,6 +82,15 @@ button {
   cursor: pointer;
 }
 
+/* visible keyboard focus (and for switch/assistive control on iPad) */
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--accent, #8fb0ff);
+  outline-offset: 2px;
+}
+
 button:disabled {
   opacity: 0.5;
 }
@@ -116,6 +125,7 @@ h2 small {
 
 select {
   font: inherit;
+  min-height: 44px;
   padding: 8px;
   border-radius: 8px;
   background: var(--panel);

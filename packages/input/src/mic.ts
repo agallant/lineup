@@ -11,6 +11,9 @@ import {
   type ProcessorCommand,
 } from './worklet/protocol';
 
+/** Where the input AudioWorklet module is served from (the service worker keeps a copy for offline use). */
+export const INPUT_WORKLET_URL: string = workletUrl;
+
 export interface MicSession extends InputAdapter {
   readonly kind: 'mic';
   readonly ctx: AudioContext;

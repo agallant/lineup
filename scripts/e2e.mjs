@@ -3,10 +3,10 @@
 // microphone is replaced by Chromium's fake capture device playing generated WAVs,
 // or by the app's own auto-play demo adapter.
 //
-// Not part of CI (needs a Chromium + Playwright); run with `npm run e2e` after
-// `npm run build`. Exits non-zero if anything fails.
+// Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
+// `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|strum-demo|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -246,8 +246,16 @@ const scenarios = {
       await page.check('[data-id=opt-debug]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
-      await page.waitForTimeout(5000);
-      const dbg = await text(page, 'debug');
+      // notes are separated by short gaps, so wait until one is sounding rather than sampling at a fixed time
+      const dbgHandle = await page.waitForFunction(
+        () => {
+          const value = document.querySelector('[data-id=debug]')?.textContent ?? '';
+          return /VOICED/.test(value) ? value : false;
+        },
+        null,
+        { timeout: 15000 },
+      );
+      const dbg = await dbgHandle.jsonValue();
       check(
         /VOICED/.test(dbg) && /frames\s+1[5-9]\d\/s/.test(dbg),
         `debug overlay shows live voiced frames (${dbg.split('\n').find((l) => l.startsWith('frames'))})`,
@@ -276,14 +284,15 @@ const scenarios = {
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
       // notes are separated by short gaps, so wait until one is sounding rather than sampling at a fixed time
-      await page
-        .waitForFunction(
-          () => /VOICED/.test(document.querySelector('[data-id=debug]')?.textContent ?? ''),
-          null,
-          { timeout: 15000 },
-        )
-        .catch(() => {});
-      const dbg = await text(page, 'debug');
+      const dbgHandle = await page.waitForFunction(
+        () => {
+          const value = document.querySelector('[data-id=debug]')?.textContent ?? '';
+          return /VOICED/.test(value) ? value : false;
+        },
+        null,
+        { timeout: 15000 },
+      );
+      const dbg = await dbgHandle.jsonValue();
       check(
         /VOICED/.test(dbg) && /frames\s+1[5-9]\d\/s/.test(dbg),
         `debug overlay shows live pitched frames (${dbg.split('\n').find((l) => l.startsWith('frames'))})`,
@@ -369,8 +378,11 @@ const scenarios = {
       // timing-only: the same strums, no chord names
       await page.uncheck('[data-id=opt-chords]');
       await page.waitForFunction(
-        () =>
-          /strum {2}chord –/.test(document.querySelector('[data-id=monitor]')?.textContent ?? ''),
+        () => {
+          const t = document.querySelector('[data-id=monitor]')?.textContent ?? '';
+          const strums = t.split('\n').filter((l) => /strum {2}chord/.test(l));
+          return strums.length > 0 && strums.every((l) => /strum {2}chord –/.test(l));
+        },
         null,
         { timeout: 30000 },
       );
@@ -378,6 +390,42 @@ const scenarios = {
         true,
         'turning chord checking off reopens the mic: strums are listed without chord names',
       );
+    });
+  },
+
+  async offline() {
+    console.log('\n# Offline: one visit is enough for the app to start without a network');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE);
+      await page.waitForSelector('h1');
+      await page.evaluate(() => navigator.serviceWorker.ready);
+      // wait for the page to hand the worker its file list and for the worker to cache it,
+      // including the audio worklet, which the page only loads when a mic or demo starts
+      await page.waitForFunction(
+        async () => {
+          const names = await caches.keys();
+          if (!names.length) return false;
+          const urls = (await (await caches.open(names[0])).keys()).map((r) => r.url);
+          return (
+            urls.some((u) => /input-processor/.test(u)) &&
+            urls.some((u) => /\.js$/.test(u) && !/input-processor/.test(u))
+          );
+        },
+        null,
+        { timeout: 15000 },
+      );
+      check(true, 'the worker cached the app files and the audio worklet after one visit');
+      await page.context().setOffline(true);
+      await page.reload();
+      await page.waitForSelector('h1');
+      check((await page.textContent('h1')) === 'Lineup', 'the home screen loads with no network');
+      await page.goto(URL_BASE + '#/wind');
+      await page.waitForSelector('[data-id=demo]');
+      check(
+        /Windline/.test((await page.textContent('h1')) ?? ''),
+        'another screen opens offline too',
+      );
+      await page.context().setOffline(false);
     });
   },
 
