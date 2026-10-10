@@ -209,7 +209,18 @@ export const createPitchScreen =
 
     const refreshRange = () => {
       const r = chartPitchRange(selectedChart());
-      S('range').textContent = r ? c.rangeText(midiName(r.low), midiName(r.high)) : '';
+      if (!r) {
+        S('range').textContent = '';
+        return;
+      }
+      // Voices are folded into range; an instrument has one register, so a key that pushes
+      // the song past what the detector hears would silently miss every note.
+      const d = profile.detector;
+      const undetectable =
+        !d.foldIntoRange && (midiToHz(r.low) < d.minHz || midiToHz(r.high) > d.maxHz);
+      S('range').textContent =
+        c.rangeText(midiName(r.low), midiName(r.high)) +
+        (undetectable ? ` ${c.mode} cannot hear every note in this key: try another.` : '');
     };
     refreshRange();
 
