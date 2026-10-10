@@ -1,5 +1,7 @@
 import {
   SongClock,
+  chartChords,
+  chordShapesFor,
   getProfile,
   getSong,
   type Chart,
@@ -7,10 +9,12 @@ import {
   type TimbreModel,
 } from '@lineup/core';
 import { InputAnalyzer, analyzerOptionsFromProfile } from '@lineup/input';
+import { ANY_LANE } from '@lineup/render';
 import {
   enrollSynthetic,
   percussionPerformer,
   renderPerformance,
+  ukuleleStrumPerformer,
   type HitSound,
 } from '@lineup/sim';
 import { clap, shaker, tap } from '@lineup/testkit';
@@ -165,3 +169,77 @@ describe('formatHits', () => {
 function chart0(): Chart {
   return getSong('clap-tap-groove');
 }
+
+describe('strums (Strumline uses the same game)', () => {
+  const strum = getProfile('ukulele-strum');
+  const chart = getSong('strum-four-chords');
+  const first = { ...chart, notes: chart.notes.slice(0, 12) } as Chart;
+
+  function playStrums(checkChords: boolean) {
+    const perf = renderPerformance(first, ukuleleStrumPerformer, {
+      latency: OFFSET,
+      ctxStart: 2.5,
+    });
+    const time = new Time();
+    const clock = new SongClock(time);
+    time.currentTime = perf.ctxStart;
+    clock.start(perf.songStart);
+    const game = new BeatlineGame({
+      chart: first,
+      profile: strum,
+      clock,
+      latencyOffset: OFFSET,
+      model: null,
+    });
+    const analyzer = new InputAnalyzer(
+      SR,
+      analyzerOptionsFromProfile(
+        strum,
+        checkChords ? { chords: chordShapesFor(strum, chartChords(first)) } : {},
+      ),
+    );
+    const startFrame = Math.round(perf.ctxStart * SR);
+    let nextFrame = perf.ctxStart + 1 / 60;
+    for (let n = 0; n < perf.signal.length; n += 128) {
+      const block = perf.signal.subarray(n, Math.min(n + 128, perf.signal.length));
+      for (const msg of analyzer.process(block, startFrame + n)) game.handleMessage(msg);
+      time.currentTime = perf.ctxStart + (n + block.length) / SR;
+      while (time.currentTime >= nextFrame) {
+        game.update();
+        nextFrame += 1 / 60;
+      }
+    }
+    game.session.finish();
+    return { game, time };
+  }
+
+  it('lights the whole now line for a strum, and remembers the chord it heard', () => {
+    const { game } = playStrums(true);
+    const hits = game.monitor.recent;
+    expect(hits.length).toBeGreaterThan(0);
+    for (const h of hits) {
+      expect(h.lane).toBe(ANY_LANE);
+      expect(h.chord).toBe('C');
+      expect(h.chordScore).toBeGreaterThan(0.8);
+    }
+    expect(game.view().hits?.every((f) => f.lane === ANY_LANE)).toBe(true);
+  });
+
+  it('scores the strums perfect with chord checking on or off', () => {
+    for (const check of [true, false]) {
+      const { game } = playStrums(check);
+      expect(game.session.score.counts, `chords ${check}`).toEqual({
+        perfect: 12,
+        good: 0,
+        miss: 0,
+      });
+    }
+  });
+
+  it('names the chord in the hit text, or a dash when timing only', () => {
+    const on = playStrums(true);
+    expect(formatHits(on.game.monitor, on.time.currentTime)).toMatch(/strum {2}chord C \(\d+%\)/);
+    const off = playStrums(false);
+    expect(formatHits(off.game.monitor, off.time.currentTime)).toMatch(/strum {2}chord –/);
+  });
+});

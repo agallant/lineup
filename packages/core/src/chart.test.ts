@@ -9,10 +9,12 @@ import {
   loadChart,
   migrateChart,
   parseChart,
+  rescaleChart,
   transposeChart,
   type Chart,
 } from './chart';
 import schema from './chart.v1.schema.json';
+import { getSong } from './songs';
 import { describeJsonError } from './validate';
 
 const minimal = () => ({
@@ -274,6 +276,34 @@ describe('chartFromBeats', () => {
 
   it('refuses to build an invalid chart', () => {
     expect(() => chartFromBeats({ title: 'T', bpm: 1 }, [{ beat: 0 }])).toThrow(/meta\.bpm/);
+  });
+});
+
+describe('rescaleChart', () => {
+  const chart = getSong('strum-four-chords');
+
+  it('stretches times and durations and keeps the tempo in step', () => {
+    const slow = rescaleChart(chart, 0.5);
+    expect(slow.meta.bpm).toBe(chart.meta.bpm / 2);
+    expect(slow.notes).toHaveLength(chart.notes.length);
+    chart.notes.forEach((n, i) => {
+      expect(slow.notes[i]!.t).toBeCloseTo(n.t * 2, 5);
+      expect(slow.notes[i]!.lane).toBe(n.lane);
+      expect(slow.notes[i]!.expected).toEqual(n.expected);
+    });
+    expect(chartEnd(slow)).toBeCloseTo(chartEnd(chart) * 2, 4);
+  });
+
+  it('speed 1 is the same chart; the original is never modified', () => {
+    expect(rescaleChart(chart, 1)).toBe(chart);
+    const before = chart.notes[5]!.t;
+    rescaleChart(chart, 0.7);
+    expect(chart.notes[5]!.t).toBe(before);
+  });
+
+  it('refuses a speed that is not a positive number', () => {
+    for (const bad of [0, -1, NaN, Infinity])
+      expect(() => rescaleChart(chart, bad)).toThrow(/speed/);
   });
 });
 

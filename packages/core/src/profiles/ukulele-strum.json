@@ -3,7 +3,7 @@
   "name": "Ukulele (strum)",
   "mode": "strumline",
   "input": "strum",
-  "renderer": "lane-highway",
+  "renderer": "percussion-lanes",
   "range": {
     "lowMidi": 60,
     "highMidi": 81

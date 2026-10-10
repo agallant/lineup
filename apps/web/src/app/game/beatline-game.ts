@@ -11,7 +11,7 @@ import {
   type TimbreModel,
 } from '@lineup/core';
 import type { AnalyzerMessage } from '@lineup/input';
-import type { HitFlash, RenderView } from '@lineup/render';
+import { ANY_LANE, type HitFlash, type RenderView } from '@lineup/render';
 
 /** One detected hit, as the debug overlay shows it. */
 export interface HitRecord {
@@ -25,6 +25,9 @@ export interface HitRecord {
   distance: number | null;
   margin: number | null;
   features: Readonly<Record<string, number>>;
+  /** Chord the analyzer recognised in a strum, if any. */
+  chord: string | null;
+  chordScore: number | null;
 }
 
 /** Hits to keep for the overlay. */
@@ -53,7 +56,9 @@ export class HitMonitor {
   private laneOf(event: InputEvent): string {
     if (event.lane !== undefined) return event.lane;
     const lanes = this.profile.lanes ?? [];
-    return lanes.length === 1 ? lanes[0]!.id : '';
+    if (lanes.length === 1) return lanes[0]!.id;
+    // a strum has no lane of its own (its direction is not detected): it lights the whole now line
+    return this.profile.input === 'strum' ? ANY_LANE : '';
   }
 
   /** Returns the classified event (AudioContext time) for a hit, or null for other messages. */
@@ -73,6 +78,8 @@ export class HitMonitor {
       distance: classification?.distance ?? null,
       margin: classification?.margin ?? null,
       features: event.features ?? {},
+      chord: event.chord ?? null,
+      chordScore: event.chordScore ?? null,
     };
     this.total++;
     if (this.model && classification && classification.id === null) this.rejected++;
@@ -181,9 +188,16 @@ export function formatHits(
     `audio     ${age === null ? 'no data yet' : `${Math.round(age * 1000)} ms since last block`}`,
   );
   const recent = [...monitor.recent].reverse();
-  if (recent.length === 0) lines.push('(no hits yet: clap or tap)');
+  if (recent.length === 0) lines.push('(no hits yet)');
   for (const h of recent) {
     const x = h.features;
+    if (h.lane === ANY_LANE) {
+      // a strum: the chord is what there is to show
+      lines.push(
+        `${h.ctxTime.toFixed(3)}s v${h.velocity.toFixed(2)} strum  chord ${h.chord ?? '–'}${h.chordScore === null ? '' : ` (${f(h.chordScore * 100)}%)`}`,
+      );
+      continue;
+    }
     const lane = h.lane === '' ? (monitor.model ? 'UNKNOWN' : '–') : h.lane;
     const near =
       h.nearest && h.nearest !== h.lane

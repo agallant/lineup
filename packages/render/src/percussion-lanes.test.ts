@@ -1,6 +1,7 @@
-import { chartFromBeats, getProfile, type NoteStatus } from '@lineup/core';
+import { chartFromBeats, getProfile, getSong, type NoteStatus } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
 import {
+  ANY_LANE,
   FLASH_SECONDS,
   PercussionLanesRenderer,
   computeLaneLayout,
@@ -221,6 +222,37 @@ describe('PercussionLanesRenderer', () => {
     const bar = r.calls.filter((c) => c.op === 'fillRect' && c.fill === COLORS.muted);
     expect(bar).toHaveLength(1);
     expect(bar[0]!.args[3]).toBe(SIZE.height);
+  });
+
+  it('flashes an any-lane hit (a strum) as a bright bar over the whole now line', () => {
+    const r = draw(
+      view({
+        time: 0.05,
+        hits: [{ time: 0, lane: ANY_LANE, velocity: 1 }],
+        notes: [],
+        statuses: [],
+      }),
+    );
+    expect(r.discs()).toHaveLength(0);
+    const bar = r.calls.filter((c) => c.op === 'fillRect' && c.fill === COLORS.active);
+    expect(bar).toHaveLength(1);
+    expect(bar[0]!.args[3]).toBe(SIZE.height);
+  });
+
+  it('writes the chord on strum notes, and nothing on other notes', () => {
+    const strum = getProfile('ukulele-strum');
+    const chart = getSong('strum-four-chords');
+    const r = draw(
+      view({
+        profile: strum,
+        notes: chart.notes.slice(0, 3),
+        statuses: ['pending', 'pending', 'pending'],
+        time: 0,
+      }),
+    );
+    expect(r.texts().filter((t) => t === 'C')).toHaveLength(3);
+    expect(r.texts()).toContain('Down');
+    expect(draw(view()).texts()).toEqual(['Clap', 'Tap']);
   });
 
   it('single-lane profiles (any hit) draw one lane', () => {

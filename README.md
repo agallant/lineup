@@ -3,12 +3,12 @@
 An umbrella platform of rhythm games (DDR / Elite Beat Agents / SingStar style)
 that you play by performing on a real instrument. One mode per instrument family:
 
-| Mode          | Instrument                         | Status                     |
-| ------------- | ---------------------------------- | -------------------------- |
-| **Strumline** | ukulele (GCEA re-entrant)          | mic test + detectors exist |
-| **Singline**  | voice                              | playable (`#/sing`)        |
-| **Windline**  | ocarina, recorder, penny whistle   | playable (`#/wind`)        |
-| **Beatline**  | claps, taps, hand drums, kit, pads | playable (`#/beat`)        |
+| Mode          | Instrument                         | Status               |
+| ------------- | ---------------------------------- | -------------------- |
+| **Strumline** | ukulele (GCEA re-entrant)          | playable (`#/strum`) |
+| **Singline**  | voice                              | playable (`#/sing`)  |
+| **Windline**  | ocarina, recorder, penny whistle   | playable (`#/wind`)  |
+| **Beatline**  | claps, taps, hand drums, kit, pads | playable (`#/beat`)  |
 
 It's a static web app, built for Safari on iOS/iPadOS first and also tested in
 desktop Chrome. You can install it as a PWA. There's no backend.
@@ -88,6 +88,23 @@ Design rules:
 6. On the results screen, **Copy session log** puts a plain-text report on the clipboard (build,
    audio latencies, options, score and every note's result). Paste it into the chat when something
    looks off. Beatline also has _Copy hit log_ next to the hit monitor.
+
+## Strumline (ukulele) on the iPad
+
+`#/strum` (home screen -> Strumline). Strums scroll toward the now line in two lanes (Down / Up) with
+the chord to play written on each. **The timing of each strum is what is judged**; the Down / Up
+arrows are a guide (direction is not detected, see Limitations).
+
+1. **Start mic** and strum: each strum is listed with the chord it was heard as (when chord
+   checking is on). Hold the ukulele a little away from the mic; a very loud strum right at the mic clips.
+2. Pick a song (_Four chords_ is C Am F G, _Folk strum_ is G C D) and a **Speed** (50% to 100%) to
+   practise slowly. The chart's chord names stay the same.
+3. **Also check the chords** (off by default, experimental): the analyzer is told which chords the
+   song uses and a strum of a clearly different chord misses ("wrong chord" is counted on the results
+   screen). A strum it cannot name still counts for timing. Turn it off if it penalises you unfairly
+   and send me the session log.
+4. Use headphones for the metronome, check for a click leak, calibrate timing, **Play**. _Watch
+   auto-play demo_ plays a synthetic ukulele through the same pipeline.
 
 ## Windline (whistle, recorder, ocarina) on the iPad
 
