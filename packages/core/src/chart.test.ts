@@ -72,6 +72,42 @@ describe('loadChart: valid charts', () => {
     });
   });
 
+  it('reads the frets to hold on each string, with null for a string not played', () => {
+    const r = loadChart({
+      version: 1,
+      meta: { title: 'Frets', bpm: 90 },
+      notes: [{ t: 0, expected: { frets: [null, 0, null, 3] } }],
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.value.notes[0]?.expected?.frets).toEqual([null, 0, null, 3]);
+  });
+
+  it.each([
+    ['a fret that is not a whole number', [1.5, 0, 0, 0], 'notes[0].expected.frets[0]'],
+    ['a negative fret', [0, -1, 0, 0], 'notes[0].expected.frets[1]'],
+    ['a fret past the neck', [0, 0, 25, 0], 'notes[0].expected.frets[2]'],
+    ['text for a fret', [0, 0, 0, 'x'], 'notes[0].expected.frets[3]'],
+  ])('rejects %s', (_name, frets, where) => {
+    const r = loadChart({
+      version: 1,
+      meta: { title: 'Bad', bpm: 90 },
+      notes: [{ t: 0, expected: { frets } }],
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.join('\n')).toContain(where);
+  });
+
+  it('rejects an empty frets list and more than eight strings', () => {
+    for (const frets of [[], Array.from({ length: 9 }, () => 0)]) {
+      const r = loadChart({
+        version: 1,
+        meta: { title: 'Bad', bpm: 90 },
+        notes: [{ t: 0, expected: { frets } }],
+      });
+      expect(r.ok).toBe(false);
+    }
+  });
+
   it('sorts out-of-order notes and says so', () => {
     const r = loadChart({ ...minimal(), notes: [{ t: 2 }, { t: 1 }, { t: 3 }] });
     expect(r.ok).toBe(true);

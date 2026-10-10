@@ -75,6 +75,7 @@ describe('songsFor', () => {
       'ukulele-strum-demo',
       'strum-four-chords',
       'strum-folk',
+      'strum-picking',
     ]);
     expect(songsFor('kazoo')).toEqual([]);
   });

@@ -8,6 +8,7 @@ import {
   type Renderer,
 } from './renderer';
 import { PercussionLanesRenderer } from './percussion-lanes';
+import { StringLanesRenderer } from './string-lanes';
 
 export interface HighwayLayout {
   /** x of the "now" line. */
@@ -316,5 +317,5 @@ export function describePitch(hz: number | null): { name: string; cents: number 
 export function createRenderer(kind: Renderer['kind']): Renderer {
   if (kind === 'pitch-highway') return new PitchHighwayRenderer();
   if (kind === 'percussion-lanes') return new PercussionLanesRenderer();
-  throw new Error(`renderer "${kind}" is not implemented yet`);
+  return new StringLanesRenderer();
 }

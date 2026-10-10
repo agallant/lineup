@@ -21,6 +21,12 @@ export interface NoteExpectation {
   chord?: string;
   /** Strum direction. Enforced from L5 on. */
   direction?: 'up' | 'down';
+  /**
+   * Fret to hold on each string, in the profile's tuning order (ukulele: G C E A); `null` means
+   * the string is not played. Written on the strings when the chart is shown; when absent, a
+   * strum's frets come from its chord. A single non-null entry is a plucked note.
+   */
+  frets?: readonly (number | null)[];
 }
 
 /**
@@ -185,12 +191,30 @@ export function loadChart(input: unknown): Loaded<Chart> {
       const expectedRaw = readObject(n, 'expected', here, p);
       let expected: NoteExpectation | undefined;
       if (expectedRaw) {
-        warnUnknownKeys(expectedRaw, ['chord', 'direction'], `${here}.expected`, p);
+        warnUnknownKeys(expectedRaw, ['chord', 'direction', 'frets'], `${here}.expected`, p);
         const chord = readString(expectedRaw, 'chord', `${here}.expected`, p, { maxLength: 16 });
         const direction = readEnum(expectedRaw, 'direction', `${here}.expected`, p, ['up', 'down']);
+        const fretsRaw = readArray(expectedRaw, 'frets', `${here}.expected`, p, { minLength: 1 });
+        let frets: (number | null)[] | undefined;
+        if (fretsRaw && fretsRaw.length > 8) {
+          p.error(`${here}.expected.frets`, `expected at most 8 strings (got ${fretsRaw.length})`);
+        } else if (fretsRaw) {
+          frets = [];
+          fretsRaw.forEach((v, k) => {
+            if (v === null) frets!.push(null);
+            else if (typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 24)
+              frets!.push(v);
+            else
+              p.error(
+                at(`${here}.expected.frets`, k),
+                `expected a fret from 0 to 24, or null for a string that is not played (got ${describeValue(v)})`,
+              );
+          });
+        }
         expected = {};
         if (chord !== undefined) expected.chord = chord;
         if (direction !== undefined) expected.direction = direction;
+        if (frets !== undefined) expected.frets = frets;
       }
       if (t === undefined) return;
       const note: ChartNote = { t, duration: duration ?? 0 };

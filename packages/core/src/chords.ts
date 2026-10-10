@@ -1,4 +1,4 @@
-import type { Chart } from './chart';
+import type { Chart, ChartNote } from './chart';
 import type { InstrumentProfile } from './profile';
 
 /** Ukulele chord fingerings as frets on strings 4 -> 1 (the order of the profile's tuning: G C E A). */
@@ -16,6 +16,19 @@ export const UKULELE_CHORD_FRETS: Readonly<Record<string, readonly number[]>> = 
   A7: [0, 1, 0, 0],
   D7: [2, 0, 2, 0],
 };
+
+/**
+ * The fret to hold on each string for a note, in tuning order: the chart's own `frets` when it
+ * gives them, else the fingering of its chord, else null (nothing to show).
+ */
+export function noteFrets(note: ChartNote): readonly (number | null)[] | null {
+  const explicit = note.expected?.frets;
+  if (explicit) return explicit;
+  const chord = note.expected?.chord;
+  return chord !== undefined && Object.hasOwn(UKULELE_CHORD_FRETS, chord)
+    ? UKULELE_CHORD_FRETS[chord]!
+    : null;
+}
 
 /** The MIDI notes a chord sounds on an instrument with a tuning, or null when the chord is unknown. */
 export function chordMidis(profile: InstrumentProfile, chord: string): number[] | null {

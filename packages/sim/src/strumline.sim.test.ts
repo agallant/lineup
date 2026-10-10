@@ -26,6 +26,7 @@ const LATENCY = 0.1;
 
 const four = getSong('strum-four-chords');
 const folk = getSong('strum-folk');
+const picking = getSong('strum-picking');
 
 const rescale = (c: Chart, bpm: number): Chart => {
   const f = c.meta.bpm / bpm;
@@ -66,6 +67,23 @@ describe('strumline: a calibrated player who strums the right chords', () => {
     // most strums carry a recognised chord (the 48/48 perfect score shows none was wrong)
     const named = r.inputs.filter((e) => e.chord !== undefined).length;
     expect(named).toBeGreaterThan(40);
+  });
+
+  it('a fingerpicking song of single plucked strings scores every note perfect (timing only)', () => {
+    const r = play(picking);
+    expect(r.score.counts).toEqual({ perfect: 32, good: 0, miss: 0 });
+    // a plucked note names no chord, so none is demanded
+    expect(picking.notes.every((n) => n.expected?.chord === undefined)).toBe(true);
+  });
+
+  it('picking with chord checking on still counts every pluck (no chord is expected)', () => {
+    const r = play(picking, {}, { chords: chordShapesFor(profile, ['C', 'Am', 'F', 'G']) });
+    expect(r.score.counts).toEqual({ perfect: 32, good: 0, miss: 0 });
+  });
+
+  it('a pluck that is missing is a miss', () => {
+    const r = play(picking, { skip: new Set([5, 6]) });
+    expect(r.score.counts).toEqual({ perfect: 30, good: 0, miss: 2 });
   });
 
   it.each([70, 130, 160, 200])('keeps up at %d bpm', (bpm) => {
