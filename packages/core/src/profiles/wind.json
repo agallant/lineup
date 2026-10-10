@@ -5,7 +5,7 @@
   "input": "pitch",
   "renderer": "pitch-highway",
   "range": {
-    "lowMidi": 67,
+    "lowMidi": 60,
     "highMidi": 96
   },
   "transposition": {
@@ -16,7 +16,7 @@
     "hopSize": 256,
     "clarityThreshold": 0.6,
     "minLevelDb": -55,
-    "minHz": 350,
+    "minHz": 240,
     "maxHz": 2400,
     "stabilityGateMs": 0,
     "onset": {

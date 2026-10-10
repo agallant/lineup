@@ -14,3 +14,4 @@ export * from './songs';
 export * from './timbre';
 export * from './types';
 export * from './validate';
+export * from './wind-instruments';

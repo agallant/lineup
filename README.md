@@ -117,18 +117,36 @@ arrows are a guide (direction is not detected, see Limitations).
 ## Windline (whistle, recorder, ocarina) on the iPad
 
 `#/wind` (home screen -> Windline). It is Singline's pitch pipeline with a wind profile: range
-G4 to C7, a shorter analysis window for high notes, and **octaves count** (a fingering has one
+C4 to C7, a shorter analysis window for high notes, and **octaves count** (a fingering has one
 register, so an octave off is wrong, unlike singing).
 
 1. **Start mic** and play a long steady note: you should see the note name and a green clarity
    bar. Hold the instrument a little to the side of the mic: a breath straight into it
    overloads it (the level meter warns about clipping).
-2. Use **Key** to move the song to where your instrument plays (a D whistle: +2; a 12-hole
-   ocarina or a soprano recorder: original key or +/-). Songs: a C major scale, Twinkle Twinkle,
-   Ode to Joy, all within C5 to A5 before the key shift.
-3. Use headphones (the guide tone is otherwise heard by the mic), calibrate timing if the first
+2. Pick your **Instrument**: tin whistles in D, C, B-flat, A, G, F and E-flat, a low D whistle,
+   soprano, alto, tenor and sopranino recorders, or a 12-hole ocarina. Whistles and recorders are
+   diatonic, so **the song is moved into the instrument's key** (a C-major song becomes D major on a
+   D whistle) and its notes then use only the instrument's own scale. _Extra shift_ nudges it further
+   (an octave problem, or a lower or higher register). A warning appears if some notes fall outside
+   the instrument's range or scale.
+3. The **fingering chart** lists the instrument's scale with the holes drawn (filled = covered),
+   the notes of the chosen song highlighted, and "blow harder" for a whistle's second octave. While
+   playing, the **current and next note's fingering** are shown under the highway (switch it off under
+   Options). Set **Speed** to 50 to 80% to learn a song slowly: with the fingerings on, that is a
+   learning mode.
+4. Use headphones (the guide tone is otherwise heard by the mic), calibrate timing if the first
    notes always feel early or late, pick **Scoring**, and **Play**. _Watch auto-play demo_
    plays a synthetic recorder through the same pipeline.
+
+Songs: a C major scale, Twinkle Twinkle, Ode to Joy (written in C, all within C5 to A5 before the
+move into your key).
+
+**About the fingerings:** they are the standard six-hole whistle fingerings (the same by scale degree
+in every key) and the Baroque (English) recorder fingerings for the major scale. Sharps and flats
+outside the key are left out because they vary between instruments (cross-fingerings, half-holes); the
+chart says "use your instrument's own chart" for those. Recorder notes above D6 and ocarina fingerings
+(which differ between makers) are not shown. Check them against your own instrument's chart, and tell
+me if one is wrong.
 
 ## Beatline (claps, taps, percussion) on the iPad
 
@@ -163,7 +181,8 @@ counts; **Clap + tap**, two lanes where you teach it your two sounds first; **Dr
 - **Strum direction (down vs up) is not detected.** In simulation it could not be told from the audio
   reliably at realistic strum speeds (gaps of 4 to 10 ms between strings: 55 to 80% right), so the
   charts show the arrows as a guide and only timing and the chord are judged.
-- **Windline is simulation-verified only.** The wind profile and synthetic whistle/recorder/ocarina
+- **Windline is simulation-verified only, and its fingerings are from standard charts, not checked on
+  every make.** The wind profile and synthetic whistle/recorder/ocarina
   prove the software chain (high notes, chiff, drift, airy breath); a real whistle's shrill peaks,
   breath blasts into the mic and room reflections are untested.
 - **Overlapping ringing notes confuse single-note pitch tracking.** Two notes

@@ -1,16 +1,23 @@
 import {
   CalibrationStore,
+  DEFAULT_WIND_INSTRUMENT,
   SongClock,
+  WIND_INSTRUMENTS,
+  checkFit,
   chartEnd,
   chartPitchRange,
   defaultOffsetFromLatencies,
+  findWindInstrument,
   getProfile,
   letterGrade,
+  rescaleChart,
+  shiftForInstrument,
   songsFor,
   transposeChart,
   type Chart,
   type Difficulty,
   type PitchFrame,
+  type WindInstrument,
 } from '@lineup/core';
 import {
   analyzerOptionsFromProfile,
@@ -27,6 +34,7 @@ import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
 import { escapeHtml, playTone } from '../audio';
 import { planBacking, playBacking, midiToHz, type BackingHandle } from '../game/backing';
+import { fingeringChartHtml, fingeringStripHtml } from '../game/fingering-view';
 import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
@@ -55,6 +63,11 @@ export interface PitchScreenConfig {
   /** The synthetic player for the auto-play demo, e.g. "singer". */
   demoWho: string;
   demoPerformer: () => Performer;
+  /**
+   * Diatonic instruments in different keys (Windline): adds an instrument picker that moves the
+   * song into the instrument's key, a fingering chart, fingerings while playing, and a practice speed.
+   */
+  instruments?: boolean;
 }
 
 const template = (c: PitchScreenConfig) => `
@@ -87,16 +100,26 @@ const setup = (c: PitchScreenConfig) => `
   </section>
 
   <section class="panel">
-    <h2>2. Song &amp; key</h2>
+    <h2>2. ${c.instruments ? 'Instrument, song &amp; key' : 'Song &amp; key'}</h2>
     <div class="row">
+      ${c.instruments ? '<label>Instrument <select data-id="instrument"></select></label>' : ''}
       <label>Song <select data-id="song"></select></label>
-      <label>Key <select data-id="key"></select></label>
+      <label>${c.instruments ? 'Extra shift' : 'Key'} <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
     </div>
     <p data-id="range"></p>
     <p data-id="song-info"></p>
     <p data-id="best"></p>
   </section>
+
+  ${
+    c.instruments
+      ? `<details class="panel" data-id="chart-panel" open>
+    <summary>Fingering chart</summary>
+    <div class="fingering-chart" data-id="chart"></div>
+  </details>`
+      : ''
+  }
 
   <section class="panel">
     <h2>3. Options</h2>
@@ -107,6 +130,19 @@ const setup = (c: PitchScreenConfig) => `
         <option value="strict">Strict</option>
       </select>
     </label>
+    ${
+      c.instruments
+        ? `<label>Speed
+      <select data-id="speed">
+        <option value="0.5">50%</option>
+        <option value="0.65">65%</option>
+        <option value="0.8">80%</option>
+        <option value="1">100%</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" data-id="opt-fingerings" /> Show the fingering of the current and next note while playing</label>`
+        : ''
+    }
     <label class="check"><input type="checkbox" data-id="opt-guide" /> Guide tone (needs headphones)</label>
     <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks</label>
     <label class="check"><input type="checkbox" data-id="opt-debug" /> Debug overlay while playing</label>
@@ -132,6 +168,7 @@ const PLAY = `
     <canvas class="stage" data-id="stage" role="img" aria-label="The song: notes scrolling toward the now line"></canvas>
     <div class="overlay" data-id="overlay" aria-live="assertive"></div>
   </div>
+  <div class="fingering" data-id="fingering" hidden></div>
   <pre class="debug" data-id="debug" hidden></pre>
 `;
 
@@ -200,37 +237,87 @@ export const createPitchScreen =
           String(k),
         ),
       );
+    /** The instrument chosen on a Windline screen. */
+    const instrument = (): WindInstrument =>
+      findWindInstrument(settings.get().windInstrument) ??
+      findWindInstrument(DEFAULT_WIND_INSTRUMENT)!;
+
     keySel.value = String(keyShiftFor(current, c.profileId));
+    if (c.instruments) {
+      const instrumentSel = S<HTMLSelectElement>('instrument');
+      for (const i of WIND_INSTRUMENTS) instrumentSel.add(new Option(i.label, i.id));
+      instrumentSel.value = instrument().id;
+      instrumentSel.addEventListener('change', () => {
+        settings.update({ windInstrument: instrumentSel.value });
+        refreshRange();
+      });
+      const speedSel = S<HTMLSelectElement>('speed');
+      speedSel.value = String(current.speed);
+      speedSel.addEventListener('change', () => {
+        settings.update({ speed: Number(speedSel.value) });
+        refreshRange();
+      });
+      const fingerBox = S<HTMLInputElement>('opt-fingerings');
+      fingerBox.checked = current.showFingerings;
+      fingerBox.addEventListener('change', () =>
+        settings.update({ showFingerings: fingerBox.checked }),
+      );
+    }
     const difficultySel = S<HTMLSelectElement>('difficulty');
     difficultySel.value = current.difficulty;
     S<HTMLInputElement>('opt-guide').checked = current.guideTone;
     S<HTMLInputElement>('opt-metronome').checked = current.metronome;
     S<HTMLInputElement>('opt-debug').checked = current.debug;
 
+    const songEntry = () => songs.find((s) => s.id === songSel.value) ?? songs[0]!;
+
+    /** The chart as played: moved into the instrument's key, shifted, and at the practice speed. */
     const selectedChart = (): Chart => {
-      const song = songs.find((s) => s.id === songSel.value) ?? songs[0]!;
-      return transposeChart(song.chart, Number(keySel.value));
+      const song = songEntry().chart;
+      const inKey = c.instruments ? shiftForInstrument(song, instrument()) : 0;
+      const moved = transposeChart(song, inKey + Number(keySel.value));
+      return c.instruments ? rescaleChart(moved, settings.get().speed) : moved;
     };
 
-    /** Best-score bucket for the chosen song at the chosen scoring level. */
-    const bestKey = () => scoreKey(c.profileId, songSel.value, settings.get().difficulty);
+    /** Best-score bucket: the song at the chosen scoring level (and, for winds, practice speed). */
+    const bestKey = () =>
+      scoreKey(
+        c.profileId,
+        songSel.value,
+        c.instruments
+          ? `${settings.get().difficulty}|x${settings.get().speed}`
+          : settings.get().difficulty,
+      );
 
     const refreshRange = () => {
-      const r = chartPitchRange(selectedChart());
-      S('song-info').textContent = songSummary(selectedChart());
-      S('best').textContent = describeBest(scores.best(bestKey()));
-      if (!r) {
-        S('range').textContent = '';
-        return;
-      }
+      const chart = selectedChart();
+      const r = chartPitchRange(chart);
+      let text = r ? c.rangeText(midiName(r.low), midiName(r.high)) : '';
       // Voices are folded into range; an instrument has one register, so a key that pushes
       // the song past what the detector hears would silently miss every note.
       const d = profile.detector;
-      const undetectable =
-        !d.foldIntoRange && (midiToHz(r.low) < d.minHz || midiToHz(r.high) > d.maxHz);
-      S('range').textContent =
-        c.rangeText(midiName(r.low), midiName(r.high)) +
-        (undetectable ? ` ${c.mode} cannot hear every note in this key: try another.` : '');
+      if (r && !d.foldIntoRange && (midiToHz(r.low) < d.minHz || midiToHz(r.high) > d.maxHz))
+        text += ` ${c.mode} cannot hear every note in this key: try another.`;
+      if (c.instruments) {
+        const fit = checkFit(
+          chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch])),
+          instrument(),
+        );
+        const names = (ms: number[]) => ms.map(midiName).join(', ');
+        if (fit.outOfRange.length)
+          text += ` ⚠ Outside this instrument's range: ${names(fit.outOfRange)}. Try another instrument or Extra shift.`;
+        if (fit.notInScale.length)
+          text += ` ⚠ Not in this instrument's scale: ${names(fit.notInScale)} (a note that needs special fingering).`;
+      }
+      S('range').textContent = text;
+      S('song-info').textContent = songSummary(chart);
+      S('best').textContent = describeBest(scores.best(bestKey()));
+      if (c.instruments) {
+        S('chart').innerHTML = fingeringChartHtml(
+          instrument(),
+          new Set(chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch]))),
+        );
+      }
     };
     refreshRange();
 
@@ -445,6 +532,17 @@ export const createPitchScreen =
       );
       const renderer = createRenderer(profile.renderer);
       const endAt = chartEnd(chart) + 0.9;
+      // Windline: the fingering of the note being played and the next one, redrawn when they change
+      const inst = instrument();
+      const fingerEl = c.instruments && opts.showFingerings ? P<HTMLElement>('fingering') : null;
+      if (fingerEl) fingerEl.hidden = false;
+      let fingeringKey = '';
+      const fingerKeyNow = (songTime: number): string => {
+        const t = songTime - offset;
+        const i = chart.notes.findIndex((n) => t < n.t + Math.max(n.duration, 0.2));
+        // the note counts as "now" once it has started, so the key changes then too
+        return `${i}:${i >= 0 && t >= chart.notes[i]!.t}`;
+      };
       let lastDebug = 0;
       let finished = false;
 
@@ -484,6 +582,11 @@ export const createPitchScreen =
           overlay.classList.add('on');
         } else {
           overlay.classList.remove('on');
+        }
+
+        if (fingerEl && fingeringKey !== fingerKeyNow(now)) {
+          fingeringKey = fingerKeyNow(now);
+          fingerEl.innerHTML = fingeringStripHtml(inst, chart, now - offset);
         }
 
         if (opts.debug && ctx.currentTime - lastDebug > 0.1) {
@@ -550,6 +653,7 @@ export const createPitchScreen =
             keyShift: Number(keySel.value),
             guideTone: settings.get().guideTone,
             metronome: settings.get().metronome,
+            ...(c.instruments ? { instrument: instrument().id, speed: settings.get().speed } : {}),
           },
           audio: {
             sampleRate: audio.ctx.sampleRate,

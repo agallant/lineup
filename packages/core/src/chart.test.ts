@@ -9,6 +9,7 @@ import {
   loadChart,
   migrateChart,
   parseChart,
+  nextNoteIndex,
   rescaleChart,
   transposeChart,
   type Chart,
@@ -276,6 +277,41 @@ describe('chartFromBeats', () => {
 
   it('refuses to build an invalid chart', () => {
     expect(() => chartFromBeats({ title: 'T', bpm: 1 }, [{ beat: 0 }])).toThrow(/meta\.bpm/);
+  });
+});
+
+describe('meta.tonic', () => {
+  const base = { version: 1, notes: [{ t: 0, pitch: 60 }] };
+
+  it("accepts the MIDI note of the song's key", () => {
+    const r = loadChart({ ...base, meta: { title: 't', bpm: 100, tonic: 72 } });
+    expect(r.ok && r.value.meta.tonic).toBe(72);
+  });
+
+  it('is optional, and rejects a value that is not a MIDI note', () => {
+    const none = loadChart({ ...base, meta: { title: 't', bpm: 100 } });
+    expect(none.ok && none.value.meta.tonic).toBeUndefined();
+    for (const bad of [200, -1, 60.5, 'C']) {
+      const r = loadChart({ ...base, meta: { title: 't', bpm: 100, tonic: bad } });
+      expect(r.ok, String(bad)).toBe(false);
+      if (!r.ok) expect(r.errors.join('\n')).toMatch(/meta\.tonic/);
+    }
+  });
+});
+
+describe('nextNoteIndex', () => {
+  const chart = {
+    notes: [
+      { t: 1, duration: 0 },
+      { t: 2, duration: 0 },
+      { t: 3, duration: 0 },
+    ],
+  };
+  it('is the first note that starts after the time, or null at the end', () => {
+    expect(nextNoteIndex(chart, 0)).toBe(0);
+    expect(nextNoteIndex(chart, 1)).toBe(1);
+    expect(nextNoteIndex(chart, 2.5)).toBe(2);
+    expect(nextNoteIndex(chart, 3)).toBeNull();
   });
 });
 

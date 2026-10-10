@@ -5,7 +5,8 @@
     "artist": "Lineup",
     "bpm": 80,
     "countInBeats": 4,
-    "instruments": ["wind"]
+    "instruments": ["wind"],
+    "tonic": 72
   },
   "notes": [
     {
