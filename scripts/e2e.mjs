@@ -369,8 +369,11 @@ const scenarios = {
       // timing-only: the same strums, no chord names
       await page.uncheck('[data-id=opt-chords]');
       await page.waitForFunction(
-        () =>
-          /strum {2}chord –/.test(document.querySelector('[data-id=monitor]')?.textContent ?? ''),
+        () => {
+          const t = document.querySelector('[data-id=monitor]')?.textContent ?? '';
+          const strums = t.split('\n').filter((l) => /strum {2}chord/.test(l));
+          return strums.length > 0 && strums.every((l) => /strum {2}chord –/.test(l));
+        },
         null,
         { timeout: 30000 },
       );

@@ -1,6 +1,6 @@
 import type { KeyValueStore } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, SettingsStore } from './settings';
+import { DEFAULT_SETTINGS, SettingsStore, keyShiftFor } from './settings';
 
 class Mem implements KeyValueStore {
   data = new Map<string, string>();
@@ -102,5 +102,16 @@ describe('SettingsStore', () => {
     const s = new SettingsStore(new Mem());
     s.get().songs['x'] = 'y';
     expect(s.get().songs).toEqual({});
+  });
+
+  it('keeps a key change per profile; the old single shift still applies to the voice', () => {
+    const s = new SettingsStore(new Mem());
+    s.update({ keyShift: -3 });
+    expect(keyShiftFor(s.get(), 'voice')).toBe(-3);
+    expect(keyShiftFor(s.get(), 'wind')).toBe(0);
+    s.update({ keyShifts: { wind: 2, voice: 5, bad: 99, frac: 1.5 } });
+    expect(keyShiftFor(s.get(), 'wind')).toBe(2);
+    expect(keyShiftFor(s.get(), 'voice')).toBe(5);
+    expect(s.get().keyShifts).toEqual({ wind: 2, voice: 5 });
   });
 });

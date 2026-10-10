@@ -27,12 +27,12 @@ import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
 import { escapeHtml, playTone } from '../audio';
 import { planBacking, playBacking, midiToHz, type BackingHandle } from '../game/backing';
-import { micAdvice } from '../game/mic-advice';
+import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
-import { SettingsStore, safeLocalStorage } from '../settings';
+import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
 import { formatCents, formatDb } from '../format';
 import type { Screen } from '../router';
 
@@ -46,6 +46,8 @@ export interface PitchScreenConfig {
   subtitle: string;
   /** Shown under the mic meter before anything is played. */
   micPrompt: string;
+  /** Per-status mic advice wording; statuses not listed use the voice wording from `micAdvice`. */
+  adviceText?: Partial<Record<MicStatus, string>>;
   /** "singing, humming or a TV": what the quiet-baseline check might be hearing. */
   quietExamples: string;
   /** The range line under the song picker. */
@@ -191,14 +193,14 @@ export const createPitchScreen =
     songSel.value = songs.some((s) => s.id === current.songs[c.profileId])
       ? current.songs[c.profileId]!
       : songs[0]!.id;
-    for (let k = -7; k <= 7; k++)
+    for (let k = -12; k <= 12; k++)
       keySel.add(
         new Option(
           k === 0 ? 'Original key' : `${k > 0 ? '+' : '−'}${Math.abs(k)} semitones`,
           String(k),
         ),
       );
-    keySel.value = String(current.keyShift);
+    keySel.value = String(keyShiftFor(current, c.profileId));
     const difficultySel = S<HTMLSelectElement>('difficulty');
     difficultySel.value = current.difficulty;
     S<HTMLInputElement>('opt-guide').checked = current.guideTone;
@@ -215,9 +217,20 @@ export const createPitchScreen =
 
     const refreshRange = () => {
       const r = chartPitchRange(selectedChart());
-      S('range').textContent = r ? c.rangeText(midiName(r.low), midiName(r.high)) : '';
       S('song-info').textContent = songSummary(selectedChart());
       S('best').textContent = describeBest(scores.best(bestKey()));
+      if (!r) {
+        S('range').textContent = '';
+        return;
+      }
+      // Voices are folded into range; an instrument has one register, so a key that pushes
+      // the song past what the detector hears would silently miss every note.
+      const d = profile.detector;
+      const undetectable =
+        !d.foldIntoRange && (midiToHz(r.low) < d.minHz || midiToHz(r.high) > d.maxHz);
+      S('range').textContent =
+        c.rangeText(midiName(r.low), midiName(r.high)) +
+        (undetectable ? ` ${c.mode} cannot hear every note in this key: try another.` : '');
     };
     refreshRange();
 
@@ -236,7 +249,9 @@ export const createPitchScreen =
       refreshRange();
     });
     keySel.addEventListener('change', () => {
-      settings.update({ keyShift: Number(keySel.value) });
+      settings.update({
+        keyShifts: { ...settings.get().keyShifts, [c.profileId]: Number(keySel.value) },
+      });
       refreshRange();
     });
     difficultySel.addEventListener('change', () => {
@@ -368,7 +383,7 @@ export const createPitchScreen =
       S('clarity-bar').classList.toggle('good', f.clarity >= profile.detector.clarityThreshold);
       const advice = micAdvice({ levelDb: f.rmsDb, peakDb: peakHold, voicedFraction });
       const adviceEl = S('advice');
-      adviceEl.textContent = advice.message;
+      adviceEl.textContent = c.adviceText?.[advice.status] ?? advice.message;
       adviceEl.className = `status ${advice.status === 'good' ? 'ok' : advice.status === 'silent' ? '' : 'error'}`;
     };
     setupRaf = requestAnimationFrame(setupTick);
@@ -605,6 +620,10 @@ export const createPitchScreen =
           analyzer: analyzerOptionsFromProfile(profile),
           listen: true,
         });
+        if (disposed) {
+          await synth.close();
+          return;
+        }
         setupStatus.textContent = '';
         const ctx = synth.ctx;
         const countIn = chart.meta.countInBeats * (60 / chart.meta.bpm);

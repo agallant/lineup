@@ -15,7 +15,8 @@ export interface OnsetWindowConfig {
   detect: (block: Float32Array, startFrame: number) => Onset[];
   /**
    * Cut a window short where the next onset begins (minus this many samples), so a later hit
-   * does not contaminate the description of an earlier one. Omitted: windows are always full.
+   * does not contaminate the description of an earlier one. The cut is best-effort when onset
+   * detection and window emission fall in different blocks. Omitted: windows are always full.
    */
   cutAtNextOnset?: number;
   /** Reads the window of audio behind one onset into extra event fields (features, chord...). */

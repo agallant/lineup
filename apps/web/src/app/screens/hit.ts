@@ -398,7 +398,7 @@ export const createHitScreen =
       leakBtn.disabled = true;
       copyHitsBtn.disabled = true;
       // a demo that started meanwhile owns the audio; the mic must stay closed
-      if (disposed || beginInFlight || live?.demo) return;
+      if (disposed || beginInFlight || demoClaimed) return;
       await startMic();
     };
     modeSel.addEventListener('change', () => void reopenMicIfNeeded());
