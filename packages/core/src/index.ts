@@ -1,6 +1,7 @@
 export * from './calibration';
 export * from './chart';
 export * from './chords';
+export * from './generate';
 export * from './classify-event';
 export * from './clock';
 export * from './enrollment';

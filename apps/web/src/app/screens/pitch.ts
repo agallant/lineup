@@ -41,6 +41,7 @@ import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
+import { fillSongMenu } from '../song-menu';
 import { formatCents, formatDb } from '../format';
 import type { Screen } from '../router';
 
@@ -226,7 +227,7 @@ export const createPitchScreen =
     const setupStatus = S('setup-status');
 
     const current = settings.get();
-    for (const s of songs) songSel.add(new Option(s.chart.meta.title, s.id));
+    fillSongMenu(songSel, songs);
     songSel.value = songs.some((s) => s.id === current.songs[c.profileId])
       ? current.songs[c.profileId]!
       : songs[0]!.id;

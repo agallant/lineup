@@ -162,12 +162,32 @@ in song time and subtract the calibrated latency offset themselves.
    software, not the instrument: it cannot vouch for real strings, real
    microphones or Safari quirks.
 
+## Generated practice material
+
+`packages/core/src/generate/` builds charts from small descriptions instead of hand-written JSON:
+
+- `random.ts`: a seeded generator (`createRng`), so anything generated can be named by a number and
+  replayed; `hashSeed`, `pick`, `pickWeighted`, `chance`.
+- `theory.ts`: the scales and modes (`SCALES`) and `degreeToMidi`. Each scale knows the major scale
+  that holds the same notes (`rootFromParent`), so a diatonic instrument can play it in its own key
+  through the chart's `meta.tonic`.
+- `exercises.ts`: practice patterns as sequences of scale degrees (`EXERCISE_KINDS`: up and down,
+  thirds, patterns, arpeggios, long tones, interval ladder) and a plan of which scales get which.
+  `exerciseCharts(profileId)` returns ready charts for voice and wind.
+
+`songs/index.ts` registers the exercises next to the hand-written songs; `songsFor` reports each
+entry's `category` (`song` or `exercise`), and the web app's `song-menu.ts` groups the menu by it.
+Because the charts are generated, tests check them as properties (in range, in key, in order,
+playable through the real analyzer) rather than note by note.
+
 ## Adding things
 
 - **An instrument profile:** add `profiles/<id>.json`, register it in
   `profiles/index.ts`, add a built-in song in `songs/` if it has one, add a
   `Performer` in `packages/sim/src/performers.ts`, and a `*.sim.test.ts` that
   plays the song and asserts the score.
+- **An exercise:** add a kind to `EXERCISE_KINDS` (a function from the scale's length to degrees)
+  and list it under a scale in the plan in `generate/exercises.ts`; it appears in the menus.
 - **A test signal:** add it to `@lineup/testkit`; keep it deterministic (seeded).
 - **Behaviour you must not change by accident:** `packages/input/src/characterization.*`.
 

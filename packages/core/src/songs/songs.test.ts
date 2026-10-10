@@ -14,7 +14,7 @@ describe('built-in songs', () => {
 
   it('has wind songs that fit the whistle/recorder/ocarina range', () => {
     const wind = getProfile('wind');
-    const songs = songsFor('wind');
+    const songs = songsFor('wind').filter((s) => s.category === 'song');
     expect(songs.map((s) => s.id)).toEqual(['wind-scale', 'wind-twinkle', 'wind-ode']);
     for (const { id, chart } of songs) {
       const r = chartPitchRange(chart)!;

@@ -307,3 +307,25 @@ describe('voice: backing-track bleed (headphones matter)', () => {
     expect(detectBleed([], 523.25)).toEqual({ fraction: 0, meanLevelDb: null, bleeding: false });
   });
 });
+
+describe('voice: the built-in exercises', () => {
+  // the first notes of each: full runs take seconds each to synthesize
+  it.each([
+    ['ex-voice-major-thirds', 12],
+    ['ex-voice-minor-up-down', 12],
+    ['ex-voice-major-ladder', 12],
+    ['ex-voice-major-arpeggios', 12],
+    ['ex-voice-dorian-up-down', 12],
+  ])('%s: a steady singer scores every note perfect', (id, n) => {
+    const chart = take(getSong(id), n);
+    const r = sing(chart);
+    expect(r.score.counts, id).toEqual({ perfect: n, good: 0, miss: 0 });
+  });
+
+  it('the long-tones exercise holds each note for four beats and scores', () => {
+    const chart = take(getSong('ex-voice-major-long-tones'), 3);
+    expect(chart.notes[0]!.duration).toBeGreaterThan(2.5);
+    const r = sing(chart);
+    expect(r.score.counts.miss).toBe(0);
+  });
+});

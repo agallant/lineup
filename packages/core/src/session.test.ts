@@ -68,6 +68,7 @@ describe('songsFor', () => {
   it('lists the songs written for a profile', () => {
     expect(
       songsFor('voice')
+        .filter((s) => s.category === 'song')
         .map((s) => s.id)
         .sort(),
     ).toEqual(['singline-demo', 'singline-scale']);
