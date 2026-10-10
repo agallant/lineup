@@ -584,6 +584,10 @@ export const createPitchScreen =
           analyzer: analyzerOptionsFromProfile(profile),
           listen: true,
         });
+        if (disposed) {
+          await synth.close();
+          return;
+        }
         setupStatus.textContent = '';
         const ctx = synth.ctx;
         const countIn = chart.meta.countInBeats * (60 / chart.meta.bpm);

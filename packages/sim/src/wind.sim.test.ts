@@ -105,7 +105,7 @@ describe('wind: wrong playing is marked wrong', () => {
     expect(r.score.counts.miss).toBe(12);
   });
 
-  it('50 cents flat is still on a note for Easy but not for Strict', () => {
+  it('75 cents flat is still on a note for Easy but not for Strict', () => {
     const rendered = renderPerformance(scale, windPerformer({ detuneCents: -75 }), {
       latency: LATENCY,
     });
