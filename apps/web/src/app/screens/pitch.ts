@@ -188,7 +188,7 @@ export const createPitchScreen =
     songSel.value = songs.some((s) => s.id === current.songs[c.profileId])
       ? current.songs[c.profileId]!
       : songs[0]!.id;
-    for (let k = -7; k <= 7; k++)
+    for (let k = -12; k <= 12; k++)
       keySel.add(
         new Option(
           k === 0 ? 'Original key' : `${k > 0 ? '+' : '−'}${Math.abs(k)} semitones`,
