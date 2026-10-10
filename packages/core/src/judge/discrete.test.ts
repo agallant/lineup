@@ -340,8 +340,61 @@ describe('DiscreteJudge: jitter robustness (seeded)', () => {
   });
 });
 
+describe('chord matching', () => {
+  const chordNote = (t: number, chord: string): ChartNote => ({
+    t,
+    duration: 0,
+    expected: { chord },
+  });
+  const run = (notes: ChartNote[], events: InputEvent[], config: Partial<DiscreteJudgeConfig>) => {
+    const j = new DiscreteJudge(notes, { perfectWindow: 0.05, goodWindow: 0.1, ...config });
+    for (const e of events) j.feed(e);
+    j.finish(10);
+    return j;
+  };
+
+  it('a strum of the right chord hits', () => {
+    const j = run([chordNote(1, 'C')], [ev(1, { chord: 'C' })], { matchChord: true });
+    expect(j.judgmentFor(0)!.grade).toBe('perfect');
+  });
+
+  it('a strum of another chord on time misses with the reason, and counts as a stray', () => {
+    const j = run([chordNote(1, 'C')], [ev(1, { chord: 'G' })], { matchChord: true });
+    expect(j.judgmentFor(0)).toMatchObject({ grade: 'miss', reason: 'wrong-chord' });
+    expect(j.strays).toBe(1);
+  });
+
+  it('a strum with no recognised chord hits by default, but not when chords are required', () => {
+    const lenient = run([chordNote(1, 'C')], [ev(1)], { matchChord: true });
+    expect(lenient.judgmentFor(0)!.grade).toBe('perfect');
+    const strict = run([chordNote(1, 'C')], [ev(1)], { matchChord: true, requireChord: true });
+    expect(strict.judgmentFor(0)).toMatchObject({ grade: 'miss', reason: 'wrong-chord' });
+  });
+
+  it('ignores the chord when matching is off, and notes that expect none', () => {
+    const off = run([chordNote(1, 'C')], [ev(1, { chord: 'G' })], { matchChord: false });
+    expect(off.judgmentFor(0)!.grade).toBe('perfect');
+    const free = run([note(1)], [ev(1, { chord: 'G' })], { matchChord: true, requireChord: true });
+    expect(free.judgmentFor(0)!.grade).toBe('perfect');
+  });
+
+  it('a wrong chord does not use up the note: the right one a moment later still hits', () => {
+    const j = run([chordNote(1, 'C')], [ev(0.98, { chord: 'G' }), ev(1.04, { chord: 'C' })], {
+      matchChord: true,
+    });
+    expect(j.judgmentFor(0)!.grade).toBe('perfect');
+    expect(j.strays).toBe(1);
+  });
+
+  it('the strum profile reads chords by default but never insists on them', () => {
+    const c = discreteConfigFromProfile(getProfile('ukulele-strum'), 0);
+    expect(c.matchChord).toBe(true);
+    expect(c.requireChord).toBe(false);
+  });
+});
+
 describe('discreteConfigFromProfile', () => {
-  it('maps the ukulele strum profile (timing only)', () => {
+  it('maps the ukulele strum profile (timing, and the chord when the analyzer names one)', () => {
     expect(discreteConfigFromProfile(getProfile('ukulele-strum'), 0.12)).toEqual({
       perfectWindow: 0.045,
       goodWindow: 0.11,
@@ -349,8 +402,19 @@ describe('discreteConfigFromProfile', () => {
       goodCredit: 0.5,
       matchLane: false,
       requireLane: false,
+      matchChord: true,
+      requireChord: false,
       pitchToleranceCents: null,
       octaveForgiving: false,
+      // chords are recognised from audio that arrives ~0.2 s after the strum
+      settle: 0.4,
+    });
+  });
+
+  it('keeps timing-only profiles quick to resolve and chord-blind', () => {
+    expect(discreteConfigFromProfile(getProfile('clap'), 0)).toMatchObject({
+      matchChord: false,
+      requireChord: false,
       settle: 0.05,
     });
   });

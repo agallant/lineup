@@ -17,12 +17,15 @@ export function discreteConfigFromProfile(
     goodCredit: 0.5,
     matchLane: match.lane,
     requireLane: match.laneStrict ?? false,
+    matchChord: match.chord,
+    requireChord: match.chordStrict ?? false,
     pitchToleranceCents: match.pitch
       ? (pitch?.toleranceCents ?? DEFAULT_PITCH_TOLERANCE_CENTS)
       : null,
     octaveForgiving: pitch?.octaveForgiving ?? false,
     // Pitch-matched events are emitted only after the pitch frames after the
     // attack have arrived (~0.14 s + a hop), so wait longer before declaring a miss.
-    settle: match.pitch || match.laneStrict ? 0.2 : 0.05,
+    // chords are recognised from ~0.2 s of audio after the strum
+    settle: match.chord ? 0.4 : match.pitch || match.laneStrict ? 0.2 : 0.05,
   };
 }

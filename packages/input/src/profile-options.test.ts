@@ -20,6 +20,19 @@ describe('profile -> detector options', () => {
     expect(o).toEqual({ riseDb: 9, minDb: -62, refractory: 0.06, referenceDelay: 0.013 });
   });
 
+  it("a strum profile only switches to chord recognition when it is given the song's chords", () => {
+    const strum = getProfile('ukulele-strum');
+    expect(analyzerOptionsFromProfile(strum).strum).toBeUndefined();
+    expect(analyzerOptionsFromProfile(strum, { chords: {} }).strum).toBeUndefined();
+    const chords = { C: [67, 60, 64, 72] };
+    const o = analyzerOptionsFromProfile(strum, { chords });
+    expect(o.strum?.chords).toBe(chords);
+    expect(o.strum?.onset).toEqual(onsetOptionsFromProfile(strum));
+    expect(o.pitch).toBeUndefined();
+    // other kinds of profile ignore chords
+    expect(analyzerOptionsFromProfile(getProfile('voice'), { chords }).strum).toBeUndefined();
+  });
+
   it('maps units (ms -> s) and names', () => {
     expect(pitchOptionsFromProfile(uke)).toEqual({
       windowSize: 2048,

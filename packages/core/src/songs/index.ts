@@ -3,6 +3,8 @@ import clapBasic from './clap-basic.json';
 import clapTapGroove from './clap-tap-groove.json';
 import drumRock from './drum-rock.json';
 import singlineDemo from './singline-demo.json';
+import strumFolk from './strum-folk.json';
+import strumFourChords from './strum-four-chords.json';
 import singlineScale from './singline-scale.json';
 import ukuleleNotesDemo from './ukulele-notes-demo.json';
 import ukuleleStrumDemo from './ukulele-strum-demo.json';
@@ -13,6 +15,8 @@ import windTwinkle from './wind-twinkle.json';
 const RAW: Record<string, unknown> = {
   'ukulele-strum-demo': ukuleleStrumDemo,
   'ukulele-notes-demo': ukuleleNotesDemo,
+  'strum-four-chords': strumFourChords,
+  'strum-folk': strumFolk,
   'singline-demo': singlineDemo,
   'singline-scale': singlineScale,
   'wind-scale': windScale,

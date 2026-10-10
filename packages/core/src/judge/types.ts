@@ -9,7 +9,9 @@ export type MissReason =
   /** Something was heard on time but in the wrong lane. */
   | 'wrong-lane'
   /** Something was heard on time but at the wrong pitch. */
-  | 'wrong-pitch';
+  | 'wrong-pitch'
+  /** Something was heard on time but it was a different chord. */
+  | 'wrong-chord';
 
 export interface Judgment {
   noteIndex: number;

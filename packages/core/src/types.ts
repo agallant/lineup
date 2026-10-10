@@ -13,6 +13,10 @@ export interface InputEvent {
   velocity?: number;
   /** Lane id, set by a classifier (percussion timbre, strum direction). */
   lane?: string;
+  /** Chord name recognised from a strum (one of the candidates the analyzer was given); absent when none fit. */
+  chord?: string;
+  /** How well the recognised chord fitted, 0..1 (cosine similarity of the chroma). */
+  chordScore?: number;
   /** Detector features behind the event (spectral centroid, band energies...), for classifiers and debugging. */
   features?: Readonly<Record<string, number>>;
 }

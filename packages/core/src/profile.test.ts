@@ -243,6 +243,26 @@ describe('percussion profiles', () => {
   });
 });
 
+describe('chord matching in profiles', () => {
+  it('the ukulele strum profile matches chords, without insisting on them', () => {
+    const m = getProfile('ukulele-strum').judgment.match;
+    expect(m.chord).toBe(true);
+    expect(m.chordStrict).toBeUndefined();
+  });
+
+  it('chordStrict without chord matching is an error; with it, it loads', () => {
+    const raw = JSON.parse(JSON.stringify(ukuleleStrum)) as Record<string, any>;
+    raw['judgment'].match.chordStrict = true;
+    const ok = loadProfile(raw);
+    expect(ok.ok).toBe(true);
+    if (ok.ok) expect(ok.value.judgment.match.chordStrict).toBe(true);
+    raw['judgment'].match.chord = false;
+    const bad = loadProfile(raw);
+    expect(bad.ok).toBe(false);
+    if (!bad.ok) expect(bad.errors.join('\n')).toMatch(/chordStrict/);
+  });
+});
+
 describe('helpers', () => {
   const uke = getProfile('ukulele-note');
 

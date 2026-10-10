@@ -71,7 +71,11 @@ describe('songsFor', () => {
         .map((s) => s.id)
         .sort(),
     ).toEqual(['singline-demo', 'singline-scale']);
-    expect(songsFor('ukulele-strum').map((s) => s.id)).toEqual(['ukulele-strum-demo']);
+    expect(songsFor('ukulele-strum').map((s) => s.id)).toEqual([
+      'ukulele-strum-demo',
+      'strum-four-chords',
+      'strum-folk',
+    ]);
     expect(songsFor('kazoo')).toEqual([]);
   });
 });

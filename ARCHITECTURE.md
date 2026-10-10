@@ -58,6 +58,8 @@ in song time and subtract the calibrated latency offset themselves.
 - **Instrument profile** (`profile.ts`, `profiles/*.json`): everything that makes
   an instrument different - input kind, renderer, range, transposition, tuning,
   lanes, detector settings, judgment settings. Validated at load.
+- **Chords** (`chords.ts`): ukulele fingerings -> the MIDI notes a chord sounds on the profile's
+  tuning, plus `chartChords` / `chordShapesFor` to get just the chords a song uses.
 - **Judge** (`judge/`): a pure state machine behind one interface
   (`feed`, `advance`, `finish`, `judgments`, `judgmentFor`). `DiscreteJudge` does
   onset timing (+ lane/pitch match). `ContinuousJudge` (voice, winds) takes `PitchFrame`s
@@ -83,6 +85,17 @@ in song time and subtract the calibrated latency offset themselves.
   band fractions (<400 Hz, 400-2500 Hz, >2500 Hz), decay time (-12 dB), zero-crossing rate, flatness.
   All are level-independent, so soft and loud versions of a sound classify alike. No pitch tracker
   runs. The onset is delivered ~43 ms after it happened (the feature window); the attack time is exact.
+- **Strums and chords** (Strumline): `OnsetWindowAnalyzer` is the shared plumbing for analyzers that
+  describe each onset by a window of audio (ring buffer, a pending queue, level frames, windows cut
+  at the next onset); `PercussionAnalyzer` and `StrumAnalyzer` are thin users of it. `StrumAnalyzer`
+  uses the energy-rise `OnsetDetector`, skips 30 ms so all four strings have sounded, then hands 8192
+  samples to `ChordRecognizer`: a pitch-class profile (compressed FFT power folded to 12 bins) scored
+  by cosine against a template per candidate chord (each string's fundamental plus its first six
+  partials), choosing among the SONG's chords only. The event keeps the onset time and gains `chord`
+  and `chordScore`; no chord is reported under 0.7 similarity or when two fit within 0.015. The
+  event arrives ~0.2 s after the strum (the judge waits `settle` 0.4 s for it). `DiscreteJudge`
+  rejects a note whose expected chord differs from the event's chord (`wrong-chord`); an event with
+  no chord still counts for timing unless `match.chordStrict` is set.
 - **Timbre classification** (`timbre.ts`, `enrollment.ts`, `classify-event.ts`): nearest centroid on
   standardized features, with an "unknown" rejection radius per class (a cough or door slam is no
   note) and `MIN_SEPARATION` to warn when two enrolled sounds are too alike. `EnrollmentSession`
