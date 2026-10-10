@@ -1,5 +1,6 @@
 import {
   UKE_CHORDS,
+  UKE_OPEN_MIDI,
   midiToHz,
   ukeNote,
   ukeStrum,
@@ -13,6 +14,14 @@ import type { Performer } from './performance';
 
 /** Strums the chord named in `note.expected.chord` (default C), in the stroke direction of `note.lane`/`expected`. */
 export const ukuleleStrumPerformer: Performer = (note, index, sampleRate) => {
+  // a chart that names one string and fret is a plucked note, not a strum
+  const played = (note.expected?.frets ?? []).flatMap((fret, string) =>
+    fret === null || fret === undefined ? [] : [{ string, fret }],
+  );
+  if (played.length === 1) {
+    const { string, fret } = played[0]!;
+    return ukeNote(UKE_OPEN_MIDI[string]! + fret, sampleRate, { seed: 100 + index, duration: 0.5 });
+  }
   const chord = note.expected?.chord ?? 'C';
   const frets = UKE_CHORDS[chord] ?? UKE_CHORDS['C']!;
   const direction = note.expected?.direction ?? (note.lane === 'up' ? 'up' : 'down');

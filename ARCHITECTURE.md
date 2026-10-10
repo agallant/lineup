@@ -133,9 +133,12 @@ in song time and subtract the calibrated latency offset themselves.
   performance played into the same worklet) implement it; desktop MIDI/pad input can too.
 - **Renderers** (`@lineup/render` `Renderer`): `draw(g, size, view)` where `view` = clock time,
   notes, per-note status, profile, and (pitched modes) trail/live feedback. `createRenderer`
-  picks one from the profile; `pitch-highway` (voice, winds) and `percussion-lanes` (Beatline: per-lane
-  colours, judged-note rings, hit flashes, grey bar for rejected sounds; Strumline adds chord labels on
-  notes and an `ANY_LANE` flash across the now line) exist.
+  picks one from the profile; `pitch-highway` (voice, winds), `percussion-lanes` (Beatline: per-lane
+  colours, judged-note rings, hit flashes, grey bar for rejected sounds) and `lane-highway`
+  (Strumline: `StringLanesRenderer`, one line per string from the profile's tuning, highest on top;
+  each note writes the fret to hold on every string it uses, from the chart's `expected.frets` or
+  else the fingering of its chord, a bar joining a strum's strings, and the chord and stroke
+  direction above) exist.
 - `screens/hit.ts` is the shared hit-based game screen (mic, hit monitor, click-leak check, optional
   enrollment, play, results, demo). `beat.ts` (Beatline) and `strum.ts` (Strumline) are a config
   object each; Strumline adds the chord-checking option (the analyzer is built with the song's

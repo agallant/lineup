@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|strum-demo|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -365,6 +365,28 @@ const scenarios = {
       );
       await shot(page, 'strum-results');
       await checkCopyLog(page, 'Strumline', 48);
+    });
+  },
+
+  async 'strum-picking'() {
+    console.log(
+      '\n# Strumline picking song: single plucked strings on the string lanes (synthetic ukulele -> worklet -> judge)',
+    );
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/strum');
+      await page.selectOption('[data-id=song]', 'strum-picking');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForTimeout(4000);
+      await shot(page, 'strum-picking-play');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 90000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        perfect === 32 && miss === 0,
+        `demo ukulele plucks all 32 notes on time (${perfect} perfect, ${miss} missed, grade ${await text(page, 'grade')})`,
+      );
     });
   },
 

@@ -5,6 +5,7 @@ import drumRock from './drum-rock.json';
 import singlineDemo from './singline-demo.json';
 import strumFolk from './strum-folk.json';
 import strumFourChords from './strum-four-chords.json';
+import strumPicking from './strum-picking.json';
 import singlineScale from './singline-scale.json';
 import ukuleleNotesDemo from './ukulele-notes-demo.json';
 import ukuleleStrumDemo from './ukulele-strum-demo.json';
@@ -17,6 +18,7 @@ const RAW: Record<string, unknown> = {
   'ukulele-notes-demo': ukuleleNotesDemo,
   'strum-four-chords': strumFourChords,
   'strum-folk': strumFolk,
+  'strum-picking': strumPicking,
   'singline-demo': singlineDemo,
   'singline-scale': singlineScale,
   'wind-scale': windScale,

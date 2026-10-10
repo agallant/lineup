@@ -296,9 +296,10 @@ describe('helpers', () => {
     expect(t.snapshot).toHaveLength(0);
   });
 
-  it('createRenderer builds the pitch highway and refuses kinds that do not exist yet', () => {
+  it('createRenderer builds a renderer of every kind', () => {
     expect(createRenderer('pitch-highway').kind).toBe('pitch-highway');
-    expect(() => createRenderer('lane-highway')).toThrow(/not implemented/);
+    expect(createRenderer('percussion-lanes').kind).toBe('percussion-lanes');
+    expect(createRenderer('lane-highway').kind).toBe('lane-highway');
   });
 
   it('roundedRect traces a closed path with four corners', () => {

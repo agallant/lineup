@@ -99,14 +99,19 @@ Design rules:
 
 ## Strumline (ukulele) on the iPad
 
-`#/strum` (home screen -> Strumline). Strums scroll toward the now line in two lanes (Down / Up) with
-the chord to play written on each. **The timing of each strum is what is judged**; the Down / Up
-arrows are a guide (direction is not detected, see Limitations).
+`#/strum` (home screen -> Strumline). The song scrolls toward the now line on **four lines, one per
+string** (A on top, then E, C, G, like written tab). The number on a line is **the fret to hold on that
+string** (0 is an open string, a hollow ring). A bar across the strings is a strum, so a chord shows
+as its fingering; a single number is a plucked note. The chord name and the stroke direction are
+written above. **The timing of each note is what is judged** (and optionally the chord of a strum);
+the direction arrow is a guide, since direction is not detected (see Limitations).
 
 1. **Start mic** and strum: each strum is listed with the chord it was heard as (when chord
    checking is on). Hold the ukulele a little away from the mic; a very loud strum right at the mic clips.
-2. Pick a song (_Four chords_ is C Am F G, _Folk strum_ is G C D) and a **Speed** (50% to 100%) to
-   practise slowly. The chart's chord names stay the same.
+2. Pick a song (_Four chords_ is C Am F G, _Folk strum_ is G C D, _Picking_ is a slow
+   fingerpicking pattern over C Am F G, one string at a time) and a **Speed** (50% to 100%) to
+   practise slowly. The chart's frets and chord names stay the same. A plucked note is judged on
+   timing only: Lineup hears that you played, not which string or fret.
 3. **Also check the chords** (off by default, experimental): the analyzer is told which chords the
    song uses and a strum of a clearly different chord misses ("wrong chord" is counted on the results
    screen). A strum it cannot name still counts for timing. Turn it off if it penalises you unfairly
@@ -172,6 +177,9 @@ counts; **Clap + tap**, two lanes where you teach it your two sounds first; **Dr
 - **Strumline chord recognition is simulation-verified only.** A synthetic ukulele (Karplus-Strong
   strings) is recognised in all twelve fingerings, in room noise and at 44.1 and 48 kHz, but a real
   ukulele, strumming hand and microphone are untested.
+- **Strumline shows the strings and frets but does not hear which ones you play.** A plucked note
+  counts when a sound lands on time; a wrong string or fret is not noticed. Telling single strings
+  apart is future work (it needs per-note pitch tracking on top of the strum detector).
 - **Chords are picked from the song's own chords, not named from scratch.** Choosing among four
   or five is reliable; **Am, F and C share notes** and are the closest trio (the analyzer says
   "no chord" rather than guess when two fit about equally, and a strum with no recognised chord

@@ -11,7 +11,7 @@ export const strumScreen = createHitScreen({
     {
       id: 'ukulele-strum',
       label: 'Ukulele strumming',
-      note: 'Strum on the beat. Down and up strums are shown as a guide; the timing is what is judged, and optionally the chord.',
+      note: 'Four lines, one per string (A E C G, as in tab). The number on a line is the fret to hold on that string: 0 is open. A bar across the strings is a strum; a single number is a pluck. The timing is what is judged, and optionally the chord.',
     },
   ],
   micPrompt:
