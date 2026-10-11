@@ -1,6 +1,7 @@
 import { loadChart, rescaleChart, type Chart, type ChartNote } from '../chart';
 import { chartKind, notePitch } from '../difficulty';
 import { ukulelePlayable, ukulelePluck } from '../songs/notation';
+import { phraseBars } from './practice';
 import { chance, createRng, pick, type Rng } from './random';
 
 /**
@@ -228,14 +229,6 @@ function varyNotes(chart: Chart, variation: 'easier' | 'harder', seed: number): 
   return notes.sort((a, b) => a.t - b.t);
 }
 
-/** Bars in a phrase (fewer for a short song, so there are at least a few phrases to mix). */
-function phraseBars(chart: Chart): number {
-  const spb = 60 / chart.meta.bpm;
-  const barLen = spb * (chart.meta.beatsPerBar ?? 4);
-  const end = chart.notes.at(-1)!.t;
-  return end / barLen >= 12 ? 4 : 2;
-}
-
 /**
  * Each phrase from the plainer, the original or the busier version, chosen by the seed (never all
  * the same), at the song's own tempo. Phrases are cut at bar lines, so a long note or a chord keeps
@@ -263,7 +256,11 @@ function mixPhrases(chart: Chart, seed: number): Chart {
   for (let p = 0; p <= lastPhrase; p++) {
     const from = p * phraseLen - 1e-6;
     const to = (p + 1) * phraseLen - 1e-6;
-    for (const n of sources[choices[p]!]) if (n.t >= from && n.t < to) notes.push({ ...n });
+    const inPhrase = (n: ChartNote): boolean => n.t >= from && n.t < to;
+    let chosen = sources[choices[p]!].filter(inPhrase);
+    // a plainer phrase that lost every stroke (all off the beat) keeps the original ones instead
+    if (chosen.length === 0) chosen = chart.notes.filter(inPhrase);
+    for (const n of chosen) notes.push({ ...n });
   }
   return withNotes(chart, notes);
 }

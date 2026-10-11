@@ -10,6 +10,7 @@ import { optionsScreen } from './app/screens/options';
 import { scoreboardScreen } from './app/screens/scoreboard';
 import { singScreen } from './app/screens/sing';
 import { strumScreen } from './app/screens/strum';
+import { tunerScreen } from './app/screens/tuner';
 import { windScreen } from './app/screens/wind';
 
 const app = document.getElementById('app');
@@ -29,6 +30,7 @@ startRouter(
     beat: beatScreen,
     strum: strumScreen,
     scores: scoreboardScreen,
+    tuner: tunerScreen,
     options: optionsScreen,
   },
   '',

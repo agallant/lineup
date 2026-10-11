@@ -1,4 +1,5 @@
-import { ACHIEVEMENTS, ProgressStore, levelFor } from '../progress';
+import { DAILY_GAMES, dailyFor, dailyKey } from '../daily';
+import { ACHIEVEMENTS, DAILY_BONUS, ProgressStore, levelFor } from '../progress';
 import { safeLocalStorage } from '../settings';
 import type { Screen } from '../router';
 
@@ -36,10 +37,11 @@ const CARDS = [
 
 /** The home menu: the four games, then progress, then set-up tools and options. */
 export const homeScreen: Screen = (root) => {
+  const now = new Date();
   const store = new ProgressStore(safeLocalStorage());
   const state = store.get();
   const lvl = levelFor(state.xp);
-  const streak = store.streak();
+  const streak = store.streak(now);
   const trophies = Object.keys(state.achievements).length;
   root.innerHTML = `
     <h1>Lineup</h1>
@@ -52,6 +54,18 @@ export const homeScreen: Screen = (root) => {
         streak > 0 ? `${streak}-day streak` : 'no streak yet: play today to start one'
       } · ${trophies} of ${ACHIEVEMENTS.length} trophies</span>
     </a>
+
+    <h2>Today’s challenge <small>a new song each day, the same for everyone</small></h2>
+    <ul class="menu daily" data-id="daily">
+      ${DAILY_GAMES.map((g) => {
+        const d = dailyFor(g, now);
+        const done = state.dailies.includes(dailyKey(g, now));
+        return `<li><a class="card ${done ? 'done' : ''}" href="${d.href}" data-daily="${g}">
+          <strong>${done ? '✓ ' : ''}${d.label}</strong>
+          <span class="muted">${done ? 'Cleared today.' : `Reach 60% for +${DAILY_BONUS} XP.`}</span>
+        </a></li>`;
+      }).join('')}
+    </ul>
 
     <h2>Play</h2>
     <ul class="menu games" data-id="games">
@@ -73,6 +87,8 @@ export const homeScreen: Screen = (root) => {
 
     <h2>Set up <small>once per device or instrument</small></h2>
     <ul class="menu">
+      <li><a class="card" href="#/tuner" data-id="tuner-link"><strong>Tuner</strong>
+        <span>Tune your ukulele (or check any note) before you play. Not a game.</span></a></li>
       <li><a class="card" href="#/calibrate" data-id="calibrate-link"><strong>Calibrate timing</strong>
         <span>Tap along to a beat so the game knows how late your speaker and microphone are.</span></a></li>
       <li><a class="card" href="#/mic" data-id="mic-link"><strong>Mic &amp; latency test</strong>

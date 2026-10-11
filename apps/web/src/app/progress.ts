@@ -13,6 +13,8 @@ export interface PlayResult {
   /** Notes missed, and in all. */
   misses: number;
   notes: number;
+  /** Today's daily challenge for the game, played as given. */
+  daily?: { key: string };
 }
 
 /** Everything kept about a player's progress, all in this device's storage. */
@@ -25,6 +27,8 @@ export interface ProgressState {
   perGame: Record<string, number>;
   /** Distinct songs played, as "profile|song". */
   songs: string[];
+  /** Daily challenges cleared, as "day|game", the last 120 kept. */
+  dailies: string[];
   /** When each achievement was earned (ISO time). */
   achievements: Record<string, string>;
 }
@@ -32,6 +36,9 @@ export interface ProgressState {
 const KEY = 'lineup.progress.v1';
 const MAX_DAYS = 400;
 const MAX_SONGS = 2000;
+const MAX_DAILIES = 120;
+/** XP for clearing a daily challenge (60% accuracy or better), once per game per day. */
+export const DAILY_BONUS = 50;
 
 export const emptyProgress = (): ProgressState => ({
   xp: 0,
@@ -39,6 +46,7 @@ export const emptyProgress = (): ProgressState => ({
   days: [],
   perGame: {},
   songs: [],
+  dailies: [],
   achievements: {},
 });
 
@@ -194,6 +202,18 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     earned: (_s, _p, streak) => streak >= 7,
   },
   {
+    id: 'daily-first',
+    title: 'Challenge accepted',
+    description: 'Clear a daily challenge.',
+    earned: (s) => s.dailies.length >= 1,
+  },
+  {
+    id: 'daily-seven',
+    title: 'Dedicated',
+    description: 'Clear 7 daily challenges.',
+    earned: (s) => s.dailies.length >= 7,
+  },
+  {
     id: 'level-5',
     title: 'Regular',
     description: 'Reach level 5.',
@@ -206,6 +226,8 @@ export interface PlayOutcome {
   level: LevelInfo;
   leveledUp: boolean;
   streak: number;
+  /** XP from clearing a daily challenge, included in `xpGained`; 0 when none. */
+  dailyBonus: number;
   /** Achievements earned by this play. */
   newAchievements: Achievement[];
 }
@@ -222,6 +244,11 @@ function sanitize(raw: unknown): ProgressState {
     out.days = r['days']
       .filter((d): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d))
       .slice(-MAX_DAYS);
+  }
+  if (Array.isArray(r['dailies'])) {
+    out.dailies = r['dailies']
+      .filter((d): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}\|[a-z]+$/.test(d))
+      .slice(-MAX_DAILIES);
   }
   if (Array.isArray(r['songs'])) {
     out.songs = r['songs'].filter((s): s is string => typeof s === 'string').slice(-MAX_SONGS);
@@ -261,13 +288,18 @@ export class ProgressStore {
 
   /** Files a finished song: adds XP, the day, the song and any achievements it earns. */
   recordPlay(result: PlayResult, now = new Date()): PlayOutcome {
+    // pick up what another tab saved since this one loaded, so writing never erases it
+    if (this.store) this.value = this.read();
     const before = levelFor(this.value.xp).level;
     const v = this.value;
     const gained = xpFor(result);
     const today = dayKey(now);
     // a first song of the day is worth a little extra, so coming back is rewarded
     const dayBonus = v.days.includes(today) ? 0 : 20;
-    v.xp += gained + dayBonus;
+    const cleared = result.daily && result.accuracy >= 0.6 && !v.dailies.includes(result.daily.key);
+    const dailyBonus = cleared ? DAILY_BONUS : 0;
+    if (cleared) v.dailies = [...v.dailies, result.daily!.key].slice(-MAX_DAILIES);
+    v.xp += gained + dayBonus + dailyBonus;
     v.plays++;
     if (!v.days.includes(today)) v.days = [...v.days, today].slice(-MAX_DAYS);
     const game = gameOf(result.profileId);
@@ -282,7 +314,8 @@ export class ProgressStore {
     this.write();
     const level = levelFor(v.xp);
     return {
-      xpGained: gained + dayBonus,
+      xpGained: gained + dayBonus + dailyBonus,
+      dailyBonus,
       level,
       leveledUp: level.level > before,
       streak,

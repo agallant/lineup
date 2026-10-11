@@ -9,6 +9,7 @@ describe('rewardHtml', () => {
       level: levelFor(350),
       leveledUp: true,
       streak: 3,
+      dailyBonus: 50,
       newAchievements: [ACHIEVEMENTS[0]!],
     });
     expect(html).toContain('★★★');
@@ -16,6 +17,7 @@ describe('rewardHtml', () => {
     expect(html).toContain('Level 3 Student');
     expect(html).toContain('3-day streak');
     expect(html).toContain('Level up!');
+    expect(html).toContain('Daily challenge cleared! +50 XP');
     expect(html).toContain('First notes');
   });
 
@@ -25,10 +27,12 @@ describe('rewardHtml', () => {
       level: levelFor(30),
       leveledUp: false,
       streak: 1,
+      dailyBonus: 0,
       newAchievements: [],
     });
     expect(html).toContain('☆☆☆');
     expect(html).not.toContain('Level up');
+    expect(html).not.toContain('Daily challenge');
     expect(html).not.toContain('streak');
     expect(html).not.toContain('new-trophies');
   });

@@ -36,6 +36,8 @@ import {
   type ScaleId,
   VARIATIONS,
   VARIATION_LABELS,
+  applyPart,
+  songParts,
   varyChart,
   type Variation,
   type WindInstrument,
@@ -61,7 +63,10 @@ import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
+import { starsBySong } from '../scoreboard';
+import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
+import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
 import { RANDOM_MELODY, addRandomMelodyOption, fillSongMenu, fillTargetMenu } from '../song-menu';
@@ -134,6 +139,7 @@ const setup = (c: PitchScreenConfig) => `
       ${c.instruments ? '<label>Instrument <select data-id="instrument"></select></label>' : ''}
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
+      <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
       <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
     </div>
@@ -270,8 +276,19 @@ export const createPitchScreen =
     const setupStatus = S('setup-status');
 
     const current = settings.get();
-    fillSongMenu(songSel, songs);
+    const stars = starsBySong(scores.entries(), c.profileId);
+    fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
     addRandomMelodyOption(songSel);
+    // opened from today's challenge: choose its random melody (the same for everyone today)
+    const dailyGame: DailyGame = c.profileId === 'wind' ? 'windline' : 'singline';
+    if (wantsDaily(location.hash)) {
+      settings.update({
+        challenge: dailyFor(dailyGame).spec,
+        variation: 'original',
+        songs: { ...current.songs, [c.profileId]: RANDOM_MELODY },
+      });
+      current.songs[c.profileId] = RANDOM_MELODY;
+    }
     const savedSong = current.songs[c.profileId];
     songSel.value =
       savedSong === RANDOM_MELODY || songs.some((s) => s.id === savedSong)
@@ -375,10 +392,33 @@ export const createPitchScreen =
         : (songs.find((s) => s.id === songSel.value) ?? songs[0]!);
 
     /** The chosen song, as written or in its easier or harder version. */
-    const variedSong = (): Chart => {
+    const wholeSong = (): Chart => {
       const entry = songEntry();
       return varyChart(entry.chart, settings.get().variation, hashSeed(entry.id));
     };
+    /** The part of the song to practise (an index into its phrases), or -1 for all of it. */
+    let partIdx = -1;
+    let partFor = '';
+    const partSel = S<HTMLSelectElement>('part');
+    /** Offers the phrases of the chosen song; a different song or version goes back to the whole. */
+    const syncParts = () => {
+      const parts = songParts(wholeSong());
+      const key = `${songEntry().id}|${settings.get().variation}|${parts.length}`;
+      if (key !== partFor) {
+        partFor = key;
+        partIdx = -1;
+        partSel.replaceChildren(new Option('Whole song', '-1'));
+        parts.forEach((p, i) => partSel.add(new Option(p.label, String(i))));
+      }
+      partSel.value = String(partIdx);
+      S('part-label').hidden = parts.length < 2;
+    };
+    partSel.addEventListener('change', () => {
+      partIdx = Number(partSel.value);
+      refreshRange();
+    });
+    /** The chosen song, version and part. */
+    const variedSong = (): Chart => applyPart(wholeSong(), partIdx);
 
     /** The chart as played: moved into the instrument's key, shifted, and at the practice speed. */
     const selectedChart = (): Chart => {
@@ -403,10 +443,13 @@ export const createPitchScreen =
           c.instruments
             ? `${settings.get().difficulty}|x${settings.get().speed}${anyOctave() ? '|anyoctave' : ''}`
             : settings.get().difficulty
-        }${settings.get().variation === 'original' ? '' : `|${settings.get().variation}`}`,
+        }${settings.get().variation === 'original' ? '' : `|${settings.get().variation}`}${
+          partIdx >= 0 ? `|part${partIdx + 1}` : ''
+        }`,
       );
 
     const refreshRange = () => {
+      syncParts();
       const chart = selectedChart();
       const r = chartPitchRange(chart);
       let text = r ? c.rangeText(midiName(r.low), midiName(r.high)) : '';
@@ -777,6 +820,10 @@ export const createPitchScreen =
       playRaf = requestAnimationFrame(tick);
     };
 
+    /** Whether the song just played is today's challenge, played whole and as written. */
+    const isDaily = (id: string): boolean =>
+      id === dailyFor(dailyGame).id && settings.get().variation === 'original' && partIdx < 0;
+
     const showResults = (game: SinglineGame, chart: Chart, audio: GameAudio) => {
       const s = game.session.score;
       const grade = letterGrade(s.accuracy);
@@ -786,12 +833,18 @@ export const createPitchScreen =
         : scores.record(bestKey(), { score: s.score, accuracy: s.accuracy, grade });
       refreshRange(); // the setup screen's best-score line now shows this result
       // stars, XP and trophies: the demo earns none
-      const reward = audio.demo
-        ? ''
-        : rewardHtml(
-            s.accuracy,
-            progress.recordPlay(playResultFor(profile.id, songEntry().id, chart, s)),
+      const outcome = audio.demo
+        ? null
+        : progress.recordPlay(
+            playResultFor(
+              profile.id,
+              songEntry().id,
+              chart,
+              s,
+              isDaily(songEntry().id) ? { key: dailyKey(dailyGame) } : undefined,
+            ),
           );
+      const reward = outcome ? rewardHtml(s.accuracy, outcome) : '';
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'
         : best!.isNewBest
@@ -824,6 +877,14 @@ export const createPitchScreen =
         <p class="status" data-id="copy-status" role="status"></p>
       </section>`;
       show('results');
+      if (!audio.demo && settings.get().effects) {
+        const kind = jingleFor(outcome, best?.isNewBest ?? false);
+        try {
+          if (kind) playJingle(audio.ctx, kind);
+        } catch {
+          // the audio context may already be closed: the jingle is a nicety
+        }
+      }
       const R = (id: string) =>
         stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
       R('copy-log').addEventListener('click', () => {

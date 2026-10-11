@@ -81,3 +81,17 @@ export function sortRows(rows: readonly ScoreRow[], by: ScoreSort): ScoreRow[] {
   };
   return [...rows].sort(cmp[by]);
 }
+
+/** The most stars earned on each song of a profile, over every way it has been played. */
+export function starsBySong(
+  entries: readonly { key: string; best: BestScore }[],
+  profileId: string,
+): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const { key, best } of entries) {
+    const [profile = '', songId = ''] = key.split('|');
+    if (profile !== profileId) continue;
+    out.set(songId, Math.max(out.get(songId) ?? 0, starsFor(best.accuracy)));
+  }
+  return out;
+}

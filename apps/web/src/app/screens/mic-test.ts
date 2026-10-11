@@ -9,6 +9,7 @@ import { listAudioInputs, micSupported, openMic, type MicSession } from '@lineup
 import { drawMeter, drawWaveform } from '@lineup/render';
 import { buildInfoText } from '../build-info';
 import { formatCents, formatDb, formatMs } from '../format';
+import { describeError } from '../mic-error';
 import type { Screen } from '../router';
 
 /** How long the last detected pitch stays on screen after the note stops. */
@@ -364,23 +365,6 @@ function diagnostics(s: MicSession) {
     track: { label: track.label, settings: track.getSettings() },
     constraints: constraintReport(track.getSettings(), supported),
   };
-}
-
-function describeError(err: unknown): string {
-  if (err instanceof DOMException) {
-    switch (err.name) {
-      case 'NotAllowedError':
-        return 'Microphone permission denied. In Safari, tap aA → Website Settings → Microphone → Allow, then reload.';
-      case 'NotFoundError':
-        return 'No microphone found.';
-      case 'NotReadableError':
-        return 'The microphone is busy or unavailable (another app may be using it).';
-      case 'OverconstrainedError':
-        return 'That input device is no longer available. Pick another one.';
-    }
-    return `${err.name}: ${err.message}`;
-  }
-  return err instanceof Error ? err.message : String(err);
 }
 
 function escapeHtml(s: string): string {

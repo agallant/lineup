@@ -34,6 +34,26 @@ describe('mixed versions', () => {
     }
   });
 
+  it('never leaves a phrase empty, even when its easier version has no strokes on the beat', () => {
+    // every stroke of the second phrase is an off-beat up-stroke, which "easier" would drop
+    const chord = generateChordSong({ seed: 8, level: 'medium' });
+    const spb = 60 / chord.meta.bpm;
+    const barLen = spb * 4;
+    const odd = {
+      ...chord,
+      notes: chord.notes.map((n) =>
+        n.t >= barLen * 2 && n.t < barLen * 4
+          ? { ...n, t: Math.round((n.t + spb / 2) * 1e6) / 1e6 }
+          : n,
+      ),
+    };
+    for (let seed = 1; seed <= 12; seed++) {
+      const mixed = varyChart(odd, 'mixed', seed);
+      const inSecond = mixed.notes.filter((n) => n.t >= barLen * 2 && n.t < barLen * 4);
+      expect(inSecond.length, `seed ${seed}`).toBeGreaterThan(0);
+    }
+  });
+
   it('keeps chord songs and grooves valid', () => {
     for (const chart of [
       generateChordSong({ seed: 8, level: 'hard' }),

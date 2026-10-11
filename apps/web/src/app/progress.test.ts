@@ -2,6 +2,7 @@ import type { KeyValueStore } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
 import {
   ACHIEVEMENTS,
+  DAILY_BONUS,
   ProgressStore,
   dayKey,
   gameOf,
@@ -87,6 +88,47 @@ describe('streakOf', () => {
 
   it('formats local dates', () => {
     expect(dayKey(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+});
+
+describe('daily challenges', () => {
+  it('pay a bonus once per game per day, only from 60% accuracy', () => {
+    const p = new ProgressStore(new Mem());
+    const daily = { key: '2026-10-01|singline' };
+    const poor = p.recordPlay(play({ accuracy: 0.4, daily }), at(1));
+    expect(poor.dailyBonus).toBe(0);
+    const cleared = p.recordPlay(play({ daily }), at(1));
+    expect(cleared.dailyBonus).toBe(DAILY_BONUS);
+    expect(cleared.newAchievements.map((a) => a.id)).toContain('daily-first');
+    expect(p.recordPlay(play({ daily }), at(1)).dailyBonus).toBe(0); // already cleared
+    expect(p.recordPlay(play(), at(1)).dailyBonus).toBe(0); // not a daily
+    expect(p.get().dailies).toEqual(['2026-10-01|singline']);
+  });
+
+  it('earn the Dedicated trophy at seven, and ignore junk in storage', () => {
+    const mem = new Mem();
+    const p = new ProgressStore(mem);
+    let last = false;
+    for (let d = 1; d <= 7; d++) {
+      const out = p.recordPlay(play({ daily: { key: `2026-10-0${d}|strumline` } }), at(d));
+      last = out.newAchievements.some((a) => a.id === 'daily-seven');
+    }
+    expect(last).toBe(true);
+    mem.data.set('lineup.progress.v1', '{"dailies": ["2026-10-01|beatline", "nope", 4]}');
+    expect(new ProgressStore(mem).get().dailies).toEqual(['2026-10-01|beatline']);
+  });
+});
+
+describe('ProgressStore with two tabs', () => {
+  it('does not erase what another tab saved', () => {
+    const mem = new Mem();
+    const tabA = new ProgressStore(mem);
+    const tabB = new ProgressStore(mem); // loaded before A plays
+    tabA.recordPlay(play({ songId: 'a' }), at(1));
+    tabB.recordPlay(play({ songId: 'b' }), at(1));
+    const fresh = new ProgressStore(mem).get();
+    expect(fresh.plays).toBe(2);
+    expect(fresh.songs.sort()).toEqual(['voice|a', 'voice|b']);
   });
 });
 

@@ -33,6 +33,8 @@ import {
   type ScaleId,
   VARIATIONS,
   VARIATION_LABELS,
+  applyPart,
+  songParts,
   varyChart,
   type Variation,
   type TimbreModel,
@@ -56,7 +58,10 @@ import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
+import { starsBySong } from '../scoreboard';
+import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
+import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { SettingsStore, safeLocalStorage } from '../settings';
 import {
@@ -109,6 +114,7 @@ const setup = (c: HitScreenConfig) => `
       <label>Mode <select data-id="mode"></select></label>
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
+      <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
     </div>
     <div class="row" data-id="challenge" hidden>
       <label data-id="challenge-scale-label">Scale <select data-id="challenge-scale"></select></label>
@@ -216,6 +222,21 @@ export const createHitScreen =
     const scores = new ScoreStore(safeLocalStorage());
     const progress = new ProgressStore(safeLocalStorage());
     const models = new TimbreModelStore(() => safeLocalStorage() ?? undefined);
+
+    // opened from today's challenge: pick its game mode and its random song (the same for everyone today)
+    const dailyGame: DailyGame = c.strum ? 'strumline' : 'beatline';
+    if (wantsDaily(location.hash)) {
+      const profileId = c.strum ? 'ukulele-strum' : 'clap';
+      settings.update({
+        challenge: dailyFor(dailyGame).spec,
+        variation: 'original',
+        songs: {
+          ...settings.get().songs,
+          [`${c.keyPrefix}-mode`]: profileId,
+          [`${c.keyPrefix}:${profileId}`]: c.strum ? RANDOM_CHORDS : RANDOM_GROOVE,
+        },
+      });
+    }
 
     let profile: InstrumentProfile = getProfile(
       c.modes.some((m) => m.id === settings.get().songs[`${c.keyPrefix}-mode`])
@@ -328,9 +349,10 @@ export const createHitScreen =
         randomEntry()?.id ?? songSel.value,
         `${c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}` : ''}${
           settings.get().variation === 'original' ? '' : `|${settings.get().variation}`
-        }`,
+        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}`,
       );
     const refreshSong = () => {
+      syncParts();
       // a random song has no fixed title to find in the menu: say which one this is
       const chart = songChart();
       S('song-info').textContent = randomEntry()
@@ -343,7 +365,8 @@ export const createHitScreen =
     const applyMode = () => {
       songSel.replaceChildren(); // also removes group headings
       const songs = songsFor(profile.id);
-      fillSongMenu(songSel, songs);
+      const stars = starsBySong(scores.entries(), profile.id);
+      fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
       addRandomOptions(
         songSel,
         profile.id === 'ukulele-strum'
@@ -826,6 +849,10 @@ export const createHitScreen =
       playRaf = requestAnimationFrame(tick);
     };
 
+    /** Whether the song just played is today's challenge, played whole and as written. */
+    const isDaily = (id: string): boolean =>
+      id === dailyFor(dailyGame).id && settings.get().variation === 'original' && partIdx < 0;
+
     const showResults = (game: BeatlineGame, chart: Chart, audio: GameAudio) => {
       const s = game.session.score;
       const grade = letterGrade(s.accuracy);
@@ -835,14 +862,20 @@ export const createHitScreen =
         : scores.record(bestKey(), { score: s.score, accuracy: s.accuracy, grade });
       refreshSong(); // the setup screen's best-score line now shows this result
       // stars, XP and trophies: the demo earns none
-      const reward = audio.demo
-        ? ''
-        : rewardHtml(
-            s.accuracy,
-            progress.recordPlay(
-              playResultFor(profile.id, randomEntry()?.id ?? songSel.value, chart, s),
+      const outcome = audio.demo
+        ? null
+        : progress.recordPlay(
+            playResultFor(
+              profile.id,
+              randomEntry()?.id ?? songSel.value,
+              chart,
+              s,
+              isDaily(randomEntry()?.id ?? songSel.value)
+                ? { key: dailyKey(dailyGame) }
+                : undefined,
             ),
           );
+      const reward = outcome ? rewardHtml(s.accuracy, outcome) : '';
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'
         : best!.isNewBest
@@ -883,6 +916,14 @@ export const createHitScreen =
         <p class="status" data-id="copy-status" role="status"></p>
       </section>`;
       show('results');
+      if (!audio.demo && settings.get().effects) {
+        const kind = jingleFor(outcome, best?.isNewBest ?? false);
+        try {
+          if (kind) playJingle(audio.ctx, kind);
+        } catch {
+          // the audio context may already be closed: the jingle is a nicety
+        }
+      }
       const R = (id: string) =>
         stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
       R('copy-log').addEventListener('click', () => {
@@ -935,12 +976,37 @@ export const createHitScreen =
     };
 
     /** The chosen song at its own tempo. */
-    const songChart = (): Chart => {
-      const random = randomEntry();
-      const songs = songsFor(profile.id);
-      const entry = random ?? songs.find((s) => s.id === songSel.value) ?? songs[0]!;
+    const wholeSong = (): Chart => {
+      const entry = songEntry();
       return varyChart(entry.chart, settings.get().variation, hashSeed(entry.id));
     };
+    const songEntry = () => {
+      const random = randomEntry();
+      const songs = songsFor(profile.id);
+      return random ?? songs.find((s) => s.id === songSel.value) ?? songs[0]!;
+    };
+    /** The part of the song to practise (an index into its phrases), or -1 for all of it. */
+    let partIdx = -1;
+    let partFor = '';
+    const partSel = S<HTMLSelectElement>('part');
+    /** Offers the phrases of the chosen song; a different song or version goes back to the whole. */
+    const syncParts = () => {
+      const parts = songParts(wholeSong());
+      const key = `${songEntry().id}|${settings.get().variation}|${parts.length}`;
+      if (key !== partFor) {
+        partFor = key;
+        partIdx = -1;
+        partSel.replaceChildren(new Option('Whole song', '-1'));
+        parts.forEach((p, i) => partSel.add(new Option(p.label, String(i))));
+      }
+      partSel.value = String(partIdx);
+      S('part-label').hidden = parts.length < 2;
+    };
+    partSel.addEventListener('change', () => {
+      partIdx = Number(partSel.value);
+      refreshSong();
+    });
+    const songChart = (): Chart => applyPart(wholeSong(), partIdx);
     /** The chart as played: at the chosen practice speed. */
     const selectedChart = (): Chart =>
       rescaleChart(songChart(), c.strum ? settings.get().speed : 1);
