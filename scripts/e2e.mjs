@@ -888,10 +888,31 @@ const scenarios = {
               grade: 'B',
               at: new Date().toISOString(),
             },
+            // every step of the clap path, mastered
+            ...Object.fromEntries(
+              [
+                'ex-clap-quarters',
+                'ex-clap-eighths',
+                'ex-clap-off-beats',
+                'ex-clap-gallop',
+                'ex-clap-syncopation',
+                'clap-waltz',
+                'ex-clap-tresillo',
+                'ex-clap-triplets',
+                'ex-clap-son-clave',
+              ].map((id) => [
+                `clap|${id}|`,
+                { score: 500, accuracy: 0.9, grade: 'A', at: new Date().toISOString() },
+              ]),
+            ),
           }),
         );
       });
       await page.goto(URL_BASE + '#/learn');
+      check(
+        (await page.$('[data-id=graduate]')) !== null,
+        'learn: finishing a whole path earns the Graduate trophy',
+      );
       const state = (id) => page.getAttribute(`[data-step=${id}]`, 'class');
       check(
         (await state('sing-hot-cross-buns')) === 'mastered',
