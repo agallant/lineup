@@ -62,6 +62,7 @@ describe('levels and stars', () => {
     expect(gameOf('drum-kit')?.label).toBe('Beatline');
     expect(gameOf('ukulele-strum')?.label).toBe('Strumline');
     expect(gameOf('wind')?.label).toBe('Windline');
+    expect(gameOf('ear')?.label).toBe('Ear training');
     expect(gameOf('nope')).toBeNull();
   });
 });
@@ -131,6 +132,39 @@ describe('ProgressStore with two tabs', () => {
     const fresh = new ProgressStore(mem).get();
     expect(fresh.plays).toBe(2);
     expect(fresh.songs.sort()).toEqual(['voice|a', 'voice|b']);
+  });
+});
+
+describe('ear training', () => {
+  it('counts as a game but not towards Full band, and earns Golden ears for a clean medium round', () => {
+    const p = new ProgressStore(new Mem());
+    const ear = (patch: Partial<PlayResult> = {}) =>
+      play({
+        profileId: 'ear',
+        songId: 'ear-intervals-medium',
+        rating: 5,
+        misses: 0,
+        notes: 10,
+        accuracy: 1,
+        ...patch,
+      });
+    const first = p.recordPlay(ear(), at(1));
+    expect(first.newAchievements.map((a) => a.id)).toContain('golden-ears');
+    expect(first.newAchievements.map((a) => a.id)).not.toContain('all-games');
+    expect(p.get().perGame).toEqual({ ear: 1 });
+    p.recordPlay(play({ profileId: 'voice', songId: 'a' }), at(2));
+    p.recordPlay(play({ profileId: 'wind', songId: 'b' }), at(3));
+    p.recordPlay(play({ profileId: 'clap', songId: 'c' }), at(4));
+    const last = p.recordPlay(play({ profileId: 'ukulele-strum', songId: 'd' }), at(5));
+    expect(last.newAchievements.map((a) => a.id)).toContain('all-games');
+    // an easy round, or one with a mistake, is not golden
+    const q = new ProgressStore(new Mem());
+    expect(q.recordPlay(ear({ rating: 3 }), at(1)).newAchievements.map((a) => a.id)).not.toContain(
+      'golden-ears',
+    );
+    expect(q.recordPlay(ear({ misses: 1 }), at(2)).newAchievements.map((a) => a.id)).not.toContain(
+      'golden-ears',
+    );
   });
 });
 

@@ -1,4 +1,4 @@
-import { getSong, rateChart } from '@lineup/core';
+import { EAR_RATING, earTitle, getSong, rateChart, type EarLevel } from '@lineup/core';
 import { gameOf, starsFor } from './progress';
 import type { BestScore } from './scores';
 
@@ -45,12 +45,18 @@ export function scoreRows(entries: readonly { key: string; best: BestScore }[]):
     const rest = key.split('|').slice(2).join('|') || variant;
     let title = songId;
     let rating: number | null = null;
-    try {
-      const chart = getSong(songId);
-      title = chart.meta.title;
-      rating = rateChart(chart).score;
-    } catch {
-      // a song this version no longer has: show its id
+    const ear = earTitle(songId);
+    if (ear !== null) {
+      title = ear;
+      rating = EAR_RATING[songId.split('-').at(-1) as EarLevel] ?? null;
+    } else {
+      try {
+        const chart = getSong(songId);
+        title = chart.meta.title;
+        rating = rateChart(chart).score;
+      } catch {
+        // a song this version no longer has: show its id
+      }
     }
     rows.push({
       key,

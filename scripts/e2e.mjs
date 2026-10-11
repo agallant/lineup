@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|listen|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -775,6 +775,40 @@ const scenarios = {
     });
   },
 
+  async ear() {
+    console.log('\n# Ear training: a round of ten questions, a result, and a scoreboard entry');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/ear');
+      await page.selectOption('[data-id=kind]', 'chords');
+      await page.selectOption('[data-id=level]', 'easy');
+      await page.click('[data-id=start]');
+      for (let q = 1; q <= 10; q++) {
+        await page.waitForFunction(
+          (n) => document.querySelector('[data-id=count]')?.textContent === `Question ${n} of 10`,
+          q,
+          { timeout: 8000 },
+        );
+        await page.click('[data-id=choices] button >> nth=0');
+        check(
+          /Right|It was/.test(await text(page, 'feedback')),
+          `ear: question ${q} gives feedback`,
+        );
+      }
+      await page.waitForSelector('[data-id=r-right]', { timeout: 8000 });
+      check(
+        / of 10$/.test(await text(page, 'r-right')),
+        `ear: result shows (${await text(page, 'r-right')})`,
+      );
+      check((await page.$('[data-id=reward]')) !== null, 'ear: stars and XP are shown');
+      await page.goto(URL_BASE + '#/scores');
+      await page.waitForSelector('[data-id=rows] li');
+      check(
+        /Ear training: chords, easy/.test(await text(page, 'rows')),
+        'ear: the round is on the scoreboard',
+      );
+    });
+  },
+
   async tuner() {
     console.log('\n# Tuner hears a sung C4 and names the C string');
     await session(fixtures.sung, async (page) => {
@@ -830,7 +864,10 @@ const scenarios = {
         );
       });
       await page.goto(URL_BASE);
-      check((await page.$$('[data-id=games] a')).length === 4, 'home: four games under Play');
+      check(
+        (await page.$$('[data-id=games] a')).length === 5,
+        'home: four instrument games and ear training under Play',
+      );
       check(
         (await page.$$('[data-id=games] a[href="#/mic"], [data-id=games] a[href="#/calibrate"]'))
           .length === 0,

@@ -33,6 +33,13 @@ const CARDS = [
     who: 'Claps, taps, hand drums, kit',
     blurb: 'Hit the rhythm on the beat: grooves, rudiments and random patterns.',
   },
+  {
+    id: 'ear',
+    href: '#/ear',
+    name: 'Ear training',
+    who: 'No instrument needed',
+    blurb: 'Hear two notes or a chord and name them. Intervals and chord types, ten at a time.',
+  },
 ] as const;
 
 /** The home menu: the four games, then progress, then set-up tools and options. */

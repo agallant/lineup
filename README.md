@@ -114,7 +114,7 @@ The difficulty in the song info changes with the version, and best scores are ke
 
 All of this stays on the device (browser storage); nothing is sent anywhere.
 
-- **Home** groups the four games under _Play_, the scoreboard under _Progress_, and the timing
+- **Home** groups the games (the four instruments and ear training) under _Play_, the scoreboard under _Progress_, and the timing
   calibration and the mic and latency test under _Set up_ (they are tools, not games), with your level
   and streak on top.
 - **Today's challenge**: one random song per game per day (the same for everyone, no network: it
@@ -123,6 +123,9 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   from memory (best with a short Part).
 - **Part**: next to Version, practise one phrase of a song (four bars, two in a short song) on its own;
   best scores are kept per part.
+- **Ear training** (`#/ear`): ten questions, no instrument or microphone: name the interval between
+  two notes, or the kind of chord (major, minor, dominant 7th...), at three levels; stars, XP and the
+  scoreboard work as in the other games.
 - **Tuner** (`#/tuner`, under Set up): ukulele (G C E A), low-G and baritone tunings or any note, with
   a needle and reference tones. A tool, not a game.
 - **Practice goal**: pick minutes per week in Options; the home menu and scoreboard show the last

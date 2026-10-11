@@ -56,12 +56,13 @@ export const emptyProgress = (): ProgressState => ({
   achievements: {},
 });
 
-/** The four games, by the profile ids that belong to each. */
+/** The games (four for an instrument, and ear training), by the profile ids that belong to each. */
 export const GAMES = [
   { id: 'singline', label: 'Singline', profiles: ['voice'] },
   { id: 'windline', label: 'Windline', profiles: ['wind'] },
   { id: 'beatline', label: 'Beatline', profiles: ['clap', 'hand-percussion', 'drum-kit'] },
   { id: 'strumline', label: 'Strumline', profiles: ['ukulele-strum'] },
+  { id: 'ear', label: 'Ear training', profiles: ['ear'] },
 ] as const;
 
 /** The game a profile belongs to, or null for a profile this version does not know. */
@@ -192,8 +193,8 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   {
     id: 'all-games',
     title: 'Full band',
-    description: 'Play all four games.',
-    earned: (s) => GAMES.every((g) => (s.perGame[g.id] ?? 0) > 0),
+    description: 'Play all four instrument games.',
+    earned: (s) => GAMES.filter((g) => g.id !== 'ear').every((g) => (s.perGame[g.id] ?? 0) > 0),
   },
   {
     id: 'streak-3',
@@ -206,6 +207,12 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     title: 'A week of music',
     description: 'Play on 7 days in a row.',
     earned: (_s, _p, streak) => streak >= 7,
+  },
+  {
+    id: 'golden-ears',
+    title: 'Golden ears',
+    description: 'Answer every question right in a medium or hard ear-training round.',
+    earned: (_s, p) => p.profileId === 'ear' && p.misses === 0 && p.rating >= 5,
   },
   {
     id: 'daily-first',

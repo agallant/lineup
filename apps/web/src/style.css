@@ -736,3 +736,13 @@ a.card.done {
 .week span.played {
   background: var(--accent);
 }
+
+button.right {
+  border-color: var(--good);
+  color: var(--good);
+}
+
+button.wrong {
+  border-color: var(--bad);
+  color: var(--bad);
+}

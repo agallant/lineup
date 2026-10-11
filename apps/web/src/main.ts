@@ -2,6 +2,7 @@ import './style.css';
 import { INPUT_WORKLET_URL } from '@lineup/input/mic';
 import { buildInfoText } from './app/build-info';
 import { applyTextSize } from './app/appearance';
+import { earScreen } from './app/screens/ear';
 import { startRouter } from './app/router';
 import { SettingsStore, safeLocalStorage } from './app/settings';
 import { beatScreen } from './app/screens/beat';
@@ -35,6 +36,7 @@ startRouter(
     strum: strumScreen,
     scores: scoreboardScreen,
     tuner: tunerScreen,
+    ear: earScreen,
     options: optionsScreen,
   },
   '',
