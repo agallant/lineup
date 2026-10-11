@@ -12,12 +12,19 @@ import {
 
 /** The holes covered, as numbers a screen reader can say: "holes 1, 2, 3 covered" or "all holes open". */
 function spoken(f: Fingering, family: WindInstrument['family']): string {
-  const names: string[] = [];
+  const covered: string[] = [];
+  const half: string[] = [];
   const thumb = family === 'recorder';
+  const name = (i: number) => (thumb ? (i === 0 ? 'thumb' : String(i)) : String(i + 1));
   [...f.holes].forEach((h, i) => {
-    if (h === '1') names.push(thumb ? (i === 0 ? 'thumb' : String(i)) : String(i + 1));
+    if (h === '1') covered.push(name(i));
+    else if (h === '2') half.push(name(i));
   });
-  return names.length === 0 ? 'all holes open' : `covered: ${names.join(', ')}`;
+  const parts = [
+    covered.length ? `covered: ${covered.join(', ')}` : '',
+    half.length ? `half covered: ${half.join(', ')}` : '',
+  ].filter(Boolean);
+  return parts.length === 0 ? 'all holes open' : parts.join('; ');
 }
 
 /** A row of circles for one fingering: filled = covered, hollow = open, grouped by hand. */
@@ -26,7 +33,7 @@ export function holesHtml(family: WindInstrument['family'], f: Fingering): strin
   let at = 0;
   const parts = groups.map((size) => {
     const circles = [...f.holes.slice(at, at + size)]
-      .map((h) => `<span class="hole${h === '1' ? ' on' : ''}"></span>`)
+      .map((h) => `<span class="hole${h === '1' ? ' on' : h === '2' ? ' half' : ''}"></span>`)
       .join('');
     at += size;
     return `<span class="hole-group">${circles}</span>`;
@@ -41,16 +48,24 @@ export function holesHtml(family: WindInstrument['family'], f: Fingering): strin
 export function fingeringChartHtml(instrument: WindInstrument, used: ReadonlySet<number>): string {
   const scale = windScale(instrument);
   if (scale.length === 0) {
-    return `<p>No fingering chart is shown for this instrument: charts differ between makers, so use the one that came with yours.</p>`;
+    return `<p>No fingering chart for a generic instrument: choose a specific whistle or recorder above to see its fingerings, or use the chart that came with yours.</p>`;
   }
   const rows = scale
     .map(
       (n) =>
-        `<div class="fing-row${used.has(n.midi) ? ' used' : ''}"><span class="fing-note">${n.label}</span>${holesHtml(instrument.family, n.fingering)}${n.fingering.harder ? '<span class="fing-hint">blow harder</span>' : ''}</div>`,
+        `<div class="fing-row${used.has(n.midi) ? ' used' : ''}${n.chromatic ? ' chromatic' : ''}"><span class="fing-note">${n.label}</span>${holesHtml(instrument.family, n.fingering)}${hintHtml(n)}</div>`,
     )
     .join('');
   const thumb = instrument.family === 'recorder' ? ' The first circle is the thumb hole.' : '';
-  return `${rows}<p class="fing-key">Filled circle: hole covered. Hollow: open.${thumb} Notes in this song are highlighted. Sharps and flats outside the key vary between instruments, so they are not shown: use your instrument's own chart for those.</p>`;
+  return `${rows}<p class="fing-key">Filled circle: hole covered. Hollow: open. Half-filled: half covered.${thumb} Notes in this song are highlighted. Sharps and flats (grey) are the commonly taught cross-fingerings and half-holes: they vary between instruments, so check them against your own.</p>`;
+}
+
+/** The small notes beside a row: a chromatic note's technique, and a whistle's stronger breath. */
+function hintHtml(n: { fingering: Fingering; chromatic: boolean }): string {
+  const hints: string[] = [];
+  if (n.chromatic) hints.push(n.fingering.holes.includes('2') ? 'half-hole' : 'cross-fingering');
+  if (n.fingering.harder) hints.push('blow harder');
+  return hints.map((h) => `<span class="fing-hint">${h}</span>`).join('');
 }
 
 /** One note in the play-time strip: its name and the holes, or a dash when there is no fingering to show. */

@@ -6,13 +6,17 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
 ## Done
 
 - **Singline** (voice): sustained-pitch game, three scoring levels, key menu.
-- **Windline** (whistles, recorders, ocarina): the same pipeline with octave-strict judging; an
-  instrument menu for tin whistles in seven keys, recorders and an ocarina, songs moved into the
+- **Windline** (whistles, recorders): the same pipeline with octave-strict judging; an
+  instrument menu for tin whistles in seven keys, recorders, and a generic instrument whose key you set, songs moved into the
   instrument's key, fingering chart and in-play fingering strip, practice speed.
 - **Beatline** (claps, taps, hand drums, kit): onset classification with a sound-training step.
 - **Strumline** (ukulele): strum detection and chord recognition; four string lanes showing the fret
   to hold on each string (open strings are small rings); strums and plucked notes; chord checking;
   practice speed.
+- **Exercises and random melodies** for Singline and Windline: scales, modes, thirds, arpeggios, long
+  tones, and a seeded melody generator (scale, level, seed) in the song menu.
+- **Chromatic fingerings** for whistles and recorders (half-holes and cross-fingerings), a chromatic
+  scale exercise, and Greensleeves as the first song with sharps.
 - **Product**: best scores, song info, offline start, session logs you can copy, end-to-end tests in CI.
 
 ## Development goals
@@ -28,7 +32,7 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
   chart. They are listed under "Exercises" next to each mode's songs.
 - **Generative challenges**: a fresh piece every time, still musical. Each is built from a seed
   (shown, so you can replay or share it) and a difficulty:
-  - _Melodies_ (Singline, Windline, and ukulele picking): phrases of four bars in forms such as
+  - _Melodies_ (done for Singline and Windline; ukulele picking to come): phrases of two bars in forms such as
     AABA, built on a scale with mostly stepwise motion, leaps that recover, strong beats on chord
     tones, a rest or long note at each phrase end, and a final cadence on the tonic.
   - _Chord songs_ (Strumline): progressions from common patterns (I–IV–V–I, I–V–vi–IV, I–vi–IV–V,
@@ -53,7 +57,7 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
 
 ### 4. Quality and plumbing
 
-- Real-device verification: whistles, recorders, ocarinas, ukuleles, hand drums and the iPad
+- Real-device verification: whistles, recorders, ukuleles, hand drums and the iPad
   microphone have only been tried as simulated sounds. The fingering tables need checking against
   your instruments.
 - Accessibility audit (VoiceOver, contrast, touch targets).

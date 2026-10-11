@@ -43,3 +43,11 @@ function heading(label: string): HTMLOptGroupElement {
   g.label = label;
   return g;
 }
+
+/** The value of the song menu's "random melody" entry. */
+export const RANDOM_MELODY = 'random-melody';
+
+/** Adds the "random melody" entry to a song menu, under its own heading. */
+export function addRandomMelodyOption(select: HTMLSelectElement): void {
+  select.appendChild(heading('Random')).appendChild(new Option('🎲 Random melody', RANDOM_MELODY));
+}

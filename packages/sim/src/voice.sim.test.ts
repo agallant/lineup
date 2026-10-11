@@ -316,6 +316,7 @@ describe('voice: the built-in exercises', () => {
     ['ex-voice-major-ladder', 12],
     ['ex-voice-major-arpeggios', 12],
     ['ex-voice-dorian-up-down', 12],
+    ['ex-voice-chromatic-up-down', 12],
   ])('%s: a steady singer scores every note perfect', (id, n) => {
     const chart = take(getSong(id), n);
     const r = sing(chart);

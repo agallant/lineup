@@ -2,7 +2,7 @@ import type { Chart } from './chart';
 import { midiLabel } from './notes';
 
 /** The kinds of simple wind instrument Windline knows. */
-export type WindFamily = 'whistle' | 'recorder' | 'ocarina';
+export type WindFamily = 'whistle' | 'recorder' | 'generic';
 
 /**
  * A simple wind instrument in a particular key. Whistles and recorders are diatonic: their
@@ -37,8 +37,28 @@ const recorder = (id: string, label: string, tonic: number): WindInstrument => (
   range: { low: tonic, high: tonic + 14 },
 });
 
-/** The instruments offered, most common first. */
+/**
+ * The instrument chosen until you pick a specific one: any wind instrument, in C until you set
+ * its key with the semitone shift (+2 is D, see {@link inKey}). It has no fingering chart and no
+ * scale of its own, so only its range is checked.
+ */
+export const GENERIC_WIND_INSTRUMENT: WindInstrument = {
+  id: 'generic',
+  label: 'Generic (C, set your own key)',
+  family: 'generic',
+  tonic: 72,
+  range: { low: 72, high: 72 + 23 },
+};
+
+export const DEFAULT_WIND_INSTRUMENT = GENERIC_WIND_INSTRUMENT.id;
+
+/** The generic instrument first, then the specific ones (presets): recorders, then whistles. */
 export const WIND_INSTRUMENTS: readonly WindInstrument[] = [
+  GENERIC_WIND_INSTRUMENT,
+  recorder('recorder-soprano', 'Soprano recorder (C)', 72),
+  recorder('recorder-alto', 'Alto recorder (F)', 65),
+  recorder('recorder-tenor', 'Tenor recorder (C)', 60),
+  recorder('recorder-sopranino', 'Sopranino recorder (F)', 77),
   whistle('whistle-d', 'Tin whistle in D', 74),
   whistle('whistle-c', 'Tin whistle in C', 72),
   whistle('whistle-bb', 'Tin whistle in B♭', 70),
@@ -47,20 +67,23 @@ export const WIND_INSTRUMENTS: readonly WindInstrument[] = [
   whistle('whistle-f', 'Tin whistle in F', 65),
   whistle('whistle-eb', 'Tin whistle in E♭', 63),
   whistle('whistle-low-d', 'Low whistle in D', 62),
-  recorder('recorder-soprano', 'Soprano recorder (C)', 72),
-  recorder('recorder-alto', 'Alto recorder (F)', 65),
-  recorder('recorder-tenor', 'Tenor recorder (C)', 60),
-  recorder('recorder-sopranino', 'Sopranino recorder (F)', 77),
-  {
-    id: 'ocarina-c12',
-    label: '12-hole ocarina (C)',
-    family: 'ocarina',
-    tonic: 72,
-    range: { low: 69, high: 89 },
-  },
 ];
 
-export const DEFAULT_WIND_INSTRUMENT = 'whistle-d';
+/** True for the generic instrument, whose key is the semitone shift you set. */
+export const isGenericWind = (instrument: Pick<WindInstrument, 'id'>): boolean =>
+  instrument.id === GENERIC_WIND_INSTRUMENT.id;
+
+/** The instrument with its key moved up (or down) by `semitones`: range and tonic move together. */
+export function inKey(instrument: WindInstrument, semitones: number): WindInstrument {
+  return {
+    ...instrument,
+    tonic: instrument.tonic + semitones,
+    range: {
+      low: instrument.range.low + semitones,
+      high: Math.min(instrument.range.high + semitones, TOP_NOTE),
+    },
+  };
+}
 
 /** The instrument with this id, or null. */
 export function findWindInstrument(id: string): WindInstrument | null {
@@ -75,7 +98,7 @@ export function shiftForInstrument(chart: Pick<Chart, 'meta'>, instrument: WindI
 
 /**
  * One fingering. `holes` has one character per hole in the order of {@link holeGroups}:
- * "1" covered, "0" open.
+ * "1" covered, "0" open, "2" half covered (a half-hole, or one half of a recorder's double hole).
  */
 export interface Fingering {
   holes: string;
@@ -87,96 +110,122 @@ export interface Fingering {
 export function holeGroups(family: WindFamily): number[] {
   if (family === 'whistle') return [3, 3]; // top hand, bottom hand
   if (family === 'recorder') return [1, 3, 4]; // thumb, then the left and right hands
-  return [];
+  return []; // generic: no holes to draw
 }
 
-/** Semitones above the tonic of the notes of a major scale over two octaves and a bit. */
-const MAJOR = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24];
+/** The semitones above the tonic that are notes of the major scale (the rest are chromatic). */
+const MAJOR_STEPS: ReadonlySet<number> = new Set([0, 2, 4, 5, 7, 9, 11]);
+
+const f = (holes: string, harder = false): Fingering => ({
+  holes: holes.replaceAll(' ', ''),
+  harder,
+});
 
 /**
- * Whistle fingerings by scale degree (0 = tonic), holes 1 to 6 from the top. The second octave
- * reuses the first octave's fingerings with a stronger breath, except the upper tonic, which
- * opens the top hole.
+ * Whistle fingerings by semitones above the tonic, holes 1 to 6 from the top. The second octave
+ * (12 up) reuses the first octave's fingerings with a stronger breath, except the upper tonic,
+ * which opens the top hole and a few cross-fingerings that work better another way up there.
+ * Notes outside the major scale use half-holes (a hole only partly covered) or cross-fingerings
+ * (a hole left open above covered ones); these are the commonly taught ones and differ between
+ * whistles, so check them against your own.
  */
-const WHISTLE: readonly Fingering[] = [
-  { holes: '111111', harder: false },
-  { holes: '111110', harder: false },
-  { holes: '111100', harder: false },
-  { holes: '111000', harder: false },
-  { holes: '110000', harder: false },
-  { holes: '100000', harder: false },
-  { holes: '000000', harder: false },
-  { holes: '011111', harder: true }, // upper tonic
-  { holes: '111110', harder: true },
-  { holes: '111100', harder: true },
-  { holes: '111000', harder: true },
-  { holes: '110000', harder: true },
-  { holes: '100000', harder: true },
-  { holes: '000000', harder: true },
+const WHISTLE: readonly (Fingering | null)[] = [
+  f('111 111'), // 0 D
+  f('111 112'), // 1 D#: bottom hole half covered
+  f('111 110'), // 2 E
+  f('111 011'), // 3 F: cross-fingered
+  f('111 100'), // 4 F#
+  f('111 000'), // 5 G
+  f('110 111'), // 6 G#: cross-fingered
+  f('110 000'), // 7 A
+  f('101 110'), // 8 A#: cross-fingered
+  f('100 000'), // 9 B
+  f('011 000'), // 10 C: cross-fingered
+  f('000 000'), // 11 C#
+  f('011 111', true), // 12 upper D
+  f('111 112', true),
+  f('111 110', true),
+  f('111 011', true),
+  f('111 100', true),
+  f('111 000', true),
+  f('110 100', true), // 18 G#
+  f('110 000', true),
+  f('110 111', true), // 20 A#
+  f('100 000', true),
+  f('011 110', true), // 22 C
+  f('000 000', true),
 ];
 
 /**
- * Recorder fingerings (Baroque / English system) by scale degree: thumb hole, holes 1 to 3, then
- * holes 4 to 7, where 6 and 7 are the double holes (both halves covered). Eight notes of the
- * major scale and the ninth, which is all most songs need; higher notes are left to the maker's chart.
+ * Recorder fingerings (Baroque / English system) by semitones above the tonic: thumb hole, holes 1
+ * to 3, then holes 4 to 7, where 6 and 7 are the double holes (both halves covered; half covered
+ * is "2"). The chromatic notes use the commonly taught forks and half-holes, which differ between
+ * makes. The notes above the upper D, and the C-sharp below it, are left to the maker's chart.
  */
-const RECORDER: readonly Fingering[] = [
-  { holes: '1 111 1111', harder: false },
-  { holes: '1 111 1110', harder: false },
-  { holes: '1 111 1100', harder: false },
-  { holes: '1 111 1011', harder: false }, // the fourth: hole 5 open, 6 and 7 covered
-  { holes: '1 111 0000', harder: false },
-  { holes: '1 110 0000', harder: false },
-  { holes: '1 100 0000', harder: false },
-  { holes: '1 010 0000', harder: false }, // upper tonic: thumb and hole 2
-  { holes: '0 010 0000', harder: false }, // hole 2 alone
-].map((f) => ({ ...f, holes: f.holes.replaceAll(' ', '') }));
+const RECORDER: readonly (Fingering | null)[] = [
+  f('1 111 1111'), // 0 C
+  f('1 111 1112'), // 1 C#: bottom hole half covered
+  f('1 111 1110'), // 2 D
+  f('1 111 1120'), // 3 D#: hole 6 half covered
+  f('1 111 1100'), // 4 E
+  f('1 111 1011'), // 5 F: hole 5 open, 6 and 7 covered
+  f('1 111 0110'), // 6 F#: hole 4 open
+  f('1 111 0000'), // 7 G
+  f('1 110 1111'), // 8 G#: hole 3 open
+  f('1 110 0000'), // 9 A
+  f('1 101 1000'), // 10 A#: hole 2 open, 3 and 4 covered
+  f('1 100 0000'), // 11 B
+  f('1 010 0000'), // 12 upper C: thumb and hole 2
+  null, // 13
+  f('0 010 0000'), // 14 upper D: hole 2 alone
+];
 
-const TABLES: Record<WindFamily, readonly Fingering[]> = {
+const TABLES: Record<WindFamily, readonly (Fingering | null)[]> = {
   whistle: WHISTLE,
   recorder: RECORDER,
-  ocarina: [],
+  generic: [],
 };
 
-/** One note of the instrument's scale, with the fingering to play it. */
+/** One note the instrument has a fingering for, with the fingering to play it. */
 export interface ScaleNote {
   midi: number;
   label: string;
   fingering: Fingering;
+  /** True for a note outside the major scale of the instrument's key (a sharp or flat). */
+  chromatic: boolean;
 }
 
-/** The notes the instrument can finger in its own major scale, lowest first. */
+/** The notes the instrument has fingerings for, lowest first, chromatic notes included. */
 export function windScale(instrument: WindInstrument): ScaleNote[] {
-  const table = TABLES[instrument.family];
-  return table.map((fingering, degree) => {
-    const midi = instrument.tonic + MAJOR[degree]!;
-    return { midi, label: midiLabel(midi), fingering };
+  return TABLES[instrument.family].flatMap((fingering, steps) => {
+    if (!fingering) return [];
+    const midi = instrument.tonic + steps;
+    return [{ midi, label: midiLabel(midi), fingering, chromatic: !MAJOR_STEPS.has(steps % 12) }];
   });
 }
 
-/** The fingering for a note, or null when the instrument has no chart or the note is not in its scale. */
+/** The fingering for a note, or null when the instrument has no chart or no fingering for the note. */
 export function fingeringFor(instrument: WindInstrument, midi: number): Fingering | null {
-  const degree = MAJOR.indexOf(midi - instrument.tonic);
-  if (degree < 0) return null;
-  return TABLES[instrument.family][degree] ?? null;
+  const steps = midi - instrument.tonic;
+  return (Number.isInteger(steps) && TABLES[instrument.family][steps]) || null;
 }
 
 /** What is wrong with playing a song's notes on this instrument; empty arrays when it fits. */
 export interface Fit {
   /** Notes (MIDI) below or above the instrument's range. */
   outOfRange: number[];
-  /** Notes in range that are not in its scale (a chromatic note on a diatonic instrument). */
-  notInScale: number[];
+  /** Notes in range that the chart has no fingering for. */
+  noFingering: number[];
 }
 
 export function checkFit(notes: Iterable<number>, instrument: WindInstrument): Fit {
   const outOfRange = new Set<number>();
-  const notInScale = new Set<number>();
+  const noFingering = new Set<number>();
   for (const m of notes) {
     if (m < instrument.range.low || m > instrument.range.high) outOfRange.add(m);
-    else if (instrument.family !== 'ocarina' && fingeringFor(instrument, m) === null)
-      notInScale.add(m);
+    else if (instrument.family !== 'generic' && fingeringFor(instrument, m) === null)
+      noFingering.add(m);
   }
   const byPitch = (a: number, b: number) => a - b;
-  return { outOfRange: [...outOfRange].sort(byPitch), notInScale: [...notInScale].sort(byPitch) };
+  return { outOfRange: [...outOfRange].sort(byPitch), noFingering: [...noFingering].sort(byPitch) };
 }

@@ -72,12 +72,13 @@ describe('SettingsStore', () => {
 
   it('remembers the wind instrument and the fingering option, and ignores unknown instruments', () => {
     const s = new SettingsStore(new Mem());
-    expect(s.get()).toMatchObject({ windInstrument: 'whistle-d', showFingerings: true });
+    expect(s.get()).toMatchObject({ windInstrument: 'generic', showFingerings: true });
     expect(s.update({ windInstrument: 'recorder-alto', showFingerings: false })).toMatchObject({
       windInstrument: 'recorder-alto',
       showFingerings: false,
     });
-    expect(s.update({ windInstrument: 'kazoo' }).windInstrument).toBe('whistle-d');
+    expect(s.update({ windInstrument: 'kazoo' }).windInstrument).toBe('generic');
+    expect(s.update({ windInstrument: 'ocarina-c12' }).windInstrument).toBe('generic'); // dropped
     expect(s.update({ showFingerings: 1 as never }).showFingerings).toBe(true);
   });
 
@@ -124,5 +125,31 @@ describe('SettingsStore', () => {
     expect(keyShiftFor(s.get(), 'wind')).toBe(2);
     expect(keyShiftFor(s.get(), 'voice')).toBe(5);
     expect(s.get().keyShifts).toEqual({ wind: 2, voice: 5 });
+  });
+
+  it('keeps a valid random-melody spec and repairs a bad one', () => {
+    const mem = new Map<string, string>();
+    const store = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, v),
+      removeItem: (k: string) => void mem.delete(k),
+    };
+    const settings = new SettingsStore(store);
+    expect(settings.get().challenge).toEqual({ seed: 1, scale: 'major', level: 'easy' });
+    settings.update({ challenge: { seed: 4242, scale: 'dorian', level: 'hard' } });
+    expect(new SettingsStore(store).get().challenge).toEqual({
+      seed: 4242,
+      scale: 'dorian',
+      level: 'hard',
+    });
+    mem.set(
+      'lineup.settings.v1',
+      JSON.stringify({ challenge: { seed: 1e9, scale: 'locrian', level: 'hard' } }),
+    );
+    expect(new SettingsStore(store).get().challenge).toEqual({
+      seed: 1,
+      scale: 'major',
+      level: 'hard',
+    });
   });
 });

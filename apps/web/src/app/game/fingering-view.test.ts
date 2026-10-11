@@ -4,7 +4,6 @@ import { fingeringChartHtml, fingeringStripHtml, holesHtml } from './fingering-v
 
 const dWhistle = findWindInstrument('whistle-d')!;
 const recorder = findWindInstrument('recorder-soprano')!;
-const ocarina = findWindInstrument('ocarina-c12')!;
 
 /** The scale song moved into the instrument's key, as the screen plays it. */
 const played = (inst: typeof dWhistle) => {
@@ -51,10 +50,6 @@ describe('fingeringChartHtml', () => {
     expect(fingeringChartHtml(recorder, new Set())).toMatch(/thumb hole/);
     expect(fingeringChartHtml(dWhistle, new Set())).not.toMatch(/thumb hole/);
   });
-
-  it('says there is no chart for an instrument without one', () => {
-    expect(fingeringChartHtml(ocarina, new Set())).toMatch(/No fingering chart/);
-  });
 });
 
 describe('fingeringStripHtml', () => {
@@ -90,8 +85,28 @@ describe('fingeringStripHtml', () => {
     const odd = { notes: [{ t: 0, duration: 1, pitch: 73 }] }; // C#5 is not in D major
     expect(fingeringStripHtml(dWhistle, odd, 0.1)).toContain('holes-none');
   });
+});
 
-  it('shows nothing for an instrument with no chart', () => {
-    expect(fingeringStripHtml(ocarina, chart, 1)).toBe('');
+describe('chromatic notes', () => {
+  it('draws a half-covered hole half filled, and says so to a screen reader', () => {
+    const html = holesHtml('whistle', { holes: '111112', harder: false });
+    expect(html.match(/class="hole on"/g)).toHaveLength(5);
+    expect(html.match(/class="hole half"/g)).toHaveLength(1);
+    expect(html).toContain('covered: 1, 2, 3, 4, 5; half covered: 6');
+  });
+
+  it('marks chromatic rows and says how each is played', () => {
+    const html = fingeringChartHtml(dWhistle, new Set());
+    expect(html.match(/fing-row chromatic/g)).toHaveLength(10);
+    expect(html).toContain('half-hole');
+    expect(html).toContain('cross-fingering');
+  });
+});
+
+describe('the generic instrument', () => {
+  const generic = findWindInstrument('generic')!;
+  it('has no chart and no fingering strip, and says how to get them', () => {
+    expect(fingeringChartHtml(generic, new Set())).toMatch(/choose a specific whistle or recorder/);
+    expect(fingeringStripHtml(generic, played(dWhistle), 1)).toBe('');
   });
 });

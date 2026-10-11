@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { loadChart } from './chart';
 import {
+  DEFAULT_WIND_INSTRUMENT,
+  GENERIC_WIND_INSTRUMENT,
   WIND_INSTRUMENTS,
   checkFit,
   findWindInstrument,
   fingeringFor,
   holeGroups,
+  inKey,
+  isGenericWind,
   shiftForInstrument,
   windScale,
   type WindInstrument,
@@ -76,20 +80,32 @@ describe('tin whistle fingerings', () => {
   it("labels the scale in the whistle's own key", () => {
     expect(
       windScale(d)
+        .filter((n) => !n.chromatic)
         .slice(0, 8)
         .map((n) => n.label),
     ).toEqual(['D5', 'E5', 'F#5', 'G5', 'A5', 'B5', 'C#6', 'D6']);
     expect(
       windScale(inst('whistle-c'))
+        .filter((n) => !n.chromatic)
         .slice(0, 7)
         .map((n) => n.label),
     ).toEqual(['C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5']);
   });
 
-  it('has no fingering for a note outside the scale (shown as "see your chart")', () => {
-    expect(fingeringFor(d, 72)).toBeNull(); // C natural is a cross-fingering that varies by whistle
-    expect(fingeringFor(d, 75)).toBeNull();
+  it('has fingerings for the notes between: half-holes and cross-fingerings', () => {
+    expect(fingeringFor(d, 75)).toEqual({ holes: '111112', harder: false }); // E-flat: half hole
+    expect(fingeringFor(d, 77)).toEqual({ holes: '111011', harder: false }); // F natural: cross
+    expect(fingeringFor(d, 84)).toEqual({ holes: '011000', harder: false }); // C natural: cross
+    expect(fingeringFor(d, 87)).toEqual({ holes: '111112', harder: true }); // upper E-flat
+    // every semitone of two octaves has a fingering, the notes in between marked chromatic
+    expect(windScale(d)).toHaveLength(24);
+    expect(windScale(d).filter((n) => n.chromatic)).toHaveLength(10);
+  });
+
+  it('has no fingering below the tonic or above the top of its chart', () => {
+    expect(fingeringFor(d, 73)).toBeNull();
     expect(fingeringFor(d, 40)).toBeNull();
+    expect(fingeringFor(d, 98)).toBeNull();
   });
 });
 
@@ -98,7 +114,8 @@ describe('recorder fingerings (Baroque system)', () => {
 
   it('the C major scale from C5 to D6', () => {
     // thumb, holes 1-3, holes 4-7 (6 and 7 are the double holes)
-    expect(windScale(s).map((n) => `${n.label} ${n.fingering.holes}`)).toEqual([
+    const major = windScale(s).filter((n) => !n.chromatic);
+    expect(major.map((n) => `${n.label} ${n.fingering.holes}`)).toEqual([
       'C5 11111111',
       'D5 11111110',
       'E5 11111100',
@@ -115,7 +132,16 @@ describe('recorder fingerings (Baroque system)', () => {
     const alto = inst('recorder-alto');
     expect(windScale(alto).map((n) => n.fingering)).toEqual(windScale(s).map((n) => n.fingering));
     expect(fingeringFor(alto, 65)!.holes).toBe('11111111'); // F4
-    expect(fingeringFor(alto, 68)).toBeNull(); // A-flat is not in F major
+    expect(fingeringFor(alto, 68)).toEqual(fingeringFor(s, 75)); // A-flat: the same fork as E-flat
+  });
+
+  it('has the commonly taught chromatic fingerings, with the half-holes marked', () => {
+    expect(fingeringFor(s, 73)!.holes).toBe('11111112'); // C#: bottom hole half covered
+    expect(fingeringFor(s, 78)!.holes).toBe('11110110'); // F#: hole 4 open
+    expect(fingeringFor(s, 80)!.holes).toBe('11101111'); // G#: hole 3 open
+    expect(fingeringFor(s, 82)!.holes).toBe('11011000'); // B-flat: hole 2 open
+    expect(fingeringFor(s, 85)).toBeNull(); // the C# above the upper D is left to the maker's chart
+    expect(windScale(s).filter((n) => n.chromatic)).toHaveLength(5);
   });
 });
 
@@ -126,10 +152,10 @@ describe('hole groups', () => {
       for (const n of windScale(i)) expect(n.fingering.holes, i.id).toHaveLength(total);
     }
   });
-  it('a family without a chart has no holes to draw', () => {
-    expect(holeGroups('ocarina')).toEqual([]);
-    expect(windScale(inst('ocarina-c12'))).toEqual([]);
-    expect(fingeringFor(inst('ocarina-c12'), 72)).toBeNull();
+  it('every specific instrument offered has a fingering chart; the generic one has none', () => {
+    for (const i of WIND_INSTRUMENTS) expect(windScale(i).length > 0, i.id).toBe(!isGenericWind(i));
+    expect(holeGroups('generic')).toEqual([]);
+    expect(fingeringFor(GENERIC_WIND_INSTRUMENT, 72)).toBeNull();
   });
 });
 
@@ -143,7 +169,7 @@ describe("moving a song into the instrument's key", () => {
     expect(shiftForInstrument(chart, inst('whistle-c'))).toBe(0);
     expect(shiftForInstrument(chart, inst('whistle-bb'))).toBe(-2);
     expect(shiftForInstrument(chart, inst('recorder-alto'))).toBe(-7);
-    expect(shiftForInstrument(chart, inst('ocarina-c12'))).toBe(0);
+    expect(shiftForInstrument(chart, inst('generic'))).toBe(0);
   });
 
   it('leaves a song with no stated key where it is', () => {
@@ -164,18 +190,48 @@ describe("moving a song into the instrument's key", () => {
           c.notes.map((n) => n.pitch! + shift),
           i,
         );
-        expect(fit, `${id} on ${i.id}`).toEqual({ outOfRange: [], notInScale: [] });
+        // Greensleeves spans more than a recorder's range; everything else fits everything
+        const tooWide = id === 'wind-greensleeves' && i.family === 'recorder';
+        if (!tooWide) expect(fit.outOfRange, `${id} on ${i.id}`).toEqual([]);
+        expect(fit.noFingering, `${id} on ${i.id}`).toEqual([]);
       }
     }
   });
 });
 
 describe('checkFit', () => {
-  it('names the notes that are too low or high, and the ones outside the scale', () => {
+  it('names the notes that are too low or high, and the ones with no fingering', () => {
     const d = inst('whistle-d');
-    expect(checkFit([74, 75, 60, 100, 76], d)).toEqual({ outOfRange: [60, 100], notInScale: [75] });
+    expect(checkFit([74, 75, 60, 100, 76], d)).toEqual({ outOfRange: [60, 100], noFingering: [] });
+    expect(checkFit([72, 85, 86], inst('recorder-soprano'))).toEqual({
+      outOfRange: [],
+      noFingering: [85],
+    });
   });
-  it("does not call an ocarina's chromatic notes out of scale", () => {
-    expect(checkFit([70, 71, 72], inst('ocarina-c12'))).toEqual({ outOfRange: [], notInScale: [] });
+});
+
+describe('the generic instrument', () => {
+  it('is the default, in C, and first in the list', () => {
+    expect(DEFAULT_WIND_INSTRUMENT).toBe('generic');
+    expect(WIND_INSTRUMENTS[0]).toBe(GENERIC_WIND_INSTRUMENT);
+    expect(GENERIC_WIND_INSTRUMENT.tonic).toBe(72);
+    expect(isGenericWind(inst('generic'))).toBe(true);
+    expect(isGenericWind(inst('whistle-d'))).toBe(false);
+  });
+
+  it('set to a key moves its tonic and range, and has no fingering chart', () => {
+    const d = inKey(GENERIC_WIND_INSTRUMENT, 2);
+    expect(d.tonic).toBe(74); // C5 + 2 = D5
+    expect(d.range).toEqual(inst('whistle-d').range);
+    expect(windScale(d)).toEqual([]);
+  });
+
+  it('checks only the range: any note in it is fine, whatever its scale', () => {
+    const d = inKey(GENERIC_WIND_INSTRUMENT, 2);
+    expect(checkFit([74, 75, 76, 97, 60], d)).toEqual({ outOfRange: [60, 97], noFingering: [] });
+  });
+
+  it('keeps the top of its range at the highest note the pitch tracker handles', () => {
+    expect(inKey(GENERIC_WIND_INSTRUMENT, 12).range.high).toBe(96);
   });
 });

@@ -12,10 +12,15 @@ describe('built-in songs', () => {
     expect(() => getSong('nope')).toThrow(/unknown song "nope" \(have: ukulele-strum-demo/);
   });
 
-  it('has wind songs that fit the whistle/recorder/ocarina range', () => {
+  it('has wind songs that fit the wind range', () => {
     const wind = getProfile('wind');
     const songs = songsFor('wind').filter((s) => s.category === 'song');
-    expect(songs.map((s) => s.id)).toEqual(['wind-scale', 'wind-twinkle', 'wind-ode']);
+    expect(songs.map((s) => s.id)).toEqual([
+      'wind-scale',
+      'wind-twinkle',
+      'wind-ode',
+      'wind-greensleeves',
+    ]);
     for (const { id, chart } of songs) {
       const r = chartPitchRange(chart)!;
       expect(r.low, id).toBeGreaterThanOrEqual(wind.range!.lowMidi);
