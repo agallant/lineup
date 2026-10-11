@@ -51,9 +51,9 @@ real instrument to judge is listed again under "Waiting on real-device testing".
 
 ### 2. Strumline and ukulele
 
-- Use the vertical bars for **barre chords** (one finger holding several strings).
-- Find out why the simulated ukulele misses the odd strum on a new chord in the harder random chord
-  songs.
+- ~~Barre bars~~, ~~waltz random songs~~, ~~more chords (Bm, B♭, Gm, Cm, F♯m, E, E7, B7) and keys (F, A)~~: done.
+- The simulated ukulele still misses the odd strum on a new chord a beat after another chord, and
+  near-identical shapes (Am/Am7, A/F♯m) are not told apart in one song; both are analyzer limits.
 - Hear **which string and fret** is played, so a plucked note can be judged on pitch, not just timing.
 - Strum **direction** (down or up) detection, which is not reliable yet.
 

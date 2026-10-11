@@ -15,6 +15,8 @@ import {
   getProfile,
   melodyScalesFor,
   rhythmExercises,
+  strumChart,
+  UKULELE_CHORD_FRETS,
   varyChart,
   type Chart,
 } from '@lineup/core';
@@ -144,6 +146,34 @@ describe('generated and exercise material, played through the real chain', () =>
     // for some chords (see Limitations in the README). It must stay rare.
     expect(counts.miss / chart.notes.length).toBeLessThan(0.06);
     expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
+  });
+
+  it.each(
+    MELODY_LEVELS.flatMap(
+      (level) =>
+        [
+          [level, 4],
+          [level, 2024],
+        ] as const,
+    ),
+  )('a random waltz (%s, seed %i) is played (almost) perfectly', (level, seed) => {
+    const chart = generateChordSong({ seed, level, waltz: true });
+    const { counts } = uke(chart).score;
+    if (level === 'easy') return perfect(counts, chart.notes.length);
+    expect(counts.miss / chart.notes.length).toBeLessThan(0.08);
+    expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
+  });
+
+  it.each(Object.keys(UKULELE_CHORD_FRETS))('recognises %s among its neighbours', (chord) => {
+    // each chord between two others a song would plausibly mix it with (very close shapes such as
+    // Am and Am7, or A and F#m, are not told apart in one song)
+    const other = chord === 'G' ? 'C' : 'G';
+    const chart = strumChart(
+      { title: 'One chord', bpm: 60 },
+      `${other} | ${chord} | ${other} | ${chord}`,
+      'D . . . D . . .',
+    );
+    perfect(uke(chart).score.counts, chart.notes.length);
   });
 
   it.each(

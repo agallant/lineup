@@ -58,6 +58,7 @@ import { SettingsStore, safeLocalStorage } from '../settings';
 import {
   RANDOM_CHORDS,
   RANDOM_GROOVE,
+  RANDOM_WALTZ,
   RANDOM_MELODY,
   addRandomOptions,
   fillSongMenu,
@@ -272,9 +273,11 @@ export const createHitScreen =
       const spec = settings.get().challenge;
       let id: string;
       let build: () => Chart;
-      if (songSel.value === RANDOM_CHORDS) {
-        id = chordSongId(spec);
-        build = () => generateChordSong(spec);
+      if (songSel.value === RANDOM_CHORDS || songSel.value === RANDOM_WALTZ) {
+        const waltz = songSel.value === RANDOM_WALTZ;
+        const chordSpec = waltz ? { ...spec, waltz } : spec;
+        id = chordSongId(chordSpec);
+        build = () => generateChordSong(chordSpec);
       } else if (songSel.value === RANDOM_GROOVE) {
         id = grooveId(profile.id as GrooveProfile, spec);
         build = () => generateGroove(profile.id as GrooveProfile, spec);
@@ -330,6 +333,7 @@ export const createHitScreen =
         profile.id === 'ukulele-strum'
           ? [
               { value: RANDOM_CHORDS, label: '🎲 Random chord song' },
+              { value: RANDOM_WALTZ, label: '🎲 Random waltz (3/4)' },
               { value: RANDOM_MELODY, label: '🎲 Random melody (picked)' },
             ]
           : [{ value: RANDOM_GROOVE, label: '🎲 Random groove' }],

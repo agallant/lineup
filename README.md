@@ -153,8 +153,9 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    one), three melodies to pick (Hot Cross Buns, Mary Had a Little Lamb, Ode to Joy), and
    **Exercises**: major, dorian and pentatonic scales, thirds, arpeggios, long tones and a chromatic
    scale, plucked on single strings. Under "Random": **🎲 Random chord song** (sixteen bars from
-   common progressions such as I–IV–V–I and I–V–vi–IV, in C, G or D, the strum pattern repeating
-   with a variation every four bars, ending at home) and **🎲 Random melody (picked)**. Pick a
+   common progressions such as I–IV–V–I and I–V–vi–IV, in C, G, D, F or A, the strum pattern repeating
+   with a variation every four bars, ending at home), **🎲 Random waltz (3/4)** (the same in three
+   beats to the bar) and **🎲 Random melody (picked)**. Pick a
    level, press _New song_ or type a seed to replay one; the seed is shown in the song info.
 3. **Also check the chords** (off by default, experimental): the analyzer is told which chords the
    song uses and a strum of a clearly different chord misses ("wrong chord" is counted on the results
