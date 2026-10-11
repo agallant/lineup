@@ -56,6 +56,7 @@ import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
+import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { SettingsStore, safeLocalStorage } from '../settings';
@@ -216,6 +217,21 @@ export const createHitScreen =
     const scores = new ScoreStore(safeLocalStorage());
     const progress = new ProgressStore(safeLocalStorage());
     const models = new TimbreModelStore(() => safeLocalStorage() ?? undefined);
+
+    // opened from today's challenge: pick its game mode and its random song (the same for everyone today)
+    const dailyGame: DailyGame = c.strum ? 'strumline' : 'beatline';
+    if (wantsDaily(location.hash)) {
+      const profileId = c.strum ? 'ukulele-strum' : 'clap';
+      settings.update({
+        challenge: dailyFor(dailyGame).spec,
+        variation: 'original',
+        songs: {
+          ...settings.get().songs,
+          [`${c.keyPrefix}-mode`]: profileId,
+          [`${c.keyPrefix}:${profileId}`]: c.strum ? RANDOM_CHORDS : RANDOM_GROOVE,
+        },
+      });
+    }
 
     let profile: InstrumentProfile = getProfile(
       c.modes.some((m) => m.id === settings.get().songs[`${c.keyPrefix}-mode`])
@@ -826,6 +842,10 @@ export const createHitScreen =
       playRaf = requestAnimationFrame(tick);
     };
 
+    /** Whether the song just played is today's challenge, played as written. */
+    const isDaily = (id: string): boolean =>
+      id === dailyFor(dailyGame).id && settings.get().variation === 'original';
+
     const showResults = (game: BeatlineGame, chart: Chart, audio: GameAudio) => {
       const s = game.session.score;
       const grade = letterGrade(s.accuracy);
@@ -840,7 +860,15 @@ export const createHitScreen =
         : rewardHtml(
             s.accuracy,
             progress.recordPlay(
-              playResultFor(profile.id, randomEntry()?.id ?? songSel.value, chart, s),
+              playResultFor(
+                profile.id,
+                randomEntry()?.id ?? songSel.value,
+                chart,
+                s,
+                isDaily(randomEntry()?.id ?? songSel.value)
+                  ? { key: dailyKey(dailyGame) }
+                  : undefined,
+              ),
             ),
           );
       const bestLine = audio.demo

@@ -792,6 +792,22 @@ const scenarios = {
         /Level 3 · Student/.test(await text(page, 'level-card')),
         'home: shows the level from stored progress',
       );
+      check((await page.$$('[data-id=daily] a')).length === 4, 'home: four daily challenges');
+      for (const [game, route, pick] of [
+        ['singline', 'sing', 'random-melody'],
+        ['strumline', 'strum', 'random-chords'],
+        ['beatline', 'beat', 'random-groove'],
+      ]) {
+        await page.goto(URL_BASE);
+        await page.click(`[data-daily=${game}]`);
+        await page.waitForSelector('[data-id=song]');
+        check(
+          (await page.inputValue('[data-id=song]')) === pick &&
+            /Beginner|Easy|Medium|Hard|Expert/.test(await text(page, 'song-info')),
+          `daily ${route}: opens with today's random song chosen`,
+        );
+      }
+      await page.goto(URL_BASE);
       await page.click('[data-id=scores-link]');
       await page.waitForSelector('[data-id=rows] li');
       check(

@@ -61,6 +61,7 @@ import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
+import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
@@ -272,6 +273,16 @@ export const createPitchScreen =
     const current = settings.get();
     fillSongMenu(songSel, songs);
     addRandomMelodyOption(songSel);
+    // opened from today's challenge: choose its random melody (the same for everyone today)
+    const dailyGame: DailyGame = c.profileId === 'wind' ? 'windline' : 'singline';
+    if (wantsDaily(location.hash)) {
+      settings.update({
+        challenge: dailyFor(dailyGame).spec,
+        variation: 'original',
+        songs: { ...current.songs, [c.profileId]: RANDOM_MELODY },
+      });
+      current.songs[c.profileId] = RANDOM_MELODY;
+    }
     const savedSong = current.songs[c.profileId];
     songSel.value =
       savedSong === RANDOM_MELODY || songs.some((s) => s.id === savedSong)
@@ -777,6 +788,10 @@ export const createPitchScreen =
       playRaf = requestAnimationFrame(tick);
     };
 
+    /** Whether the song just played is today's challenge, played as written. */
+    const isDaily = (id: string): boolean =>
+      id === dailyFor(dailyGame).id && settings.get().variation === 'original';
+
     const showResults = (game: SinglineGame, chart: Chart, audio: GameAudio) => {
       const s = game.session.score;
       const grade = letterGrade(s.accuracy);
@@ -790,7 +805,15 @@ export const createPitchScreen =
         ? ''
         : rewardHtml(
             s.accuracy,
-            progress.recordPlay(playResultFor(profile.id, songEntry().id, chart, s)),
+            progress.recordPlay(
+              playResultFor(
+                profile.id,
+                songEntry().id,
+                chart,
+                s,
+                isDaily(songEntry().id) ? { key: dailyKey(dailyGame) } : undefined,
+              ),
+            ),
           );
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'

@@ -11,6 +11,11 @@ export function rewardHtml(accuracy: number, outcome: PlayOutcome): string {
       outcome.streak > 1 ? ` · ${outcome.streak}-day streak` : ''
     }`,
   ];
+  if (outcome.dailyBonus > 0) {
+    lines.push(
+      `<strong data-id="daily-cleared">Daily challenge cleared! +${outcome.dailyBonus} XP</strong>`,
+    );
+  }
   if (outcome.leveledUp)
     lines.push(
       `<strong data-id="level-up">Level up! You are now a ${escapeHtml(outcome.level.title)}.</strong>`,
@@ -32,6 +37,7 @@ export function playResultFor(
   songId: string,
   chart: Chart,
   score: { accuracy: number; counts: { perfect: number; good: number; miss: number } },
+  daily?: { key: string },
 ): PlayResult {
   const rating = rateChart(chart);
   const { perfect, good, miss } = score.counts;
@@ -43,5 +49,6 @@ export function playResultFor(
     chromatic: rating.scale === 'chromatic',
     misses: miss,
     notes: perfect + good + miss,
+    ...(daily ? { daily } : {}),
   };
 }
