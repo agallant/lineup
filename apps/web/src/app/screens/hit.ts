@@ -383,6 +383,8 @@ export const createHitScreen =
       settings.update({ challenge: { ...settings.get().challenge, ...patch } });
       showChallenge();
       refreshSong();
+      // a new random song can use other chords: an open mic must listen for those
+      void reopenMicIfNeeded();
     };
     scaleSel.addEventListener('change', () =>
       updateChallenge({ scale: scaleSel.value as ScaleId }),
