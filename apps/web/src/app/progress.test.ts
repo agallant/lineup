@@ -122,6 +122,20 @@ describe('daily challenges', () => {
   });
 });
 
+describe('grant', () => {
+  it('awards a trophy once, from outside a song, and keeps it', () => {
+    const mem = new Mem();
+    const p = new ProgressStore(mem);
+    expect(p.grant('graduate', at(1))?.title).toBe('Graduate');
+    expect(p.grant('graduate', at(2))).toBeNull(); // already earned
+    expect(p.grant('no-such-trophy')).toBeNull();
+    expect(new ProgressStore(mem).get().achievements['graduate']).toBeDefined();
+    // a finished song never grants it by itself
+    const q = new ProgressStore(new Mem());
+    expect(q.recordPlay(play(), at(1)).newAchievements.map((a) => a.id)).not.toContain('graduate');
+  });
+});
+
 describe('ProgressStore with two tabs', () => {
   it('does not erase what another tab saved', () => {
     const mem = new Mem();
