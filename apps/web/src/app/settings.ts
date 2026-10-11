@@ -15,6 +15,8 @@ import {
 /** How much backing music plays under a song. */
 export type Accompaniment = 'off' | 'bass' | 'full';
 
+import { DRUM_STYLES, type DrumStyle } from './game/drums';
+
 export const ACCOMPANIMENTS: readonly Accompaniment[] = ['off', 'bass', 'full'];
 
 /** Weekly practice goals offered, in minutes (0 for none). */
@@ -57,6 +59,8 @@ export interface Settings {
   effects: boolean;
   /** Play-along backing under a song: nothing, a bass line, or bass and chords (needs headphones). */
   accompaniment: Accompaniment;
+  /** A quiet drum loop under Singline, Windline and Strumline songs (needs headphones). */
+  drums: DrumStyle;
   /** Key change in semitones applied to the chart. */
   keyShift: number;
   /** Key change per profile (an instrument's key is not a singer's); wins over `keyShift`. */
@@ -98,6 +102,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'dark',
   seenHelp: false,
   accompaniment: 'off',
+  drums: 'off',
   keyShift: 0,
   keyShifts: {},
   difficulty: 'normal',
@@ -213,6 +218,9 @@ function sanitize(raw: unknown): Settings {
     accompaniment: ACCOMPANIMENTS.includes(r['accompaniment'] as Accompaniment)
       ? (r['accompaniment'] as Accompaniment)
       : DEFAULT_SETTINGS.accompaniment,
+    drums: DRUM_STYLES.includes(r['drums'] as DrumStyle)
+      ? (r['drums'] as DrumStyle)
+      : DEFAULT_SETTINGS.drums,
     keyShift: validShift(shift) ? shift : DEFAULT_SETTINGS.keyShift,
     keyShifts,
     difficulty: isDifficulty(r['difficulty']) ? r['difficulty'] : DEFAULT_SETTINGS.difficulty,

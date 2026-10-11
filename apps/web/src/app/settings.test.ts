@@ -189,6 +189,9 @@ describe('SettingsStore', () => {
     expect(s.update({ accompaniment: 'full' }).accompaniment).toBe('full');
     expect(new SettingsStore(mem).get().accompaniment).toBe('full');
     expect(s.update({ accompaniment: 'orchestra' as never }).accompaniment).toBe('off');
+    expect(s.get().drums).toBe('off');
+    expect(s.update({ drums: 'bossa' }).drums).toBe('bossa');
+    expect(s.update({ drums: 'polka' as never }).drums).toBe('off');
   });
 
   it('remembers the difficulty a new random song aims for, and ignores anything else', () => {

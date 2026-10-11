@@ -148,6 +148,7 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
 - **Options** (`#/options`): colours (dark, light, high contrast), metronome, guide tone, jingles, play-along backing, weekly goal, text size, scoring strictness, Windline
   octaves and fingerings, chord checking, the debug overlay; reset options, erase scores or progress
   (two taps), and save or restore a **backup file** of everything the app keeps.
+- **Drum loop** (Options, off by default): a quiet _rock_ or _bossa nova_ beat under Singline, Windline and Strumline songs (a waltz gets a kick and two ticks). Beatline never plays it, since the mic would hear it.
 - **Play-along backing** (Options, off by default): quiet music under a song, for headphones. _Bass
   line_ plays the root of each bar's chord (and the fifth half way through); _Bass and chords_ adds
   the chord softly. A chord song uses its own chords; a melody is harmonised a bar at a time from the

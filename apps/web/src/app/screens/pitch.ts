@@ -788,6 +788,7 @@ export const createPitchScreen =
             metronome: opts.metronome,
             guideTone: opts.guideTone,
             accompaniment: settings.get().accompaniment,
+            drums: settings.get().drums,
           }),
           ...listen.tones,
         ].sort((a, b) => a.songTime - b.songTime),

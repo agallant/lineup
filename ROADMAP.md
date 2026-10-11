@@ -104,7 +104,7 @@ Roughly in order of how well they fit a private, offline edutainment game.
 
 **Play**
 
-- **Play-along backing styles**: drum loops and simple bass patterns under melodies and chord songs.
+- ~~Play-along backing styles~~ (done: bass line, chords, and a rock or bossa drum loop; more styles and bass patterns could follow).
 - **Duet mode**: two players alternate phrases of one song (the same device, passed around).
 - **Call and response** in Beatline: the app plays a pattern each bar and you answer it, random each time.
 - **Free play with a metronome and a recorder**: record a take (kept on the device), play it back.
