@@ -1,6 +1,7 @@
 import { loadChart, type Chart } from '../chart';
 import { exerciseCharts } from '../generate/exercises';
 import { generateMelody, parseMelodyId } from '../generate/melody';
+import { LIBRARY } from './library';
 import clapBasic from './clap-basic.json';
 import clapTapGroove from './clap-tap-groove.json';
 import drumRock from './drum-rock.json';
@@ -51,6 +52,7 @@ export const builtinSongs: Readonly<Record<string, Chart>> = {
       return [id, r.value] as const;
     }),
   ),
+  ...LIBRARY,
   ...EXERCISES,
 };
 
@@ -77,3 +79,6 @@ export function songsFor(
     .filter(([, chart]) => chart.meta.instruments?.includes(profileId))
     .map(([id, chart]) => ({ id, chart, category: songCategory(id) }));
 }
+
+export { LIBRARY } from './library';
+export * from './notation';

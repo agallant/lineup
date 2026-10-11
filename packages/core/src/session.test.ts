@@ -66,18 +66,20 @@ describe('GameSession', () => {
 
 describe('songsFor', () => {
   it('lists the songs written for a profile', () => {
-    expect(
-      songsFor('voice')
+    // the hand-written songs come first, then the library's, then exercises
+    const ids = (profile: string) =>
+      songsFor(profile)
         .filter((s) => s.category === 'song')
-        .map((s) => s.id)
-        .sort(),
-    ).toEqual(['singline-demo', 'singline-scale']);
-    expect(songsFor('ukulele-strum').map((s) => s.id)).toEqual([
+        .map((s) => s.id);
+    expect(ids('voice').slice(0, 2).sort()).toEqual(['singline-demo', 'singline-scale']);
+    expect(ids('voice')).toContain('sing-hot-cross-buns');
+    expect(ids('ukulele-strum').slice(0, 4)).toEqual([
       'ukulele-strum-demo',
       'strum-four-chords',
       'strum-folk',
       'strum-picking',
     ]);
+    expect(ids('ukulele-strum')).toContain('pick-mary-lamb');
     expect(songsFor('kazoo')).toEqual([]);
   });
 });
