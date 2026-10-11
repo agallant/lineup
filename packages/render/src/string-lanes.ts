@@ -11,6 +11,10 @@ const OPEN_RADIUS = 0.5;
 /** String colours, indexed like the profile's tuning (ukulele: G C E A). */
 const STRING_COLORS = ['#4cc9f0', '#ff9f43', '#c77dff', '#8fb0ff'] as const;
 
+/**
+ * Colour for a string, by its index in the profile's tuning (cycles if there are more strings
+ * than colours).
+ */
 export const stringColor = (tuningIndex: number): string =>
   STRING_COLORS[tuningIndex % STRING_COLORS.length]!;
 

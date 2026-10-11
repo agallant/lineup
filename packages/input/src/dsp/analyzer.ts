@@ -5,6 +5,7 @@ import { PercussionAnalyzer, type PercussionAnalyzerOptions } from './percussion
 import { PitchTracker, type PitchTrackerOptions } from './pitch';
 import { StrumAnalyzer, type StrumAnalyzerOptions } from './strum-analyzer';
 
+/** Which detectors the analyzer runs (pitch and onset, strum, or percussion) and their settings. */
 export interface InputAnalyzerOptions {
   pitch?: PitchTrackerOptions;
   onset?: OnsetDetectorOptions;

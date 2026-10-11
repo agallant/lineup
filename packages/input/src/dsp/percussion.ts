@@ -19,7 +19,9 @@ export interface PercussionFeatures {
   rmsDb: number;
 }
 
+/** Upper edge of the "low" band in PercussionFeatures, Hz. */
 export const LOW_EDGE_HZ = 400;
+/** Lower edge of the "high" band in PercussionFeatures, Hz. */
 export const HIGH_EDGE_HZ = 2500;
 
 /** The window analysed after an onset, in samples (power of two). */

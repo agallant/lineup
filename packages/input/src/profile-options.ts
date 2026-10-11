@@ -29,11 +29,16 @@ export function onsetOptionsFromProfile(profile: InstrumentProfile): OnsetDetect
   };
 }
 
+/** Song-specific analyzer inputs that the profile cannot supply. */
 export interface AnalyzerExtras {
   /** For a strum profile: the chords the song uses (name -> sounding MIDI notes). Turns on chord recognition. */
   chords?: ChordShapes;
 }
 
+/**
+ * Builds the analyzer options for a profile's input kind (strum, percussion, or pitch plus
+ * onset), converting its milliseconds to seconds.
+ */
 export function analyzerOptionsFromProfile(
   profile: InstrumentProfile,
   { chords }: AnalyzerExtras = {},

@@ -4,6 +4,7 @@ import type { InstrumentProfile } from '../profile';
 import type { PitchFrame } from '../types';
 import type { Grade, Judge, Judgment, MissReason } from './types';
 
+/** Settings for judging sustained pitch (voice, winds). Times are in seconds and levels in dBFS. */
 export interface ContinuousJudgeConfig {
   /** Calibrated latency, seconds, subtracted from every frame time. */
   latencyOffset: number;
@@ -33,6 +34,7 @@ export interface ContinuousJudgeConfig {
   minNoteDuration: number;
 }
 
+/** Defaults for the continuous judge; profiles override the pitch-related values. */
 export const DEFAULT_CONTINUOUS_CONFIG: ContinuousJudgeConfig = {
   latencyOffset: 0,
   perfectWindow: 0.18,

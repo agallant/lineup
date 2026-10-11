@@ -8,6 +8,10 @@ import {
   type Renderer,
 } from './renderer';
 
+/**
+ * Pixel geometry of the percussion lane view: the now line, scale (px per second) and lane
+ * rows.
+ */
 export interface LaneLayout {
   nowX: number;
   pxPerSec: number;
@@ -22,12 +26,20 @@ export interface LaneLayout {
   radius: number;
 }
 
+/**
+ * Layout overrides: seconds of look-ahead, where the now line sits as a fraction of the plot,
+ * and the label gutter in px.
+ */
 export interface LaneLayoutOptions {
   lookAhead?: number;
   nowFraction?: number;
   gutter?: number;
 }
 
+/**
+ * Computes the lane-view geometry for a canvas size and number of lanes. Lanes share the
+ * height equally.
+ */
 export function computeLaneLayout(
   size: RenderSize,
   laneCount: number,
@@ -52,9 +64,11 @@ export function computeLaneLayout(
   };
 }
 
+/** Vertical centre in px of the lane at the given index. */
 export const laneCenterY = (l: LaneLayout, laneIndex: number): number =>
   l.top + l.laneHeight * (laneIndex + 0.5);
 
+/** x in px of a song time t (seconds) when the song clock reads now. */
 export const hitTimeToX = (l: LaneLayout, t: number, now: number): number =>
   l.nowX + (t - now) * l.pxPerSec;
 

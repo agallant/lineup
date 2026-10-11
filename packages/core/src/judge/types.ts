@@ -1,5 +1,6 @@
 import type { ChartNote } from '../chart';
 
+/** How well a note was played. */
 export type Grade = 'perfect' | 'good' | 'miss';
 
 /** Why a note was missed, when we know. */
@@ -13,6 +14,7 @@ export type MissReason =
   /** Something was heard on time but it was a different chord. */
   | 'wrong-chord';
 
+/** The verdict on one chart note. Times are seconds on the song clock. */
 export interface Judgment {
   noteIndex: number;
   note: ChartNote;

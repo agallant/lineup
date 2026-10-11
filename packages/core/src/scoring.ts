@@ -1,5 +1,6 @@
 import type { Grade, Judgment } from './judge/types';
 
+/** Tuning for scoring: points per note and how the combo multiplier grows. */
 export interface ScoreConfig {
   /** Points for a note judged at full credit. */
   pointsPerNote: number;
@@ -10,6 +11,7 @@ export interface ScoreConfig {
   maxMultiplier: number;
 }
 
+/** Default scoring: 100 points per note, +0.1x every 10 notes of combo, capped at 2x. */
 export const DEFAULT_SCORE_CONFIG: ScoreConfig = {
   pointsPerNote: 100,
   multiplierPerStep: 0.1,
@@ -17,6 +19,7 @@ export const DEFAULT_SCORE_CONFIG: ScoreConfig = {
   maxMultiplier: 2,
 };
 
+/** A snapshot of the scoreboard for display. */
 export interface ScoreState {
   score: number;
   combo: number;

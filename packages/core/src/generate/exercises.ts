@@ -27,6 +27,7 @@ const one = (degrees: readonly number[], beats = 1): Step[] =>
 const holdLast = (steps: Step[]): Step[] =>
   steps.map((s, i) => (i === steps.length - 1 ? { ...s, beats: Math.max(s.beats, 2) } : s));
 
+/** The practice patterns by id, each with a label, tempo and its sequence of scale degrees. */
 export const EXERCISE_KINDS: Readonly<Record<ExerciseKindId, ExerciseKind>> = {
   'up-down': {
     id: 'up-down',

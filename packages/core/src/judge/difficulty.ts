@@ -3,8 +3,10 @@ import type { ContinuousJudgeConfig } from './continuous';
 /** How forgiving sustained-pitch scoring is. "strict" is the profile's own numbers. */
 export type Difficulty = 'easy' | 'normal' | 'strict';
 
+/** All difficulty levels, easiest first. */
 export const DIFFICULTIES: readonly Difficulty[] = ['easy', 'normal', 'strict'];
 
+/** Type guard for Difficulty. */
 export function isDifficulty(value: unknown): value is Difficulty {
   return typeof value === 'string' && (DIFFICULTIES as readonly string[]).includes(value);
 }

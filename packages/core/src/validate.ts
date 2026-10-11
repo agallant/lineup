@@ -4,11 +4,16 @@
  * was expected, and shows what was actually found.
  */
 
+/** Result of loading untrusted data: the value plus warnings, or a list of readable errors. */
 export type Loaded<T> =
   { ok: true; value: T; warnings: string[] } | { ok: false; errors: string[] };
 
 const MAX_REPORTED = 12;
 
+/**
+ * Collects errors and warnings while validating, each prefixed with the path of the offending
+ * field.
+ */
 export class Problems {
   readonly errors: string[] = [];
   readonly warnings: string[] = [];
@@ -42,9 +47,15 @@ export class Problems {
   }
 }
 
+/** Appends a key to a dotted field path. */
 export const join = (path: string, key: string): string => (path ? `${path}.${key}` : key);
+/** Appends a list index to a field path, e.g. "lanes[2]". */
 export const at = (path: string, index: number): string => `${path}[${index}]`;
 
+/**
+ * Short human-readable description of a value for error messages ("nothing", "null", a quoted
+ * string, "a list of 3").
+ */
 export function describeValue(v: unknown): string {
   if (v === undefined) return 'nothing';
   if (v === null) return 'null';
@@ -54,6 +65,7 @@ export function describeValue(v: unknown): string {
   return 'an object';
 }
 
+/** True for plain objects (not null, not arrays). */
 export function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
@@ -73,6 +85,10 @@ function rangeText({ min, max, integer }: NumOpts): string {
   return kind;
 }
 
+/**
+ * Reads an optional or required finite number from obj, recording an error in p if it is
+ * missing or out of range.
+ */
 export function readNumber(
   obj: Record<string, unknown>,
   key: string,
@@ -101,6 +117,10 @@ export function readNumber(
   return v;
 }
 
+/**
+ * Reads a non-empty string (optionally capped at maxLength), recording an error in p if
+ * invalid.
+ */
 export function readString(
   obj: Record<string, unknown>,
   key: string,
@@ -125,6 +145,7 @@ export function readString(
   return v;
 }
 
+/** Reads a boolean, recording an error in p if it is missing (when required) or not a boolean. */
 export function readBoolean(
   obj: Record<string, unknown>,
   key: string,
@@ -145,6 +166,7 @@ export function readBoolean(
   return v;
 }
 
+/** Reads a string that must be one of allowed, recording an error in p otherwise. */
 export function readEnum<T extends string>(
   obj: Record<string, unknown>,
   key: string,
@@ -166,6 +188,10 @@ export function readEnum<T extends string>(
   return v as T;
 }
 
+/**
+ * Reads a nested plain object, recording an error in p if it is missing (when required) or not
+ * an object.
+ */
 export function readObject(
   obj: Record<string, unknown>,
   key: string,
@@ -186,6 +212,7 @@ export function readObject(
   return v;
 }
 
+/** Reads a list (optionally with a minimum length), recording an error in p if invalid. */
 export function readArray(
   obj: Record<string, unknown>,
   key: string,
@@ -264,6 +291,7 @@ export function describeJsonError(text: string, message: string): string {
   return `not valid JSON: ${message}`;
 }
 
+/** JSON.parse that returns a Loaded result with a readable error instead of throwing. */
 export function parseJson(text: string): Loaded<unknown> {
   try {
     return { ok: true, value: JSON.parse(text) as unknown, warnings: [] };

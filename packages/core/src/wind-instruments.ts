@@ -50,6 +50,7 @@ export const GENERIC_WIND_INSTRUMENT: WindInstrument = {
   range: { low: 72, high: 72 + 23 },
 };
 
+/** Id of the instrument selected by default (the generic one). */
 export const DEFAULT_WIND_INSTRUMENT = GENERIC_WIND_INSTRUMENT.id;
 
 /** The generic instrument first, then the specific ones (presets): recorders, then whistles. */
@@ -242,6 +243,10 @@ export interface Fit {
   noFingering: number[];
 }
 
+/**
+ * Lists the MIDI notes a song needs that the instrument cannot play: outside its range, or in
+ * range with no fingering.
+ */
 export function checkFit(notes: Iterable<number>, instrument: WindInstrument): Fit {
   const outOfRange = new Set<number>();
   const noFingering = new Set<number>();
