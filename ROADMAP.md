@@ -21,6 +21,8 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
   five ukulele chord songs and three picked melodies, and clap, hand and drum-kit rhythms.
 - **Random chord songs, picked melodies and grooves** for Strumline and Beatline, rhythm and
   ukulele scale exercises, with the same seed, level and "New song" controls.
+- **Windline octave handling**: by default the right note counts in whatever octave you play it
+  (low whistle, alto recorder, second octave); strict octaves are an option.
 - **Product**: best scores, song info, offline start, session logs you can copy, end-to-end tests in CI.
 
 ## Development goals

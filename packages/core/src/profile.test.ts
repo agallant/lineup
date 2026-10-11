@@ -5,6 +5,7 @@ import {
   laneForTimbre,
   loadProfile,
   tabForPitch,
+  withOctaveForgiving,
   writtenMidi,
   type InstrumentProfile,
 } from './profile';
@@ -293,5 +294,25 @@ describe('helpers', () => {
     if (!p.ok) return;
     expect(laneForTimbre(p.value, 'tap')?.id).toBe('b');
     expect(laneForTimbre(p.value, 'nope')).toBeUndefined();
+  });
+});
+
+describe('withOctaveForgiving', () => {
+  it('switches octave-forgiving judging without touching the rest or the original', () => {
+    const w = getProfile('wind');
+    expect(w.judgment.pitch?.octaveForgiving).toBe(false);
+    const any = withOctaveForgiving(w, true);
+    expect(any.judgment.pitch?.octaveForgiving).toBe(true);
+    expect(any.judgment.pitch?.toleranceCents).toBe(w.judgment.pitch?.toleranceCents);
+    expect(any.detector).toBe(w.detector);
+    expect(w.judgment.pitch?.octaveForgiving).toBe(false);
+    expect(withOctaveForgiving(any, false).judgment.pitch?.octaveForgiving).toBe(false);
+  });
+
+  it('returns the same profile when nothing changes, or when it does not judge pitch', () => {
+    const w = getProfile('wind');
+    expect(withOctaveForgiving(w, false)).toBe(w);
+    const strum = getProfile('ukulele-strum');
+    expect(withOctaveForgiving(strum, true)).toBe(strum);
   });
 });

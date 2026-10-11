@@ -12,6 +12,7 @@ import {
   getSong,
   loadChart,
   shiftForInstrument,
+  withOctaveForgiving,
   transposeChart,
   type Chart,
 } from '@lineup/core';
@@ -195,5 +196,28 @@ describe('wind: the built-in exercises', () => {
     const moved = transposeChart(take(chart, 11), shiftForInstrument(chart, whistle));
     const r = play(moved);
     expect(r.score.counts).toEqual({ perfect: 11, good: 0, miss: 0 });
+  });
+});
+
+describe('wind: a player an octave away from the chart', () => {
+  // a low whistle, an alto recorder or a second octave: the right notes, the wrong register
+  const strict = profile;
+  const any = withOctaveForgiving(profile, true);
+  const judgeAt = (shift: number, prof: typeof profile) => {
+    const played = transposeChart(scale, shift);
+    const rendered = renderPerformance(played, windPerformer({}), { latency: LATENCY });
+    return runContinuous(rendered, scale, prof, { latencyOffset: LATENCY });
+  };
+
+  it.each([-12, 12])('is missed when the octave must match exactly (%i)', (shift) => {
+    expect(judgeAt(shift, strict).score.counts.perfect).toBe(0);
+  });
+
+  it.each([-12, 12])('scores every note perfect when any octave counts (%i)', (shift) => {
+    expect(judgeAt(shift, any).score.counts).toEqual({ perfect: 12, good: 0, miss: 0 });
+  });
+
+  it('a note a semitone off is still wrong in any octave', () => {
+    expect(judgeAt(11, any).score.counts.perfect).toBe(0);
   });
 });

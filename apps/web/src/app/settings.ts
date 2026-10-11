@@ -25,6 +25,11 @@ export interface Settings {
   difficulty: Difficulty;
   /** Windline: which instrument you play (decides the key the song is moved into and the fingerings). */
   windInstrument: string;
+  /**
+   * Windline: "auto" counts the right note in whatever octave you play it (a low whistle, an alto
+   * recorder or a second octave all work); "exact" wants the octave the chart shows.
+   */
+  windOctave: 'auto' | 'exact';
   /** Windline: show the fingering of the current and next note while playing. */
   showFingerings: boolean;
   /** Strumline: also check that the right chord is strummed (experimental), not just the timing. */
@@ -45,6 +50,7 @@ export const DEFAULT_SETTINGS: Settings = {
   keyShifts: {},
   difficulty: 'normal',
   windInstrument: DEFAULT_WIND_INSTRUMENT,
+  windOctave: 'auto',
   showFingerings: true,
   checkChords: false,
   speed: 1,
@@ -139,6 +145,7 @@ function sanitize(raw: unknown): Settings {
       typeof r['windInstrument'] === 'string' && findWindInstrument(r['windInstrument'])
         ? r['windInstrument']
         : DEFAULT_SETTINGS.windInstrument,
+    windOctave: r['windOctave'] === 'exact' ? 'exact' : 'auto',
     showFingerings:
       typeof r['showFingerings'] === 'boolean'
         ? r['showFingerings']

@@ -285,6 +285,10 @@ const scenarios = {
         (await page.inputValue('[data-id=instrument]')) === 'generic',
         'the generic instrument is the default',
       );
+      check(
+        (await page.inputValue('[data-id=octave]')) === 'auto',
+        'any octave is the default: the right note counts in whatever octave you play it',
+      );
       await page.selectOption('[data-id=key]', '2');
       const generic = await page.$$eval('[data-id=chart] .fing-row', (r) => r.length);
       const chartText = await text(page, 'chart');

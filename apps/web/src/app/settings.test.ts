@@ -73,6 +73,9 @@ describe('SettingsStore', () => {
   it('remembers the wind instrument and the fingering option, and ignores unknown instruments', () => {
     const s = new SettingsStore(new Mem());
     expect(s.get()).toMatchObject({ windInstrument: 'generic', showFingerings: true });
+    expect(s.get().windOctave).toBe('auto'); // follow the octave you play unless you ask otherwise
+    expect(s.update({ windOctave: 'exact' }).windOctave).toBe('exact');
+    expect(s.update({ windOctave: 'sideways' as never }).windOctave).toBe('auto');
     expect(s.update({ windInstrument: 'recorder-alto', showFingerings: false })).toMatchObject({
       windInstrument: 'recorder-alto',
       showFingerings: false,

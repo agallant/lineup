@@ -149,7 +149,10 @@ register, so an octave off is wrong, unlike singing).
    recorders are diatonic, so **the song is moved into the instrument's key** (a C-major song becomes
    D major on a D whistle) and its notes then use only the instrument's own scale. On a preset,
    _Extra shift_ nudges it further (an octave problem, or a lower or higher register) and starts at
-   None whenever you change instrument. A warning appears if some notes fall outside the
+   None whenever you change instrument. **Octave** (under Options) defaults to _any octave_: the
+   right note counts in whatever octave you play it, so a low whistle, an alto recorder or a second
+   octave all work, and the range warning checks the octave that suits the instrument. Choose _exactly
+   the octave shown_ if you want the strict version (best scores are kept separately for each). A warning appears if some notes fall outside the
    instrument's range or have no fingering in its chart.
 3. The **fingering chart** lists the instrument's scale with the holes drawn (filled = covered),
    the notes of the chosen song highlighted, and "blow harder" for a whistle's second octave. While

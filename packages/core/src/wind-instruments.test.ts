@@ -4,6 +4,7 @@ import {
   DEFAULT_WIND_INSTRUMENT,
   GENERIC_WIND_INSTRUMENT,
   WIND_INSTRUMENTS,
+  bestOctaveShift,
   checkFit,
   findWindInstrument,
   fingeringFor,
@@ -234,5 +235,26 @@ describe('the generic instrument', () => {
 
   it('keeps the top of its range at the highest note the pitch tracker handles', () => {
     expect(inKey(GENERIC_WIND_INSTRUMENT, 12).range.high).toBe(96);
+  });
+});
+
+describe('bestOctaveShift', () => {
+  const range = { low: 74, high: 97 }; // a D whistle
+
+  it('leaves a song that fits where it is', () => {
+    expect(bestOctaveShift({ low: 76, high: 88 }, range)).toBe(0);
+  });
+
+  it('moves a song that sits an octave low or high up or down to fit', () => {
+    expect(bestOctaveShift({ low: 64, high: 76 }, range)).toBe(12);
+    expect(bestOctaveShift({ low: 88, high: 100 }, range)).toBe(-12);
+    expect(bestOctaveShift({ low: 52, high: 64 }, range)).toBe(24);
+  });
+
+  it('takes the smallest move when two fit equally, and the best compromise for a song too wide', () => {
+    expect(bestOctaveShift({ low: 80, high: 84 }, range)).toBe(0);
+    // 40 semitones wide in a 23-semitone range: no octave fits; the least overhang wins
+    const move = bestOctaveShift({ low: 60, high: 100 }, range);
+    expect(Math.abs(move)).toBeLessThanOrEqual(12);
   });
 });

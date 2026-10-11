@@ -9,6 +9,7 @@ import {
   WIND_INSTRUMENTS,
   checkFit,
   chartEnd,
+  bestOctaveShift,
   chartPitchRange,
   defaultOffsetFromLatencies,
   findWindInstrument,
@@ -24,6 +25,7 @@ import {
   shiftForInstrument,
   songsFor,
   transposeChart,
+  withOctaveForgiving,
   type Chart,
   type Difficulty,
   type MelodyLevel,
@@ -163,6 +165,12 @@ const setup = (c: PitchScreenConfig) => `
         <option value="0.65">65%</option>
         <option value="0.8">80%</option>
         <option value="1">100%</option>
+      </select>
+    </label>
+    <label>Octave
+      <select data-id="octave">
+        <option value="auto">Any octave: follow how I play (recommended)</option>
+        <option value="exact">Exactly the octave shown</option>
       </select>
     </label>
     <label class="check"><input type="checkbox" data-id="opt-fingerings" /> Show the fingering of the current and next note while playing</label>`
@@ -307,6 +315,12 @@ export const createPitchScreen =
         settings.update({ speed: Number(speedSel.value) });
         refreshRange();
       });
+      const octaveSel = S<HTMLSelectElement>('octave');
+      octaveSel.value = current.windOctave;
+      octaveSel.addEventListener('change', () => {
+        settings.update({ windOctave: octaveSel.value === 'exact' ? 'exact' : 'auto' });
+        refreshRange();
+      });
       const fingerBox = S<HTMLInputElement>('opt-fingerings');
       fingerBox.checked = current.showFingerings;
       fingerBox.addEventListener('change', () =>
@@ -357,13 +371,19 @@ export const createPitchScreen =
       return c.instruments ? rescaleChart(moved, settings.get().speed) : moved;
     };
 
+    /** Windline: count the right note in whatever octave the player plays it. */
+    const anyOctave = (): boolean => c.instruments === true && settings.get().windOctave === 'auto';
+    /** The profile as judged: octave-forgiving when the player asked for any octave. */
+    const judgedProfile = () =>
+      withOctaveForgiving(profile, profile.judgment.pitch?.octaveForgiving === true || anyOctave());
+
     /** Best-score bucket: the song at the chosen scoring level (and, for winds, practice speed). */
     const bestKey = () =>
       scoreKey(
         c.profileId,
         songEntry().id,
         c.instruments
-          ? `${settings.get().difficulty}|x${settings.get().speed}`
+          ? `${settings.get().difficulty}|x${settings.get().speed}${anyOctave() ? '|anyoctave' : ''}`
           : settings.get().difficulty,
       );
 
@@ -374,12 +394,21 @@ export const createPitchScreen =
       // Voices are folded into range; an instrument has one register, so a key that pushes
       // the song past what the detector hears would silently miss every note.
       const d = profile.detector;
-      if (r && !d.foldIntoRange && (midiToHz(r.low) < d.minHz || midiToHz(r.high) > d.maxHz))
+      if (
+        r &&
+        !d.foldIntoRange &&
+        !anyOctave() &&
+        (midiToHz(r.low) < d.minHz || midiToHz(r.high) > d.maxHz)
+      )
         text += ` ${c.mode} cannot hear every note in this key: try another.`;
       if (c.instruments) {
+        const inst = instrument();
+        const pitches = chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch]));
+        // playing in any octave: check the song in the octave that suits this instrument best
+        const octaveMove = anyOctave() && r ? bestOctaveShift(r, inst.range) : 0;
         const fit = checkFit(
-          chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch])),
-          instrument(),
+          pitches.map((p) => p + octaveMove),
+          inst,
         );
         const names = (ms: number[]) => ms.map(midiName).join(', ');
         if (fit.outOfRange.length)
@@ -617,7 +646,7 @@ export const createPitchScreen =
       clock.start(-countIn, startAt);
       const game = new SinglineGame({
         chart,
-        profile,
+        profile: judgedProfile(),
         clock,
         latencyOffset: offset,
         hop: profile.detector.hopSize / ctx.sampleRate,
@@ -752,7 +781,13 @@ export const createPitchScreen =
             keyShift: Number(keySel.value),
             guideTone: settings.get().guideTone,
             metronome: settings.get().metronome,
-            ...(c.instruments ? { instrument: instrument().id, speed: settings.get().speed } : {}),
+            ...(c.instruments
+              ? {
+                  instrument: instrument().id,
+                  speed: settings.get().speed,
+                  octave: settings.get().windOctave,
+                }
+              : {}),
           },
           audio: {
             sampleRate: audio.ctx.sampleRate,
