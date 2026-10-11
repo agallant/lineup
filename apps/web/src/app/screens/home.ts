@@ -125,6 +125,8 @@ export const homeScreen: Screen = (root) => {
 
     <h2>More</h2>
     <ul class="menu">
+      <li><a class="card" href="#/help" data-id="help-link"><strong>How to play</strong>
+        <span>What each game is, how scoring and progress work, and what stays private.</span></a></li>
       <li><a class="card" href="#/options" data-id="options-link"><strong>Options</strong>
         <span>Sound, scoring, your data and backups.</span></a></li>
     </ul>

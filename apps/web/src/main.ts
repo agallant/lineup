@@ -1,12 +1,13 @@
 import './style.css';
 import { INPUT_WORKLET_URL } from '@lineup/input/mic';
 import { buildInfoText } from './app/build-info';
-import { applyTextSize } from './app/appearance';
+import { applyTextSize, applyTheme } from './app/appearance';
 import { earScreen } from './app/screens/ear';
 import { startRouter } from './app/router';
 import { SettingsStore, safeLocalStorage } from './app/settings';
 import { beatScreen } from './app/screens/beat';
 import { calibrateScreen } from './app/screens/calibrate';
+import { helpScreen } from './app/screens/help';
 import { homeScreen } from './app/screens/home';
 import { makerScreen } from './app/screens/maker';
 import { micTestScreen } from './app/screens/mic-test';
@@ -20,7 +21,11 @@ import { windScreen } from './app/screens/wind';
 const app = document.getElementById('app');
 if (!app) throw new Error('#app missing');
 
-applyTextSize(new SettingsStore(safeLocalStorage()).get().textSize);
+{
+  const appearance = new SettingsStore(safeLocalStorage()).get();
+  applyTextSize(appearance.textSize);
+  applyTheme(appearance.theme);
+}
 
 const footer = document.getElementById('build-info');
 if (footer) footer.textContent = buildInfoText();
@@ -39,6 +44,7 @@ startRouter(
     tuner: tunerScreen,
     ear: earScreen,
     make: makerScreen,
+    help: helpScreen,
     options: optionsScreen,
   },
   '',

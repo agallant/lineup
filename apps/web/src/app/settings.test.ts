@@ -139,6 +139,15 @@ describe('SettingsStore', () => {
     expect(s.update({ variation: 'hardest' as never }).variation).toBe('original');
   });
 
+  it('remembers the colour scheme, and ignores anything else', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get().theme).toBe('dark');
+    expect(s.update({ theme: 'contrast' }).theme).toBe('contrast');
+    expect(new SettingsStore(mem).get().theme).toBe('contrast');
+    expect(s.update({ theme: 'neon' as never }).theme).toBe('dark');
+  });
+
   it('remembers listen-first, and ignores anything else', () => {
     const mem = new Mem();
     const s = new SettingsStore(mem);

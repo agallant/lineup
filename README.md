@@ -141,7 +141,8 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   a clean run and for the first song of the day), which raises your level; playing on days in a row
   builds a streak; trophies (First notes, Flawless, Sharps and flats, Full band...) are earned once.
   The auto-play demo earns nothing.
-- **Options** (`#/options`): metronome, guide tone, jingles, play-along backing, weekly goal, text size, scoring strictness, Windline
+- **How to play** (`#/help`): what each game is, scoring, progress and privacy, in a page.
+- **Options** (`#/options`): colours (dark, light, high contrast), metronome, guide tone, jingles, play-along backing, weekly goal, text size, scoring strictness, Windline
   octaves and fingerings, chord checking, the debug overlay; reset options, erase scores or progress
   (two taps), and save or restore a **backup file** of everything the app keeps.
 - **Play-along backing** (Options, off by default): quiet music under a song, for headphones. _Bass

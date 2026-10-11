@@ -2,7 +2,7 @@ import { exportBackup, importBackup, lineupKeys } from '../backup';
 import { ProgressStore } from '../progress';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
-import { applyTextSize } from '../appearance';
+import { applyTextSize, applyTheme } from '../appearance';
 import {
   ACCOMPANIMENTS,
   DEFAULT_SETTINGS,
@@ -10,6 +10,7 @@ import {
   SettingsStore,
   safeLocalStorage,
   type TextSize,
+  type Theme,
 } from '../settings';
 import { DIFFICULTIES } from '@lineup/core';
 
@@ -77,6 +78,10 @@ export const optionsScreen: Screen = (root) => {
 
     <section class="panel">
       <h2>Display</h2>
+      <div class="row"><label>Colours <select data-id="theme">
+        <option value="dark">Dark</option>
+        <option value="light">Light</option>
+        <option value="contrast">High contrast</option></select></label></div>
       <div class="row"><label>Text size <select data-id="text-size">
         <option value="normal">Normal</option>
         <option value="large">Large</option>
@@ -121,6 +126,7 @@ export const optionsScreen: Screen = (root) => {
     $<HTMLInputElement>('debug').checked = v.debug;
     $<HTMLSelectElement>('goal').value = String(v.goalMinutes);
     $<HTMLSelectElement>('text-size').value = v.textSize;
+    $<HTMLSelectElement>('theme').value = v.theme;
   };
   show();
 
@@ -163,10 +169,15 @@ export const optionsScreen: Screen = (root) => {
     applyTextSize(size);
   });
 
+  $<HTMLSelectElement>('theme').addEventListener('change', (e) => {
+    applyTheme(settings.update({ theme: (e.target as HTMLSelectElement).value as Theme }).theme);
+  });
+
   $('reset-settings').addEventListener('click', () => {
     settings.update({ ...DEFAULT_SETTINGS, songs: {}, keyShifts: {} });
     show();
     applyTextSize(settings.get().textSize);
+    applyTheme(settings.get().theme);
     msg('Options are back to their defaults.');
   });
   // erasing needs a second tap, so a stray touch cannot lose a high score

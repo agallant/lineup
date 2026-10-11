@@ -20,6 +20,9 @@ export const ACCOMPANIMENTS: readonly Accompaniment[] = ['off', 'bass', 'full'];
 /** Weekly practice goals offered, in minutes (0 for none). */
 export const GOAL_MINUTES: readonly number[] = [0, 15, 30, 60, 120];
 
+export type Theme = 'dark' | 'light' | 'contrast';
+export const THEMES: readonly Theme[] = ['dark', 'light', 'contrast'];
+
 export type TextSize = 'normal' | 'large' | 'larger';
 export const TEXT_SIZES: readonly TextSize[] = ['normal', 'large', 'larger'];
 
@@ -44,6 +47,8 @@ export interface Settings {
   goalMinutes: number;
   /** How large the page's text is. */
   textSize: TextSize;
+  /** The colour scheme: dark, light or high contrast. */
+  theme: Theme;
   /** A short jingle on a new best, a trophy, a level up or a cleared daily challenge. */
   effects: boolean;
   /** Play-along backing under a song: nothing, a bass line, or bass and chords (needs headphones). */
@@ -85,6 +90,7 @@ export const DEFAULT_SETTINGS: Settings = {
   listenFirst: false,
   goalMinutes: 0,
   textSize: 'normal',
+  theme: 'dark',
   accompaniment: 'off',
   keyShift: 0,
   keyShifts: {},
@@ -185,6 +191,7 @@ function sanitize(raw: unknown): Settings {
     goalMinutes: GOAL_MINUTES.includes(r['goalMinutes'] as number)
       ? (r['goalMinutes'] as number)
       : DEFAULT_SETTINGS.goalMinutes,
+    theme: THEMES.includes(r['theme'] as Theme) ? (r['theme'] as Theme) : DEFAULT_SETTINGS.theme,
     textSize: TEXT_SIZES.includes(r['textSize'] as TextSize)
       ? (r['textSize'] as TextSize)
       : DEFAULT_SETTINGS.textSize,

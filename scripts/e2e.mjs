@@ -991,6 +991,11 @@ const scenarios = {
         (await page.$$('[data-trophy].earned')).length === 1,
         'scoreboard: one trophy earned, the rest locked',
       );
+      await page.goto(URL_BASE + '#/help');
+      check(
+        /Private and offline/.test((await page.textContent('main')) ?? ''),
+        'help: the how-to-play page explains privacy',
+      );
       await page.goto(URL_BASE + '#/tuner');
       await page.selectOption('[data-id=tuning]', 'baritone');
       check(
@@ -1004,6 +1009,7 @@ const scenarios = {
       );
       await page.goto(URL_BASE + '#/options');
       await page.uncheck('[data-id=metronome]');
+      await page.selectOption('[data-id=theme]', 'contrast');
       await page.selectOption('[data-id=accompaniment]', 'bass');
       await page.selectOption('[data-id=goal]', '30');
       await page.selectOption('[data-id=text-size]', 'large');
@@ -1019,6 +1025,10 @@ const scenarios = {
             document.documentElement.style.getPropertyValue('--text-scale'),
           )) === '1.15',
         'options: the weekly goal and text size are remembered and applied',
+      );
+      check(
+        (await page.evaluate(() => document.documentElement.dataset.theme)) === 'contrast',
+        'options: the colour scheme is remembered and applied',
       );
       await page.click('[data-id=clear-scores]');
       check(
