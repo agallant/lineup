@@ -202,4 +202,13 @@ describe('ScoreStore across tabs and bad data', () => {
       lastPlayed: '2026-10-05T10:00:00.000Z',
     });
   });
+
+  it('never moves the latest play backwards when a clock is behind', () => {
+    const s = new ScoreStore(null);
+    s.record(KEY, { score: 800, accuracy: 0.8, grade: 'B' }, new Date('2026-10-05T10:00:00Z'));
+    s.record(KEY, { score: 100, accuracy: 0.5, grade: 'D' }, new Date('2026-10-02T10:00:00Z'));
+    expect(s.best(KEY)?.lastPlayed).toBe('2026-10-05T10:00:00.000Z');
+    s.record(KEY, { score: 900, accuracy: 0.9, grade: 'A' }, new Date('2026-10-03T10:00:00Z'));
+    expect(s.best(KEY)).toMatchObject({ score: 900, lastPlayed: '2026-10-05T10:00:00.000Z' });
+  });
 });

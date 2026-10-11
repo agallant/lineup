@@ -201,10 +201,11 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    More songs: chord songs (fifties progression, Skip to My Lou, 12-bar blues, a waltz, a minor
    one), three melodies to pick (Hot Cross Buns, Mary Had a Little Lamb, Ode to Joy), and
    **Exercises**: eight chord-change drills (two chords alternating, the changes coming faster as it goes), major, dorian and pentatonic scales, thirds, arpeggios, long tones and a chromatic
-   scale, plucked on single strings. Under "Random": **🎲 Random chord song** (sixteen bars from
-   common progressions such as I–IV–V–I and I–V–vi–IV, in C, G, D, F or A, the strum pattern repeating
-   with a variation every four bars, ending at home), **🎲 Random waltz (3/4)** (the same in three
-   beats to the bar) and **🎲 Random melody (picked)**. Pick a
+   scale, plucked on single strings. Under "Random": **🎲 Random chord song** (sixteen bars in four
+   phrases such as A A′ B A′, the chords walked fresh from a grammar of how chords usually move
+   (so two songs are rarely alike), in C, G or D at the easy level and also F or A above it, the
+   strum pattern changing for the contrast phrase, a turnaround every four bars, ending at home),
+   **🎲 Random waltz (3/4)** (the same in three beats to the bar, counted in with three clicks) and **🎲 Random melody (picked)**. Pick a
    level (and optionally **Aim for** a difficulty from 1 to 10), press _New song_ or type a seed to replay one; the seed is shown in the song info.
 3. **Also check the chords** (off by default, experimental): the analyzer is told which chords the
    song uses and a strum of a clearly different chord misses ("wrong chord" is counted on the results

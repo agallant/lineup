@@ -67,15 +67,14 @@ describe('generateGroove', () => {
     }
   }
 
-  it('a kit beat has the kick on the one and the snare on two and four', () => {
+  it('a kit beat has the kick on the one and a snare somewhere in every bar of the main beat', () => {
     for (const level of MELODY_LEVELS) {
       for (const seed of SEEDS) {
         const chart = generateGroove('drum-kit', { seed, level });
-        for (const b of [0, 1, 2, 4, 5, 6]) {
+        for (const b of [0, 1, 4, 5]) {
           const steps = barSteps(chart, b);
           expect(steps[0], `${level} ${seed} bar ${b}`).toBe('kick');
-          expect(steps[2]).toBe('snare');
-          expect(steps[6]).toBe('snare');
+          expect(steps, `${level} ${seed} bar ${b}`).toContain('snare');
         }
       }
     }
@@ -114,17 +113,22 @@ describe('generateChordSong', () => {
     for (const level of MELODY_LEVELS) {
       for (const seed of SEEDS) {
         const spec = { seed, level };
-        const { key, bars, progressions } = chordSongBars(spec);
+        const { key, bars, progressions, form } = chordSongBars(spec);
         expect(bars).toHaveLength(16);
         for (const chord of bars) expect(UKULELE_CHORD_FRETS[chord], chord).toBeDefined();
-        // the song is built from one or two four-bar progressions, and ends on the home chord
-        expect(progressions.length).toBeGreaterThanOrEqual(1);
-        expect(progressions.length).toBeLessThanOrEqual(2);
+        // the song is four phrases of four bars (some of them the same), and ends on the home chord
+        expect(form).toHaveLength(4);
+        expect(progressions.length).toBeGreaterThanOrEqual(2);
+        expect(progressions.length).toBeLessThanOrEqual(4);
         const home = key;
         expect(bars.at(-1), `${level} ${seed}`).toBe(home);
-        if (level === 'easy') expect(['C', 'G']).toContain(key);
-        // the first four bars come round again (the form is made of whole progressions)
-        expect(bars.slice(4, 8).length).toBe(4);
+        if (level === 'easy') expect(['C', 'G', 'D']).toContain(key);
+        // no chord is held for more than two bars in a row, apart from the closing pair
+        for (let i = 2; i < 14; i++)
+          expect(
+            bars[i] === bars[i - 1] && bars[i] === bars[i - 2],
+            `${level} ${seed} bar ${i}`,
+          ).toBe(false);
       }
     }
   });
@@ -239,6 +243,57 @@ describe('rhythm exercises', () => {
       const first = list.findIndex((s) => s.category === 'exercise');
       expect(first, id).toBeGreaterThan(0);
       expect(list.slice(first).every((s) => s.category === 'exercise')).toBe(true);
+    }
+  });
+
+  it('counts in one bar: three beats for a waltz, four otherwise', () => {
+    expect(generateChordSong({ seed: 3, level: 'easy', waltz: true }).meta.countInBeats).toBe(3);
+    expect(generateChordSong({ seed: 3, level: 'easy' }).meta.countInBeats).toBe(4);
+  });
+});
+
+describe('variety of the random songs', () => {
+  const MANY = Array.from({ length: 200 }, (_, i) => i * 977 + 3);
+  const distinct = (make: (seed: number) => unknown): number =>
+    new Set(MANY.map((seed) => JSON.stringify(make(seed)))).size;
+
+  it('chord songs and waltzes are rarely alike, even at the easy level', () => {
+    for (const level of MELODY_LEVELS) {
+      expect(
+        distinct((seed) => generateChordSong({ seed, level }).notes),
+        level,
+      ).toBeGreaterThan(120);
+      expect(
+        distinct((seed) => generateChordSong({ seed, level, waltz: true }).notes),
+        `waltz ${level}`,
+      ).toBeGreaterThan(120);
+    }
+  });
+
+  it('chord songs are not one loop of four bars: they move through several chords', () => {
+    for (const level of MELODY_LEVELS) {
+      let distinctChords = 0;
+      for (const seed of MANY.slice(0, 60)) {
+        const { bars } = chordSongBars({ seed, level, waltz: seed % 2 === 0 });
+        // the first four bars do not simply come round again as the next four and the next
+        expect(
+          bars.slice(0, 4).join() === bars.slice(4, 8).join() &&
+            bars.slice(0, 4).join() === bars.slice(8, 12).join(),
+        ).toBe(false);
+        distinctChords += new Set(bars).size;
+      }
+      expect(distinctChords / 60, level).toBeGreaterThanOrEqual(level === 'easy' ? 3 : 4);
+    }
+  });
+
+  it('grooves differ from seed to seed at every level and for every instrument', () => {
+    for (const profile of GROOVE_PROFILES) {
+      for (const level of MELODY_LEVELS) {
+        expect(
+          distinct((seed) => generateGroove(profile, { seed, level }).notes),
+          `${profile} ${level}`,
+        ).toBeGreaterThan(20);
+      }
     }
   });
 });

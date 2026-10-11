@@ -23,99 +23,115 @@ type Bar = (string | null)[]; // a lane id or nothing on each step
 
 const empty = (): Bar => Array.from({ length: STEPS_PER_BAR }, () => null);
 
+/** A bar written as text, one character per eighth note: K kick, S snare, C clap, t tap, h hat, . nothing. */
+const LANE_OF: Readonly<Record<string, string>> = {
+  K: 'kick',
+  S: 'snare',
+  C: 'clap',
+  t: 'tap',
+  h: 'hat',
+  X: 'hit',
+};
+const fromText = (text: string): Bar => [...text].map((c) => LANE_OF[c] ?? null);
+
+/** Some of `items`, at most `count`, in no particular order. */
+function some<T>(rng: Rng, items: readonly T[], count: number): T[] {
+  const left = [...items];
+  const out: T[] = [];
+  while (out.length < count && left.length)
+    out.push(left.splice(Math.floor(rng() * left.length), 1)[0]!);
+  return out;
+}
+
+/** A fill that differs from the bar it leads out of. */
+function differentFill(rng: Rng, fills: readonly string[], main: Bar): Bar {
+  const key = main.join();
+  const options = fills.map(fromText).filter((f) => f.join() !== key);
+  return pick(rng, options.length ? options : fills.map(fromText));
+}
+
 /**
- * One bar of a rock-style kit beat: kick on the one, snare on the backbeat (two and four), and
- * the hat filling the other eighths when the level asks for it. Only one drum sounds at a time,
- * because the microphone hears one onset per step.
+ * The beats a kit groove is built on, kick and snare only, each a rock, half-time or syncopated
+ * pattern with the kick on the one. Only one drum sounds at a time, because the microphone hears
+ * one onset per step.
  */
-function kitBar(rng: Rng, level: MelodyLevel): Bar {
-  const bar = empty();
-  bar[0] = 'kick';
-  bar[2] = 'snare';
-  bar[6] = 'snare';
-  if (level === 'easy') {
-    bar[4] = 'kick';
-    return bar;
-  }
-  // the hat rides the eighths that are left
-  for (const i of [1, 3, 5, 7]) bar[i] = 'hat';
+const KIT_BASES: Readonly<Record<MelodyLevel, readonly string[]>> = {
+  easy: ['K.S.K.S.', 'K.S...S.', 'K...S...', 'K.S.KKS.', 'KKS.K.S.', 'K.S..KS.', 'K..KS...'],
+  medium: ['K.S.K.S.', 'K.S..KS.', 'K...S.K.', 'K.S.KKS.', 'K.SK..S.', 'KK..S..K'],
+  hard: ['K..KS..K', 'K.S..KS.', 'K..KS.K.', 'K.SK.KS.', 'KK.KS.S.', 'K.S.KK.S'],
+};
+
+const KIT_FILLS: Readonly<Record<MelodyLevel, readonly string[]>> = {
+  easy: ['K.S...SS', 'K.S.K.SS', 'K.S.S.SS', 'K.S.SSSS', 'K.SSK.SS'],
+  medium: ['K.S.SSSS', 'K.S.K.SS', 'K.SSSSSS', 'K.S.S.SS', 'K.S..SSS'],
+  hard: ['K.S.SSSS', 'K.SKSKSS', 'K.SSSSSS', 'KKS.SSSS', 'K.S.SKSS'],
+};
+
+/** One bar of a kit beat: a base pattern, with the hat filling the free eighths as the level asks. */
+function kitBar(rng: Rng, level: MelodyLevel, base?: string): Bar {
+  const bar = fromText(base ?? pick(rng, KIT_BASES[level]));
+  if (level === 'easy') return bar;
+  const free = bar.flatMap((lane, i) => (lane === null ? [i] : []));
   if (level === 'medium') {
-    bar[4] = 'kick';
+    // the hat rides the off-beats, except where a kick or snare already sits
+    for (const i of free.filter((i) => i % 2 === 1)) bar[i] = 'hat';
     return bar;
   }
-  // hard: the second kick moves around and the hat drops out where the kick lands
-  const kick = pick(rng, [4, 5, 3]);
-  bar[kick] = 'kick';
-  if (chance(rng, 0.5)) bar[7] = null;
+  // hard: the hat rides every free off-beat, and a kick or ghost snare may take one of them, so
+  // some beats are only felt in the gaps (syncopation)
+  const offbeats = free.filter((i) => i % 2 === 1);
+  const spot = chance(rng, 0.7) ? pick(rng, offbeats) : -1;
+  for (const i of offbeats) bar[i] = i === spot ? pick(rng, ['kick', 'snare']) : 'hat';
   return bar;
 }
 
-/** A bar that ends the phrase: the snare rolls across the second half. */
-function kitFill(level: MelodyLevel): Bar {
-  const bar = empty();
-  bar[0] = 'kick';
-  bar[2] = 'snare';
-  const from = level === 'easy' ? 6 : 4;
-  for (let i = from; i < STEPS_PER_BAR; i++) bar[i] = 'snare';
-  return bar;
-}
-
-/** Claps on the strong beats and taps on the off-beats between; one hand at a time. */
+/** Claps on the strong beats and taps between, one hand at a time. */
 function handBar(rng: Rng, level: MelodyLevel): Bar {
   const bar = empty();
-  for (const i of [0, 4]) bar[i] = 'clap';
-  if (level === 'easy') return bar;
-  bar[2] = 'tap';
-  bar[6] = 'tap';
-  if (level === 'hard') {
-    bar[pick(rng, [3, 5, 7])] = 'tap';
+  bar[0] = 'clap';
+  bar[pick(rng, level === 'easy' ? [4, 4, 4, 3] : [4, 4, 3, 5])] = 'clap';
+  const taps = {
+    easy: some(rng, [2, 6], Math.floor(rng() * 3)),
+    medium: [
+      ...some(rng, [2, 6], 1 + Math.floor(rng() * 2)),
+      ...some(rng, [1, 3, 5, 7], Math.floor(rng() * 2)),
+    ],
+    hard: [...some(rng, [2, 6], 2), ...some(rng, [1, 3, 5, 7], 1 + Math.floor(rng() * 2))],
+  }[level];
+  for (const i of taps) if (bar[i] === null) bar[i] = 'tap';
+  // never a bar with next to nothing in it
+  if (bar.filter((l) => l !== null).length < 3) {
+    for (const i of [2, 6]) bar[i] ??= 'tap';
   }
   return bar;
 }
 
-function handFill(): Bar {
-  const bar = empty();
-  bar[0] = 'clap';
-  bar[4] = 'tap';
-  bar[5] = 'tap';
-  bar[6] = 'clap';
-  bar[7] = 'clap';
-  return bar;
-}
+const HAND_FILLS: readonly string[] = ['C...ttCC', 'C.t.ttCC', 'C..tt.CC', 'C.tCttCC', 'Ctt.ttCC'];
 
-/** A single-lane clap rhythm: a motif that repeats, answered by a variation. */
+/** A single-lane clap rhythm: the downbeat and a few more hits, more of them and further off the beat as the level rises. */
 function clapBar(rng: Rng, level: MelodyLevel): Bar {
-  const motifs: Record<MelodyLevel, readonly number[][]> = {
-    easy: [
-      [0, 2, 4, 6],
-      [0, 4],
-      [0, 2, 4],
-    ],
-    medium: [
-      [0, 3, 4, 6],
-      [0, 2, 4, 5],
-      [0, 3, 4],
-    ],
-    hard: [
-      [0, 3, 4, 7],
-      [0, 1, 3, 4, 6],
-      [0, 3, 5, 6],
-    ],
+  const from: Record<MelodyLevel, readonly number[]> = {
+    easy: [2, 4, 4, 6],
+    medium: [2, 3, 4, 4, 5, 6],
+    hard: [1, 2, 3, 4, 5, 6, 7],
   };
+  const count = {
+    easy: 1 + Math.floor(rng() * 3),
+    medium: 2 + Math.floor(rng() * 3),
+    hard: 3 + Math.floor(rng() * 3),
+  }[level];
   const bar = empty();
-  for (const i of pick(rng, motifs[level])) bar[i] = 'hit';
+  bar[0] = 'hit';
+  for (const i of some(rng, [...new Set(from[level])], count)) bar[i] = 'hit';
   return bar;
 }
 
-function clapFill(): Bar {
-  const bar = empty();
-  for (const i of [0, 4, 5, 6, 7]) bar[i] = 'hit';
-  return bar;
-}
+const CLAP_FILLS: readonly string[] = ['X...XXXX', 'X.X.XXXX', 'X...X.XX', 'X.X.X.XX', 'X..XXXXX'];
 
 /**
  * A new groove: eight bars where the main bar repeats, every second phrase answers with a small
- * variation and the last bar of each four is a fill that leads into the next phrase. The same
+ * variation and the last bar of each four is a fill that leads into the next phrase. The beat, the
+ * hits and the fill are all chosen from the seed, so two seeds rarely share a groove. The same
  * spec always gives the same groove.
  */
 export function generateGroove(profile: GrooveProfile, spec: GrooveSpec): Chart {
@@ -123,13 +139,17 @@ export function generateGroove(profile: GrooveProfile, spec: GrooveSpec): Chart 
     spec.seed * 4099 + MELODY_LEVELS.indexOf(spec.level) * 17 + GROOVE_PROFILES.indexOf(profile),
   );
   const make = {
-    'drum-kit': { bar: kitBar, fill: () => kitFill(spec.level) },
-    'hand-percussion': { bar: handBar, fill: handFill },
-    clap: { bar: clapBar, fill: clapFill },
+    'drum-kit': {
+      bar: kitBar,
+      fills: KIT_FILLS[spec.level],
+    },
+    'hand-percussion': { bar: handBar, fills: HAND_FILLS },
+    clap: { bar: clapBar, fills: CLAP_FILLS },
   }[profile];
   const main = make.bar(rng, spec.level);
+  // the answer is the same beat with its own small changes (the easy level just repeats it)
   const answer = spec.level === 'easy' ? main : make.bar(rng, spec.level);
-  const fill = make.fill();
+  const fill = differentFill(rng, make.fills, main);
   const notes: BeatNote[] = [];
   for (let bar = 0; bar < BARS; bar++) {
     const last = bar % 4 === 3;

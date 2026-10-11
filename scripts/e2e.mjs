@@ -1142,8 +1142,14 @@ const scenarios = {
         if (mode) await page.selectOption('[data-id=mode]', mode);
         await page.selectOption('[data-id=song]', song);
         await page.selectOption('[data-id=challenge-level]', 'hard');
-        // hard chord songs do not go below a 5
-        for (const target of song === 'random-chords' ? ['5', '7'] : ['3', '6']) {
+        // hard chord songs do not go below a 5, nor do hard kit grooves
+        const targets =
+          song === 'random-melody'
+            ? ['3', '6']
+            : song === 'random-chords'
+              ? ['5', '7']
+              : ['5', '6'];
+        for (const target of targets) {
           await page.selectOption('[data-id=challenge-target]', target);
           await page.click('[data-id=challenge-new]');
           const got = await score(page);
