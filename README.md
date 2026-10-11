@@ -77,6 +77,19 @@ Design rules:
 - `packages/core` and `packages/testkit` are DOM-free, enforced by TypeScript
   (no DOM lib) and an ESLint rule.
 
+## Difficulty and diatonic or chromatic
+
+Every song, exercise and random song shows how hard it is, worked out from the chart itself:
+**Beginner, Easy, Medium, Hard or Expert** with stars, and a score out of 10 in the song info. A
+melody's score looks at tempo, how many short notes, range, leaps and sharps/flats; a chord song's at
+how many chords, how often they change and how busy the strumming is; a rhythm's at speed,
+syncopation, finer divisions and how many sounds it uses. Songs are listed easiest first.
+
+Melodies are also labelled **diatonic** (every note in the major scale of the song's key: any
+diatonic instrument such as a tin whistle can play it in its own key) or **chromatic** (it has sharps
+or flats, which need half-holes or cross-fingerings on a whistle or recorder, and a chromatic
+instrument, a voice or a ukulele).
+
 ## Singline (voice) on the iPad
 
 `#/sing` (home screen -> Singline):

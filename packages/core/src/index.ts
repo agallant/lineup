@@ -4,6 +4,7 @@ export * from './chords';
 export * from './generate';
 export * from './classify-event';
 export * from './clock';
+export * from './difficulty';
 export * from './enrollment';
 export * from './judge';
 export * from './notes';

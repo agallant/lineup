@@ -1,16 +1,16 @@
-import type { SongCategory } from '@lineup/core';
+import { rateChart, ratingText, type Chart, type SongCategory } from '@lineup/core';
 
 /** The slice of a song the menu needs. */
 export interface MenuSong {
   id: string;
-  chart: { meta: { title: string } };
+  chart: Chart;
   category: SongCategory;
 }
 
 export interface MenuGroup {
   /** The heading, or null when there is only one kind of entry and no heading is needed. */
   label: string | null;
-  items: { id: string; title: string }[];
+  items: { id: string; title: string; score: number }[];
 }
 
 const HEADINGS: readonly { category: SongCategory; label: string }[] = [
@@ -18,13 +18,30 @@ const HEADINGS: readonly { category: SongCategory; label: string }[] = [
   { category: 'exercise', label: 'Exercises' },
 ];
 
-/** The menu entries grouped by kind, in a fixed order, keeping each group's own order. */
+/**
+ * The menu entries grouped by kind, in a fixed order. Songs run from easiest to hardest (by the
+ * rating worked out from the chart, ties in their own order); exercises keep their own order,
+ * which groups them by scale. Each entry says how hard it is and, for a melody, whether it is
+ * diatonic or needs sharps and flats.
+ */
 export function songMenuGroups(songs: readonly MenuSong[]): MenuGroup[] {
   const groups = HEADINGS.map(({ category, label }) => ({
     label,
     items: songs
       .filter((s) => s.category === category)
-      .map((s) => ({ id: s.id, title: s.chart.meta.title })),
+      .map((s) => {
+        const rating = rateChart(s.chart);
+        return {
+          id: s.id,
+          title: `${s.chart.meta.title} · ${ratingText(rating)}`,
+          score: rating.score,
+        };
+      })
+      .map((item, index) => ({ item, index }))
+      .sort((a, b) =>
+        category === 'song' ? a.item.score - b.item.score || a.index - b.index : a.index - b.index,
+      )
+      .map(({ item }) => item),
   })).filter((g) => g.items.length > 0);
   return groups.length === 1 ? [{ label: null, items: groups[0]!.items }] : groups;
 }
