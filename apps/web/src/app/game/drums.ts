@@ -31,23 +31,23 @@ export function planDrums(chart: Chart, style: DrumStyle): BackingEvent[] {
   if (style === 'off') return [];
   const spb = 60 / chart.meta.bpm;
   const perBar = chart.meta.beatsPerBar ?? 4;
-  const end = chart.notes.reduce((m, n) => Math.max(m, n.t + n.duration), 0);
+  const end = chart.notes.reduce((m, n) => Math.max(m, n.t + n.duration, n.t + 1e-6), 0);
   const events: BackingEvent[] = [];
   const beats = Math.ceil(end / spb);
   for (let b = 0; b < beats; b++) {
     const t = b * spb;
     const inBar = b % perBar;
     if (perBar === 3) {
-      if (inBar === 0) events.push(drum(t, KICK, 0.12, 2.2));
+      if (inBar === 0) events.push(drum(t, KICK, 0.12, 1.6));
       else events.push(drum(t, HAT, 0.04, 0.5));
       continue;
     }
     if (style === 'rock') {
-      if (inBar === 0 || inBar === 2) events.push(drum(t, KICK, 0.12, 2.2));
+      if (inBar === 0 || inBar === 2) events.push(drum(t, KICK, 0.12, 1.6));
       if (inBar === 1 || inBar === 3) events.push(drum(t, SNARE, 0.06, 0.9));
       events.push(drum(t, HAT, 0.04, 0.5), drum(t + spb / 2, HAT, 0.04, 0.35));
     } else {
-      events.push(drum(t, KICK, 0.12, 2.0));
+      events.push(drum(t, KICK, 0.12, 1.6));
       const e = (b % (perBar * 2)) * 2; // this beat's first eighth, counted over two bars
       if (BOSSA_TICKS.has(e)) events.push(drum(t, HAT, 0.05, 0.6));
       if (BOSSA_TICKS.has(e + 1)) events.push(drum(t + spb / 2, HAT, 0.05, 0.6));

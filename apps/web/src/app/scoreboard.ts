@@ -1,6 +1,6 @@
 import { EAR_RATING, earTitle, getSong, rateChart, type EarLevel } from '@lineup/core';
 import { gameOf, starsFor } from './progress';
-import { COURSES, courseProgress } from './courses';
+import { COURSES, courseProgress, type StepProgress } from './courses';
 import type { BestScore } from './scores';
 
 /** One line of the personal-best scoreboard. */
@@ -140,4 +140,27 @@ export function completedCourse(
     if (courseProgress(course, (id) => stars.get(id) ?? null).done) return course;
   }
   return null;
+}
+
+/**
+ * The learning-path step to suggest next: the open step of the path you played most recently, else
+ * the first step of the first path. Null once every path is finished.
+ */
+export function suggestNext(
+  entries: readonly { key: string; best: BestScore }[],
+): { course: (typeof COURSES)[number]; step: StepProgress } | null {
+  const candidates = COURSES.map((course, order) => {
+    const stars = starsBySong(entries, course.profileId, true);
+    const progress = courseProgress(course, (id) => stars.get(id) ?? null);
+    const step = progress.steps.find((s) => s.state === 'open');
+    const played = entries
+      .filter((e) => e.key.startsWith(`${course.profileId}|`))
+      .reduce((latest, e) => (e.best.at > latest ? e.best.at : latest), '');
+    return { course, step, played, order };
+  }).filter((c): c is typeof c & { step: StepProgress } => c.step !== undefined);
+  candidates.sort((a, b) =>
+    a.played < b.played ? 1 : a.played > b.played ? -1 : a.order - b.order,
+  );
+  const best = candidates[0];
+  return best ? { course: best.course, step: best.step } : null;
 }

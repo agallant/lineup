@@ -1001,6 +1001,10 @@ const scenarios = {
         'home: a first visit suggests the how-to-play page',
       );
       check(
+        ((await page.getAttribute('[data-id=suggested]', 'href')) ?? '').includes('?song='),
+        'home: the next learning-path step is suggested',
+      );
+      check(
         (await page.$$('[data-id=games] a')).length === 5,
         'home: four instrument games and ear training under Play',
       );

@@ -9,7 +9,7 @@ export type BackingEvent =
       songTime: number;
       duration: number;
       midi: number;
-      /** Loudness from 0 to 1 relative to the guide tone (0.16 on the audio output); 1 when absent. */
+      /** Loudness relative to the guide tone (0.16 on the audio output); 1 when absent. Drums use up to 1.6. */
       level?: number;
       /** Oscillator shape; a sine when absent. */
       wave?: OscillatorType;
