@@ -6,7 +6,7 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
 ## Done
 
 - **Singline** (voice): sustained-pitch game, three scoring levels, key menu.
-- **Windline** (whistles, recorders): the same pipeline with octave-strict judging; an
+- **Windline** (whistles, recorders): the same pipeline, with the right note counting in any octave by default (strict octaves are an option); an
   instrument menu for tin whistles in seven keys, recorders, and a generic instrument whose key you set, songs moved into the
   instrument's key, fingering chart and in-play fingering strip, practice speed.
 - **Beatline** (claps, taps, hand drums, kit): onset classification with a sound-training step.

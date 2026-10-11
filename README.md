@@ -137,8 +137,9 @@ the direction arrow is a guide, since direction is not detected (see Limitations
 ## Windline (whistle, recorder) on the iPad
 
 `#/wind` (home screen -> Windline). It is Singline's pitch pipeline with a wind profile: range
-C4 to C7, a shorter analysis window for high notes, and **octaves count** (a fingering has one
-register, so an octave off is wrong, unlike singing).
+C4 to C7, a shorter analysis window for high notes, and an **Octave** option: by default the right
+note counts in any octave (so a low whistle or a second octave works, as in singing); choose
+_exactly the octave shown_ and an octave off is wrong, since a fingering has one register.
 
 1. **Start mic** and play a long steady note: you should see the note name and a green clarity
    bar. Hold the instrument a little to the side of the mic: a breath straight into it
