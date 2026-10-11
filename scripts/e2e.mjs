@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -737,6 +737,33 @@ const scenarios = {
           miss === 0 && perfect + good >= 16,
           `${mode} ${entry}: the demo plays random song 5 (${perfect} perfect, ${good} good, ${miss} missed)`,
         );
+      });
+    }
+  },
+
+  async target() {
+    console.log('\n# "Aim for" a difficulty: New song finds a random song near it');
+    const score = async (page) => Number(/\((\d+)\/10\)/.exec(await text(page, 'song-info'))?.[1]);
+    for (const [route, mode, song] of [
+      ['sing', null, 'random-melody'],
+      ['strum', null, 'random-chords'],
+      ['beat', 'drum-kit', 'random-groove'],
+    ]) {
+      await session(null, async (page) => {
+        await page.goto(URL_BASE + '#/' + route);
+        if (mode) await page.selectOption('[data-id=mode]', mode);
+        await page.selectOption('[data-id=song]', song);
+        await page.selectOption('[data-id=challenge-level]', 'hard');
+        // hard chord songs do not go below a 5
+        for (const target of song === 'random-chords' ? ['5', '7'] : ['3', '6']) {
+          await page.selectOption('[data-id=challenge-target]', target);
+          await page.click('[data-id=challenge-new]');
+          const got = await score(page);
+          check(
+            Math.abs(got - Number(target)) <= 1,
+            `${song}: aiming for ${target} gives a ${got}`,
+          );
+        }
       });
     }
   },

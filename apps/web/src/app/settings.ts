@@ -44,6 +44,8 @@ export interface Settings {
   challenge: MelodySpec;
   /** Play songs as written, or a plainer or busier version of them. */
   variation: Variation;
+  /** The difficulty (1 to 10) that "New song" aims for, or null for any. */
+  target: number | null;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -61,6 +63,7 @@ export const DEFAULT_SETTINGS: Settings = {
   songs: {},
   challenge: { seed: 1, scale: 'major', level: 'easy' },
   variation: 'original',
+  target: null,
 };
 
 const KEY = 'lineup.settings.v1';
@@ -164,6 +167,13 @@ function sanitize(raw: unknown): Settings {
     songs,
     challenge,
     variation: isVariation(r['variation']) ? r['variation'] : DEFAULT_SETTINGS.variation,
+    target:
+      typeof r['target'] === 'number' &&
+      Number.isInteger(r['target']) &&
+      r['target'] >= 1 &&
+      r['target'] <= 10
+        ? r['target']
+        : null,
   };
 }
 

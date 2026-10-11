@@ -40,10 +40,10 @@ real instrument to judge is listed again under "Waiting on real-device testing".
   have no such label), since instruments differ in what they can play.
 - **Song variations** (done): any song can be made **easier** or **harder** (generated from the song
   and a seed): fewer or more passing notes, simpler or busier strum patterns, plainer or more
-  syncopated grooves; the difficulty score changes with it. To come: a variation per phrase, and
-  "give me a 4" difficulty targets.
+  syncopated grooves; the difficulty score changes with it. **Aim for** a difficulty (1 to 10) next to
+  "New song" finds a random song near it. To come: a variation per phrase.
 - **More generators, not just more songs** (chord songs now cover waltz time and five keys): new forms
-  and levels for random melodies and grooves; difficulty targets ("give me a 4"); play-along backing
+  and levels for random melodies and grooves; play-along backing
   for melodies.
 - **More songs**: easy tunes first, then harder and chromatic ones, in every mode. Public domain or
   original.

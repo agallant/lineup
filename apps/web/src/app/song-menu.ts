@@ -86,3 +86,9 @@ export function addRandomOptions(
 export function addRandomMelodyOption(select: HTMLSelectElement): void {
   addRandomOptions(select, [{ value: RANDOM_MELODY, label: '🎲 Random melody' }]);
 }
+
+/** Fills the "aim for" menu of a random song: any difficulty, or 1 (easiest) to 10 (hardest). */
+export function fillTargetMenu(select: HTMLSelectElement): void {
+  select.add(new Option('Any difficulty', '0'));
+  for (let n = 1; n <= 10; n++) select.add(new Option(String(n), String(n)));
+}

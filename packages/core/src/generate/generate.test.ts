@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadChart } from '../chart';
+import { rateChart } from '../difficulty';
 import { getProfile } from '../profiles';
 import { songsFor } from '../songs';
 import {
@@ -11,11 +12,13 @@ import {
   createRng,
   degreeToMidi,
   exerciseCharts,
+  generateChordSong,
   hashSeed,
   majorPitchClasses,
   pick,
   pickWeighted,
   scalePitchClasses,
+  seedForDifficulty,
 } from '.';
 
 describe('createRng', () => {
@@ -286,5 +289,32 @@ describe('ukulele exercises', () => {
     const first = list.findIndex((s) => s.category === 'exercise');
     expect(first).toBeGreaterThan(0);
     expect(list.slice(first).every((s) => s.category === 'exercise')).toBe(true);
+  });
+});
+
+describe('seedForDifficulty', () => {
+  const sequence = (start: number) => {
+    let s = start;
+    return () => {
+      s = (s * 1664525 + 1013904223) % 4294967296;
+      return s / 4294967296;
+    };
+  };
+
+  it('finds a random song at (or next to) the difficulty asked for, repeatably', () => {
+    const build = (seed: number) => generateChordSong({ seed, level: 'hard' });
+    // targets that some seed is known to reach
+    for (const known of [5, 6, 7]) {
+      const target = rateChart(build(known)).score;
+      const seed = seedForDifficulty(build, target, sequence(target), 400);
+      expect(seedForDifficulty(build, target, sequence(target), 400)).toBe(seed);
+      expect(rateChart(build(seed)).score).toBe(target);
+    }
+  });
+
+  it('gives the nearest song when the target cannot be reached', () => {
+    const build = (seed: number) => generateChordSong({ seed, level: 'easy' });
+    const seed = seedForDifficulty(build, 10, sequence(1), 20);
+    expect(rateChart(build(seed)).score).toBeLessThan(10);
   });
 });
