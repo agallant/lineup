@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -687,6 +687,52 @@ const scenarios = {
         );
         await shot(page, `beat-${mode}-results`);
         if (mode === 'clap') await checkCopyLog(page, 'Beatline', notes);
+      });
+    }
+  },
+
+  async 'random-hits'() {
+    console.log(
+      '\n# Random songs for Strumline and Beatline: seeded, shown, and playable end to end',
+    );
+    for (const [route, mode, entry] of [
+      ['strum', 'ukulele-strum', 'random-chords'],
+      ['strum', 'ukulele-strum', 'random-melody'],
+      ['beat', 'drum-kit', 'random-groove'],
+      ['beat', 'hand-percussion', 'random-groove'],
+      ['beat', 'clap', 'random-groove'],
+    ]) {
+      await session(null, async (page) => {
+        await page.goto(URL_BASE + '#/' + route);
+        if (route === 'beat') await page.selectOption('[data-id=mode]', mode);
+        await page.selectOption('[data-id=song]', entry);
+        check(
+          await page.isVisible('[data-id=challenge]'),
+          `${mode} ${entry}: the level and seed controls appear`,
+        );
+        await page.selectOption('[data-id=challenge-level]', 'easy');
+        await page.fill('[data-id=challenge-seed]', '5');
+        await page.dispatchEvent('[data-id=challenge-seed]', 'change');
+        const info = await text(page, 'song-info');
+        check(/Random .* 5/.test(info), `${mode} ${entry}: the song info names the seed (${info})`);
+        await page.click('[data-id=challenge-new]');
+        const seed = await page.inputValue('[data-id=challenge-seed]');
+        check(
+          seed !== '5' || Math.random() < 0.001,
+          `${mode} ${entry}: New song rolls another seed (${seed})`,
+        );
+        await page.fill('[data-id=challenge-seed]', '5');
+        await page.dispatchEvent('[data-id=challenge-seed]', 'change');
+        await page.uncheck('[data-id=opt-metronome]');
+        await page.click('[data-id=demo]');
+        await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+        const perfect = Number(await text(page, 'r-perfect'));
+        const good = Number(await text(page, 'r-good'));
+        const miss = Number(await text(page, 'r-miss'));
+        check(
+          miss === 0 && perfect + good >= 16,
+          `${mode} ${entry}: the demo plays random song 5 (${perfect} perfect, ${good} good, ${miss} missed)`,
+        );
       });
     }
   },

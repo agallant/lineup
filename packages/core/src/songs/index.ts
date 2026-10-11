@@ -1,6 +1,10 @@
 import { loadChart, type Chart } from '../chart';
 import { exerciseCharts } from '../generate/exercises';
+import { generateChordSong, parseChordSongId } from '../generate/chordsong';
+import { generateGroove, parseGrooveId } from '../generate/groove';
 import { generateMelody, parseMelodyId } from '../generate/melody';
+import { rhythmExercises } from '../generate/rudiments';
+import { LIBRARY } from './library';
 import clapBasic from './clap-basic.json';
 import clapTapGroove from './clap-tap-groove.json';
 import drumRock from './drum-rock.json';
@@ -40,6 +44,10 @@ const RAW: Record<string, unknown> = {
 const EXERCISES: Record<string, Chart> = {
   ...exerciseCharts('voice'),
   ...exerciseCharts('wind'),
+  ...exerciseCharts('ukulele-strum'),
+  ...rhythmExercises('hand-percussion'),
+  ...rhythmExercises('drum-kit'),
+  ...rhythmExercises('clap'),
 };
 
 /** Built-in songs, validated when this module loads (a bad one fails every test). */
@@ -51,6 +59,7 @@ export const builtinSongs: Readonly<Record<string, Chart>> = {
       return [id, r.value] as const;
     }),
   ),
+  ...LIBRARY,
   ...EXERCISES,
 };
 
@@ -64,6 +73,10 @@ export const songCategory = (id: string): SongCategory =>
 export function getSong(id: string): Chart {
   const generated = parseMelodyId(id);
   if (generated) return generateMelody(generated.profileId, generated.spec);
+  const chords = parseChordSongId(id);
+  if (chords) return generateChordSong(chords);
+  const groove = parseGrooveId(id);
+  if (groove) return generateGroove(groove.profile, groove.spec);
   const c = Object.hasOwn(builtinSongs, id) ? builtinSongs[id] : undefined;
   if (!c) throw new Error(`unknown song "${id}" (have: ${Object.keys(builtinSongs).join(', ')})`);
   return c;
@@ -77,3 +90,6 @@ export function songsFor(
     .filter(([, chart]) => chart.meta.instruments?.includes(profileId))
     .map(([id, chart]) => ({ id, chart, category: songCategory(id) }));
 }
+
+export { LIBRARY } from './library';
+export * from './notation';

@@ -1,4 +1,5 @@
 import { chartFromBeats, type BeatNote, type Chart } from '../chart';
+import { pluckNotes, ukulelePlayable } from '../songs/notation';
 import { SCALES, degreeToMidi, type ScaleId } from './theory';
 
 /** The kinds of practice pattern, each a sequence of scale degrees. */
@@ -103,7 +104,14 @@ const mod12 = (n: number): number => ((n % 12) + 12) % 12;
  * The tonic of the major key the exercises are written in, per instrument profile. Voice sits
  * around middle C; winds an octave up, where whistles and recorders sound.
  */
-export const EXERCISE_TONICS: Readonly<Record<string, number>> = { voice: 60, wind: 72 };
+export const EXERCISE_TONICS: Readonly<Record<string, number>> = {
+  voice: 60,
+  wind: 72,
+  'ukulele-strum': 60,
+};
+
+/** Profiles whose exercises and melodies are plucked on single strings rather than sounded. */
+export const isPicked = (profileId: string): boolean => profileId === 'ukulele-strum';
 
 /** The chromatic scale up one octave and back, every semitone: it needs the cross-fingerings. */
 function chromaticExercise(profileId: string, tonic: number): Chart {
@@ -127,7 +135,7 @@ function chromaticExercise(profileId: string, tonic: number): Chart {
       instruments: [profileId],
       tonic,
     },
-    notes,
+    isPicked(profileId) ? pluckNotes(notes) : notes,
   );
 }
 
@@ -154,6 +162,8 @@ export function exerciseCharts(profileId: string): Record<string, Chart> {
         beat += s.beats;
         return note;
       });
+      // a ukulele plays a note on one string, so only runs that stay on the first frets are offered
+      if (isPicked(profileId) && !notes.every((n) => ukulelePlayable(n.pitch!))) continue;
       out[`ex-${profileId}-${scaleId}-${kindId}`] = chartFromBeats(
         {
           title: `${scale.label}: ${kind.label}`,
@@ -163,7 +173,7 @@ export function exerciseCharts(profileId: string): Record<string, Chart> {
           // the major scale holding the same notes, so a diatonic instrument can play it in its key
           tonic: parentTonic,
         },
-        notes,
+        isPicked(profileId) ? pluckNotes(notes) : notes,
       );
     }
   }

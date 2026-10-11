@@ -17,13 +17,17 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
   tones, and a seeded melody generator (scale, level, seed) in the song menu.
 - **Chromatic fingerings** for whistles and recorders (half-holes and cross-fingerings), a chromatic
   scale exercise, and Greensleeves as the first song with sharps.
+- **A song library** written in small text notations: six easy tunes each for Singline and Windline,
+  five ukulele chord songs and three picked melodies, and clap, hand and drum-kit rhythms.
+- **Random chord songs, picked melodies and grooves** for Strumline and Beatline, rhythm and
+  ukulele scale exercises, with the same seed, level and "New song" controls.
 - **Product**: best scores, song info, offline start, session logs you can copy, end-to-end tests in CI.
 
 ## Development goals
 
 ### 1. More to play, in every mode
 
-- **More songs** (all public domain or original): easy tunes first, a few harder ones. Melodies for
+- **More songs** (all public domain or original; a first library is in, more welcome): easy tunes first, a few harder ones. Melodies for
   Singline and Windline, chord songs and picking patterns for Strumline, rhythms for Beatline.
 - **Scales and exercises** for every mode: scales and modes, thirds, arpeggios, pentatonics, long
   tones and interval ladders for voice and winds; scales, arpeggios and picking patterns on the
@@ -32,13 +36,13 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
   chart. They are listed under "Exercises" next to each mode's songs.
 - **Generative challenges**: a fresh piece every time, still musical. Each is built from a seed
   (shown, so you can replay or share it) and a difficulty:
-  - _Melodies_ (done for Singline and Windline; ukulele picking to come): phrases of two bars in forms such as
+  - _Melodies_ (done for Singline, Windline and ukulele picking): phrases of two bars in forms such as
     AABA, built on a scale with mostly stepwise motion, leaps that recover, strong beats on chord
     tones, a rest or long note at each phrase end, and a final cadence on the tonic.
-  - _Chord songs_ (Strumline): progressions from common patterns (I–IV–V–I, I–V–vi–IV, I–vi–IV–V,
+  - _Chord songs_ (Strumline, done; waltz time and more chords such as Bm and B♭ to come): progressions from common patterns (I–IV–V–I, I–V–vi–IV, I–vi–IV–V,
     ii–V–I…) in keys where every chord has a ukulele fingering, with strum or picking patterns that
     repeat and vary like real accompaniment.
-  - _Grooves_ (Beatline): a repeating bar with a backbeat, variations and an occasional fill.
+  - _Grooves_ (Beatline, done): a repeating bar with a backbeat, variations and an occasional fill.
   - Tests measure "pleasing" with checkable properties over many seeds (range, step and leap
     ratios, repetition, phrase ends, cadence), because a bad piece is a bug.
 

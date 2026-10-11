@@ -1,7 +1,8 @@
 import { chartFromBeats, type BeatNote, type Chart } from '../chart';
 import { createRng, pick, pickWeighted, type Rng } from './random';
 import { SCALES, SCALE_IDS, degreeToMidi, type ScaleDef, type ScaleId } from './theory';
-import { EXERCISE_TONICS } from './exercises';
+import { pluckNotes, ukulelePlayable } from '../songs/notation';
+import { EXERCISE_TONICS, isPicked } from './exercises';
 
 /** How demanding a generated melody is. */
 export type MelodyLevel = 'easy' | 'medium' | 'hard';
@@ -13,6 +14,10 @@ export const isMelodyLevel = (v: unknown): v is MelodyLevel =>
 
 export const isScaleId = (v: unknown): v is ScaleId =>
   typeof v === 'string' && (SCALE_IDS as readonly string[]).includes(v);
+
+/** The scales a profile can play a melody in: a ukulele's must stay on the first frets of one string. */
+export const melodyScalesFor = (profileId: string): readonly ScaleId[] =>
+  isPicked(profileId) ? ['major', 'dorian', 'major-pentatonic'] : SCALE_IDS;
 
 export interface MelodySpec {
   seed: number;
@@ -295,6 +300,9 @@ export function generateMelody(profileId: string, spec: MelodySpec): Chart {
     beat += BEATS_PER_PHRASE;
   });
 
+  if (isPicked(profileId) && !notes.every((n) => ukulelePlayable(n.pitch!))) {
+    throw new Error(`a ${spec.scale} melody does not fit the ukulele's first frets`);
+  }
   return chartFromBeats(
     {
       title: `Random melody ${spec.seed}: ${scale.label}, ${spec.level}`,
@@ -303,7 +311,7 @@ export function generateMelody(profileId: string, spec: MelodySpec): Chart {
       instruments: [profileId],
       tonic: parentTonic,
     },
-    notes,
+    isPicked(profileId) ? pluckNotes(notes) : notes,
   );
 }
 
@@ -321,7 +329,7 @@ export const isSeed = (v: unknown): v is number =>
 export const melodyId = (profileId: string, spec: MelodySpec): string =>
   `gen-${profileId}-${spec.scale}-${spec.level}-${spec.seed}`;
 
-const MELODY_ID = /^gen-([a-z]+)-([a-z-]+)-(easy|medium|hard)-(0|[1-9]\d{0,4})$/;
+const MELODY_ID = /^gen-(voice|wind|ukulele-strum)-([a-z-]+)-(easy|medium|hard)-(0|[1-9]\d{0,4})$/;
 
 /** The profile and spec an id names, or null if it is not a generated melody's id. */
 export function parseMelodyId(id: string): { profileId: string; spec: MelodySpec } | null {
@@ -330,6 +338,6 @@ export function parseMelodyId(id: string): { profileId: string; spec: MelodySpec
   const [, profileId, scale, level, seed] = m;
   if (!isScaleId(scale) || !isMelodyLevel(level)) return null;
   const n = Number(seed);
-  if (!isSeed(n) || EXERCISE_TONICS[profileId!] === undefined) return null;
+  if (!isSeed(n) || !melodyScalesFor(profileId!).includes(scale)) return null;
   return { profileId: profileId!, spec: { seed: n, scale, level } };
 }

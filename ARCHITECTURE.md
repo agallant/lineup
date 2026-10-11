@@ -183,6 +183,21 @@ in song time and subtract the calibrated latency offset themselves.
   name a melody as `gen-<profile>-<scale>-<level>-<seed>`, which `getSong` can build, so scores
   and session logs treat it like any song.
 
+`generate/` also holds `chordsong.ts` (`generateChordSong`: sixteen bars of common progressions in
+C, G or D, only chords with a ukulele fingering, a repeating strum pattern with a variation every
+four bars, the last stroke before a chord change left out, and a closing downstroke), `groove.ts`
+(`generateGroove` for drum kit, claps and taps, and a single clap: a repeating bar, a variation, a fill
+every four bars, one sound at a time) and `rudiments.ts` (rhythm exercises). Melodies and exercises
+also exist for the ukulele, plucked on single strings (`pluckNotes`); ids are `gen-chords-<level>-<seed>`
+and `gen-groove-<profile>-<level>-<seed>`, and `getSong` builds them.
+
+`songs/notation.ts` has small text notations for writing songs by hand (`melodyChart`:
+`E4 D4:2 r:1`; `strumChart`: chords per bar and one bar of `D . D U` strokes; `pickedMelodyChart`:
+a melody plucked on single ukulele strings; `grooveChart`: one line per lane, `x` for a hit, one
+sound at a time). `songs/library.ts` is the library written in them: tunes placed for the voice and
+(an octave up) for winds, ukulele chord songs and picking, and clap, hand and drum-kit rhythms. Adding
+a song is a few lines there; `library.sim.test.ts` plays every one through the real chain.
+
 `songs/index.ts` registers the exercises next to the hand-written songs; `songsFor` reports each
 entry's `category` (`song` or `exercise`), and the web app's `song-menu.ts` groups the menu by it.
 Because the charts are generated, tests check them as properties (in range, in key, in order,

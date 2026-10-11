@@ -190,8 +190,9 @@ describe("moving a song into the instrument's key", () => {
           c.notes.map((n) => n.pitch! + shift),
           i,
         );
-        // Greensleeves spans more than a recorder's range; everything else fits everything
-        const tooWide = id === 'wind-greensleeves' && i.family === 'recorder';
+        // these span more than a recorder's range; everything else fits everything
+        const tooWide =
+          ['wind-greensleeves', 'wind-silent-night'].includes(id) && i.family === 'recorder';
         if (!tooWide) expect(fit.outOfRange, `${id} on ${i.id}`).toEqual([]);
         expect(fit.noFingering, `${id} on ${i.id}`).toEqual([]);
       }
