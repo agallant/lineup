@@ -31,6 +31,7 @@ export function variantLabel(variant: string): string {
       if (speed[2]) parts.push('chords checked');
     } else if (part) parts.push(`part ${part[1]}`);
     else if (token === 'echo') parts.push('listen first');
+    else if (token === 'blind') parts.push('unseen');
     else if (token === 'easier' || token === 'harder') parts.push(`${token} version`);
     else if (token === 'mixed') parts.push('mixed version');
     else if (token === 'easy' || token === 'strict') parts.push(`${token} scoring`);

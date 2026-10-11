@@ -124,6 +124,7 @@ const setup = (c: HitScreenConfig) => `
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
       <label class="check" data-id="listen-label" hidden><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
+      <label class="check" data-id="blind-label" hidden><input type="checkbox" data-id="blind" /> Unseen: hide the notes on your turn</label>
       <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
     </div>
     <div class="row" data-id="challenge" hidden>
@@ -385,7 +386,7 @@ export const createHitScreen =
         randomEntry()?.id ?? songSel.value,
         `${c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}` : ''}${
           settings.get().variation === 'original' ? '' : `|${settings.get().variation}`
-        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${listening() ? '|echo' : ''}`,
+        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${listening() ? `|echo${blind() ? '|blind' : ''}` : ''}`,
       );
     const refreshSong = () => {
       syncParts();
@@ -867,6 +868,8 @@ export const createHitScreen =
         game.update();
         const { g, width, height } = fitCanvas(stage);
         renderer.draw(g, { width, height }, game.view());
+        // unseen: after the listening part the notes are hidden, so the rhythm is played from memory
+        stage.style.opacity = blind() && listen.end > 0 && now >= listen.end - spb ? '0.08' : '';
 
         const s = game.session.score;
         P('score').textContent = String(s.score);
@@ -1075,9 +1078,21 @@ export const createHitScreen =
     listenBox.checked = settings.get().listenFirst;
     listenBox.addEventListener('change', () => {
       settings.update({ listenFirst: listenBox.checked });
+      syncBlind();
       refreshSong();
     });
     const listening = (): boolean => !c.strum && settings.get().listenFirst;
+    const blind = (): boolean => listening() && settings.get().blind;
+    const blindBox = S<HTMLInputElement>('blind');
+    const syncBlind = () => {
+      S('blind-label').hidden = !listening();
+    };
+    blindBox.checked = settings.get().blind;
+    blindBox.addEventListener('change', () => {
+      settings.update({ blind: blindBox.checked });
+      refreshSong();
+    });
+    syncBlind();
     /** The chart as played: at the chosen practice speed. */
     const selectedChart = (): Chart =>
       rescaleChart(songChart(), c.strum ? settings.get().speed : 1);

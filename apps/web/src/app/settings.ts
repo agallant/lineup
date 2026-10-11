@@ -43,6 +43,8 @@ export interface Settings {
   metronome: boolean;
   /** Singline and Windline: hear the song played first, then play it back. */
   listenFirst: boolean;
+  /** Beatline, with listen first: hide the notes on your turn, so you clap back from memory. */
+  blind: boolean;
   /** Minutes of practice to aim for each week (0 for no goal). */
   goalMinutes: number;
   /** How large the page's text is. */
@@ -90,6 +92,7 @@ export const DEFAULT_SETTINGS: Settings = {
   metronome: true,
   effects: true,
   listenFirst: false,
+  blind: false,
   goalMinutes: 0,
   textSize: 'normal',
   theme: 'dark',
@@ -197,6 +200,7 @@ function sanitize(raw: unknown): Settings {
     metronome: typeof r['metronome'] === 'boolean' ? r['metronome'] : DEFAULT_SETTINGS.metronome,
     listenFirst:
       typeof r['listenFirst'] === 'boolean' ? r['listenFirst'] : DEFAULT_SETTINGS.listenFirst,
+    blind: typeof r['blind'] === 'boolean' ? r['blind'] : DEFAULT_SETTINGS.blind,
     goalMinutes: GOAL_MINUTES.includes(r['goalMinutes'] as number)
       ? (r['goalMinutes'] as number)
       : DEFAULT_SETTINGS.goalMinutes,

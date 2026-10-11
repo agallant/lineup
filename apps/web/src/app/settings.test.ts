@@ -163,6 +163,8 @@ describe('SettingsStore', () => {
     expect(s.update({ listenFirst: true }).listenFirst).toBe(true);
     expect(new SettingsStore(mem).get().listenFirst).toBe(true);
     expect(s.update({ listenFirst: 'yes' as never }).listenFirst).toBe(false);
+    expect(s.get().blind).toBe(false);
+    expect(s.update({ blind: true }).blind).toBe(true);
   });
 
   it('remembers the weekly goal and text size, and ignores anything else', () => {

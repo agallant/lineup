@@ -111,6 +111,40 @@ export const COURSES: readonly Course[] = [
       { songId: 'kit-funk', focus: 'Funk, two bars' },
     ],
   },
+  {
+    id: 'voice-scales-and-keys',
+    title: 'Singline: scales and modes',
+    route: 'sing',
+    profileId: 'voice',
+    blurb: 'Beyond major: pentatonic, minor and the modes, then every semitone.',
+    steps: [
+      { songId: 'ex-voice-major-pentatonic-up-down', focus: 'Five notes that always sound good' },
+      { songId: 'ex-voice-minor-pentatonic-up-down', focus: 'The bluesy five' },
+      { songId: 'ex-voice-minor-up-down', focus: 'The natural minor scale' },
+      { songId: 'ex-voice-minor-thirds', focus: 'Minor, skipping a note' },
+      { songId: 'ex-voice-dorian-up-down', focus: 'Minor with a brighter sixth' },
+      { songId: 'ex-voice-mixolydian-up-down', focus: 'Major with a flat seventh' },
+      { songId: 'ex-voice-minor-fifths', focus: 'Minor, bigger leaps' },
+      { songId: 'ex-voice-chromatic-up-down', focus: 'Every semitone' },
+    ],
+  },
+  {
+    id: 'wind-scales-and-keys',
+    title: 'Windline: scales and modes',
+    route: 'wind',
+    profileId: 'wind',
+    blurb: 'Beyond major: pentatonic, minor and the modes, then every semitone.',
+    steps: [
+      { songId: 'ex-wind-major-pentatonic-up-down', focus: 'Five notes that always sound good' },
+      { songId: 'ex-wind-minor-pentatonic-up-down', focus: 'The bluesy five' },
+      { songId: 'ex-wind-minor-up-down', focus: 'The natural minor scale' },
+      { songId: 'ex-wind-minor-thirds', focus: 'Minor, skipping a note' },
+      { songId: 'ex-wind-dorian-up-down', focus: 'Minor with a brighter sixth' },
+      { songId: 'ex-wind-mixolydian-up-down', focus: 'Major with a flat seventh' },
+      { songId: 'ex-wind-minor-fifths', focus: 'Minor, bigger leaps' },
+      { songId: 'ex-wind-chromatic-up-down', focus: 'Every semitone' },
+    ],
+  },
 ];
 
 /** Stars needed on a step to open the next one, and to count it as mastered. */
