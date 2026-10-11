@@ -86,3 +86,11 @@ describe('fingeringStripHtml', () => {
     expect(fingeringStripHtml(dWhistle, odd, 0.1)).toContain('holes-none');
   });
 });
+
+describe('the generic instrument', () => {
+  const generic = findWindInstrument('generic')!;
+  it('has no chart and no fingering strip, and says how to get them', () => {
+    expect(fingeringChartHtml(generic, new Set())).toMatch(/choose a specific whistle or recorder/);
+    expect(fingeringStripHtml(generic, played(dWhistle), 1)).toBe('');
+  });
+});

@@ -41,7 +41,7 @@ export function holesHtml(family: WindInstrument['family'], f: Fingering): strin
 export function fingeringChartHtml(instrument: WindInstrument, used: ReadonlySet<number>): string {
   const scale = windScale(instrument);
   if (scale.length === 0) {
-    return `<p>No fingering chart is shown for this instrument: charts differ between makers, so use the one that came with yours.</p>`;
+    return `<p>No fingering chart for a generic instrument: choose a specific whistle or recorder above to see its fingerings, or use the chart that came with yours.</p>`;
   }
   const rows = scale
     .map(

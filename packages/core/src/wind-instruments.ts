@@ -2,7 +2,7 @@ import type { Chart } from './chart';
 import { midiLabel } from './notes';
 
 /** The kinds of simple wind instrument Windline knows. */
-export type WindFamily = 'whistle' | 'recorder';
+export type WindFamily = 'whistle' | 'recorder' | 'generic';
 
 /**
  * A simple wind instrument in a particular key. Whistles and recorders are diatonic: their
@@ -38,11 +38,17 @@ const recorder = (id: string, label: string, tonic: number): WindInstrument => (
 });
 
 /**
- * The instrument chosen until you pick a specific one: a diatonic instrument in C whose key you
- * set yourself with the semitone shift (+2 is a whistle in D, see {@link inKey}). Its fingering
- * chart is the whistle's.
+ * The instrument chosen until you pick a specific one: any wind instrument, in C until you set
+ * its key with the semitone shift (+2 is D, see {@link inKey}). It has no fingering chart and no
+ * scale of its own, so only its range is checked.
  */
-export const GENERIC_WIND_INSTRUMENT = whistle('generic', 'Generic (C, set your own key)', 72);
+export const GENERIC_WIND_INSTRUMENT: WindInstrument = {
+  id: 'generic',
+  label: 'Generic (C, set your own key)',
+  family: 'generic',
+  tonic: 72,
+  range: { low: 72, high: 72 + 23 },
+};
 
 export const DEFAULT_WIND_INSTRUMENT = GENERIC_WIND_INSTRUMENT.id;
 
@@ -102,9 +108,9 @@ export interface Fingering {
 
 /** How the holes are grouped for drawing, in the order of {@link Fingering.holes}. */
 export function holeGroups(family: WindFamily): number[] {
-  return family === 'whistle'
-    ? [3, 3] // top hand, bottom hand
-    : [1, 3, 4]; // recorder: thumb, then the left and right hands
+  if (family === 'whistle') return [3, 3]; // top hand, bottom hand
+  if (family === 'recorder') return [1, 3, 4]; // thumb, then the left and right hands
+  return []; // generic: no holes to draw
 }
 
 /** Semitones above the tonic of the notes of a major scale over two octaves and a bit. */
@@ -152,6 +158,7 @@ const RECORDER: readonly Fingering[] = [
 const TABLES: Record<WindFamily, readonly Fingering[]> = {
   whistle: WHISTLE,
   recorder: RECORDER,
+  generic: [],
 };
 
 /** One note of the instrument's scale, with the fingering to play it. */
@@ -190,7 +197,8 @@ export function checkFit(notes: Iterable<number>, instrument: WindInstrument): F
   const notInScale = new Set<number>();
   for (const m of notes) {
     if (m < instrument.range.low || m > instrument.range.high) outOfRange.add(m);
-    else if (fingeringFor(instrument, m) === null) notInScale.add(m);
+    else if (instrument.family !== 'generic' && fingeringFor(instrument, m) === null)
+      notInScale.add(m);
   }
   const byPitch = (a: number, b: number) => a - b;
   return { outOfRange: [...outOfRange].sort(byPitch), notInScale: [...notInScale].sort(byPitch) };

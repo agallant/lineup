@@ -137,7 +137,7 @@ register, so an octave off is wrong, unlike singing).
    bar. Hold the instrument a little to the side of the mic: a breath straight into it
    overloads it (the level meter warns about clipping).
 2. Pick your **Instrument**. The default is a **generic** diatonic instrument in C: choose its
-   **Key** yourself (+2 is a D whistle). Or pick a **preset**: tin whistles in D, C, B-flat, A, G, F
+   **Key** yourself (+2 is a D whistle; there is no fingering chart for it). Or pick a **preset**: tin whistles in D, C, B-flat, A, G, F
    and E-flat, a low D whistle, or soprano, alto, tenor and sopranino recorders. Whistles and
    recorders are diatonic, so **the song is moved into the instrument's key** (a C-major song becomes
    D major on a D whistle) and its notes then use only the instrument's own scale. On a preset,

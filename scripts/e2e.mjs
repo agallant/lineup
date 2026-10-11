@@ -286,8 +286,16 @@ const scenarios = {
         'the generic instrument is the default',
       );
       await page.selectOption('[data-id=key]', '2');
-      const generic = await page.$$eval('[data-id=chart] .fing-row', (r) => r[0]?.textContent);
-      check(/^D5/.test(generic ?? ''), `generic set to +2 has a D whistle's chart (${generic})`);
+      const generic = await page.$$eval('[data-id=chart] .fing-row', (r) => r.length);
+      const chartText = await text(page, 'chart');
+      check(
+        generic === 0 && /No fingering chart/.test(chartText),
+        `the generic instrument has no fingering chart (${chartText})`,
+      );
+      check(
+        /D/.test(await page.$eval('[data-id=key] option:checked', (o) => o.textContent ?? '')),
+        'the key menu names the key (Key of D)',
+      );
       // a preset starts from its own key: the old shift does not carry over
       await page.selectOption('[data-id=instrument]', 'whistle-g');
       const shift = await page.inputValue('[data-id=key]');
