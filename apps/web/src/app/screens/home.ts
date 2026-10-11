@@ -107,6 +107,12 @@ export const homeScreen: Screen = (root) => {
         <span>Your best score on every song, stars, and the trophies you have earned.</span></a></li>
     </ul>
 
+    <h2>Make</h2>
+    <ul class="menu">
+      <li><a class="card" href="#/make" data-id="make-link"><strong>My songs</strong>
+        <span>Write your own melody, chord song or rhythm as text; it appears in the song menus.</span></a></li>
+    </ul>
+
     <h2>Set up <small>once per device or instrument</small></h2>
     <ul class="menu">
       <li><a class="card" href="#/tuner" data-id="tuner-link"><strong>Tuner</strong>

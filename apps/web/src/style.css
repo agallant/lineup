@@ -746,3 +746,30 @@ button.wrong {
   border-color: var(--bad);
   color: var(--bad);
 }
+
+label.block {
+  display: block;
+  margin: 8px 0;
+}
+
+textarea,
+input[type='text'] {
+  display: block;
+  width: 100%;
+  font: inherit;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+textarea {
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+code {
+  background: var(--panel);
+  padding: 0 4px;
+  border-radius: 4px;
+}

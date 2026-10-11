@@ -71,6 +71,7 @@ import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
+import { UserSongStore, userSongsFor } from '../user-songs';
 import { starsBySong } from '../scoreboard';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
@@ -247,7 +248,8 @@ export const createPitchScreen =
     };
 
     const profile = getProfile(c.profileId);
-    const songs = songsFor(c.profileId);
+    const mine = new UserSongStore(safeLocalStorage());
+    const songs = [...songsFor(c.profileId), ...userSongsFor(c.profileId, mine)];
     const settings = new SettingsStore(safeLocalStorage());
     const calibration = new CalibrationStore(safeLocalStorage());
     const scores = new ScoreStore(safeLocalStorage());

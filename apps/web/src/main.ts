@@ -8,6 +8,7 @@ import { SettingsStore, safeLocalStorage } from './app/settings';
 import { beatScreen } from './app/screens/beat';
 import { calibrateScreen } from './app/screens/calibrate';
 import { homeScreen } from './app/screens/home';
+import { makerScreen } from './app/screens/maker';
 import { micTestScreen } from './app/screens/mic-test';
 import { optionsScreen } from './app/screens/options';
 import { scoreboardScreen } from './app/screens/scoreboard';
@@ -37,6 +38,7 @@ startRouter(
     scores: scoreboardScreen,
     tuner: tunerScreen,
     ear: earScreen,
+    make: makerScreen,
     options: optionsScreen,
   },
   '',

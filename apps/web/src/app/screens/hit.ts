@@ -65,6 +65,7 @@ import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
+import { UserSongStore, userSongsFor } from '../user-songs';
 import { starsBySong } from '../scoreboard';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
@@ -229,6 +230,7 @@ export const createHitScreen =
     const calibration = new CalibrationStore(safeLocalStorage());
     const scores = new ScoreStore(safeLocalStorage());
     const progress = new ProgressStore(safeLocalStorage());
+    const mine = new UserSongStore(safeLocalStorage());
     const models = new TimbreModelStore(() => safeLocalStorage() ?? undefined);
 
     // opened from today's challenge: pick its game mode and its random song (the same for everyone today)
@@ -372,7 +374,7 @@ export const createHitScreen =
     /** Re-reads everything that depends on the chosen mode. */
     const applyMode = () => {
       songSel.replaceChildren(); // also removes group headings
-      const songs = songsFor(profile.id);
+      const songs = [...songsFor(profile.id), ...userSongsFor(profile.id, mine)];
       const stars = starsBySong(scores.entries(), profile.id);
       fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
       addRandomOptions(
@@ -1005,7 +1007,7 @@ export const createHitScreen =
     };
     const songEntry = () => {
       const random = randomEntry();
-      const songs = songsFor(profile.id);
+      const songs = [...songsFor(profile.id), ...userSongsFor(profile.id, mine)];
       return random ?? songs.find((s) => s.id === songSel.value) ?? songs[0]!;
     };
     /** The part of the song to practise (an index into its phrases), or -1 for all of it. */

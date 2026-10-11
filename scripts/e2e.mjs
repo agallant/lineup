@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|maker|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -805,6 +805,68 @@ const scenarios = {
       check(
         /Ear training: chords, easy/.test(await text(page, 'rows')),
         'ear: the round is on the scoreboard',
+      );
+    });
+  },
+
+  async maker() {
+    console.log(
+      '\n# My songs: write a melody, a chord song and a rhythm; they reach the right games',
+    );
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/make');
+      await page.fill('[data-id=title]', 'E2E tune');
+      await page.fill('[data-id=notes]', 'C4 D4 E4 F4 G4:2 E4 C4:2');
+      check(
+        /Looks good/.test(await text(page, 'preview')),
+        `maker: a melody previews (${await text(page, 'preview')})`,
+      );
+      await page.fill('[data-id=notes]', 'C4 H9');
+      check(/H9/.test(await text(page, 'preview')), 'maker: a mistake is explained');
+      await page.fill('[data-id=notes]', 'C4 D4 E4 F4 G4:2 E4 C4:2');
+      await page.click('[data-id=save]');
+      await page.selectOption('[data-id=kind]', 'chords');
+      await page.fill('[data-id=title]', 'E2E chords');
+      await page.click('[data-id=save]');
+      await page.selectOption('[data-id=kind]', 'rhythm');
+      await page.selectOption('[data-id=profile]', 'clap');
+      await page.fill('[data-id=title]', 'E2E rhythm');
+      await page.fill('[data-id=lanes]', 'hit: x.x.xx..');
+      await page.click('[data-id=save]');
+      check((await page.$$('[data-id=list] li')).length === 3, 'maker: three songs are kept');
+      const has = async (route, mode, title) => {
+        await page.goto(URL_BASE + '#/' + route);
+        if (mode) await page.selectOption('[data-id=mode]', mode);
+        return page.evaluate(
+          (t) =>
+            [...document.querySelectorAll('[data-id=song] option')].some((o) =>
+              o.textContent.startsWith(t),
+            ),
+          title,
+        );
+      };
+      check(await has('sing', null, 'E2E tune'), 'maker: the melody is in Singline');
+      check(await has('wind', null, 'E2E tune'), 'maker: the melody is in Windline');
+      check(await has('strum', null, 'E2E chords'), 'maker: the chord song is in Strumline');
+      check(await has('beat', 'clap', 'E2E rhythm'), 'maker: the rhythm is in Beatline');
+      check(
+        !(await has('beat', 'drum-kit', 'E2E rhythm')),
+        'maker: but not in a kit it was not written for',
+      );
+      await page.goto(URL_BASE + '#/sing');
+      const value = await page.evaluate(
+        () =>
+          [...document.querySelectorAll('[data-id=song] option')].find((o) =>
+            o.textContent.startsWith('E2E tune'),
+          ).value,
+      );
+      await page.selectOption('[data-id=song]', value);
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      check(
+        Number(await text(page, 'r-miss')) === 0,
+        'maker: the demo plays the player’s own melody without a miss',
       );
     });
   },

@@ -67,6 +67,18 @@ describe('scoreRows', () => {
   });
 });
 
+describe('scoreRows with the player’s own songs', () => {
+  it('uses their title and difficulty', () => {
+    const rows = scoreRows([{ key: 'voice|my-abc|normal', best: best(300, 0.9) }], (id) =>
+      id === 'my-abc' ? { title: 'My tune', rating: 4 } : null,
+    );
+    expect(rows[0]).toMatchObject({ title: 'My tune', rating: 4, game: 'Singline' });
+    expect(scoreRows([{ key: 'voice|my-gone|normal', best: best(1, 1) }])[0]!.title).toBe(
+      'my-gone',
+    );
+  });
+});
+
 describe('starsBySong', () => {
   it('keeps the most stars a song earned in any way of playing it, for one profile', () => {
     const stars = starsBySong(

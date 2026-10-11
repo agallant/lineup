@@ -35,7 +35,10 @@ export function variantLabel(variant: string): string {
 }
 
 /** Turns the stored best scores into rows, resolving titles and difficulty from the song library. */
-export function scoreRows(entries: readonly { key: string; best: BestScore }[]): ScoreRow[] {
+export function scoreRows(
+  entries: readonly { key: string; best: BestScore }[],
+  mine: (id: string) => { title: string; rating: number } | null = () => null,
+): ScoreRow[] {
   const rows: ScoreRow[] = [];
   for (const { key, best } of entries) {
     const [profileId = '', songId = '', variant = ''] = key.split('|');
@@ -46,7 +49,11 @@ export function scoreRows(entries: readonly { key: string; best: BestScore }[]):
     let title = songId;
     let rating: number | null = null;
     const ear = earTitle(songId);
-    if (ear !== null) {
+    const own = ear === null ? mine(songId) : null;
+    if (own) {
+      title = own.title;
+      rating = own.rating;
+    } else if (ear !== null) {
       title = ear;
       rating = EAR_RATING[songId.split('-').at(-1) as EarLevel] ?? null;
     } else {

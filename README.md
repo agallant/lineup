@@ -123,6 +123,11 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   from memory (best with a short Part).
 - **Part**: next to Version, practise one phrase of a song (four bars, two in a short song) on its own;
   best scores are kept per part.
+- **My songs** (`#/make`, under Make): write a melody, a chord song or a rhythm as text (note names
+  like `E4:2`, chords like `C | Am | F | G`, lanes like `kick: x...x...`); it is checked as you type,
+  rated like any other song, and joins the song menus of the games that suit it (a melody goes to
+  Singline, and to Windline when no note is below the key note). Songs are kept on the device and
+  included in the backup file.
 - **Ear training** (`#/ear`): ten questions, no instrument or microphone: name the interval between
   two notes, or the kind of chord (major, minor, dominant 7th...), at three levels; stars, XP and the
   scoreboard work as in the other games.

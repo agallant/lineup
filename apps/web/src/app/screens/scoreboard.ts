@@ -12,6 +12,7 @@ import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
 import { scoreRows, sortRows, type ScoreSort } from '../scoreboard';
 import { safeLocalStorage } from '../settings';
+import { UserSongStore, lookupUserSong } from '../user-songs';
 
 const SORTS: readonly { id: ScoreSort; label: string }[] = [
   { id: 'recent', label: 'Newest first' },
@@ -35,7 +36,8 @@ export const scoreboardScreen: Screen = (root) => {
   const now = new Date();
   const days = recentDays(state.log, now, 14);
   const peak = Math.max(60, ...days.map((d) => d.seconds));
-  const all = scoreRows(new ScoreStore(storage).entries());
+  const songs = new UserSongStore(storage);
+  const all = scoreRows(new ScoreStore(storage).entries(), (id) => lookupUserSong(id, songs));
 
   root.innerHTML = `
     <p><a href="#/">← Home</a></p>
