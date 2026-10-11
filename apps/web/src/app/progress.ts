@@ -13,6 +13,8 @@ export interface PlayResult {
   /** Notes missed, and in all. */
   misses: number;
   notes: number;
+  /** How long the song took, in seconds (its last note's end). */
+  seconds?: number;
   /** Today's daily challenge for the game, played as given. */
   daily?: { key: string };
 }
@@ -27,6 +29,8 @@ export interface ProgressState {
   perGame: Record<string, number>;
   /** Distinct songs played, as "profile|song". */
   songs: string[];
+  /** Practice per day (local date): songs finished and seconds played; the last 90 days kept. */
+  log: Record<string, { plays: number; seconds: number }>;
   /** Daily challenges cleared, as "day|game", the last 120 kept. */
   dailies: string[];
   /** When each achievement was earned (ISO time). */
@@ -37,6 +41,7 @@ const KEY = 'lineup.progress.v1';
 const MAX_DAYS = 400;
 const MAX_SONGS = 2000;
 const MAX_DAILIES = 120;
+const MAX_LOG_DAYS = 90;
 /** XP for clearing a daily challenge (60% accuracy or better), once per game per day. */
 export const DAILY_BONUS = 50;
 
@@ -46,6 +51,7 @@ export const emptyProgress = (): ProgressState => ({
   days: [],
   perGame: {},
   songs: [],
+  log: {},
   dailies: [],
   achievements: {},
 });
@@ -245,6 +251,20 @@ function sanitize(raw: unknown): ProgressState {
       .filter((d): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d))
       .slice(-MAX_DAYS);
   }
+  if (typeof r['log'] === 'object' && r['log'] !== null) {
+    const days = Object.entries(r['log'] as Record<string, unknown>)
+      .filter(([d]) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-MAX_LOG_DAYS);
+    for (const [d, v] of days) {
+      if (typeof v !== 'object' || v === null) continue;
+      const e = v as Record<string, unknown>;
+      out.log[d] = {
+        plays: Math.floor(num(e['plays'], 1e5)),
+        seconds: Math.floor(num(e['seconds'], 1e7)),
+      };
+    }
+  }
   if (Array.isArray(r['dailies'])) {
     out.dailies = r['dailies']
       .filter((d): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}\|[a-z]+$/.test(d))
@@ -301,6 +321,12 @@ export class ProgressStore {
     if (cleared) v.dailies = [...v.dailies, result.daily!.key].slice(-MAX_DAILIES);
     v.xp += gained + dayBonus + dailyBonus;
     v.plays++;
+    const entry = v.log[today] ?? { plays: 0, seconds: 0 };
+    v.log[today] = {
+      plays: entry.plays + 1,
+      seconds: entry.seconds + Math.round(Math.max(0, result.seconds ?? 0)),
+    };
+    for (const old of Object.keys(v.log).sort().slice(0, -MAX_LOG_DAYS)) delete v.log[old];
     if (!v.days.includes(today)) v.days = [...v.days, today].slice(-MAX_DAYS);
     const game = gameOf(result.profileId);
     if (game) v.perGame[game.id] = (v.perGame[game.id] ?? 0) + 1;
@@ -374,3 +400,33 @@ export class ProgressStore {
     }
   }
 }
+
+/** Practice for one day. */
+export interface DayPractice {
+  day: string;
+  plays: number;
+  seconds: number;
+}
+
+/** The last `n` days up to and including `today`, oldest first, with zeros for days not played. */
+export function recentDays(
+  log: Readonly<Record<string, { plays: number; seconds: number }>>,
+  today: Date,
+  n: number,
+): DayPractice[] {
+  const out: DayPractice[] = [];
+  const cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  cursor.setDate(cursor.getDate() - (n - 1));
+  for (let i = 0; i < n; i++) {
+    const day = dayKey(cursor);
+    out.push({ day, plays: log[day]?.plays ?? 0, seconds: log[day]?.seconds ?? 0 });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return out;
+}
+
+/** Minutes practised over the last seven days (including today), rounded down. */
+export const weekMinutes = (
+  log: Readonly<Record<string, { plays: number; seconds: number }>>,
+  today: Date,
+): number => Math.floor(recentDays(log, today, 7).reduce((a, d) => a + d.seconds, 0) / 60);

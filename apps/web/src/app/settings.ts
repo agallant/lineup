@@ -17,6 +17,12 @@ export type Accompaniment = 'off' | 'bass' | 'full';
 
 export const ACCOMPANIMENTS: readonly Accompaniment[] = ['off', 'bass', 'full'];
 
+/** Weekly practice goals offered, in minutes (0 for none). */
+export const GOAL_MINUTES: readonly number[] = [0, 15, 30, 60, 120];
+
+export type TextSize = 'normal' | 'large' | 'larger';
+export const TEXT_SIZES: readonly TextSize[] = ['normal', 'large', 'larger'];
+
 export interface Settings {
   /** Show the live debug overlay while playing. */
   debug: boolean;
@@ -24,6 +30,10 @@ export interface Settings {
   guideTone: boolean;
   /** Play a click on every beat. */
   metronome: boolean;
+  /** Minutes of practice to aim for each week (0 for no goal). */
+  goalMinutes: number;
+  /** How large the page's text is. */
+  textSize: TextSize;
   /** A short jingle on a new best, a trophy, a level up or a cleared daily challenge. */
   effects: boolean;
   /** Play-along backing under a song: nothing, a bass line, or bass and chords (needs headphones). */
@@ -62,6 +72,8 @@ export const DEFAULT_SETTINGS: Settings = {
   guideTone: true,
   metronome: true,
   effects: true,
+  goalMinutes: 0,
+  textSize: 'normal',
   accompaniment: 'off',
   keyShift: 0,
   keyShifts: {},
@@ -157,6 +169,12 @@ function sanitize(raw: unknown): Settings {
     debug: typeof r['debug'] === 'boolean' ? r['debug'] : DEFAULT_SETTINGS.debug,
     guideTone: typeof r['guideTone'] === 'boolean' ? r['guideTone'] : DEFAULT_SETTINGS.guideTone,
     metronome: typeof r['metronome'] === 'boolean' ? r['metronome'] : DEFAULT_SETTINGS.metronome,
+    goalMinutes: GOAL_MINUTES.includes(r['goalMinutes'] as number)
+      ? (r['goalMinutes'] as number)
+      : DEFAULT_SETTINGS.goalMinutes,
+    textSize: TEXT_SIZES.includes(r['textSize'] as TextSize)
+      ? (r['textSize'] as TextSize)
+      : DEFAULT_SETTINGS.textSize,
     effects: typeof r['effects'] === 'boolean' ? r['effects'] : DEFAULT_SETTINGS.effects,
     accompaniment: ACCOMPANIMENTS.includes(r['accompaniment'] as Accompaniment)
       ? (r['accompaniment'] as Accompaniment)

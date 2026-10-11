@@ -7,9 +7,11 @@ import {
   dayKey,
   gameOf,
   levelFor,
+  recentDays,
   starText,
   starsFor,
   streakOf,
+  weekMinutes,
   xpFor,
   type PlayResult,
 } from './progress';
@@ -189,5 +191,39 @@ describe('ProgressStore', () => {
     expect(new ProgressStore(mem).get()).toMatchObject({ xp: 0, plays: 0, days: ['2026-10-01'] });
     const blocked = new ProgressStore(null);
     expect(blocked.recordPlay(play(), at(1)).xpGained).toBeGreaterThan(0);
+  });
+});
+
+describe('practice log', () => {
+  it('adds up songs and seconds per day, and reads back the recent days', () => {
+    const p = new ProgressStore(new Mem());
+    p.recordPlay(play({ seconds: 90 }), at(9));
+    p.recordPlay(play({ seconds: 30.4 }), at(10));
+    p.recordPlay(play({ seconds: 60 }), at(10));
+    p.recordPlay(play(), at(10)); // no length known: counts as a song, no time
+    const log = p.get().log;
+    expect(log['2026-10-10']).toEqual({ plays: 3, seconds: 90 });
+    const days = recentDays(log, at(11), 4);
+    expect(days.map((d) => d.day)).toEqual([
+      '2026-10-08',
+      '2026-10-09',
+      '2026-10-10',
+      '2026-10-11',
+    ]);
+    expect(days.map((d) => d.seconds)).toEqual([0, 90, 90, 0]);
+    expect(weekMinutes(log, at(11))).toBe(3);
+    expect(weekMinutes(log, at(20))).toBe(0); // the week has moved on
+  });
+
+  it('keeps only the last 90 days and ignores junk in storage', () => {
+    const mem = new Mem();
+    const p = new ProgressStore(mem);
+    for (let d = 0; d < 100; d++) p.recordPlay(play({ seconds: 10 }), new Date(2026, 0, 1 + d, 12));
+    expect(Object.keys(p.get().log)).toHaveLength(90);
+    mem.data.set(
+      'lineup.progress.v1',
+      '{"log": {"2026-10-01": {"plays": 2, "seconds": 70}, "bad": {"plays": 1}, "2026-10-02": 5}}',
+    );
+    expect(new ProgressStore(mem).get().log).toEqual({ '2026-10-01': { plays: 2, seconds: 70 } });
   });
 });

@@ -24,7 +24,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font:
-    16px/1.4 -apple-system,
+    calc(16px * var(--text-scale, 1)) / 1.4 -apple-system,
     system-ui,
     sans-serif;
   -webkit-text-size-adjust: 100%;
@@ -715,4 +715,24 @@ label.file {
 
 a.card.done {
   border-color: var(--good);
+}
+
+/* a week of practice */
+.week {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 64px;
+  margin: 8px 0;
+}
+
+.week span {
+  flex: 1;
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--line);
+}
+
+.week span.played {
+  background: var(--accent);
 }

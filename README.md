@@ -121,13 +121,17 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   comes from the date), on the home menu. Reach 60% for +50 XP, once per game per day.
 - **Part**: next to Version, practise one phrase of a song (four bars, two in a short song) on its own;
   best scores are kept per part.
+- **Tuner** (`#/tuner`, under Set up): ukulele (G C E A), low-G and baritone tunings or any note, with
+  a needle and reference tones. A tool, not a game.
+- **Practice goal**: pick minutes per week in Options; the home menu and scoreboard show the last
+  seven and fourteen days.
 - **Scoreboard** (`#/scores`) lists your best score on every song with stars (★ 60%, ★★ 80%, ★★★ 95%
   accuracy), filtered by game and sorted by newest, highest score, most stars or hardest song.
 - **Progress**: every finished song earns XP (more for accuracy and for harder songs, plus a bonus for
   a clean run and for the first song of the day), which raises your level; playing on days in a row
   builds a streak; trophies (First notes, Flawless, Sharps and flats, Full band...) are earned once.
   The auto-play demo earns nothing.
-- **Options** (`#/options`): metronome, guide tone, play-along backing, scoring strictness, Windline
+- **Options** (`#/options`): metronome, guide tone, jingles, play-along backing, weekly goal, text size, scoring strictness, Windline
   octaves and fingerings, chord checking, the debug overlay; reset options, erase scores or progress
   (two taps), and save or restore a **backup file** of everything the app keeps.
 - **Play-along backing** (Options, off by default): quiet music under a song, for headphones. _Bass

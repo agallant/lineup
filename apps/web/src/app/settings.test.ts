@@ -139,6 +139,21 @@ describe('SettingsStore', () => {
     expect(s.update({ variation: 'hardest' as never }).variation).toBe('original');
   });
 
+  it('remembers the weekly goal and text size, and ignores anything else', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get()).toMatchObject({ goalMinutes: 0, textSize: 'normal' });
+    expect(s.update({ goalMinutes: 30, textSize: 'large' })).toMatchObject({
+      goalMinutes: 30,
+      textSize: 'large',
+    });
+    expect(new SettingsStore(mem).get()).toMatchObject({ goalMinutes: 30, textSize: 'large' });
+    expect(s.update({ goalMinutes: 7, textSize: 'huge' as never })).toMatchObject({
+      goalMinutes: 0,
+      textSize: 'normal',
+    });
+  });
+
   it('remembers the backing under songs, and ignores anything else', () => {
     const mem = new Mem();
     const s = new SettingsStore(mem);

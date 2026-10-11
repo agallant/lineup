@@ -1,6 +1,6 @@
 import { DAILY_GAMES, dailyFor, dailyKey } from '../daily';
-import { ACHIEVEMENTS, DAILY_BONUS, ProgressStore, levelFor } from '../progress';
-import { safeLocalStorage } from '../settings';
+import { ACHIEVEMENTS, DAILY_BONUS, ProgressStore, levelFor, weekMinutes } from '../progress';
+import { SettingsStore, safeLocalStorage } from '../settings';
 import type { Screen } from '../router';
 
 /** What each game is, for the home menu: the route, the instrument and a line about it. */
@@ -42,6 +42,8 @@ export const homeScreen: Screen = (root) => {
   const state = store.get();
   const lvl = levelFor(state.xp);
   const streak = store.streak(now);
+  const goal = new SettingsStore(safeLocalStorage()).get().goalMinutes;
+  const minutes = weekMinutes(state.log, now);
   const trophies = Object.keys(state.achievements).length;
   root.innerHTML = `
     <h1>Lineup</h1>
@@ -54,6 +56,19 @@ export const homeScreen: Screen = (root) => {
         streak > 0 ? `${streak}-day streak` : 'no streak yet: play today to start one'
       } · ${trophies} of ${ACHIEVEMENTS.length} trophies</span>
     </a>
+
+    <section class="week-card" data-id="week" aria-label="Practice this week">
+      <p class="muted">${
+        goal > 0
+          ? `This week: ${minutes} of ${goal} minutes${minutes >= goal ? ' ✓ goal reached' : ''}`
+          : `This week: ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} of practice`
+      }</p>
+      ${
+        goal > 0
+          ? `<span class="bar" role="img" aria-label="${Math.min(minutes, goal)} of ${goal} minutes"><span style="width:${Math.min(100, Math.round((minutes / goal) * 100))}%"></span></span>`
+          : ''
+      }
+    </section>
 
     <h2>Today’s challenge <small>a new song each day, the same for everyone</small></h2>
     <ul class="menu daily" data-id="daily">

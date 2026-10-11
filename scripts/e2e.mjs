@@ -785,6 +785,7 @@ const scenarios = {
         localStorage.setItem(
           'lineup.progress.v1',
           JSON.stringify({
+            log: { [new Date().toLocaleDateString('en-CA')]: { plays: 2, seconds: 600 } },
             xp: 350,
             plays: 2,
             days: ['2026-10-10', '2026-10-11'],
@@ -812,6 +813,10 @@ const scenarios = {
       );
       check((await page.$$('[data-id=daily] a')).length === 4, 'home: four daily challenges');
       check((await page.$('[data-id=tuner-link]')) !== null, 'home: the tuner is under Set up');
+      check(
+        /10 minutes of practice/.test(await text(page, 'week')),
+        `home: shows this week's practice (${await text(page, 'week')})`,
+      );
       for (const [game, route, pick] of [
         ['singline', 'sing', 'random-melody'],
         ['strumline', 'strum', 'random-chords'],
@@ -829,6 +834,10 @@ const scenarios = {
       await page.goto(URL_BASE);
       await page.click('[data-id=scores-link]');
       await page.waitForSelector('[data-id=rows] li');
+      check(
+        (await page.$$('[data-id=practice] .week span.played')).length === 1,
+        'scoreboard: today shows as a practised day',
+      );
       check(
         (await page.$$('[data-id=rows] li')).length === 2,
         'scoreboard: lists both personal bests',
@@ -863,11 +872,20 @@ const scenarios = {
       await page.goto(URL_BASE + '#/options');
       await page.uncheck('[data-id=metronome]');
       await page.selectOption('[data-id=accompaniment]', 'bass');
+      await page.selectOption('[data-id=goal]', '30');
+      await page.selectOption('[data-id=text-size]', 'large');
       await page.reload();
       check(
         !(await page.isChecked('[data-id=metronome]')) &&
           (await page.inputValue('[data-id=accompaniment]')) === 'bass',
         'options: choices are remembered',
+      );
+      check(
+        (await page.inputValue('[data-id=goal]')) === '30' &&
+          (await page.evaluate(() =>
+            document.documentElement.style.getPropertyValue('--text-scale'),
+          )) === '1.15',
+        'options: the weekly goal and text size are remembered and applied',
       );
       await page.click('[data-id=clear-scores]');
       check(
