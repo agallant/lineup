@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -741,6 +741,24 @@ const scenarios = {
     }
   },
 
+  async tuner() {
+    console.log('\n# Tuner hears a sung C4 and names the C string');
+    await session(fixtures.sung, async (page) => {
+      await page.goto(URL_BASE + '#/tuner');
+      await page.click('[data-id=start]');
+      await page.waitForFunction(
+        () => document.querySelector('[data-id=note]')?.textContent === 'C4',
+        null,
+        { timeout: 20000 },
+      );
+      check(true, 'tuner: names the C string');
+      check(
+        /In tune|tune (up|down)/.test(await text(page, 'advice')),
+        `tuner: says in tune (${await text(page, 'advice')})`,
+      );
+    });
+  },
+
   async home() {
     console.log('\n# Home menu, scoreboard, trophies and options');
     await session(null, async (page) => {
@@ -793,6 +811,7 @@ const scenarios = {
         'home: shows the level from stored progress',
       );
       check((await page.$$('[data-id=daily] a')).length === 4, 'home: four daily challenges');
+      check((await page.$('[data-id=tuner-link]')) !== null, 'home: the tuner is under Set up');
       for (const [game, route, pick] of [
         ['singline', 'sing', 'random-melody'],
         ['strumline', 'strum', 'random-chords'],
@@ -829,6 +848,17 @@ const scenarios = {
       check(
         (await page.$$('[data-trophy].earned')).length === 1,
         'scoreboard: one trophy earned, the rest locked',
+      );
+      await page.goto(URL_BASE + '#/tuner');
+      await page.selectOption('[data-id=tuning]', 'baritone');
+      check(
+        (await page.$$('[data-id=refs] button')).length === 4,
+        'tuner: a reference note for each of the four strings',
+      );
+      await page.selectOption('[data-id=tuning]', 'chromatic');
+      check(
+        await page.isHidden('[data-id=refs-panel]'),
+        'tuner: no reference notes for the chromatic tuner',
       );
       await page.goto(URL_BASE + '#/options');
       await page.uncheck('[data-id=metronome]');
