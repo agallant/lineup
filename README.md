@@ -194,7 +194,7 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    timing only: Lineup hears that you played, not which string or fret.
    More songs: chord songs (fifties progression, Skip to My Lou, 12-bar blues, a waltz, a minor
    one), three melodies to pick (Hot Cross Buns, Mary Had a Little Lamb, Ode to Joy), and
-   **Exercises**: major, dorian and pentatonic scales, thirds, arpeggios, long tones and a chromatic
+   **Exercises**: eight chord-change drills (two chords alternating, the changes coming faster as it goes), major, dorian and pentatonic scales, thirds, arpeggios, long tones and a chromatic
    scale, plucked on single strings. Under "Random": **🎲 Random chord song** (sixteen bars from
    common progressions such as I–IV–V–I and I–V–vi–IV, in C, G, D, F or A, the strum pattern repeating
    with a variation every four bars, ending at home), **🎲 Random waltz (3/4)** (the same in three

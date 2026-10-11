@@ -252,3 +252,53 @@ export function exerciseCharts(profileId: string): Record<string, Chart> {
   if (profileId === 'voice') out['ex-voice-range-finder'] = rangeFinder(parentTonic);
   return out;
 }
+
+/** Pairs of chords worth practising changes between, easiest first. */
+const CHANGE_PAIRS: readonly (readonly [string, string])[] = [
+  ['C', 'Am'],
+  ['C', 'F'],
+  ['C', 'G'],
+  ['G', 'D'],
+  ['Am', 'F'],
+  ['G', 'Em'],
+  ['D', 'A'],
+  ['Dm', 'G7'],
+];
+
+/**
+ * Chord-change drills for the ukulele: two chords alternating, with the changes coming faster as
+ * the drill goes on (every four beats, then two, then every beat), one down-stroke a beat. The
+ * ids are `ex-ukulele-strum-changes-<a>-<b>`.
+ */
+export function chordChangeDrills(): Record<string, Chart> {
+  const out: Record<string, Chart> = {};
+  for (const [a, b] of CHANGE_PAIRS) {
+    const notes: BeatNote[] = [];
+    let beat = 0;
+    let which = 0;
+    // changes every 4 beats (4 holds), every 2 beats (8 holds), then every beat (8 holds)
+    for (const [hold, count] of [
+      [4, 4],
+      [2, 8],
+      [1, 8],
+    ] as const) {
+      for (let i = 0; i < count; i++, which++) {
+        const chord = which % 2 === 0 ? a : b;
+        for (let k = 0; k < hold; k++, beat++) {
+          notes.push({ beat, lane: 'down', expected: { chord, direction: 'down' } });
+        }
+      }
+      which = 0; // each speed starts again on the first chord
+    }
+    out[`ex-ukulele-strum-changes-${a.toLowerCase()}-${b.toLowerCase()}`] = chartFromBeats(
+      {
+        title: `Chord changes: ${a} and ${b}`,
+        artist: 'Lineup',
+        bpm: 72,
+        instruments: ['ukulele-strum'],
+      },
+      notes,
+    );
+  }
+  return out;
+}
