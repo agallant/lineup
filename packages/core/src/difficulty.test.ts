@@ -90,6 +90,44 @@ describe('diatonic or chromatic', () => {
   });
 });
 
+describe('rating edge cases', () => {
+  it('counts sharps and flats against the best-fitting key when a song states none', () => {
+    const notes = [60, 61, 62, 63, 64, 65, 60, 61, 62, 63].map((pitch, i) => ({
+      beat: i,
+      beats: 0.8,
+      pitch,
+    }));
+    const keyless = chartFromBeats({ title: 'k', bpm: 80 }, notes);
+    const keyed = chartFromBeats({ title: 'k', bpm: 80, tonic: 60 }, notes);
+    expect(rateChart(keyless).scale).toBe('chromatic');
+    // the same notes rate the same whether or not the key is stated (the best fit here is C)
+    expect(rateChart(keyless).score).toBe(rateChart(keyed).score);
+    expect(rateChart(keyless).score).toBeGreaterThan(
+      rateChart(
+        chartFromBeats(
+          { title: 'd', bpm: 80 },
+          notes.map((n) => ({ ...n, pitch: 60 })),
+        ),
+      ).score,
+    );
+  });
+
+  it('does not invent a pitch for a fret position the ukulele does not have', () => {
+    const odd = chartFromBeats(
+      { title: 'odd', bpm: 80, instruments: ['ukulele-strum'] },
+      [0, 1, 2, 3].map((beat) => ({
+        beat,
+        expected: { frets: [null, null, null, null, 2, null] },
+      })),
+    );
+    const r = rateChart(odd);
+    expect(Number.isFinite(r.score)).toBe(true);
+    expect(r.score).toBeGreaterThanOrEqual(1);
+    expect(r.score).toBeLessThanOrEqual(10);
+    expect(r.kind).toBe('rhythm');
+  });
+});
+
 describe('how a rating reads', () => {
   it('draws the stars and joins the parts', () => {
     expect(starString(2)).toBe('★★☆☆☆');

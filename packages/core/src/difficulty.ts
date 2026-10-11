@@ -45,9 +45,10 @@ function pitchOf(note: ChartNote): number | null {
   const frets = noteFrets(note);
   if (!frets || note.expected?.chord !== undefined) return null;
   const played = frets.flatMap((f, i) =>
-    f === null || f === undefined ? [] : [UKULELE_OPEN[i]! + f],
+    f === null || f === undefined ? [] : [(UKULELE_OPEN[i] ?? NaN) + f],
   );
-  return played.length === 1 ? played[0]! : null;
+  // a string the ukulele does not have, or a chord shape, names no single pitch
+  return played.length === 1 && Number.isFinite(played[0]) ? played[0]! : null;
 }
 
 /**
@@ -58,6 +59,20 @@ export function isDiatonic(pitches: readonly number[], tonic?: number): boolean 
   if (pitches.length === 0) return true;
   const fits = (key: number) => pitches.every((p) => MAJOR.has((((p - key) % 12) + 12) % 12));
   return tonic === undefined ? Array.from({ length: 12 }, (_, k) => k).some(fits) : fits(tonic);
+}
+
+/** The major key (a pitch class) that holds the most of these pitches; the lowest wins a tie. */
+function bestKey(pitches: readonly number[]): number {
+  let best = 0;
+  let bestHits = -1;
+  for (let k = 0; k < 12; k++) {
+    const hits = pitches.filter((p) => MAJOR.has((((p - k) % 12) + 12) % 12)).length;
+    if (hits > bestHits) {
+      best = k;
+      bestHits = hits;
+    }
+  }
+  return best;
 }
 
 /** Onset gaps in seconds. */
@@ -76,10 +91,9 @@ function rateMelody(chart: Chart, pitches: number[]): number {
   const leaps = pitches.slice(1).map((p, i) => Math.abs(p - pitches[i]!));
   const leapShare = leaps.length ? leaps.filter((l) => l > 4).length / leaps.length : 0;
   const bigLeap = clamp01((Math.max(0, ...leaps) - 4) / 8);
-  const key = chart.meta.tonic;
-  const chromatic = pitches.filter(
-    (p) => key !== undefined && !MAJOR.has((((p - key) % 12) + 12) % 12),
-  );
+  // out of the key: against the song's own key, or the major key that holds the most of its notes
+  const key = chart.meta.tonic ?? bestKey(pitches);
+  const chromatic = pitches.filter((p) => !MAJOR.has((((p - key) % 12) + 12) % 12));
   const chromaticShare = clamp01((chromatic.length / pitches.length) * 8);
   const length = clamp01(chart.notes.length / 120);
   return (

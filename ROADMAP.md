@@ -36,8 +36,8 @@ real instrument to judge is listed again under "Waiting on real-device testing".
 ### 1. More to play, in every mode (ongoing)
 
 - **Difficulty and labels** (done): every song, exercise and random song is rated from its chart
-  (Beginner to Expert, 1 to 10), and melodies are labelled diatonic or chromatic, since instruments
-  differ in what they can play.
+  (Beginner to Expert, 1 to 10); melodies are also labelled diatonic or chromatic (other kinds of song
+  have no such label), since instruments differ in what they can play.
 - **Song variations** (done): any song can be made **easier** or **harder** (generated from the song
   and a seed): fewer or more passing notes, simpler or busier strum patterns, plainer or more
   syncopated grooves; the difficulty score changes with it. To come: a variation per phrase, and
