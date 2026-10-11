@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { COURSES } from './courses';
 import {
   completedCourse,
+  suggestNext,
   isPlainVariant,
   scoreRows,
   sortRows,
@@ -168,5 +169,25 @@ describe('completedCourse', () => {
     expect(completedCourse(weak)).toBeNull();
     const done = course.steps.map((s) => entry(s.songId, 0.7, 0.96));
     expect(completedCourse(done)?.id).toBe(course.id);
+  });
+});
+
+describe('suggestNext', () => {
+  const entry = (profile: string, songId: string, at: string) => ({
+    key: `${profile}|${songId}|normal`,
+    best: { score: 1, accuracy: 0.7, grade: 'B', at },
+  });
+
+  it('starts with the first step of the first path for a new player', () => {
+    const next = suggestNext([])!;
+    expect(next.course.id).toBe(COURSES[0]!.id);
+    expect(next.step.songId).toBe(COURSES[0]!.steps[0]!.songId);
+  });
+
+  it('continues the path played most recently', () => {
+    const wind = COURSES.find((c) => c.profileId === 'wind')!;
+    const next = suggestNext([entry('wind', wind.steps[0]!.songId, '2026-10-11T10:00:00Z')])!;
+    expect(next.course.id).toBe(wind.id);
+    expect(next.step.songId).toBe(wind.steps[1]!.songId);
   });
 });

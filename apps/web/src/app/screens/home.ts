@@ -2,6 +2,11 @@ import { DAILY_GAMES, dailyFor, dailyKey } from '../daily';
 import { ACHIEVEMENTS, DAILY_BONUS, ProgressStore, levelFor, weekMinutes } from '../progress';
 import { SettingsStore, safeLocalStorage } from '../settings';
 import type { Screen } from '../router';
+import { ScoreStore } from '../scores';
+import { suggestNext } from '../scoreboard';
+import { stepHref } from '../courses';
+import { escapeHtml } from '../audio';
+import { getSong } from '@lineup/core';
 
 /** What each game is, for the home menu: the route, the instrument and a line about it. */
 const CARDS = [
@@ -53,6 +58,7 @@ export const homeScreen: Screen = (root) => {
   const goal = prefs.goalMinutes;
   const minutes = weekMinutes(state.log, now);
   const trophies = Object.keys(state.achievements).length;
+  const next = suggestNext(new ScoreStore(safeLocalStorage()).entries());
   root.innerHTML = `
     <h1>Lineup</h1>
     <p>Rhythm games you play with a real instrument. Everything stays on this device.</p>
@@ -84,6 +90,14 @@ export const homeScreen: Screen = (root) => {
           : ''
       }
     </section>
+
+    ${
+      next
+        ? `<a class="card" href="${stepHref(next.course, next.step)}" data-id="suggested">
+      <strong>Up next: ${escapeHtml(getSong(next.step.songId).meta.title)}</strong>
+      <span class="muted">${escapeHtml(next.course.title)} · ${escapeHtml(next.step.focus)}</span></a>`
+        : ''
+    }
 
     <h2>Today’s challenge <small>a new song each day, the same for everyone</small></h2>
     <ul class="menu daily" data-id="daily">
