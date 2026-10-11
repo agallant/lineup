@@ -1,5 +1,5 @@
 import { loadChart, type Chart } from '../chart';
-import { exerciseCharts } from '../generate/exercises';
+import { chordChangeDrills, exerciseCharts } from '../generate/exercises';
 import { generateChordSong, parseChordSongId } from '../generate/chordsong';
 import { generateGroove, parseGrooveId } from '../generate/groove';
 import { generateMelody, parseMelodyId } from '../generate/melody';
@@ -45,6 +45,7 @@ const EXERCISES: Record<string, Chart> = {
   ...exerciseCharts('voice'),
   ...exerciseCharts('wind'),
   ...exerciseCharts('ukulele-strum'),
+  ...chordChangeDrills(),
   ...rhythmExercises('hand-percussion'),
   ...rhythmExercises('drum-kit'),
   ...rhythmExercises('clap'),

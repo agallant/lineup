@@ -1,9 +1,18 @@
 import { escapeHtml } from '../audio';
-import { ACHIEVEMENTS, GAMES, ProgressStore, levelFor, starText } from '../progress';
+import {
+  ACHIEVEMENTS,
+  GAMES,
+  ProgressStore,
+  levelFor,
+  recentDays,
+  starText,
+  weekMinutes,
+} from '../progress';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
 import { scoreRows, sortRows, type ScoreSort } from '../scoreboard';
 import { safeLocalStorage } from '../settings';
+import { UserSongStore, lookupUserSong } from '../user-songs';
 
 const SORTS: readonly { id: ScoreSort; label: string }[] = [
   { id: 'recent', label: 'Newest first' },
@@ -24,7 +33,11 @@ export const scoreboardScreen: Screen = (root) => {
   const state = progress.get();
   const lvl = levelFor(state.xp);
   const streak = progress.streak();
-  const all = scoreRows(new ScoreStore(storage).entries());
+  const now = new Date();
+  const days = recentDays(state.log, now, 14);
+  const peak = Math.max(60, ...days.map((d) => d.seconds));
+  const songs = new UserSongStore(storage);
+  const all = scoreRows(new ScoreStore(storage).entries(), (id) => lookupUserSong(id, songs));
 
   root.innerHTML = `
     <p><a href="#/">← Home</a></p>
@@ -40,6 +53,17 @@ export const scoreboardScreen: Screen = (root) => {
         <dt>Days played</dt><dd>${state.days.length}</dd>
         <dt>Streak</dt><dd data-id="streak">${streak} ${streak === 1 ? 'day' : 'days'}</dd>
       </dl>
+    </section>
+
+    <section class="panel" data-id="practice">
+      <h2>Practice <small>last 14 days</small></h2>
+      <div class="week" role="img" aria-label="Minutes practised on each of the last 14 days">${days
+        .map(
+          (d) =>
+            `<span class="${d.seconds > 0 ? 'played' : ''}" style="height:${d.seconds > 0 ? Math.max(8, Math.round((d.seconds / peak) * 100)) : 5}%" title="${d.day}: ${Math.round(d.seconds / 60)} min, ${d.plays} ${d.plays === 1 ? 'song' : 'songs'}"></span>`,
+        )
+        .join('')}</div>
+      <p class="muted">${weekMinutes(state.log, now)} minutes this week · ${days.reduce((a, d) => a + d.plays, 0)} songs in 14 days</p>
     </section>
 
     <section class="panel">

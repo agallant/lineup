@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { builtinSongs, getSong } from '../songs';
-import { applyPart, phraseBars, slicePart, songParts } from './practice';
+import { applyPart, echoChart, phraseBars, slicePart, songParts } from './practice';
 
 describe('songParts', () => {
   it('cuts a song into phrases at bar lines, and leaves very short ones whole', () => {
@@ -45,5 +45,22 @@ describe('slicePart / applyPart', () => {
     expect(applyPart(night, -1)).toBe(night);
     expect(applyPart(night, 99)).toBe(night);
     expect(applyPart(night, 0).notes.length).toBeLessThan(night.notes.length);
+  });
+});
+
+describe('echoChart', () => {
+  it('moves every note later by whole beats, past the end of the original', () => {
+    const song = getSong('sing-hot-cross-buns');
+    const spb = 60 / song.meta.bpm;
+    const { chart, listenEnd } = echoChart(song);
+    const end = song.notes.reduce((m, n) => Math.max(m, n.t + n.duration), 0);
+    expect(listenEnd).toBeGreaterThan(end);
+    expect(listenEnd / spb).toBeCloseTo(Math.round(listenEnd / spb), 5);
+    expect(chart.notes).toHaveLength(song.notes.length);
+    chart.notes.forEach((n, i) => {
+      expect(n.t).toBeCloseTo(song.notes[i]!.t + listenEnd, 5);
+      expect(n.pitch).toBe(song.notes[i]!.pitch);
+    });
+    expect(chart.meta).toEqual(song.meta);
   });
 });

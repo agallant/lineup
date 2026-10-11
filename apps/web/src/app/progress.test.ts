@@ -7,9 +7,11 @@ import {
   dayKey,
   gameOf,
   levelFor,
+  recentDays,
   starText,
   starsFor,
   streakOf,
+  weekMinutes,
   xpFor,
   type PlayResult,
 } from './progress';
@@ -60,6 +62,7 @@ describe('levels and stars', () => {
     expect(gameOf('drum-kit')?.label).toBe('Beatline');
     expect(gameOf('ukulele-strum')?.label).toBe('Strumline');
     expect(gameOf('wind')?.label).toBe('Windline');
+    expect(gameOf('ear')?.label).toBe('Ear training');
     expect(gameOf('nope')).toBeNull();
   });
 });
@@ -132,6 +135,39 @@ describe('ProgressStore with two tabs', () => {
   });
 });
 
+describe('ear training', () => {
+  it('counts as a game but not towards Full band, and earns Golden ears for a clean medium round', () => {
+    const p = new ProgressStore(new Mem());
+    const ear = (patch: Partial<PlayResult> = {}) =>
+      play({
+        profileId: 'ear',
+        songId: 'ear-intervals-medium',
+        rating: 5,
+        misses: 0,
+        notes: 10,
+        accuracy: 1,
+        ...patch,
+      });
+    const first = p.recordPlay(ear(), at(1));
+    expect(first.newAchievements.map((a) => a.id)).toContain('golden-ears');
+    expect(first.newAchievements.map((a) => a.id)).not.toContain('all-games');
+    expect(p.get().perGame).toEqual({ ear: 1 });
+    p.recordPlay(play({ profileId: 'voice', songId: 'a' }), at(2));
+    p.recordPlay(play({ profileId: 'wind', songId: 'b' }), at(3));
+    p.recordPlay(play({ profileId: 'clap', songId: 'c' }), at(4));
+    const last = p.recordPlay(play({ profileId: 'ukulele-strum', songId: 'd' }), at(5));
+    expect(last.newAchievements.map((a) => a.id)).toContain('all-games');
+    // an easy round, or one with a mistake, is not golden
+    const q = new ProgressStore(new Mem());
+    expect(q.recordPlay(ear({ rating: 3 }), at(1)).newAchievements.map((a) => a.id)).not.toContain(
+      'golden-ears',
+    );
+    expect(q.recordPlay(ear({ misses: 1 }), at(2)).newAchievements.map((a) => a.id)).not.toContain(
+      'golden-ears',
+    );
+  });
+});
+
 describe('ProgressStore', () => {
   it('records plays: XP, day bonus once a day, level ups and the first achievements', () => {
     const p = new ProgressStore(new Mem());
@@ -189,5 +225,39 @@ describe('ProgressStore', () => {
     expect(new ProgressStore(mem).get()).toMatchObject({ xp: 0, plays: 0, days: ['2026-10-01'] });
     const blocked = new ProgressStore(null);
     expect(blocked.recordPlay(play(), at(1)).xpGained).toBeGreaterThan(0);
+  });
+});
+
+describe('practice log', () => {
+  it('adds up songs and seconds per day, and reads back the recent days', () => {
+    const p = new ProgressStore(new Mem());
+    p.recordPlay(play({ seconds: 90 }), at(9));
+    p.recordPlay(play({ seconds: 30.4 }), at(10));
+    p.recordPlay(play({ seconds: 60 }), at(10));
+    p.recordPlay(play(), at(10)); // no length known: counts as a song, no time
+    const log = p.get().log;
+    expect(log['2026-10-10']).toEqual({ plays: 3, seconds: 90 });
+    const days = recentDays(log, at(11), 4);
+    expect(days.map((d) => d.day)).toEqual([
+      '2026-10-08',
+      '2026-10-09',
+      '2026-10-10',
+      '2026-10-11',
+    ]);
+    expect(days.map((d) => d.seconds)).toEqual([0, 90, 90, 0]);
+    expect(weekMinutes(log, at(11))).toBe(3);
+    expect(weekMinutes(log, at(20))).toBe(0); // the week has moved on
+  });
+
+  it('keeps only the last 90 days and ignores junk in storage', () => {
+    const mem = new Mem();
+    const p = new ProgressStore(mem);
+    for (let d = 0; d < 100; d++) p.recordPlay(play({ seconds: 10 }), new Date(2026, 0, 1 + d, 12));
+    expect(Object.keys(p.get().log)).toHaveLength(90);
+    mem.data.set(
+      'lineup.progress.v1',
+      '{"log": {"2026-10-01": {"plays": 2, "seconds": 70}, "bad": {"plays": 1}, "2026-10-02": 5}}',
+    );
+    expect(new ProgressStore(mem).get().log).toEqual({ '2026-10-01': { plays: 2, seconds: 70 } });
   });
 });

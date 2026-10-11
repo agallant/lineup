@@ -2,7 +2,16 @@ import { exportBackup, importBackup, lineupKeys } from '../backup';
 import { ProgressStore } from '../progress';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
-import { ACCOMPANIMENTS, DEFAULT_SETTINGS, SettingsStore, safeLocalStorage } from '../settings';
+import { applyTextSize, applyTheme } from '../appearance';
+import {
+  ACCOMPANIMENTS,
+  DEFAULT_SETTINGS,
+  GOAL_MINUTES,
+  SettingsStore,
+  safeLocalStorage,
+  type TextSize,
+  type Theme,
+} from '../settings';
 import { DIFFICULTIES } from '@lineup/core';
 
 const DIFFICULTY_TEXT: Record<string, string> = {
@@ -60,7 +69,23 @@ export const optionsScreen: Screen = (root) => {
     </section>
 
     <section class="panel">
+      <h2>Practice goal</h2>
+      <div class="row"><label>Minutes to practise each week <select data-id="goal">${GOAL_MINUTES.map(
+        (m) => `<option value="${m}">${m === 0 ? 'No goal' : `${m} minutes`}</option>`,
+      ).join('')}</select></label></div>
+      <p class="muted">The home menu shows the last seven days against your goal.</p>
+    </section>
+
+    <section class="panel">
       <h2>Display</h2>
+      <div class="row"><label>Colours <select data-id="theme">
+        <option value="dark">Dark</option>
+        <option value="light">Light</option>
+        <option value="contrast">High contrast</option></select></label></div>
+      <div class="row"><label>Text size <select data-id="text-size">
+        <option value="normal">Normal</option>
+        <option value="large">Large</option>
+        <option value="larger">Larger</option></select></label></div>
       <label class="check"><input type="checkbox" data-id="fingerings" /> Windline: show the fingering of the current and next note</label>
       <label class="check"><input type="checkbox" data-id="debug" /> Debug overlay while playing</label>
     </section>
@@ -99,6 +124,9 @@ export const optionsScreen: Screen = (root) => {
     $<HTMLInputElement>('chords').checked = v.checkChords;
     $<HTMLInputElement>('fingerings').checked = v.showFingerings;
     $<HTMLInputElement>('debug').checked = v.debug;
+    $<HTMLSelectElement>('goal').value = String(v.goalMinutes);
+    $<HTMLSelectElement>('text-size').value = v.textSize;
+    $<HTMLSelectElement>('theme').value = v.theme;
   };
   show();
 
@@ -131,9 +159,25 @@ export const optionsScreen: Screen = (root) => {
     }),
   );
 
+  $<HTMLSelectElement>('goal').addEventListener('change', (e) =>
+    settings.update({ goalMinutes: Number((e.target as HTMLSelectElement).value) }),
+  );
+  $<HTMLSelectElement>('text-size').addEventListener('change', (e) => {
+    const size = settings.update({
+      textSize: (e.target as HTMLSelectElement).value as TextSize,
+    }).textSize;
+    applyTextSize(size);
+  });
+
+  $<HTMLSelectElement>('theme').addEventListener('change', (e) => {
+    applyTheme(settings.update({ theme: (e.target as HTMLSelectElement).value as Theme }).theme);
+  });
+
   $('reset-settings').addEventListener('click', () => {
     settings.update({ ...DEFAULT_SETTINGS, songs: {}, keyShifts: {} });
     show();
+    applyTextSize(settings.get().textSize);
+    applyTheme(settings.get().theme);
     msg('Options are back to their defaults.');
   });
   // erasing needs a second tap, so a stray touch cannot lose a high score

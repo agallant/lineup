@@ -8,6 +8,7 @@ import {
   LIBRARY,
   MELODY_LEVELS,
   exerciseCharts,
+  chordChangeDrills,
   generateChordSong,
   generateGroove,
   generateMelody,
@@ -174,6 +175,14 @@ describe('generated and exercise material, played through the real chain', () =>
       'D . . . D . . .',
     );
     perfect(uke(chart).score.counts, chart.notes.length);
+  });
+
+  it.each(Object.keys(chordChangeDrills()))('%s: strums are almost all heard', (id) => {
+    const chart = getSong(id);
+    const { counts } = uke(chart).score;
+    // the same few strums right after a change can be missed in the simulation (see the README)
+    expect(counts.miss / chart.notes.length).toBeLessThan(0.1);
+    expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
   });
 
   it.each(

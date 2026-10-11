@@ -1,6 +1,6 @@
 import { DAILY_GAMES, dailyFor, dailyKey } from '../daily';
-import { ACHIEVEMENTS, DAILY_BONUS, ProgressStore, levelFor } from '../progress';
-import { safeLocalStorage } from '../settings';
+import { ACHIEVEMENTS, DAILY_BONUS, ProgressStore, levelFor, weekMinutes } from '../progress';
+import { SettingsStore, safeLocalStorage } from '../settings';
 import type { Screen } from '../router';
 
 /** What each game is, for the home menu: the route, the instrument and a line about it. */
@@ -33,6 +33,13 @@ const CARDS = [
     who: 'Claps, taps, hand drums, kit',
     blurb: 'Hit the rhythm on the beat: grooves, rudiments and random patterns.',
   },
+  {
+    id: 'ear',
+    href: '#/ear',
+    name: 'Ear training',
+    who: 'No instrument needed',
+    blurb: 'Hear two notes or a chord and name them. Intervals and chord types, ten at a time.',
+  },
 ] as const;
 
 /** The home menu: the four games, then progress, then set-up tools and options. */
@@ -42,10 +49,20 @@ export const homeScreen: Screen = (root) => {
   const state = store.get();
   const lvl = levelFor(state.xp);
   const streak = store.streak(now);
+  const prefs = new SettingsStore(safeLocalStorage()).get();
+  const goal = prefs.goalMinutes;
+  const minutes = weekMinutes(state.log, now);
   const trophies = Object.keys(state.achievements).length;
   root.innerHTML = `
     <h1>Lineup</h1>
     <p>Rhythm games you play with a real instrument. Everything stays on this device.</p>
+
+    ${
+      prefs.seenHelp
+        ? ''
+        : `<a class="card" href="#/help" data-id="new-here"><strong>New here?</strong>
+      <span class="muted">A one-minute guide to the games, scoring and what stays private.</span></a>`
+    }
 
     <a class="card level" href="#/scores" data-id="level-card">
       <span class="level-name">Level ${lvl.level} · ${lvl.title}</span>
@@ -54,6 +71,19 @@ export const homeScreen: Screen = (root) => {
         streak > 0 ? `${streak}-day streak` : 'no streak yet: play today to start one'
       } · ${trophies} of ${ACHIEVEMENTS.length} trophies</span>
     </a>
+
+    <section class="week-card" data-id="week" aria-label="Practice this week">
+      <p class="muted">${
+        goal > 0
+          ? `This week: ${minutes} of ${goal} minutes${minutes >= goal ? ' ✓ goal reached' : ''}`
+          : `This week: ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} of practice`
+      }</p>
+      ${
+        goal > 0
+          ? `<span class="bar" role="img" aria-label="${Math.min(minutes, goal)} of ${goal} minutes"><span style="width:${Math.min(100, Math.round((minutes / goal) * 100))}%"></span></span>`
+          : ''
+      }
+    </section>
 
     <h2>Today’s challenge <small>a new song each day, the same for everyone</small></h2>
     <ul class="menu daily" data-id="daily">
@@ -85,6 +115,12 @@ export const homeScreen: Screen = (root) => {
         <span>Your best score on every song, stars, and the trophies you have earned.</span></a></li>
     </ul>
 
+    <h2>Make</h2>
+    <ul class="menu">
+      <li><a class="card" href="#/make" data-id="make-link"><strong>My songs</strong>
+        <span>Write your own melody, chord song or rhythm as text; it appears in the song menus.</span></a></li>
+    </ul>
+
     <h2>Set up <small>once per device or instrument</small></h2>
     <ul class="menu">
       <li><a class="card" href="#/tuner" data-id="tuner-link"><strong>Tuner</strong>
@@ -97,6 +133,8 @@ export const homeScreen: Screen = (root) => {
 
     <h2>More</h2>
     <ul class="menu">
+      <li><a class="card" href="#/help" data-id="help-link"><strong>How to play</strong>
+        <span>What each game is, how scoring and progress work, and what stays private.</span></a></li>
       <li><a class="card" href="#/options" data-id="options-link"><strong>Options</strong>
         <span>Sound, scoring, your data and backups.</span></a></li>
     </ul>

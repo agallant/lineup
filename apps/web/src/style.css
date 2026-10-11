@@ -24,7 +24,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font:
-    16px/1.4 -apple-system,
+    calc(16px * var(--text-scale, 1)) / 1.4 -apple-system,
     system-ui,
     sans-serif;
   -webkit-text-size-adjust: 100%;
@@ -715,4 +715,127 @@ label.file {
 
 a.card.done {
   border-color: var(--good);
+}
+
+/* a week of practice */
+.week {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 64px;
+  margin: 8px 0;
+}
+
+.week span {
+  flex: 1;
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--line);
+}
+
+.week span.played {
+  background: var(--accent);
+}
+
+button.right {
+  border-color: var(--good);
+  color: var(--good);
+}
+
+button.wrong {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+label.block {
+  display: block;
+  margin: 8px 0;
+}
+
+textarea,
+input[type='text'] {
+  display: block;
+  width: 100%;
+  font: inherit;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+textarea {
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+code {
+  background: var(--panel);
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+/* colour schemes: dark is the default above */
+:root[data-theme='light'] {
+  --bg: #f7f5fb;
+  --panel: #ffffff;
+  --line: #c9c3dc;
+  --text: #1c1830;
+  --muted: #5a5472;
+  --accent: #8a5a00;
+  --good: #05735a;
+  --bad: #b3123a;
+  color-scheme: light;
+}
+
+:root[data-theme='contrast'] {
+  --bg: #000000;
+  --panel: #0a0a0a;
+  --line: #ffffff;
+  --text: #ffffff;
+  --muted: #e0e0e0;
+  --accent: #ffee00;
+  --good: #00ff9c;
+  --bad: #ff5c7a;
+  color-scheme: dark;
+}
+
+/* the lines inside a menu card are text, not buttons of their own */
+.menu a.card span {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.menu a.card span.muted {
+  color: var(--muted);
+}
+
+/* a card link outside a menu list (the level card) looks like the ones inside */
+a.card {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  text-decoration: none;
+}
+
+a.card .muted {
+  color: var(--muted);
+}
+
+dl.help {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+}
+
+dl.help dt {
+  font-weight: 600;
+}
+
+dl.help dd {
+  margin: 0;
 }

@@ -49,3 +49,18 @@ export function applyPart(chart: Chart, index: number): Chart {
   const part = index >= 0 ? songParts(chart)[index] : undefined;
   return part ? slicePart(chart, part) : chart;
 }
+
+/**
+ * A song for "listen first, then play it back": the same notes moved later by the length of the song
+ * plus a short gap (a whole number of beats, so the clicks line up), leaving room to hear it
+ * played first. `listenEnd` is where the player's turn begins, in song time.
+ */
+export function echoChart(chart: Chart, gapBeats = 2): { chart: Chart; listenEnd: number } {
+  const spb = 60 / chart.meta.bpm;
+  const end = chart.notes.reduce((m, n) => Math.max(m, n.t + n.duration), 0);
+  const listenEnd = Math.round(Math.ceil((end + gapBeats * spb) / spb - 1e-6) * spb * 1e6) / 1e6;
+  const notes = chart.notes.map((n) => ({ ...n, t: Math.round((n.t + listenEnd) * 1e6) / 1e6 }));
+  const result = loadChart({ ...chart, notes });
+  if (!result.ok) throw new Error(`an echo chart is invalid:\n${result.errors.join('\n')}`);
+  return { chart: result.value, listenEnd };
+}

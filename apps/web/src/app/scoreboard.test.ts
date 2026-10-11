@@ -27,10 +27,11 @@ describe('scoreRows', () => {
     { key: 'voice|gen-major-easy-1|normal', best: best(300, 0.5) },
     { key: 'clap|gone-song|', best: best(100, 0.2) },
     { key: 'mystery|x|', best: best(1, 1) },
+    { key: 'ear|ear-intervals-hard|', best: best(700, 0.8) },
   ]);
 
   it('finds titles, difficulty and stars, and skips profiles it does not know', () => {
-    expect(rows).toHaveLength(4);
+    expect(rows).toHaveLength(5);
     expect(rows[0]).toMatchObject({
       game: 'Singline',
       title: 'Hot Cross Buns',
@@ -45,16 +46,36 @@ describe('scoreRows', () => {
     });
   });
 
+  it('names ear-training rounds', () => {
+    expect(rows[4]).toMatchObject({
+      game: 'Ear training',
+      title: 'Ear training: intervals, hard',
+      rating: 8,
+    });
+  });
+
   it('shows the id of a song this version no longer has', () => {
     expect(rows[3]).toMatchObject({ title: 'gone-song', rating: null, game: 'Beatline' });
   });
 
   it('sorts by recency, score, stars and difficulty', () => {
     expect(sortRows(rows, 'recent')[0]!.game).toBe('Strumline');
-    expect(sortRows(rows, 'score').map((r) => r.score)).toEqual([900, 500, 300, 100]);
+    expect(sortRows(rows, 'score').map((r) => r.score)).toEqual([900, 700, 500, 300, 100]);
     expect(sortRows(rows, 'stars')[0]!.stars).toBe(3);
     const hardest = sortRows(rows, 'hardest');
     expect((hardest[0]!.rating ?? 0) >= (hardest[1]!.rating ?? 0)).toBe(true);
+  });
+});
+
+describe('scoreRows with the player’s own songs', () => {
+  it('uses their title and difficulty', () => {
+    const rows = scoreRows([{ key: 'voice|my-abc|normal', best: best(300, 0.9) }], (id) =>
+      id === 'my-abc' ? { title: 'My tune', rating: 4 } : null,
+    );
+    expect(rows[0]).toMatchObject({ title: 'My tune', rating: 4, game: 'Singline' });
+    expect(scoreRows([{ key: 'voice|my-gone|normal', best: best(1, 1) }])[0]!.title).toBe(
+      'my-gone',
+    );
   });
 });
 

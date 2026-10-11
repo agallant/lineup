@@ -29,7 +29,9 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
 - **Home, scoreboard and options**: home menu in sections (games, progress, set-up tools, options);
   scoreboard of personal bests with stars; XP, levels, day streaks and trophies; an options screen with
   backup and restore; mixed-difficulty versions; play-along bass and chords; a daily challenge per game;
-  practising one phrase of a song at a time.
+  practising one phrase of a song at a time; a tuner; ear training (intervals and chord types); listen-first
+  (echo) play; a practice log with a weekly goal; stars on song menus; jingles; **My songs** (write
+  your own melody, chord song or rhythm as text); a speed trainer that offers the next speed after a clean run.
 - **Product**: best scores, song info, offline start, session logs you can copy, end-to-end tests in CI.
 
 ## Development goals
@@ -83,7 +85,49 @@ real instrument to judge is listed again under "Waiting on real-device testing".
 
 - Accessibility: audited by reading (labels on every control, 44px touch targets, visible focus,
   contrast, reduced motion); a real VoiceOver pass on the iPad is still to do.
-- Docstring coverage (CodeRabbit reports about 61% against an 80% target).
+- Docstring coverage is about 90% of exports (was 61%).
+
+### 7. Ideas worth considering
+
+Roughly in order of how well they fit a private, offline edutainment game.
+
+**Learn**
+
+- **Rhythm dictation**: hear a one-bar rhythm, then clap it back (the listen-first mode, but unseen).
+- **Sight-reading / note names**: a staff view with an option to hide the note labels, and a
+  "name that note" quiz in the ear-training screen.
+- **Scale and key practice paths**: a short sequence of exercises that unlocks the next as you earn stars
+  (a "course"), per instrument.
+- **Interval singing**: hear a note and sing the note a fourth above it (ear training with the mic).
+- **Chord-change trainer** for the ukulele: two chords alternating at a rising tempo, scored on the
+  change.
+- **Tempo ladders**: finish a song at 80%, 90%, 100% in a row (extends the speed trainer).
+
+**Play**
+
+- **Play-along backing styles**: drum loops and simple bass patterns under melodies and chord songs.
+- **Duet mode**: two players alternate phrases of one song (the same device, passed around).
+- **Call and response** in Beatline: the app plays a pattern each bar and you answer it, random each time.
+- **Free play with a metronome and a recorder**: record a take (kept on the device), play it back.
+
+**Game feel**
+
+- **Seasonal or themed challenges** (a week of waltzes, a week of pentatonic) on top of the daily one.
+- **Badges for each song family** and a "collection" page of songs cleared with three stars.
+- **Streak freezes** and rest days so a missed day does not erase a long streak.
+- **Personal records timeline**: when each best was set, and how it improved.
+
+**Make and share (still private)**
+
+- Song maker extras: transpose, import from a MIDI file or pasted ABC notation, copy a song as text to
+  share through the backup file or a message.
+- **Lyrics** shown under a melody for sing-along.
+
+**Polish**
+
+- Theme choices (light, high contrast), left-handed layouts, and larger touch targets on the game screens.
+- A first-run tour and a "how to play" page for each game.
+- Haptic feedback (where the device supports it) on a hit or a miss.
 
 ### Waiting on real-device testing
 

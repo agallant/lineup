@@ -114,20 +114,35 @@ The difficulty in the song info changes with the version, and best scores are ke
 
 All of this stays on the device (browser storage); nothing is sent anywhere.
 
-- **Home** groups the four games under _Play_, the scoreboard under _Progress_, and the timing
+- **Home** groups the games (the four instruments and ear training) under _Play_, the scoreboard under _Progress_, and the timing
   calibration and the mic and latency test under _Set up_ (they are tools, not games), with your level
   and streak on top.
 - **Today's challenge**: one random song per game per day (the same for everyone, no network: it
   comes from the date), on the home menu. Reach 60% for +50 XP, once per game per day.
+- **Listen first** (Singline, Windline, Beatline): the song is played once (as tones, or ticks for a rhythm), then you play it back
+  from memory (best with a short Part).
 - **Part**: next to Version, practise one phrase of a song (four bars, two in a short song) on its own;
   best scores are kept per part.
+- **My songs** (`#/make`, under Make): write a melody, a chord song or a rhythm as text (note names
+  like `E4:2`, chords like `C | Am | F | G`, lanes like `kick: x...x...`); it is checked as you type,
+  rated like any other song, and joins the song menus of the games that suit it (a melody goes to
+  Singline, and to Windline when no note is below the key note). Songs are kept on the device and
+  included in the backup file.
+- **Ear training** (`#/ear`): ten questions, no instrument or microphone: name the interval between
+  two notes, or the kind of chord (major, minor, dominant 7th...), at three levels; stars, XP and the
+  scoreboard work as in the other games.
+- **Tuner** (`#/tuner`, under Set up): ukulele (G C E A), low-G and baritone tunings or any note, with
+  a needle and reference tones. A tool, not a game.
+- **Practice goal**: pick minutes per week in Options; the home menu and scoreboard show the last
+  seven and fourteen days.
 - **Scoreboard** (`#/scores`) lists your best score on every song with stars (★ 60%, ★★ 80%, ★★★ 95%
   accuracy), filtered by game and sorted by newest, highest score, most stars or hardest song.
 - **Progress**: every finished song earns XP (more for accuracy and for harder songs, plus a bonus for
   a clean run and for the first song of the day), which raises your level; playing on days in a row
   builds a streak; trophies (First notes, Flawless, Sharps and flats, Full band...) are earned once.
   The auto-play demo earns nothing.
-- **Options** (`#/options`): metronome, guide tone, play-along backing, scoring strictness, Windline
+- **How to play** (`#/help`): what each game is, scoring, progress and privacy, in a page.
+- **Options** (`#/options`): colours (dark, light, high contrast), metronome, guide tone, jingles, play-along backing, weekly goal, text size, scoring strictness, Windline
   octaves and fingerings, chord checking, the debug overlay; reset options, erase scores or progress
   (two taps), and save or restore a **backup file** of everything the app keeps.
 - **Play-along backing** (Options, off by default): quiet music under a song, for headphones. _Bass
@@ -180,7 +195,7 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    timing only: Lineup hears that you played, not which string or fret.
    More songs: chord songs (fifties progression, Skip to My Lou, 12-bar blues, a waltz, a minor
    one), three melodies to pick (Hot Cross Buns, Mary Had a Little Lamb, Ode to Joy), and
-   **Exercises**: major, dorian and pentatonic scales, thirds, arpeggios, long tones and a chromatic
+   **Exercises**: eight chord-change drills (two chords alternating, the changes coming faster as it goes), major, dorian and pentatonic scales, thirds, arpeggios, long tones and a chromatic
    scale, plucked on single strings. Under "Random": **🎲 Random chord song** (sixteen bars from
    common progressions such as I–IV–V–I and I–V–vi–IV, in C, G, D, F or A, the strum pattern repeating
    with a variation every four bars, ending at home), **🎲 Random waltz (3/4)** (the same in three

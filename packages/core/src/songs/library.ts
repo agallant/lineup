@@ -111,6 +111,35 @@ const TUNES: readonly Tune[] = [
     notes: `G3 | C4:2 E4:.5 C4:.5 | E4:2 D4 | C4:2 A3 | G3:2 G3 | C4:2 E4:.5 C4:.5 | E4:2 D4 | G4:3`,
   },
   {
+    id: 'ode-to-joy',
+    title: 'Ode to Joy',
+    artist: 'Beethoven',
+    bpm: 100,
+    tonic: 60,
+    notes: `E4 E4 F4 G4 | G4 F4 E4 D4 | C4 C4 D4 E4 | E4:1.5 D4:.5 D4:2 |
+      E4 E4 F4 G4 | G4 F4 E4 D4 | C4 C4 D4 E4 | D4:1.5 C4:.5 C4:2`,
+  },
+  {
+    id: 'london-bridge',
+    title: 'London Bridge',
+    artist: 'Traditional',
+    bpm: 112,
+    tonic: 60,
+    notes: `G4:1.5 A4:.5 G4 F4 | E4 F4 G4:2 | D4 E4 F4:2 | E4 F4 G4:2 |
+      G4:1.5 A4:.5 G4 F4 | E4 F4 G4:2 | D4 G4 E4 C4:2`,
+  },
+  {
+    id: 'happy-birthday',
+    title: 'Happy Birthday',
+    artist: 'Hill / Hill',
+    bpm: 96,
+    tonic: 60,
+    beatsPerBar: 3,
+    voiceOnly: true,
+    notes: `G3:.75 G3:.25 A3 G3 C4 B3:2 | G3:.75 G3:.25 A3 G3 D4 C4:2 |
+      G3:.75 G3:.25 G4 E4 C4 B3 | A3 F4:.75 F4:.25 E4 C4 D4 C4:2`,
+  },
+  {
     id: 'joy-to-the-world',
     title: 'Joy to the World (opening)',
     artist: 'Handel / Mason',
@@ -220,6 +249,16 @@ export const STRUM_SONGS: Readonly<Record<string, Chart>> = {
     },
     'Am | Am | Dm | Dm | Em | Am | Dm | Am | Am | Am | Dm | Dm | Em | Em | Am | Am',
     'D . D U . U D U',
+  ),
+  'strum-rising-sun': strumChart(
+    {
+      title: 'House of the Rising Sun (Am C D F Am E)',
+      artist: 'Traditional',
+      bpm: 76,
+      instruments: ['ukulele-strum'],
+    },
+    'Am | C | D | F | Am | C | E | E | Am | C | D | F | Am | E | Am | Am',
+    'D . D . D U D .',
   ),
   'pick-hot-cross-buns': pickedMelodyChart(
     {

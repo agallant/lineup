@@ -8,3 +8,4 @@ export * from './rudiments';
 export * from './variations';
 export * from './target';
 export * from './practice';
+export * from './ear';

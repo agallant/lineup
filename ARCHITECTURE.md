@@ -222,7 +222,7 @@ tolerant store class (corrupt or blocked storage means "start empty", never a cr
 `settings.ts`, `scores.ts` (best per song and way of playing), `progress.ts` (XP, levels, day
 streaks, trophies; pure rules plus a store) and the calibration store in core. `backup.ts` exports
 and restores all `lineup.*` keys as one JSON file. `scoreboard.ts` turns stored score keys
-(`profile|song|variant`) back into rows by looking songs up in the library. `game/reward.ts` builds
+(`profile|song|variant`) back into rows by looking songs up in the library. `user-songs.ts` keeps the songs a player writes as source text and compiles them with the same notation functions as the library (so they are rated, varied and scored like any song); `game/reward.ts` builds
 the results-screen reward from a finished song. `game/accompaniment.ts` plans bass and chord backing
 as data (`BackingEvent`s in song time, harmonising a melody a bar at a time), merged with the click
 and guide tone by `planAllBacking` and scheduled by `playBacking`.

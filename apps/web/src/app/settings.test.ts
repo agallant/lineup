@@ -1,6 +1,6 @@
 import type { KeyValueStore } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, SettingsStore, keyShiftFor } from './settings';
+import { DEFAULT_SETTINGS, SettingsStore, keyShiftFor, nextSpeed } from './settings';
 
 class Mem implements KeyValueStore {
   data = new Map<string, string>();
@@ -139,6 +139,47 @@ describe('SettingsStore', () => {
     expect(s.update({ variation: 'hardest' as never }).variation).toBe('original');
   });
 
+  it('remembers that the help page was opened', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get().seenHelp).toBe(false);
+    s.update({ seenHelp: true });
+    expect(new SettingsStore(mem).get().seenHelp).toBe(true);
+  });
+
+  it('remembers the colour scheme, and ignores anything else', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get().theme).toBe('dark');
+    expect(s.update({ theme: 'contrast' }).theme).toBe('contrast');
+    expect(new SettingsStore(mem).get().theme).toBe('contrast');
+    expect(s.update({ theme: 'neon' as never }).theme).toBe('dark');
+  });
+
+  it('remembers listen-first, and ignores anything else', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get().listenFirst).toBe(false);
+    expect(s.update({ listenFirst: true }).listenFirst).toBe(true);
+    expect(new SettingsStore(mem).get().listenFirst).toBe(true);
+    expect(s.update({ listenFirst: 'yes' as never }).listenFirst).toBe(false);
+  });
+
+  it('remembers the weekly goal and text size, and ignores anything else', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get()).toMatchObject({ goalMinutes: 0, textSize: 'normal' });
+    expect(s.update({ goalMinutes: 30, textSize: 'large' })).toMatchObject({
+      goalMinutes: 30,
+      textSize: 'large',
+    });
+    expect(new SettingsStore(mem).get()).toMatchObject({ goalMinutes: 30, textSize: 'large' });
+    expect(s.update({ goalMinutes: 7, textSize: 'huge' as never })).toMatchObject({
+      goalMinutes: 0,
+      textSize: 'normal',
+    });
+  });
+
   it('remembers the backing under songs, and ignores anything else', () => {
     const mem = new Mem();
     const s = new SettingsStore(mem);
@@ -182,5 +223,16 @@ describe('SettingsStore', () => {
       scale: 'major',
       level: 'hard',
     });
+  });
+});
+
+describe('nextSpeed', () => {
+  it('steps up through the practice speeds and stops at full speed', () => {
+    expect(nextSpeed(0.5)).toBe(0.65);
+    expect(nextSpeed(0.65)).toBe(0.8);
+    expect(nextSpeed(0.8)).toBe(1);
+    expect(nextSpeed(1)).toBeNull();
+    expect(nextSpeed(0.7)).toBe(0.8);
+    expect(nextSpeed(1.25)).toBeNull();
   });
 });

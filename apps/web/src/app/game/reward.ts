@@ -1,5 +1,5 @@
 import { escapeHtml } from '../audio';
-import { rateChart, type Chart } from '@lineup/core';
+import { chartEnd, rateChart, type Chart } from '@lineup/core';
 import { starText, starsFor, type PlayOutcome, type PlayResult } from '../progress';
 
 /** The stars, XP, level and new trophies a finished song earned, as HTML for the results screen. */
@@ -49,6 +49,7 @@ export function playResultFor(
     chromatic: rating.scale === 'chromatic',
     misses: miss,
     notes: perfect + good + miss,
+    seconds: chartEnd(chart),
     ...(daily ? { daily } : {}),
   };
 }

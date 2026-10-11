@@ -37,6 +37,7 @@ import {
   VARIATIONS,
   VARIATION_LABELS,
   applyPart,
+  echoChart,
   songParts,
   varyChart,
   type Variation,
@@ -56,19 +57,27 @@ import { renderPerformanceAsync, type Performer } from '@lineup/sim';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
 import { escapeHtml, playTone } from '../audio';
-import { planAllBacking, playBacking, midiToHz, type BackingHandle } from '../game/backing';
+import {
+  planAllBacking,
+  planBacking,
+  playBacking,
+  type BackingEvent,
+  midiToHz,
+  type BackingHandle,
+} from '../game/backing';
 import { fingeringChartHtml, fingeringStripHtml } from '../game/fingering-view';
 import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
+import { UserSongStore, userSongsFor } from '../user-songs';
 import { starsBySong } from '../scoreboard';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
-import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
+import { SettingsStore, nextSpeed, keyShiftFor, safeLocalStorage } from '../settings';
 import { RANDOM_MELODY, addRandomMelodyOption, fillSongMenu, fillTargetMenu } from '../song-menu';
 import { formatCents, formatDb } from '../format';
 import type { Screen } from '../router';
@@ -140,6 +149,7 @@ const setup = (c: PitchScreenConfig) => `
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
       <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
+      <label class="check"><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
       <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
     </div>
@@ -238,7 +248,8 @@ export const createPitchScreen =
     };
 
     const profile = getProfile(c.profileId);
-    const songs = songsFor(c.profileId);
+    const mine = new UserSongStore(safeLocalStorage());
+    const songs = [...songsFor(c.profileId), ...userSongsFor(c.profileId, mine)];
     const settings = new SettingsStore(safeLocalStorage());
     const calibration = new CalibrationStore(safeLocalStorage());
     const scores = new ScoreStore(safeLocalStorage());
@@ -417,6 +428,12 @@ export const createPitchScreen =
       partIdx = Number(partSel.value);
       refreshRange();
     });
+    const listenBox = S<HTMLInputElement>('listen');
+    listenBox.checked = settings.get().listenFirst;
+    listenBox.addEventListener('change', () => {
+      settings.update({ listenFirst: listenBox.checked });
+      refreshRange();
+    });
     /** The chosen song, version and part. */
     const variedSong = (): Chart => applyPart(wholeSong(), partIdx);
 
@@ -445,7 +462,7 @@ export const createPitchScreen =
             : settings.get().difficulty
         }${settings.get().variation === 'original' ? '' : `|${settings.get().variation}`}${
           partIdx >= 0 ? `|part${partIdx + 1}` : ''
-        }`,
+        }${settings.get().listenFirst ? '|echo' : ''}`,
       );
 
     const refreshRange = () => {
@@ -714,7 +731,14 @@ export const createPitchScreen =
       backing = null;
     };
 
-    const runGame = (audio: GameAudio, chart: Chart, offset: number, startAt: number) => {
+    /** `listenEnd` is when the player's turn starts after hearing the song (0 when there is no listening part). */
+    const runGame = (
+      audio: GameAudio,
+      chart: Chart,
+      offset: number,
+      startAt: number,
+      listen: { end: number; tones: BackingEvent[] } = { end: 0, tones: [] },
+    ) => {
       const { adapter, ctx, demo } = audio;
       sessionStart = new Date();
       stages.play.innerHTML = PLAY;
@@ -746,11 +770,14 @@ export const createPitchScreen =
       backing = playBacking(
         ctx,
         clock,
-        planAllBacking(chart, {
-          metronome: opts.metronome,
-          guideTone: opts.guideTone,
-          accompaniment: settings.get().accompaniment,
-        }),
+        [
+          ...planAllBacking(chart, {
+            metronome: opts.metronome,
+            guideTone: opts.guideTone,
+            accompaniment: settings.get().accompaniment,
+          }),
+          ...listen.tones,
+        ].sort((a, b) => a.songTime - b.songTime),
       );
       const renderer = createRenderer(profile.renderer);
       const endAt = chartEnd(chart) + 0.9;
@@ -802,6 +829,12 @@ export const createPitchScreen =
           const beats = Math.ceil(-now / spb - 1e-6);
           overlay.textContent = String(Math.max(1, beats));
           overlay.classList.add('on');
+        } else if (listen.end > 0 && now < listen.end - spb) {
+          overlay.textContent = 'Listen…';
+          overlay.classList.add('on');
+        } else if (listen.end > 0 && now < listen.end) {
+          overlay.textContent = 'Your turn!';
+          overlay.classList.add('on');
         } else {
           overlay.classList.remove('on');
         }
@@ -850,6 +883,9 @@ export const createPitchScreen =
         : best!.isNewBest
           ? 'New best!'
           : describeBest(best!.best);
+      // a clean run at a practice speed offers the next speed up
+      const faster =
+        !audio.demo && c.instruments && s.accuracy >= 0.9 ? nextSpeed(settings.get().speed) : null;
       stages.results.innerHTML = `
       <section class="panel results">
         <div class="grade" data-id="grade">${grade}</div>
@@ -871,6 +907,7 @@ export const createPitchScreen =
           .join('')}</div>
         <div class="row">
           <button data-id="again" class="primary">Play again</button>
+          ${faster ? `<button data-id="faster">Faster: ${Math.round(faster * 100)}% speed</button>` : ''}
           <button data-id="back">Back to setup</button>
           <button data-id="copy-log">Copy session log</button>
         </div>
@@ -887,6 +924,12 @@ export const createPitchScreen =
       }
       const R = (id: string) =>
         stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
+      stages.results.querySelector('[data-id=faster]')?.addEventListener('click', () => {
+        if (faster === null) return;
+        settings.update({ speed: faster });
+        S<HTMLSelectElement>('speed').value = String(faster);
+        R('again').click();
+      });
       R('copy-log').addEventListener('click', () => {
         const text = formatSessionLog({
           build: buildInfoText(),
@@ -949,7 +992,18 @@ export const createPitchScreen =
       if (beginInFlight) return;
       beginInFlight = true;
       try {
-        const chart = selectedChart();
+        const heard = selectedChart();
+        // "listen first": the song is played once, then the same notes are asked of the player
+        const echo = settings.get().listenFirst ? echoChart(heard) : null;
+        const chart = echo ? echo.chart : heard;
+        const listen = echo
+          ? {
+              end: echo.listenEnd,
+              tones: planBacking(heard, { metronome: false, guideTone: true }).filter(
+                (e) => e.kind === 'tone',
+              ),
+            }
+          : undefined;
         setupStatus.classList.remove('error');
         if (!demo) {
           const m = await startMic();
@@ -957,7 +1011,7 @@ export const createPitchScreen =
           const ctx = m.ctx;
           const startAt = ctx.currentTime + 0.6;
           live = { adapter: m, ctx, demo: false };
-          runGame(live, chart, latencyOffset(ctx), startAt);
+          runGame(live, chart, latencyOffset(ctx), startAt, listen);
           return;
         }
         // Demo: a synthetic player plays through the same worklet. Stop the live mic so it isn't confusing.
@@ -992,7 +1046,7 @@ export const createPitchScreen =
         const probe = new SongClock(ctx);
         probe.start(-countIn, startAt);
         live = { adapter: synth, ctx, demo: true };
-        runGame(live, chart, 0, startAt);
+        runGame(live, chart, 0, startAt, listen);
         synth.start(probe.toSourceTime(perf.songStart));
       } catch (err) {
         setupStatus.textContent = err instanceof Error ? err.message : String(err);

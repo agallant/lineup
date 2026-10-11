@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|maker|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -741,6 +741,136 @@ const scenarios = {
     }
   },
 
+  async listen() {
+    console.log('\n# Listen first, then play it back: the demo plays the echo to a perfect score');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/sing');
+      await page.selectOption('[data-id=song]', 'sing-hot-cross-buns');
+      await page.check('[data-id=listen]');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(miss === 0 && perfect >= 10, `listen first: ${perfect} perfect, ${miss} missed`);
+    });
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/beat');
+      await page.selectOption('[data-id=mode]', 'drum-kit');
+      await page.selectOption('[data-id=song]', 'kit-halftime');
+      await page.check('[data-id=listen]');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 180000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        miss === 0 && perfect >= 10,
+        `listen first (drums): ${perfect} perfect, ${miss} missed`,
+      );
+    });
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/strum');
+      check(await page.isHidden('[data-id=listen]'), 'listen first is not offered for chord songs');
+    });
+  },
+
+  async ear() {
+    console.log('\n# Ear training: a round of ten questions, a result, and a scoreboard entry');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/ear');
+      await page.selectOption('[data-id=kind]', 'chords');
+      await page.selectOption('[data-id=level]', 'easy');
+      await page.click('[data-id=start]');
+      for (let q = 1; q <= 10; q++) {
+        await page.waitForFunction(
+          (n) => document.querySelector('[data-id=count]')?.textContent === `Question ${n} of 10`,
+          q,
+          { timeout: 8000 },
+        );
+        await page.click('[data-id=choices] button >> nth=0');
+        check(
+          /Right|It was/.test(await text(page, 'feedback')),
+          `ear: question ${q} gives feedback`,
+        );
+      }
+      await page.waitForSelector('[data-id=r-right]', { timeout: 8000 });
+      check(
+        / of 10$/.test(await text(page, 'r-right')),
+        `ear: result shows (${await text(page, 'r-right')})`,
+      );
+      check((await page.$('[data-id=reward]')) !== null, 'ear: stars and XP are shown');
+      await page.goto(URL_BASE + '#/scores');
+      await page.waitForSelector('[data-id=rows] li');
+      check(
+        /Ear training: chords, easy/.test(await text(page, 'rows')),
+        'ear: the round is on the scoreboard',
+      );
+    });
+  },
+
+  async maker() {
+    console.log(
+      '\n# My songs: write a melody, a chord song and a rhythm; they reach the right games',
+    );
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/make');
+      await page.fill('[data-id=title]', 'E2E tune');
+      await page.fill('[data-id=notes]', 'C4 D4 E4 F4 G4:2 E4 C4:2');
+      check(
+        /Looks good/.test(await text(page, 'preview')),
+        `maker: a melody previews (${await text(page, 'preview')})`,
+      );
+      await page.fill('[data-id=notes]', 'C4 H9');
+      check(/H9/.test(await text(page, 'preview')), 'maker: a mistake is explained');
+      await page.fill('[data-id=notes]', 'C4 D4 E4 F4 G4:2 E4 C4:2');
+      await page.click('[data-id=save]');
+      await page.selectOption('[data-id=kind]', 'chords');
+      await page.fill('[data-id=title]', 'E2E chords');
+      await page.click('[data-id=save]');
+      await page.selectOption('[data-id=kind]', 'rhythm');
+      await page.selectOption('[data-id=profile]', 'clap');
+      await page.fill('[data-id=title]', 'E2E rhythm');
+      await page.fill('[data-id=lanes]', 'hit: x.x.xx..');
+      await page.click('[data-id=save]');
+      check((await page.$$('[data-id=list] li')).length === 3, 'maker: three songs are kept');
+      const has = async (route, mode, title) => {
+        await page.goto(URL_BASE + '#/' + route);
+        if (mode) await page.selectOption('[data-id=mode]', mode);
+        return page.evaluate(
+          (t) =>
+            [...document.querySelectorAll('[data-id=song] option')].some((o) =>
+              o.textContent.startsWith(t),
+            ),
+          title,
+        );
+      };
+      check(await has('sing', null, 'E2E tune'), 'maker: the melody is in Singline');
+      check(await has('wind', null, 'E2E tune'), 'maker: the melody is in Windline');
+      check(await has('strum', null, 'E2E chords'), 'maker: the chord song is in Strumline');
+      check(await has('beat', 'clap', 'E2E rhythm'), 'maker: the rhythm is in Beatline');
+      check(
+        !(await has('beat', 'drum-kit', 'E2E rhythm')),
+        'maker: but not in a kit it was not written for',
+      );
+      await page.goto(URL_BASE + '#/sing');
+      const value = await page.evaluate(
+        () =>
+          [...document.querySelectorAll('[data-id=song] option')].find((o) =>
+            o.textContent.startsWith('E2E tune'),
+          ).value,
+      );
+      await page.selectOption('[data-id=song]', value);
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      check(
+        Number(await text(page, 'r-miss')) === 0,
+        'maker: the demo plays the player’s own melody without a miss',
+      );
+    });
+  },
+
   async tuner() {
     console.log('\n# Tuner hears a sung C4 and names the C string');
     await session(fixtures.sung, async (page) => {
@@ -785,6 +915,7 @@ const scenarios = {
         localStorage.setItem(
           'lineup.progress.v1',
           JSON.stringify({
+            log: { [new Date().toLocaleDateString('en-CA')]: { plays: 2, seconds: 600 } },
             xp: 350,
             plays: 2,
             days: ['2026-10-10', '2026-10-11'],
@@ -795,7 +926,14 @@ const scenarios = {
         );
       });
       await page.goto(URL_BASE);
-      check((await page.$$('[data-id=games] a')).length === 4, 'home: four games under Play');
+      check(
+        (await page.$('[data-id=new-here]')) !== null,
+        'home: a first visit suggests the how-to-play page',
+      );
+      check(
+        (await page.$$('[data-id=games] a')).length === 5,
+        'home: four instrument games and ear training under Play',
+      );
       check(
         (await page.$$('[data-id=games] a[href="#/mic"], [data-id=games] a[href="#/calibrate"]'))
           .length === 0,
@@ -812,6 +950,10 @@ const scenarios = {
       );
       check((await page.$$('[data-id=daily] a')).length === 4, 'home: four daily challenges');
       check((await page.$('[data-id=tuner-link]')) !== null, 'home: the tuner is under Set up');
+      check(
+        /10 minutes of practice/.test(await text(page, 'week')),
+        `home: shows this week's practice (${await text(page, 'week')})`,
+      );
       for (const [game, route, pick] of [
         ['singline', 'sing', 'random-melody'],
         ['strumline', 'strum', 'random-chords'],
@@ -829,6 +971,10 @@ const scenarios = {
       await page.goto(URL_BASE);
       await page.click('[data-id=scores-link]');
       await page.waitForSelector('[data-id=rows] li');
+      check(
+        (await page.$$('[data-id=practice] .week span.played')).length === 1,
+        'scoreboard: today shows as a practised day',
+      );
       check(
         (await page.$$('[data-id=rows] li')).length === 2,
         'scoreboard: lists both personal bests',
@@ -849,6 +995,17 @@ const scenarios = {
         (await page.$$('[data-trophy].earned')).length === 1,
         'scoreboard: one trophy earned, the rest locked',
       );
+      await page.goto(URL_BASE + '#/help');
+      await page.goto(URL_BASE);
+      check(
+        (await page.$('[data-id=new-here]')) === null,
+        'home: the suggestion goes away once the page was opened',
+      );
+      await page.goto(URL_BASE + '#/help');
+      check(
+        /Private and offline/.test((await page.textContent('main')) ?? ''),
+        'help: the how-to-play page explains privacy',
+      );
       await page.goto(URL_BASE + '#/tuner');
       await page.selectOption('[data-id=tuning]', 'baritone');
       check(
@@ -862,12 +1019,26 @@ const scenarios = {
       );
       await page.goto(URL_BASE + '#/options');
       await page.uncheck('[data-id=metronome]');
+      await page.selectOption('[data-id=theme]', 'contrast');
       await page.selectOption('[data-id=accompaniment]', 'bass');
+      await page.selectOption('[data-id=goal]', '30');
+      await page.selectOption('[data-id=text-size]', 'large');
       await page.reload();
       check(
         !(await page.isChecked('[data-id=metronome]')) &&
           (await page.inputValue('[data-id=accompaniment]')) === 'bass',
         'options: choices are remembered',
+      );
+      check(
+        (await page.inputValue('[data-id=goal]')) === '30' &&
+          (await page.evaluate(() =>
+            document.documentElement.style.getPropertyValue('--text-scale'),
+          )) === '1.15',
+        'options: the weekly goal and text size are remembered and applied',
+      );
+      check(
+        (await page.evaluate(() => document.documentElement.dataset.theme)) === 'contrast',
+        'options: the colour scheme is remembered and applied',
       );
       await page.click('[data-id=clear-scores]');
       check(

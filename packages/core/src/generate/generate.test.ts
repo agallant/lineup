@@ -2,13 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { loadChart } from '../chart';
 import { rateChart } from '../difficulty';
 import { getProfile } from '../profiles';
-import { songsFor } from '../songs';
+import { UKULELE_CHORD_FRETS } from '../chords';
+import { getSong, songCategory, songsFor } from '../songs';
 import {
   EXERCISE_KINDS,
   EXERCISE_TONICS,
   SCALES,
   SCALE_IDS,
   chance,
+  chordChangeDrills,
   createRng,
   degreeToMidi,
   exerciseCharts,
@@ -316,5 +318,34 @@ describe('seedForDifficulty', () => {
     const build = (seed: number) => generateChordSong({ seed, level: 'easy' });
     const seed = seedForDifficulty(build, 10, sequence(1), 20);
     expect(rateChart(build(seed)).score).toBeLessThan(10);
+  });
+});
+
+describe('chord change drills', () => {
+  const drills = chordChangeDrills();
+
+  it('are valid ukulele exercises with tidy ids, and speed up the changes', () => {
+    expect(Object.keys(drills)).toHaveLength(8);
+    for (const [id, chart] of Object.entries(drills)) {
+      expect(id).toMatch(/^ex-ukulele-strum-changes-[a-z0-9]+-[a-z0-9]+$/);
+      expect(loadChart(chart).ok, id).toBe(true);
+      expect(chart.meta.instruments).toEqual(['ukulele-strum']);
+      expect(getSong(id)).toEqual(chart);
+      expect(songCategory(id)).toBe('exercise');
+      // a stroke on every one of 40 beats, only two chords
+      expect(chart.notes).toHaveLength(40);
+      const chords = chart.notes.map((n) => n.expected!.chord!);
+      expect(new Set(chords).size).toBe(2);
+      let changes = 0;
+      chords.forEach((c, i) => {
+        if (i > 0 && c !== chords[i - 1]) changes++;
+      });
+      expect(changes).toBe(19);
+    }
+  });
+
+  it('only use chords that have a fingering', () => {
+    for (const chart of Object.values(drills))
+      for (const n of chart.notes) expect(UKULELE_CHORD_FRETS[n.expected!.chord!]).toBeDefined();
   });
 });
