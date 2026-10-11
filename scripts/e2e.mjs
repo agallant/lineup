@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -739,6 +739,102 @@ const scenarios = {
         );
       });
     }
+  },
+
+  async home() {
+    console.log('\n# Home menu, scoreboard, trophies and options');
+    await session(null, async (page) => {
+      await page.addInitScript(() => {
+        if (localStorage.getItem('lineup.seeded')) return;
+        localStorage.setItem('lineup.seeded', '1');
+        localStorage.setItem(
+          'lineup.scores.v1',
+          JSON.stringify({
+            'voice|sing-hot-cross-buns|normal': {
+              score: 900,
+              accuracy: 0.97,
+              grade: 'A',
+              at: '2026-10-10T10:00:00.000Z',
+            },
+            'ukulele-strum|strum-blues|x1|harder': {
+              score: 500,
+              accuracy: 0.7,
+              grade: 'C',
+              at: '2026-10-11T10:00:00.000Z',
+            },
+          }),
+        );
+        localStorage.setItem(
+          'lineup.progress.v1',
+          JSON.stringify({
+            xp: 350,
+            plays: 2,
+            days: ['2026-10-10', '2026-10-11'],
+            perGame: { singline: 1, strumline: 1 },
+            songs: ['voice|sing-hot-cross-buns'],
+            achievements: { 'first-song': '2026-10-10T10:00:00.000Z' },
+          }),
+        );
+      });
+      await page.goto(URL_BASE);
+      check((await page.$$('[data-id=games] a')).length === 4, 'home: four games under Play');
+      check(
+        (await page.$$('[data-id=games] a[href="#/mic"], [data-id=games] a[href="#/calibrate"]'))
+          .length === 0,
+        'home: the mic test and calibration are not among the games',
+      );
+      check(
+        (await page.$('[data-id=mic-link]')) !== null &&
+          (await page.$('[data-id=calibrate-link]')) !== null,
+        'home: the mic test and calibration sit under Set up',
+      );
+      check(
+        /Level 3 · Student/.test(await text(page, 'level-card')),
+        'home: shows the level from stored progress',
+      );
+      await page.click('[data-id=scores-link]');
+      await page.waitForSelector('[data-id=rows] li');
+      check(
+        (await page.$$('[data-id=rows] li')).length === 2,
+        'scoreboard: lists both personal bests',
+      );
+      check(
+        /Hot Cross Buns/.test(await text(page, 'rows')),
+        'scoreboard: titles come from the song library',
+      );
+      await page.selectOption('[data-id=game]', 'strumline');
+      check((await page.$$('[data-id=rows] li')).length === 1, 'scoreboard: filters by game');
+      await page.selectOption('[data-id=game]', '');
+      await page.selectOption('[data-id=sort]', 'score');
+      check(
+        /Hot Cross Buns/.test((await page.textContent('[data-id=rows] li')) ?? ''),
+        'scoreboard: sorts by highest score',
+      );
+      check(
+        (await page.$$('[data-trophy].earned')).length === 1,
+        'scoreboard: one trophy earned, the rest locked',
+      );
+      await page.goto(URL_BASE + '#/options');
+      await page.uncheck('[data-id=metronome]');
+      await page.selectOption('[data-id=accompaniment]', 'bass');
+      await page.reload();
+      check(
+        !(await page.isChecked('[data-id=metronome]')) &&
+          (await page.inputValue('[data-id=accompaniment]')) === 'bass',
+        'options: choices are remembered',
+      );
+      await page.click('[data-id=clear-scores]');
+      check(
+        /Tap again/.test(await text(page, 'clear-scores')),
+        'options: erasing asks for a second tap',
+      );
+      await page.click('[data-id=clear-scores]');
+      await page.goto(URL_BASE + '#/scores');
+      check(
+        (await page.$$('[data-id=rows] li')).length === 0,
+        'options: erased scores are gone from the scoreboard',
+      );
+    });
   },
 
   async target() {

@@ -56,6 +56,8 @@ import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
+import { ProgressStore } from '../progress';
+import { playResultFor, rewardHtml } from '../game/reward';
 import { SettingsStore, safeLocalStorage } from '../settings';
 import {
   RANDOM_CHORDS,
@@ -212,6 +214,7 @@ export const createHitScreen =
     const settings = new SettingsStore(safeLocalStorage());
     const calibration = new CalibrationStore(safeLocalStorage());
     const scores = new ScoreStore(safeLocalStorage());
+    const progress = new ProgressStore(safeLocalStorage());
     const models = new TimbreModelStore(() => safeLocalStorage() ?? undefined);
 
     let profile: InstrumentProfile = getProfile(
@@ -827,6 +830,15 @@ export const createHitScreen =
         ? null
         : scores.record(bestKey(), { score: s.score, accuracy: s.accuracy, grade });
       refreshSong(); // the setup screen's best-score line now shows this result
+      // stars, XP and trophies: the demo earns none
+      const reward = audio.demo
+        ? ''
+        : rewardHtml(
+            s.accuracy,
+            progress.recordPlay(
+              playResultFor(profile.id, randomEntry()?.id ?? songSel.value, chart, s),
+            ),
+          );
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'
         : best!.isNewBest
@@ -840,6 +852,7 @@ export const createHitScreen =
       <section class="panel results">
         <div class="grade" data-id="grade">${grade}</div>
         <p class="status" data-id="best-line" role="status">${bestLine}</p>
+        ${reward}
         <dl>
           <dt>Score</dt><dd data-id="r-score">${s.score}</dd>
           <dt>Accuracy</dt><dd data-id="r-acc">${Math.round(s.accuracy * 100)}%</dd>

@@ -6,6 +6,8 @@ import { beatScreen } from './app/screens/beat';
 import { calibrateScreen } from './app/screens/calibrate';
 import { homeScreen } from './app/screens/home';
 import { micTestScreen } from './app/screens/mic-test';
+import { optionsScreen } from './app/screens/options';
+import { scoreboardScreen } from './app/screens/scoreboard';
 import { singScreen } from './app/screens/sing';
 import { strumScreen } from './app/screens/strum';
 import { windScreen } from './app/screens/wind';
@@ -26,6 +28,8 @@ startRouter(
     wind: windScreen,
     beat: beatScreen,
     strum: strumScreen,
+    scores: scoreboardScreen,
+    options: optionsScreen,
   },
   '',
 );

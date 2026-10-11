@@ -139,6 +139,15 @@ describe('SettingsStore', () => {
     expect(s.update({ variation: 'hardest' as never }).variation).toBe('original');
   });
 
+  it('remembers the backing under songs, and ignores anything else', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get().accompaniment).toBe('off');
+    expect(s.update({ accompaniment: 'full' }).accompaniment).toBe('full');
+    expect(new SettingsStore(mem).get().accompaniment).toBe('full');
+    expect(s.update({ accompaniment: 'orchestra' as never }).accompaniment).toBe('off');
+  });
+
   it('remembers the difficulty a new random song aims for, and ignores anything else', () => {
     const mem = new Mem();
     const s = new SettingsStore(mem);

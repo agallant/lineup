@@ -1,0 +1,59 @@
+import { describe, expect, it } from 'vitest';
+import { scoreRows, sortRows, variantLabel } from './scoreboard';
+
+const best = (score: number, accuracy: number, at = '2026-10-11T10:00:00.000Z') => ({
+  score,
+  accuracy,
+  grade: 'A',
+  at,
+});
+
+describe('variantLabel', () => {
+  it('says in words how a song was played, and nothing for the usual way', () => {
+    expect(variantLabel('normal')).toBe('');
+    expect(variantLabel('normal|x1|anyoctave')).toBe('');
+    expect(variantLabel('x0.8+chords|harder')).toBe('0.8× speed, chords checked, harder version');
+    expect(variantLabel('hard|easier')).toBe('hard scoring, easier version');
+  });
+});
+
+describe('scoreRows', () => {
+  const rows = scoreRows([
+    { key: 'voice|sing-hot-cross-buns|normal', best: best(900, 0.97) },
+    {
+      key: 'ukulele-strum|strum-blues|x0.8|harder',
+      best: best(500, 0.7, '2026-10-12T10:00:00.000Z'),
+    },
+    { key: 'voice|gen-major-easy-1|normal', best: best(300, 0.5) },
+    { key: 'clap|gone-song|', best: best(100, 0.2) },
+    { key: 'mystery|x|', best: best(1, 1) },
+  ]);
+
+  it('finds titles, difficulty and stars, and skips profiles it does not know', () => {
+    expect(rows).toHaveLength(4);
+    expect(rows[0]).toMatchObject({
+      game: 'Singline',
+      title: 'Hot Cross Buns',
+      stars: 3,
+      how: '',
+    });
+    expect(rows[0]!.rating).toBeGreaterThanOrEqual(1);
+    expect(rows[1]).toMatchObject({
+      game: 'Strumline',
+      how: '0.8× speed, harder version',
+      stars: 1,
+    });
+  });
+
+  it('shows the id of a song this version no longer has', () => {
+    expect(rows[3]).toMatchObject({ title: 'gone-song', rating: null, game: 'Beatline' });
+  });
+
+  it('sorts by recency, score, stars and difficulty', () => {
+    expect(sortRows(rows, 'recent')[0]!.game).toBe('Strumline');
+    expect(sortRows(rows, 'score').map((r) => r.score)).toEqual([900, 500, 300, 100]);
+    expect(sortRows(rows, 'stars')[0]!.stars).toBe(3);
+    const hardest = sortRows(rows, 'hardest');
+    expect((hardest[0]!.rating ?? 0) >= (hardest[1]!.rating ?? 0)).toBe(true);
+  });
+});
