@@ -1,5 +1,6 @@
 import { EAR_RATING, earTitle, getSong, rateChart, type EarLevel } from '@lineup/core';
 import { gameOf, starsFor } from './progress';
+import { COURSES, courseProgress } from './courses';
 import type { BestScore } from './scores';
 
 /** One line of the personal-best scoreboard. */
@@ -124,7 +125,18 @@ export function starsBySong(
     if (profile !== profileId) continue;
     // a learning path counts only the song played whole, not one phrase or an easier version
     if (plainOnly && !isPlainVariant(key.split('|').slice(2).join('|'))) continue;
-    out.set(songId, Math.max(out.get(songId) ?? 0, starsFor(best.accuracy)));
+    out.set(songId, Math.max(out.get(songId) ?? 0, starsFor(best.bestAccuracy ?? best.accuracy)));
   }
   return out;
+}
+
+/** The first learning path with every step mastered, or null. */
+export function completedCourse(
+  entries: readonly { key: string; best: BestScore }[],
+): (typeof COURSES)[number] | null {
+  for (const course of COURSES) {
+    const stars = starsBySong(entries, course.profileId, true);
+    if (courseProgress(course, (id) => stars.get(id) ?? null).done) return course;
+  }
+  return null;
 }

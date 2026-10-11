@@ -180,4 +180,15 @@ describe('ScoreStore across tabs and bad data', () => {
     expect(fresh.best(scoreKey('voice', 'song-0', 'normal'))?.score).toBe(900);
     expect(fresh.best(scoreKey('voice', 'brand-new', 'normal'))?.score).toBe(50);
   });
+
+  it('remembers the best accuracy even when a later play scores higher but is less accurate', () => {
+    const s = new ScoreStore(null);
+    s.record(KEY, { score: 500, accuracy: 0.9, grade: 'A' });
+    const later = s.record(KEY, { score: 800, accuracy: 0.7, grade: 'C' });
+    expect(later.best).toMatchObject({ score: 800, accuracy: 0.7, bestAccuracy: 0.9 });
+    // a more accurate play that is not a high score still counts
+    const careful = s.record(KEY, { score: 100, accuracy: 0.97, grade: 'S' });
+    expect(careful.isNewBest).toBe(false);
+    expect(s.best(KEY)).toMatchObject({ score: 800, bestAccuracy: 0.97 });
+  });
 });

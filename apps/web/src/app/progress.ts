@@ -230,7 +230,7 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     id: 'graduate',
     title: 'Graduate',
     description: 'Master every step of a learning path.',
-    // granted by the Learn screen when it sees a finished path (see ProgressStore.grant)
+    // granted when a play finishes a learning path (see completedCourse) (see ProgressStore.grant)
     earned: () => false,
   },
   {

@@ -24,7 +24,7 @@ export const learnScreen: Screen = (root) => {
     const stars = starsBySong(entries, course.profileId, true);
     const progress = courseProgress(course, (id) => stars.get(id) ?? null);
     const next = progress.steps.find((s) => s.state === 'open');
-    // finishing a path earns the Graduate trophy (once)
+    // normally granted when the last step is played; this catches a path finished before that existed
     if (progress.done && progressStore.grant('graduate')) {
       newTrophy = `<p class="reward" data-id="graduate">🏆 <strong>Graduate</strong>: you mastered every step of “${escapeHtml(course.title)}”.</p>`;
     }

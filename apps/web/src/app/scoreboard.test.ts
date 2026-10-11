@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { isPlainVariant, scoreRows, sortRows, starsBySong, variantLabel } from './scoreboard';
+import { COURSES } from './courses';
+import {
+  completedCourse,
+  isPlainVariant,
+  scoreRows,
+  sortRows,
+  starsBySong,
+  variantLabel,
+} from './scoreboard';
 
 const best = (score: number, accuracy: number, at = '2026-10-11T10:00:00.000Z') => ({
   score,
@@ -138,5 +146,26 @@ describe('starsBySong', () => {
     expect(stars.get('b')).toBe(0);
     expect(stars.has('c')).toBe(false);
     expect([...stars.keys()].sort()).toEqual(['a', 'b']);
+  });
+});
+
+describe('completedCourse', () => {
+  it('finds a path with every step mastered, and keeps stars from the most accurate play', () => {
+    const course = COURSES[0]!;
+    const entry = (songId: string, accuracy: number, bestAccuracy?: number) => ({
+      key: `${course.profileId}|${songId}|normal`,
+      best: {
+        score: 1,
+        accuracy,
+        ...(bestAccuracy === undefined ? {} : { bestAccuracy }),
+        grade: 'A',
+        at: '2026-01-01',
+      },
+    });
+    expect(completedCourse([])).toBeNull();
+    const weak = course.steps.map((s) => entry(s.songId, 0.7));
+    expect(completedCourse(weak)).toBeNull();
+    const done = course.steps.map((s) => entry(s.songId, 0.7, 0.96));
+    expect(completedCourse(done)?.id).toBe(course.id);
   });
 });

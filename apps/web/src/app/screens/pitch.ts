@@ -72,7 +72,7 @@ import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { UserSongStore, userSongsFor } from '../user-songs';
-import { starsBySong } from '../scoreboard';
+import { completedCourse, starsBySong } from '../scoreboard';
 import { hashParam } from '../courses';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
@@ -304,6 +304,12 @@ export const createPitchScreen =
     // opened from a learning path step: choose its song
     const wantedSong = hashParam(location.hash, 'song');
     if (wantedSong && songs.some((s) => s.id === wantedSong)) {
+      // a lesson is played whole and as written, or its stars would not count toward the path
+      settings.update({
+        variation: 'original',
+        listenFirst: false,
+        ...(c.instruments ? { speed: 1 } : {}),
+      });
       settings.update({ songs: { ...current.songs, [c.profileId]: wantedSong } });
       current.songs[c.profileId] = wantedSong;
     }
@@ -884,6 +890,7 @@ export const createPitchScreen =
               isDaily(songEntry().id) ? { key: dailyKey(dailyGame) } : undefined,
             ),
           );
+      if (outcome && completedCourse(scores.entries())) progress.grant('graduate');
       const reward = outcome ? rewardHtml(s.accuracy, outcome) : '';
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'
