@@ -839,3 +839,46 @@ dl.help dt {
 dl.help dd {
   margin: 0;
 }
+
+ol.steps {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  display: grid;
+  gap: 6px;
+}
+
+ol.steps li,
+ol.steps li a {
+  display: grid;
+  grid-template-columns: 1.6em 1fr auto;
+  gap: 10px;
+  align-items: center;
+  color: var(--text);
+  text-decoration: none;
+}
+
+ol.steps li {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+ol.steps li a {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+
+ol.steps li.locked {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+ol.steps li.mastered {
+  border-color: var(--accent);
+}
+
+ol.steps .what {
+  display: flex;
+  flex-direction: column;
+}

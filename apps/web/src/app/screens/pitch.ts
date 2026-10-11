@@ -73,6 +73,7 @@ import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { UserSongStore, userSongsFor } from '../user-songs';
 import { starsBySong } from '../scoreboard';
+import { hashParam } from '../courses';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
@@ -299,6 +300,12 @@ export const createPitchScreen =
         songs: { ...current.songs, [c.profileId]: RANDOM_MELODY },
       });
       current.songs[c.profileId] = RANDOM_MELODY;
+    }
+    // opened from a learning path step: choose its song
+    const wantedSong = hashParam(location.hash, 'song');
+    if (wantedSong && songs.some((s) => s.id === wantedSong)) {
+      settings.update({ songs: { ...current.songs, [c.profileId]: wantedSong } });
+      current.songs[c.profileId] = wantedSong;
     }
     const savedSong = current.songs[c.profileId];
     songSel.value =

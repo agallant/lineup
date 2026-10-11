@@ -9,6 +9,7 @@ import { beatScreen } from './app/screens/beat';
 import { calibrateScreen } from './app/screens/calibrate';
 import { helpScreen } from './app/screens/help';
 import { homeScreen } from './app/screens/home';
+import { learnScreen } from './app/screens/learn';
 import { makerScreen } from './app/screens/maker';
 import { micTestScreen } from './app/screens/mic-test';
 import { optionsScreen } from './app/screens/options';
@@ -44,6 +45,7 @@ startRouter(
     tuner: tunerScreen,
     ear: earScreen,
     make: makerScreen,
+    learn: learnScreen,
     help: helpScreen,
     options: optionsScreen,
   },

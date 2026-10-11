@@ -111,6 +111,8 @@ export const homeScreen: Screen = (root) => {
 
     <h2>Progress</h2>
     <ul class="menu">
+      <li><a class="card" href="#/learn" data-id="learn-link"><strong>Learn</strong>
+        <span>Step-by-step paths for each instrument: open the next song by earning stars.</span></a></li>
       <li><a class="card" href="#/scores" data-id="scores-link"><strong>Scoreboard &amp; trophies</strong>
         <span>Your best score on every song, stars, and the trophies you have earned.</span></a></li>
     </ul>

@@ -67,6 +67,7 @@ import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { UserSongStore, userSongsFor } from '../user-songs';
 import { starsBySong } from '../scoreboard';
+import { hashParam } from '../courses';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
@@ -246,6 +247,24 @@ export const createHitScreen =
           [`${c.keyPrefix}:${profileId}`]: c.strum ? RANDOM_CHORDS : RANDOM_GROOVE,
         },
       });
+    }
+
+    // opened from a learning path step: choose its sound set and song
+    {
+      const wantedMode = hashParam(location.hash, 'mode');
+      const wantedSong = hashParam(location.hash, 'song');
+      const mode = c.modes.some((m) => m.id === wantedMode) ? wantedMode! : null;
+      if (mode || wantedSong) {
+        const profileId = mode ?? settings.get().songs[`${c.keyPrefix}-mode`] ?? c.modes[0]!.id;
+        const songs = settings.get().songs;
+        settings.update({
+          songs: {
+            ...songs,
+            ...(mode ? { [`${c.keyPrefix}-mode`]: mode } : {}),
+            ...(wantedSong ? { [`${c.keyPrefix}:${profileId}`]: wantedSong } : {}),
+          },
+        });
+      }
     }
 
     let profile: InstrumentProfile = getProfile(
