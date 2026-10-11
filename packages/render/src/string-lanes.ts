@@ -34,6 +34,25 @@ export function stringRows(
     .reverse();
 }
 
+/**
+ * The runs of neighbouring strings held at the same fret (a barre), as the top and bottom row of
+ * each: a finger laid across two or more strings. Open strings are not held and never join a bar.
+ */
+export function barres(marks: readonly { row: number; fret: number }[]): [number, number][] {
+  const held = marks.filter((m) => m.fret > 0).sort((a, b) => a.row - b.row);
+  const out: [number, number][] = [];
+  let start = 0;
+  for (let i = 1; i <= held.length; i++) {
+    const prev = held[i - 1]!;
+    const cur = held[i];
+    if (!cur || cur.fret !== prev.fret || cur.row !== prev.row + 1) {
+      if (i - 1 > start) out.push([held[start]!.row, prev.row]);
+      start = i;
+    }
+  }
+  return out;
+}
+
 const statusRing = (status: string): string | null =>
   status === 'perfect'
     ? COLORS.perfect
@@ -50,8 +69,8 @@ const arrow = (n: ChartNote): string =>
  * String lanes ("tab highway"): one horizontal line per string, time scrolling toward a "now"
  * line on the left. Each note shows what to do with the left hand: the fret number to hold on
  * every string it uses (an open string is a small hollow ring with no number, so the held strings
- * stand out). A strum has marks on several
- * strings joined by a bar; a plucked note has one mark. Above the strings, the chord name and
+ * stand out). A bar joins the strings one finger holds down together (a barre: the same fret on
+ * neighbouring strings); a plucked note has one mark. Above the strings, the chord name and
  * the stroke direction are written. Once judged, a note is dimmed and ringed green / yellow /
  * red, and every detected hit flashes the now line.
  */
@@ -171,14 +190,12 @@ export class StringLanesRenderer implements Renderer {
       return;
     }
 
-    // a strum: one stroke across the strings it uses
-    const top = Math.min(...marks.map((m) => m.row));
-    const bottom = Math.max(...marks.map((m) => m.row));
-    if (top !== bottom) {
-      g.globalAlpha = alpha * 0.7;
-      g.strokeStyle = COLORS.muted;
-      g.lineWidth = 4;
-      g.lineCap = 'round';
+    // a barre: one finger holding the same fret on neighbouring strings, joined by a bar
+    g.globalAlpha = alpha * 0.8;
+    g.strokeStyle = COLORS.text;
+    g.lineWidth = Math.max(5, radius * 1.1);
+    g.lineCap = 'round';
+    for (const [top, bottom] of barres(marks)) {
       g.beginPath();
       g.moveTo(x, rowY(top));
       g.lineTo(x, rowY(bottom));
