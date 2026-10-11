@@ -132,3 +132,25 @@ export function planAllBacking(
   }
   return events.sort((a, b) => a.songTime - b.songTime);
 }
+
+/** A pitch for each lane of a rhythm, so it can be heard as ticks: low for a kick, high for a hat. */
+const LANE_PITCH: Readonly<Record<string, number>> = {
+  kick: 43,
+  snare: 57,
+  hat: 80,
+  clap: 69,
+  tap: 62,
+  hit: 66,
+};
+
+/** A rhythm as short ticks (one pitch per lane), to hear it before playing it back. */
+export function rhythmTones(chart: Chart): Extract<BackingEvent, { kind: 'tone' }>[] {
+  return chart.notes.map((n) => ({
+    kind: 'tone' as const,
+    songTime: n.t,
+    duration: 0.09,
+    midi: LANE_PITCH[n.lane ?? 'hit'] ?? 66,
+    level: 1.6,
+    wave: 'triangle' as const,
+  }));
+}

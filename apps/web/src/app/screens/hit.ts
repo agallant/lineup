@@ -34,6 +34,7 @@ import {
   VARIATIONS,
   VARIATION_LABELS,
   applyPart,
+  echoChart,
   songParts,
   varyChart,
   type Variation,
@@ -52,7 +53,13 @@ import { renderPerformanceAsync, type Performer } from '@lineup/sim';
 import { scheduleClicks } from '../audio';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
-import { planAllBacking, playBacking, type BackingHandle } from '../game/backing';
+import {
+  planAllBacking,
+  playBacking,
+  rhythmTones,
+  type BackingEvent,
+  type BackingHandle,
+} from '../game/backing';
 import { BeatlineGame, HitMonitor, formatHits } from '../game/beatline-game';
 import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
@@ -114,6 +121,7 @@ const setup = (c: HitScreenConfig) => `
       <label>Mode <select data-id="mode"></select></label>
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
+      <label class="check" data-id="listen-label" hidden><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
       <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
     </div>
     <div class="row" data-id="challenge" hidden>
@@ -349,7 +357,7 @@ export const createHitScreen =
         randomEntry()?.id ?? songSel.value,
         `${c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}` : ''}${
           settings.get().variation === 'original' ? '' : `|${settings.get().variation}`
-        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}`,
+        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${listening() ? '|echo' : ''}`,
       );
     const refreshSong = () => {
       syncParts();
@@ -757,7 +765,13 @@ export const createHitScreen =
       backing = null;
     };
 
-    const runGame = (audio: GameAudio, chart: Chart, offset: number, startAt: number) => {
+    const runGame = (
+      audio: GameAudio,
+      chart: Chart,
+      offset: number,
+      startAt: number,
+      listen: { end: number; tones: BackingEvent[] } = { end: 0, tones: [] },
+    ) => {
       const { adapter, ctx, demo } = audio;
       sessionStart = new Date();
       stages.play.innerHTML = PLAY;
@@ -788,11 +802,14 @@ export const createHitScreen =
       backing = playBacking(
         ctx,
         clock,
-        planAllBacking(chart, {
-          metronome: opts.metronome,
-          guideTone: false,
-          accompaniment: settings.get().accompaniment,
-        }),
+        [
+          ...planAllBacking(chart, {
+            metronome: opts.metronome,
+            guideTone: false,
+            accompaniment: settings.get().accompaniment,
+          }),
+          ...listen.tones,
+        ].sort((a, b) => a.songTime - b.songTime),
       );
       const renderer = createRenderer(profile.renderer);
       const endAt = chartEnd(chart) + 0.9;
@@ -831,6 +848,12 @@ export const createHitScreen =
 
         if (now < 0) {
           overlay.textContent = String(Math.max(1, Math.ceil(-now / spb - 1e-6)));
+          overlay.classList.add('on');
+        } else if (listen.end > 0 && now < listen.end - spb) {
+          overlay.textContent = 'Listen…';
+          overlay.classList.add('on');
+        } else if (listen.end > 0 && now < listen.end) {
+          overlay.textContent = 'Your turn!';
           overlay.classList.add('on');
         } else {
           overlay.classList.remove('on');
@@ -1007,6 +1030,15 @@ export const createHitScreen =
       refreshSong();
     });
     const songChart = (): Chart => applyPart(wholeSong(), partIdx);
+    // percussion rhythms can be heard first as ticks; a chord song cannot
+    const listenBox = S<HTMLInputElement>('listen');
+    S('listen-label').hidden = !!c.strum;
+    listenBox.checked = settings.get().listenFirst;
+    listenBox.addEventListener('change', () => {
+      settings.update({ listenFirst: listenBox.checked });
+      refreshSong();
+    });
+    const listening = (): boolean => !c.strum && settings.get().listenFirst;
     /** The chart as played: at the chosen practice speed. */
     const selectedChart = (): Chart =>
       rescaleChart(songChart(), c.strum ? settings.get().speed : 1);
@@ -1016,7 +1048,11 @@ export const createHitScreen =
       if (beginInFlight) return;
       beginInFlight = true;
       try {
-        const chart = selectedChart();
+        const heard = selectedChart();
+        // "listen first": the rhythm is ticked out once, then asked of the player
+        const echo = listening() ? echoChart(heard) : null;
+        const chart = echo ? echo.chart : heard;
+        const listen = echo ? { end: echo.listenEnd, tones: rhythmTones(heard) } : undefined;
         setupStatus.classList.remove('error');
         demoClaimed = demo;
         if (!demo) {
@@ -1029,7 +1065,7 @@ export const createHitScreen =
           if (!m) return;
           const ctx = m.ctx;
           live = { adapter: m, ctx, demo: false, model };
-          runGame(live, chart, latencyOffset(ctx), ctx.currentTime + 0.6);
+          runGame(live, chart, latencyOffset(ctx), ctx.currentTime + 0.6, listen);
           return;
         }
         if (mic) {
@@ -1066,7 +1102,7 @@ export const createHitScreen =
         const probe = new SongClock(ctx);
         probe.start(-countIn, startAt);
         live = { adapter: synth, ctx, demo: true, model: demoModel };
-        runGame(live, chart, 0, startAt);
+        runGame(live, chart, 0, startAt, listen);
         synth.start(probe.toSourceTime(perf.songStart));
       } catch (err) {
         setupStatus.textContent = err instanceof Error ? err.message : String(err);

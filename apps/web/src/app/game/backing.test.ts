@@ -1,6 +1,13 @@
 import { SongClock, chartFromBeats, getSong } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
-import { midiToHz, planAllBacking, planBacking, playBacking, type AudioOut } from './backing';
+import {
+  midiToHz,
+  planAllBacking,
+  planBacking,
+  playBacking,
+  rhythmTones,
+  type AudioOut,
+} from './backing';
 
 const chart = chartFromBeats({ title: 'T', bpm: 120, countInBeats: 4 }, [
   { beat: 0, beats: 1, pitch: 60 },
@@ -156,5 +163,17 @@ describe('planAllBacking', () => {
       .filter((e) => e.kind === 'click' && e.accent && e.songTime >= 0)
       .map((e) => Math.round((e.songTime / (60 / waltz.meta.bpm)) * 100) / 100);
     expect(accents.slice(0, 3)).toEqual([0, 3, 6]);
+  });
+});
+
+describe('rhythmTones', () => {
+  it('ticks every hit of a rhythm, lower for a kick than a hat', () => {
+    const groove = getSong('kit-halftime');
+    const ticks = rhythmTones(groove);
+    expect(ticks).toHaveLength(groove.notes.length);
+    expect(ticks.map((t) => t.songTime)).toEqual(groove.notes.map((n) => n.t));
+    const pitchOf = (lane: string) => ticks[groove.notes.findIndex((n) => n.lane === lane)]!.midi;
+    expect(pitchOf('kick')).toBeLessThan(pitchOf('snare'));
+    expect(pitchOf('snare')).toBeLessThan(pitchOf('hat'));
   });
 });

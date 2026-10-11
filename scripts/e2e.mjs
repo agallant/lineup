@@ -754,6 +754,25 @@ const scenarios = {
       const miss = Number(await text(page, 'r-miss'));
       check(miss === 0 && perfect >= 10, `listen first: ${perfect} perfect, ${miss} missed`);
     });
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/beat');
+      await page.selectOption('[data-id=mode]', 'drum-kit');
+      await page.selectOption('[data-id=song]', 'kit-halftime');
+      await page.check('[data-id=listen]');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 180000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        miss === 0 && perfect >= 10,
+        `listen first (drums): ${perfect} perfect, ${miss} missed`,
+      );
+    });
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/strum');
+      check(await page.isHidden('[data-id=listen]'), 'listen first is not offered for chord songs');
+    });
   },
 
   async tuner() {
