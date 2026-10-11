@@ -1,6 +1,6 @@
 import type { KeyValueStore } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, SettingsStore, keyShiftFor } from './settings';
+import { DEFAULT_SETTINGS, SettingsStore, keyShiftFor, nextSpeed } from './settings';
 
 class Mem implements KeyValueStore {
   data = new Map<string, string>();
@@ -206,5 +206,16 @@ describe('SettingsStore', () => {
       scale: 'major',
       level: 'hard',
     });
+  });
+});
+
+describe('nextSpeed', () => {
+  it('steps up through the practice speeds and stops at full speed', () => {
+    expect(nextSpeed(0.5)).toBe(0.65);
+    expect(nextSpeed(0.65)).toBe(0.8);
+    expect(nextSpeed(0.8)).toBe(1);
+    expect(nextSpeed(1)).toBeNull();
+    expect(nextSpeed(0.7)).toBe(0.8);
+    expect(nextSpeed(1.25)).toBeNull();
   });
 });

@@ -71,7 +71,7 @@ import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
-import { SettingsStore, safeLocalStorage } from '../settings';
+import { SettingsStore, nextSpeed, safeLocalStorage } from '../settings';
 import {
   RANDOM_CHORDS,
   RANDOM_GROOVE,
@@ -910,6 +910,9 @@ export const createHitScreen =
         .filter((j) => j.timingError !== null && j.grade !== 'miss')
         .map((j) => j.timingError!);
       const avg = timing.length ? (timing.reduce((a, b) => a + b, 0) / timing.length) * 1000 : null;
+      // a clean run at a practice speed offers the next speed up
+      const faster =
+        !audio.demo && c.strum && s.accuracy >= 0.9 ? nextSpeed(settings.get().speed) : null;
       stages.results.innerHTML = `
       <section class="panel results">
         <div class="grade" data-id="grade">${grade}</div>
@@ -935,6 +938,7 @@ export const createHitScreen =
           .join('')}</div>
         <div class="row">
           <button data-id="again" class="primary">Play again</button>
+          ${faster ? `<button data-id="faster">Faster: ${Math.round(faster * 100)}% speed</button>` : ''}
           <button data-id="back">Back to setup</button>
           <button data-id="copy-log">Copy session log</button>
         </div>
@@ -951,6 +955,12 @@ export const createHitScreen =
       }
       const R = (id: string) =>
         stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
+      stages.results.querySelector('[data-id=faster]')?.addEventListener('click', () => {
+        if (faster === null) return;
+        settings.update({ speed: faster });
+        S<HTMLSelectElement>('speed').value = String(faster);
+        R('again').click();
+      });
       R('copy-log').addEventListener('click', () => {
         const text = formatSessionLog({
           build: buildInfoText(),

@@ -77,7 +77,7 @@ import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
-import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
+import { SettingsStore, nextSpeed, keyShiftFor, safeLocalStorage } from '../settings';
 import { RANDOM_MELODY, addRandomMelodyOption, fillSongMenu, fillTargetMenu } from '../song-menu';
 import { formatCents, formatDb } from '../format';
 import type { Screen } from '../router';
@@ -883,6 +883,9 @@ export const createPitchScreen =
         : best!.isNewBest
           ? 'New best!'
           : describeBest(best!.best);
+      // a clean run at a practice speed offers the next speed up
+      const faster =
+        !audio.demo && c.instruments && s.accuracy >= 0.9 ? nextSpeed(settings.get().speed) : null;
       stages.results.innerHTML = `
       <section class="panel results">
         <div class="grade" data-id="grade">${grade}</div>
@@ -904,6 +907,7 @@ export const createPitchScreen =
           .join('')}</div>
         <div class="row">
           <button data-id="again" class="primary">Play again</button>
+          ${faster ? `<button data-id="faster">Faster: ${Math.round(faster * 100)}% speed</button>` : ''}
           <button data-id="back">Back to setup</button>
           <button data-id="copy-log">Copy session log</button>
         </div>
@@ -920,6 +924,12 @@ export const createPitchScreen =
       }
       const R = (id: string) =>
         stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
+      stages.results.querySelector('[data-id=faster]')?.addEventListener('click', () => {
+        if (faster === null) return;
+        settings.update({ speed: faster });
+        S<HTMLSelectElement>('speed').value = String(faster);
+        R('again').click();
+      });
       R('copy-log').addEventListener('click', () => {
         const text = formatSessionLog({
           build: buildInfoText(),

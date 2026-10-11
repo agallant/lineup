@@ -23,6 +23,14 @@ export const GOAL_MINUTES: readonly number[] = [0, 15, 30, 60, 120];
 export type TextSize = 'normal' | 'large' | 'larger';
 export const TEXT_SIZES: readonly TextSize[] = ['normal', 'large', 'larger'];
 
+/** The practice speeds on offer, slowest first. */
+export const SPEEDS: readonly number[] = [0.5, 0.65, 0.8, 1];
+
+/** The next speed up from `speed`, or null at the top. */
+export function nextSpeed(speed: number): number | null {
+  return SPEEDS.find((s) => s > speed + 1e-9) ?? null;
+}
+
 export interface Settings {
   /** Show the live debug overlay while playing. */
   debug: boolean;
