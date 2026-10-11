@@ -1,6 +1,7 @@
 import { loadChart, rescaleChart, type Chart, type ChartNote } from '../chart';
 import { chartKind, notePitch } from '../difficulty';
 import { ukulelePlayable, ukulelePluck } from '../songs/notation';
+import { phraseBars } from './practice';
 import { chance, createRng, pick, type Rng } from './random';
 
 /**
@@ -226,14 +227,6 @@ function varyNotes(chart: Chart, variation: 'easier' | 'harder', seed: number): 
     notes = variation === 'easier' ? easierRhythm(chart) : harderRhythm(chart, rng);
   }
   return notes.sort((a, b) => a.t - b.t);
-}
-
-/** Bars in a phrase (fewer for a short song, so there are at least a few phrases to mix). */
-function phraseBars(chart: Chart): number {
-  const spb = 60 / chart.meta.bpm;
-  const barLen = spb * (chart.meta.beatsPerBar ?? 4);
-  const end = chart.notes.at(-1)!.t;
-  return end / barLen >= 12 ? 4 : 2;
 }
 
 /**

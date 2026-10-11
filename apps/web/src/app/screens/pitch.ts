@@ -36,6 +36,8 @@ import {
   type ScaleId,
   VARIATIONS,
   VARIATION_LABELS,
+  applyPart,
+  songParts,
   varyChart,
   type Variation,
   type WindInstrument,
@@ -135,6 +137,7 @@ const setup = (c: PitchScreenConfig) => `
       ${c.instruments ? '<label>Instrument <select data-id="instrument"></select></label>' : ''}
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
+      <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
       <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
     </div>
@@ -386,10 +389,33 @@ export const createPitchScreen =
         : (songs.find((s) => s.id === songSel.value) ?? songs[0]!);
 
     /** The chosen song, as written or in its easier or harder version. */
-    const variedSong = (): Chart => {
+    const wholeSong = (): Chart => {
       const entry = songEntry();
       return varyChart(entry.chart, settings.get().variation, hashSeed(entry.id));
     };
+    /** The part of the song to practise (an index into its phrases), or -1 for all of it. */
+    let partIdx = -1;
+    let partFor = '';
+    const partSel = S<HTMLSelectElement>('part');
+    /** Offers the phrases of the chosen song; a different song or version goes back to the whole. */
+    const syncParts = () => {
+      const parts = songParts(wholeSong());
+      const key = `${songEntry().id}|${settings.get().variation}|${parts.length}`;
+      if (key !== partFor) {
+        partFor = key;
+        partIdx = -1;
+        partSel.replaceChildren(new Option('Whole song', '-1'));
+        parts.forEach((p, i) => partSel.add(new Option(p.label, String(i))));
+      }
+      partSel.value = String(partIdx);
+      S('part-label').hidden = parts.length < 2;
+    };
+    partSel.addEventListener('change', () => {
+      partIdx = Number(partSel.value);
+      refreshRange();
+    });
+    /** The chosen song, version and part. */
+    const variedSong = (): Chart => applyPart(wholeSong(), partIdx);
 
     /** The chart as played: moved into the instrument's key, shifted, and at the practice speed. */
     const selectedChart = (): Chart => {
@@ -414,10 +440,13 @@ export const createPitchScreen =
           c.instruments
             ? `${settings.get().difficulty}|x${settings.get().speed}${anyOctave() ? '|anyoctave' : ''}`
             : settings.get().difficulty
-        }${settings.get().variation === 'original' ? '' : `|${settings.get().variation}`}`,
+        }${settings.get().variation === 'original' ? '' : `|${settings.get().variation}`}${
+          partIdx >= 0 ? `|part${partIdx + 1}` : ''
+        }`,
       );
 
     const refreshRange = () => {
+      syncParts();
       const chart = selectedChart();
       const r = chartPitchRange(chart);
       let text = r ? c.rangeText(midiName(r.low), midiName(r.high)) : '';

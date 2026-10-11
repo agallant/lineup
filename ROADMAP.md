@@ -28,7 +28,8 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
 - **Easier and harder versions** of any song, exercise or random song.
 - **Home, scoreboard and options**: home menu in sections (games, progress, set-up tools, options);
   scoreboard of personal bests with stars; XP, levels, day streaks and trophies; an options screen with
-  backup and restore; mixed-difficulty versions; play-along bass and chords.
+  backup and restore; mixed-difficulty versions; play-along bass and chords; a daily challenge per game;
+  practising one phrase of a song at a time.
 - **Product**: best scores, song info, offline start, session logs you can copy, end-to-end tests in CI.
 
 ## Development goals

@@ -903,6 +903,23 @@ const scenarios = {
           `${song}: easier <= as written <= harder (${scores.easier}, ${scores.original}, ${scores.harder})`,
         );
         check(scores.easier < scores.harder, `${song}: the two versions differ`);
+        if (song === 'strum-blues') {
+          await page.selectOption('[data-id=variation]', 'original');
+          const notes = async () => Number(/(\d+) notes/.exec(await text(page, 'song-info'))?.[1]);
+          const whole = await notes();
+          check(
+            (await page.isVisible('[data-id=part]')) &&
+              (await page.$$('[data-id=part] option')).length > 2,
+            `${song}: a Part menu offers its phrases`,
+          );
+          await page.selectOption('[data-id=part]', '1');
+          const part = await notes();
+          check(
+            part > 0 && part < whole,
+            `${song}: practising one phrase has fewer notes (${part} of ${whole})`,
+          );
+          await page.selectOption('[data-id=part]', '-1');
+        }
         if (song === 'wind-greensleeves') {
           await page.selectOption('[data-id=variation]', 'easier');
           check(

@@ -117,6 +117,10 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
 - **Home** groups the four games under _Play_, the scoreboard under _Progress_, and the timing
   calibration and the mic and latency test under _Set up_ (they are tools, not games), with your level
   and streak on top.
+- **Today's challenge**: one random song per game per day (the same for everyone, no network: it
+  comes from the date), on the home menu. Reach 60% for +50 XP, once per game per day.
+- **Part**: next to Version, practise one phrase of a song (four bars, two in a short song) on its own;
+  best scores are kept per part.
 - **Scoreboard** (`#/scores`) lists your best score on every song with stars (★ 60%, ★★ 80%, ★★★ 95%
   accuracy), filtered by game and sorted by newest, highest score, most stars or hardest song.
 - **Progress**: every finished song earns XP (more for accuracy and for harder songs, plus a bonus for
