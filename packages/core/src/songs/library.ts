@@ -17,6 +17,8 @@ interface Tune {
   notes: string;
   /** The tune as wind instruments play it, when a note must move to stay above the tonic. */
   windNotes?: string;
+  /** Dips below the tonic, which a whistle or recorder cannot play, so it is for the voice only. */
+  voiceOnly?: boolean;
 }
 
 /**
@@ -87,6 +89,25 @@ const TUNES: readonly Tune[] = [
       C5 G4 E4 | G4:1.5 F4:.5 D4 | C4:3`,
   },
   {
+    id: 'auld-lang-syne',
+    title: 'Auld Lang Syne',
+    artist: 'Traditional',
+    bpm: 92,
+    tonic: 60,
+    voiceOnly: true,
+    notes: `G3 | C4:1.5 C4:.5 C4 E4 | D4:1.5 C4:.5 D4 E4 | C4:1.5 C4:.5 E4 G4 | A4:3 A4 |
+      G4:1.5 E4:.5 E4 C4 | D4:1.5 C4:.5 D4 E4 | C4:1.5 A3:.5 A3 G3 | C4:4`,
+  },
+  {
+    id: 'amazing-grace',
+    title: 'Amazing Grace',
+    artist: 'Traditional',
+    bpm: 80,
+    tonic: 60,
+    voiceOnly: true,
+    notes: `G3 | C4:2 E4:.5 C4:.5 | E4:2 D4 | C4:2 A3 | G3:2 G3 | C4:2 E4:.5 C4:.5 | E4:2 D4 | G4:3`,
+  },
+  {
     id: 'joy-to-the-world',
     title: 'Joy to the World (opening)',
     artist: 'Handel / Mason',
@@ -120,7 +141,7 @@ function tunesFor(
   wind = false,
 ): Record<string, Chart> {
   return Object.fromEntries(
-    TUNES.map((t) => [
+    TUNES.filter((t) => !(wind && t.voiceOnly)).map((t) => [
       `${prefix}-${t.id}`,
       melodyChart(
         {

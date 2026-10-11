@@ -143,16 +143,18 @@ describe('exercises', () => {
     expect(exerciseCharts('nope')).toEqual({});
   });
 
-  it.each(profiles)('%s: lists thirteen exercises with tidy ids and titles', (profileId) => {
+  it.each(profiles)('%s: lists its exercises with tidy ids and titles', (profileId) => {
     const charts = exerciseCharts(profileId);
-    expect(Object.keys(charts)).toHaveLength(13);
+    expect(Object.keys(charts).length).toBeGreaterThanOrEqual(13);
     for (const [id, chart] of Object.entries(charts)) {
       expect(id).toMatch(new RegExp(`^ex-${profileId}-[a-z-]+$`));
       expect(chart.meta.instruments).toEqual([profileId]);
       expect(chart.meta.title).toMatch(/^[A-Z][^:]+: .+/);
       expect(chart.meta.tonic).toBe(EXERCISE_TONICS[profileId]);
     }
-    expect(new Set(Object.values(charts).map((c) => c.meta.title)).size).toBe(13);
+    expect(new Set(Object.values(charts).map((c) => c.meta.title)).size).toBe(
+      Object.keys(charts).length,
+    );
   });
 
   it.each(profiles)('%s: every exercise is a valid chart that is easy to play', (profileId) => {
@@ -178,7 +180,7 @@ describe('exercises', () => {
 
   it.each(profiles)('%s: every note belongs to the key the exercise says it is in', (profileId) => {
     for (const [id, chart] of Object.entries(exerciseCharts(profileId))) {
-      if (id.includes('chromatic')) continue; // every semitone, by design
+      if (id.includes('chromatic') || id.includes('range')) continue; // not in one key, by design
       const parent = majorPitchClasses(chart.meta.tonic!);
       for (const n of chart.notes) expect(parent, `${id} ${n.pitch}`).toContain(n.pitch! % 12);
     }
@@ -243,10 +245,14 @@ describe('ukulele exercises', () => {
   it('are the scales that stay on the first frets, plucked on single strings', () => {
     expect(Object.keys(charts).sort()).toEqual([
       'ex-ukulele-strum-chromatic-up-down',
+      'ex-ukulele-strum-dorian-thirds',
       'ex-ukulele-strum-dorian-up-down',
       'ex-ukulele-strum-major-arpeggios',
+      'ex-ukulele-strum-major-fifths',
+      'ex-ukulele-strum-major-fourths',
       'ex-ukulele-strum-major-ladder',
       'ex-ukulele-strum-major-long-tones',
+      'ex-ukulele-strum-major-octaves',
       'ex-ukulele-strum-major-patterns',
       'ex-ukulele-strum-major-pentatonic-up-down',
       'ex-ukulele-strum-major-thirds',

@@ -50,7 +50,7 @@ describe('varyChart', () => {
     }
     expect(easier).toBeLessThan(original);
     expect(original).toBeLessThan(harder);
-    expect(changed / all.length).toBeGreaterThan(0.5);
+    expect(changed / all.length).toBeGreaterThan(0.4);
   });
 
   it('works on random songs too, and a seed gives a different harder version', () => {

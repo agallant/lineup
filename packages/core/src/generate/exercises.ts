@@ -4,7 +4,15 @@ import { SCALES, degreeToMidi, type ScaleId } from './theory';
 
 /** The kinds of practice pattern, each a sequence of scale degrees. */
 export type ExerciseKindId =
-  'up-down' | 'thirds' | 'patterns' | 'arpeggios' | 'long-tones' | 'ladder';
+  | 'up-down'
+  | 'thirds'
+  | 'patterns'
+  | 'arpeggios'
+  | 'long-tones'
+  | 'ladder'
+  | 'fourths'
+  | 'fifths'
+  | 'octaves';
 
 interface Step {
   /** Scale degree: 0 is the root, `n` (the scale's length) the octave above. */
@@ -83,16 +91,53 @@ export const EXERCISE_KINDS: Readonly<Record<ExerciseKindId, ExerciseKind>> = {
       return holdLast(one(degrees));
     },
   },
+  fourths: {
+    id: 'fourths',
+    label: 'in fourths',
+    bpm: 76,
+    steps: (n) => {
+      const degrees: number[] = [];
+      for (let i = 0; i + 3 <= n; i++) degrees.push(i, i + 3);
+      return holdLast(one(degrees));
+    },
+  },
+  fifths: {
+    id: 'fifths',
+    label: 'in fifths',
+    bpm: 72,
+    steps: (n) => {
+      const degrees: number[] = [];
+      for (let i = 0; i + 4 <= n; i++) degrees.push(i, i + 4);
+      return holdLast(one(degrees));
+    },
+  },
+  octaves: {
+    id: 'octaves',
+    label: 'octave leaps',
+    bpm: 68,
+    // the root and the octave above, then from each of the next degrees, a big leap every time
+    steps: (n) => holdLast(one([0, n, 0, n, 1, n + 1, 1, n + 1, 2, n + 2, 2, n + 2, 0])),
+  },
 };
 
 /** What each scale practises: every scale gets the up-and-down run; the major scale gets them all. */
 const PLAN: readonly { scale: ScaleId; kinds: readonly ExerciseKindId[] }[] = [
   {
     scale: 'major',
-    kinds: ['up-down', 'thirds', 'patterns', 'arpeggios', 'long-tones', 'ladder'],
+    kinds: [
+      'up-down',
+      'thirds',
+      'patterns',
+      'arpeggios',
+      'long-tones',
+      'ladder',
+      'fourths',
+      'fifths',
+      'octaves',
+    ],
   },
-  { scale: 'minor', kinds: ['up-down', 'thirds'] },
-  { scale: 'dorian', kinds: ['up-down'] },
+  { scale: 'minor', kinds: ['up-down', 'thirds', 'patterns', 'fifths'] },
+  { scale: 'dorian', kinds: ['up-down', 'thirds'] },
   { scale: 'mixolydian', kinds: ['up-down'] },
   { scale: 'major-pentatonic', kinds: ['up-down'] },
   { scale: 'minor-pentatonic', kinds: ['up-down'] },
@@ -139,6 +184,31 @@ function chromaticExercise(profileId: string, tonic: number): Chart {
   );
 }
 
+/**
+ * Finding a voice's range: whole tones from a fourth below the tonic up to the tonic's octave and a
+ * sixth, each held for two beats, then back down. Stop where it gets hard: that is the edge of the
+ * range. The whole-tone steps are not all in one major key, so it is rated chromatic.
+ */
+function rangeFinder(tonic: number): Chart {
+  const up = Array.from({ length: 12 }, (_, i) => -5 + 2 * i); // -5 .. 17
+  const semis = [...up, ...up.slice(0, -1).reverse()];
+  const notes: BeatNote[] = semis.map((s, i) => ({
+    beat: i * 2,
+    beats: 2 * 0.88,
+    pitch: tonic + s,
+  }));
+  return chartFromBeats(
+    {
+      title: 'Find your range: whole tones, low to high and back',
+      artist: 'Lineup',
+      bpm: 60,
+      instruments: ['voice'],
+      tonic,
+    },
+    notes,
+  );
+}
+
 /** The exercises written for one instrument profile, keyed by song id (`ex-<profile>-<scale>-<kind>`). */
 export function exerciseCharts(profileId: string): Record<string, Chart> {
   const parentTonic = EXERCISE_TONICS[profileId];
@@ -178,5 +248,6 @@ export function exerciseCharts(profileId: string): Record<string, Chart> {
     }
   }
   out[`ex-${profileId}-chromatic-up-down`] = chromaticExercise(profileId, parentTonic);
+  if (profileId === 'voice') out['ex-voice-range-finder'] = rangeFinder(parentTonic);
   return out;
 }
