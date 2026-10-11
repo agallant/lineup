@@ -217,7 +217,9 @@ function withNotes(chart: Chart, notes: ChartNote[]): Chart {
 export function varyChart(chart: Chart, variation: Variation, seed = 1): Chart {
   if (variation === 'original' || chart.notes.length < 2) return chart;
   const kind = chartKind(chart);
-  const rng = createRng(seed * 2654435761 + (variation === 'easier' ? 1 : 2));
+  const rng = createRng(
+    (Math.imul(seed >>> 0, 2654435761) + (variation === 'easier' ? 1 : 2)) >>> 0,
+  );
   const picked = kind === 'picked';
   let notes: ChartNote[];
   if (kind === 'melody' || kind === 'picked') {

@@ -772,7 +772,7 @@ const scenarios = {
     console.log('\n# Easier and harder versions of a song: rated, and playable end to end');
     const score = async (page) => Number(/\((\d+)\/10\)/.exec(await text(page, 'song-info'))?.[1]);
     for (const [route, mode, song] of [
-      ['sing', null, 'sing-silent-night'],
+      ['sing', null, 'sing-jingle-bells'],
       ['wind', null, 'wind-greensleeves'],
       ['strum', null, 'strum-blues'],
       ['beat', 'drum-kit', 'kit-halftime'],
