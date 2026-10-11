@@ -3,11 +3,13 @@ import {
   findWindInstrument,
   isDifficulty,
   isMelodyLevel,
+  isVariation,
   isScaleId,
   isSeed,
   type Difficulty,
   type KeyValueStore,
   type MelodySpec,
+  type Variation,
 } from '@lineup/core';
 
 export interface Settings {
@@ -40,6 +42,8 @@ export interface Settings {
   songs: Record<string, string>;
   /** The random melody on offer in the song menu (Singline and Windline). */
   challenge: MelodySpec;
+  /** Play songs as written, or a plainer or busier version of them. */
+  variation: Variation;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -56,6 +60,7 @@ export const DEFAULT_SETTINGS: Settings = {
   speed: 1,
   songs: {},
   challenge: { seed: 1, scale: 'major', level: 'easy' },
+  variation: 'original',
 };
 
 const KEY = 'lineup.settings.v1';
@@ -158,6 +163,7 @@ function sanitize(raw: unknown): Settings {
         : DEFAULT_SETTINGS.speed,
     songs,
     challenge,
+    variation: isVariation(r['variation']) ? r['variation'] : DEFAULT_SETTINGS.variation,
   };
 }
 

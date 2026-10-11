@@ -17,6 +17,14 @@ export const UKE_CHORDS: Readonly<Record<string, readonly [number, number, numbe
   C7: [0, 0, 0, 1],
   A7: [0, 1, 0, 0],
   D7: [2, 0, 2, 0],
+  Bm: [4, 2, 2, 2],
+  Bb: [3, 2, 1, 1],
+  Gm: [0, 2, 3, 1],
+  Cm: [0, 3, 3, 3],
+  'F#m': [2, 1, 2, 0],
+  E: [4, 4, 4, 2],
+  E7: [1, 2, 0, 2],
+  B7: [2, 3, 2, 2],
 };
 
 export const midiToHz = (midi: number): number => 440 * 2 ** ((midi - 69) / 12);

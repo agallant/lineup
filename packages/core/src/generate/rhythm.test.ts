@@ -120,7 +120,7 @@ describe('generateChordSong', () => {
         // the song is built from one or two four-bar progressions, and ends on the home chord
         expect(progressions.length).toBeGreaterThanOrEqual(1);
         expect(progressions.length).toBeLessThanOrEqual(2);
-        const home = { C: 'C', G: 'G', D: 'D' }[key];
+        const home = key;
         expect(bars.at(-1), `${level} ${seed}`).toBe(home);
         if (level === 'easy') expect(['C', 'G']).toContain(key);
         // the first four bars come round again (the form is made of whole progressions)
@@ -175,6 +175,27 @@ describe('generateChordSong', () => {
     expect(getSong('gen-chords-hard-1234')).toEqual(generateChordSong(spec));
     for (const bad of ['gen-chords-hard-01', 'gen-chords-bold-1', 'gen-chords-easy-100000'])
       expect(parseChordSongId(bad)).toBeNull();
+  });
+
+  it('makes waltzes: three beats to the bar, with ids that round-trip', () => {
+    const spec = { seed: 7, level: 'medium' as const, waltz: true };
+    expect(chordSongId(spec)).toBe('gen-waltz-medium-7');
+    expect(parseChordSongId('gen-waltz-medium-7')).toEqual(spec);
+    const chart = getSong('gen-waltz-medium-7');
+    expect(chart).toEqual(generateChordSong(spec));
+    const spb = 60 / chart.meta.bpm;
+    for (const n of chart.notes) expect(Math.round((n.t / spb) * 2) / 2).toBeCloseTo(n.t / spb, 4);
+    expect(chart.notes.at(-1)!.t / spb / 3).toBeCloseTo(15, 4); // the last note starts bar 16
+    for (const seed of SEEDS) {
+      const bars = chordSongBars({ seed, level: 'hard', waltz: true }).bars;
+      expect(bars).toHaveLength(16);
+    }
+  });
+
+  it('uses the new keys and only chords with a fingering', () => {
+    const keys = new Set(SEEDS.map((seed) => chordSongBars({ seed, level: 'hard' }).key));
+    expect(keys).toContain('F');
+    expect(keys).toContain('A');
   });
 });
 

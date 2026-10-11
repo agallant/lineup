@@ -25,6 +25,7 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
   (low whistle, alto recorder, second octave); strict octaves are an option.
 - **Difficulty ratings and diatonic/chromatic labels** on every song and exercise (menus sorted easiest
   first).
+- **Easier and harder versions** of any song, exercise or random song.
 - **Product**: best scores, song info, offline start, session logs you can copy, end-to-end tests in CI.
 
 ## Development goals
@@ -37,9 +38,10 @@ real instrument to judge is listed again under "Waiting on real-device testing".
 - **Difficulty and labels** (done): every song, exercise and random song is rated from its chart
   (Beginner to Expert, 1 to 10); melodies are also labelled diatonic or chromatic (other kinds of song
   have no such label), since instruments differ in what they can play.
-- **Song variations** (next): any song can be made **easier** or **harder** (generated from the song
+- **Song variations** (done): any song can be made **easier** or **harder** (generated from the song
   and a seed): fewer or more passing notes, simpler or busier strum patterns, plainer or more
-  syncopated grooves; the difficulty score changes with it.
+  syncopated grooves; the difficulty score changes with it. To come: a variation per phrase, and
+  "give me a 4" difficulty targets.
 - **More generators, not just more songs**: new forms, keys and levels for random melodies, chord songs
   (waltz time, more chords such as Bm and B♭ for more keys) and grooves; difficulty targets ("give me a
   4"); play-along backing for melodies.
@@ -49,9 +51,9 @@ real instrument to judge is listed again under "Waiting on real-device testing".
 
 ### 2. Strumline and ukulele
 
-- Use the vertical bars for **barre chords** (one finger holding several strings).
-- Find out why the simulated ukulele misses the odd strum on a new chord in the harder random chord
-  songs.
+- ~~Barre bars~~, ~~waltz random songs~~, ~~more chords (Bm, B♭, Gm, Cm, F♯m, E, E7, B7) and keys (F, A)~~: done.
+- The simulated ukulele still misses the odd strum on a new chord a beat after another chord, and
+  near-identical shapes (Am/Am7, A/F♯m) are not told apart in one song; both are analyzer limits.
 - Hear **which string and fret** is played, so a plucked note can be judged on pitch, not just timing.
 - Strum **direction** (down or up) detection, which is not reliable yet.
 

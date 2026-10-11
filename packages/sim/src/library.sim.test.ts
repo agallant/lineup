@@ -11,9 +11,13 @@ import {
   generateChordSong,
   generateGroove,
   generateMelody,
+  getSong,
   getProfile,
   melodyScalesFor,
   rhythmExercises,
+  strumChart,
+  UKULELE_CHORD_FRETS,
+  varyChart,
   type Chart,
 } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
@@ -145,6 +149,34 @@ describe('generated and exercise material, played through the real chain', () =>
   });
 
   it.each(
+    MELODY_LEVELS.flatMap(
+      (level) =>
+        [
+          [level, 4],
+          [level, 2024],
+        ] as const,
+    ),
+  )('a random waltz (%s, seed %i) is played (almost) perfectly', (level, seed) => {
+    const chart = generateChordSong({ seed, level, waltz: true });
+    const { counts } = uke(chart).score;
+    if (level === 'easy') return perfect(counts, chart.notes.length);
+    expect(counts.miss / chart.notes.length).toBeLessThan(0.08);
+    expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
+  });
+
+  it.each(Object.keys(UKULELE_CHORD_FRETS))('recognises %s among its neighbours', (chord) => {
+    // each chord between two others a song would plausibly mix it with (very close shapes such as
+    // Am and Am7, or A and F#m, are not told apart in one song)
+    const other = chord === 'G' ? 'C' : 'G';
+    const chart = strumChart(
+      { title: 'One chord', bpm: 60 },
+      `${other} | ${chord} | ${other} | ${chord}`,
+      'D . . . D . . .',
+    );
+    perfect(uke(chart).score.counts, chart.notes.length);
+  });
+
+  it.each(
     GROOVE_PROFILES.flatMap((p) =>
       MELODY_LEVELS.flatMap(
         (level) =>
@@ -166,4 +198,75 @@ describe('generated and exercise material, played through the real chain', () =>
   )('%s: every hit scores perfect', (_id, profileId, chart) => {
     perfect(hits(chart, profileId).score.counts, chart.notes.length);
   });
+});
+
+describe('easier and harder versions, played through the real chain', () => {
+  // quicker, tighter notes can score "good" now and then, but none may be missed
+  const expectMostlyPerfect = (
+    counts: { perfect: number; good: number; miss: number },
+    n: number,
+  ) => {
+    expect(counts.miss).toBe(0);
+    expect(counts.perfect / n).toBeGreaterThanOrEqual(0.88);
+  };
+
+  const versions = ['easier', 'harder'] as const;
+
+  it.each(
+    versions.flatMap((v) => ['sing-silent-night', 'sing-row-boat'].map((id) => [id, v] as const)),
+  )('%s (%s): a steady singer scores every note perfect', (id, v) => {
+    const chart = varyChart(getSong(id), v, 3);
+    const rendered = renderPerformance(chart, voicePerformer({}), { latency: LATENCY });
+    const r = runContinuous(rendered, chart, getProfile('voice'), { latencyOffset: LATENCY });
+    expectMostlyPerfect(r.score.counts, chart.notes.length);
+  });
+
+  it.each(
+    versions.flatMap((v) => ['wind-greensleeves', 'wind-mary-lamb'].map((id) => [id, v] as const)),
+  )('%s (%s): a steady wind player scores every note perfect', (id, v) => {
+    const chart = varyChart(getSong(id), v, 3);
+    const rendered = renderPerformance(chart, windPerformer({}), { latency: LATENCY });
+    const r = runContinuous(rendered, chart, getProfile('wind'), { latencyOffset: LATENCY });
+    expectMostlyPerfect(r.score.counts, chart.notes.length);
+  });
+
+  it.each(
+    versions.flatMap((v) =>
+      ['pick-mary-lamb', 'ex-ukulele-strum-major-thirds'].map((id) => [id, v] as const),
+    ),
+  )('%s (%s): every plucked note scores perfect', (id, v) => {
+    const chart = varyChart(getSong(id), v, 3);
+    const rendered = renderPerformance(chart, ukuleleStrumPerformer, { latency: LATENCY });
+    const r = runDiscrete(rendered, chart, getProfile('ukulele-strum'), { latencyOffset: LATENCY });
+    expectMostlyPerfect(r.score.counts, chart.notes.length);
+  });
+
+  it.each(versions.flatMap((v) => ['strum-skip-lou', 'strum-waltz'].map((id) => [id, v] as const)))(
+    '%s (%s): strums are almost all heard',
+    (id, v) => {
+      const chart = varyChart(getSong(id), v, 3);
+      const rendered = renderPerformance(chart, ukuleleStrumPerformer, { latency: LATENCY });
+      const { counts } = runDiscrete(rendered, chart, getProfile('ukulele-strum'), {
+        latencyOffset: LATENCY,
+      }).score;
+      // the same few strums on a new chord can be missed in the simulation (see the README)
+      expect(counts.miss / chart.notes.length).toBeLessThan(0.06);
+    },
+  );
+
+  it.each(versions.flatMap((v) => ['kit-halftime', 'kit-rock-fill'].map((id) => [id, v] as const)))(
+    '%s (%s): every hit scores perfect',
+    (id, v) => {
+      const chart = varyChart(getSong(id), v, 3);
+      const sounds: Record<string, HitSound> = { kick, snare, hat: hihat };
+      const profile = getProfile('drum-kit');
+      const model = enrollSynthetic(profile, sounds).model;
+      const rendered = renderPerformance(chart, percussionPerformer(sounds), { latency: LATENCY });
+      const r = runDiscrete(rendered, chart, profile, {
+        latencyOffset: LATENCY,
+        timbreModel: model,
+      });
+      expectMostlyPerfect(r.score.counts, chart.notes.length);
+    },
+  );
 });

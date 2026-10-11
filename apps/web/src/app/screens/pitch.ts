@@ -14,6 +14,7 @@ import {
   defaultOffsetFromLatencies,
   findWindInstrument,
   generateMelody,
+  hashSeed,
   getProfile,
   inKey,
   isGenericWind,
@@ -32,6 +33,10 @@ import {
   type MelodySpec,
   type PitchFrame,
   type ScaleId,
+  VARIATIONS,
+  VARIATION_LABELS,
+  varyChart,
+  type Variation,
   type WindInstrument,
 } from '@lineup/core';
 import {
@@ -125,6 +130,7 @@ const setup = (c: PitchScreenConfig) => `
     <div class="row">
       ${c.instruments ? '<label>Instrument <select data-id="instrument"></select></label>' : ''}
       <label>Song <select data-id="song"></select></label>
+      <label>Version <select data-id="variation"></select></label>
       <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
     </div>
@@ -363,9 +369,15 @@ export const createPitchScreen =
         ? randomMelody()
         : (songs.find((s) => s.id === songSel.value) ?? songs[0]!);
 
+    /** The chosen song, as written or in its easier or harder version. */
+    const variedSong = (): Chart => {
+      const entry = songEntry();
+      return varyChart(entry.chart, settings.get().variation, hashSeed(entry.id));
+    };
+
     /** The chart as played: moved into the instrument's key, shifted, and at the practice speed. */
     const selectedChart = (): Chart => {
-      const song = songEntry().chart;
+      const song = variedSong();
       const toInstrument = c.instruments ? shiftForInstrument(song, instrument()) : 0;
       const moved = transposeChart(song, toInstrument + extraShift());
       return c.instruments ? rescaleChart(moved, settings.get().speed) : moved;
@@ -382,9 +394,11 @@ export const createPitchScreen =
       scoreKey(
         c.profileId,
         songEntry().id,
-        c.instruments
-          ? `${settings.get().difficulty}|x${settings.get().speed}${anyOctave() ? '|anyoctave' : ''}`
-          : settings.get().difficulty,
+        `${
+          c.instruments
+            ? `${settings.get().difficulty}|x${settings.get().speed}${anyOctave() ? '|anyoctave' : ''}`
+            : settings.get().difficulty
+        }${settings.get().variation === 'original' ? '' : `|${settings.get().variation}`}`,
       );
 
     const refreshRange = () => {
@@ -442,6 +456,13 @@ export const createPitchScreen =
     };
     refreshCalibration();
 
+    const variationSel = S<HTMLSelectElement>('variation');
+    for (const v of VARIATIONS) variationSel.add(new Option(VARIATION_LABELS[v], v));
+    variationSel.value = settings.get().variation;
+    variationSel.addEventListener('change', () => {
+      settings.update({ variation: variationSel.value as Variation });
+      refreshRange();
+    });
     songSel.addEventListener('change', () => {
       settings.update({ songs: { ...settings.get().songs, [c.profileId]: songSel.value } });
       showChallenge();

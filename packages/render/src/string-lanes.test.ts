@@ -5,6 +5,7 @@ import { createRenderer } from './pitch-highway';
 import { COLORS, type Canvas2D, type HitFlash, type RenderView } from './renderer';
 import {
   HEADER_PX,
+  barres,
   StringLanesRenderer,
   stringColor,
   stringName,
@@ -185,9 +186,50 @@ describe('StringLanesRenderer', () => {
     ).toEqual([0, 1, 2, 3].map(rowY));
   });
 
-  it('joins a strum with a bar across the strings it uses', () => {
-    const g = draw(view([note(1, { chord: 'C' })]));
-    expect(g.verticalLines(noteX(1))).toContainEqual([rowY(0), rowY(3)]);
+  it('draws no bar for a chord whose fingers are all on different frets or strings', () => {
+    // C: only the A string is held
+    expect(draw(view([note(1, { chord: 'C' })])).verticalLines(noteX(1))).toEqual([]);
+    // G: G 0, C 2, E 3, A 2: the fingers are on three different strings, two on fret 2 but apart
+    expect(draw(view([note(1, { chord: 'G' })])).verticalLines(noteX(1))).toEqual([]);
+  });
+
+  it('joins strings held at the same fret next to each other with a bar: one finger, a barre', () => {
+    // D: G 2, C 2, E 2, A open: the first three strings share fret 2
+    const g = draw(view([note(1, { chord: 'D' })]));
+    expect(g.verticalLines(noteX(1))).toEqual([[rowY(1), rowY(3)]]);
+  });
+
+  it('joins only the strings that really touch, and several runs at once', () => {
+    const g = draw(view([note(1, { frets: [1, 1, 0, 2] }), note(2, { frets: [3, 3, 5, 5] })]));
+    expect(g.verticalLines(noteX(1))).toEqual([[rowY(2), rowY(3)]]);
+    expect(g.verticalLines(noteX(2))).toEqual([
+      [rowY(0), rowY(1)],
+      [rowY(2), rowY(3)],
+    ]);
+  });
+
+  it('works out barres from marks: runs of neighbouring strings at one fret above the nut', () => {
+    expect(barres([])).toEqual([]);
+    expect(
+      barres([
+        { row: 0, fret: 0 },
+        { row: 1, fret: 0 },
+      ]),
+    ).toEqual([]);
+    expect(
+      barres([
+        { row: 3, fret: 2 },
+        { row: 1, fret: 2 },
+        { row: 2, fret: 2 },
+        { row: 0, fret: 1 },
+      ]),
+    ).toEqual([[1, 3]]);
+    expect(
+      barres([
+        { row: 0, fret: 2 },
+        { row: 2, fret: 2 },
+      ]),
+    ).toEqual([]);
   });
 
   it('draws open strings as small hollow rings and fretted strings as bigger filled discs', () => {

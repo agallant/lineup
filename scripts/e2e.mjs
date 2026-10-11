@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -736,6 +736,51 @@ const scenarios = {
         check(
           miss === 0 && perfect + good >= 16,
           `${mode} ${entry}: the demo plays random song 5 (${perfect} perfect, ${good} good, ${miss} missed)`,
+        );
+      });
+    }
+  },
+
+  async variation() {
+    console.log('\n# Easier and harder versions of a song: rated, and playable end to end');
+    const score = async (page) => Number(/\((\d+)\/10\)/.exec(await text(page, 'song-info'))?.[1]);
+    for (const [route, mode, song] of [
+      ['sing', null, 'sing-jingle-bells'],
+      ['wind', null, 'wind-greensleeves'],
+      ['strum', null, 'strum-blues'],
+      ['beat', 'drum-kit', 'kit-halftime'],
+    ]) {
+      await session(null, async (page) => {
+        await page.goto(URL_BASE + '#/' + route);
+        if (mode) await page.selectOption('[data-id=mode]', mode);
+        await page.selectOption('[data-id=song]', song);
+        const scores = {};
+        for (const v of ['original', 'easier', 'harder']) {
+          await page.selectOption('[data-id=variation]', v);
+          scores[v] = await score(page);
+        }
+        check(
+          scores.easier <= scores.original && scores.original <= scores.harder,
+          `${song}: easier <= as written <= harder (${scores.easier}, ${scores.original}, ${scores.harder})`,
+        );
+        check(scores.easier < scores.harder, `${song}: the two versions differ`);
+        if (song === 'wind-greensleeves') {
+          await page.selectOption('[data-id=variation]', 'easier');
+          check(
+            /diatonic/.test(await text(page, 'song-info')),
+            'an easier Greensleeves has no sharps or flats left',
+          );
+        }
+        await page.selectOption('[data-id=variation]', 'easier');
+        await page.uncheck('[data-id=opt-metronome]');
+        await page.click('[data-id=demo]');
+        await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+        const perfect = Number(await text(page, 'r-perfect'));
+        const good = Number(await text(page, 'r-good'));
+        const miss = Number(await text(page, 'r-miss'));
+        check(
+          miss === 0 && perfect + good >= 10,
+          `${song}: the demo plays the easier version (${perfect} perfect, ${good} good, ${miss} missed)`,
         );
       });
     }

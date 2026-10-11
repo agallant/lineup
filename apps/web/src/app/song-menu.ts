@@ -67,6 +67,9 @@ export const RANDOM_MELODY = 'random-melody';
 /** The value of the "random chord song" entry (Strumline). */
 export const RANDOM_CHORDS = 'random-chords';
 
+/** The value of the "random waltz" entry (Strumline): a chord song in three beats to the bar. */
+export const RANDOM_WALTZ = 'random-waltz';
+
 /** The value of the "random groove" entry (Beatline). */
 export const RANDOM_GROOVE = 'random-groove';
 
