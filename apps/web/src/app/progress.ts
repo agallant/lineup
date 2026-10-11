@@ -326,7 +326,11 @@ export class ProgressStore {
       plays: entry.plays + 1,
       seconds: entry.seconds + Math.round(Math.max(0, result.seconds ?? 0)),
     };
-    for (const old of Object.keys(v.log).sort().slice(0, -MAX_LOG_DAYS)) delete v.log[old];
+    v.log = Object.fromEntries(
+      Object.entries(v.log)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-MAX_LOG_DAYS),
+    );
     if (!v.days.includes(today)) v.days = [...v.days, today].slice(-MAX_DAYS);
     const game = gameOf(result.profileId);
     if (game) v.perGame[game.id] = (v.perGame[game.id] ?? 0) + 1;
