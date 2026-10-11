@@ -316,6 +316,14 @@ export const KIT_SONGS: Readonly<Record<string, Chart>> = {
       hat: '.xxx.x.x | .x.x.x.x | .xxx.x.x | .x.x.x..',
     },
   ),
+  'kit-funk': grooveChart(
+    { title: 'Funk groove (two bars)', artist: 'Lineup', bpm: 76, instruments: ['drum-kit'] },
+    {
+      kick: 'x..x.... | ..x.....',
+      snare: '....x... | ....x..x',
+      hat: '.xx..xx. | .x.x.x..',
+    },
+  ),
 };
 
 /** All the library's songs, in menu order for each profile (the order within each profile is kept). */
