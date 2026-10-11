@@ -129,7 +129,8 @@ export function strumChart(
 
 /**
  * A groove written per lane on a grid: each line is `lane: pattern` with one character per step
- * (`x` is a hit, `.` is nothing), bar lines (`|`) and spaces ignored. All lanes must be the same length.
+ * (`x` is a hit, `.` is nothing), bar lines (`|`) and spaces ignored. All lanes must be the same
+ * length, and no two lanes may hit on the same step (one sound at a time).
  */
 export function grooveChart(
   meta: Meta,
@@ -150,5 +151,14 @@ export function grooveChart(
     });
   }
   notes.sort((a, b) => a.beat - b.beat);
+  // one sound at a time: the player's microphone hears a single onset, so two lanes on one step
+  // cannot both be judged
+  for (let i = 1; i < notes.length; i++) {
+    if (notes[i]!.beat === notes[i - 1]!.beat) {
+      throw new Error(
+        `lanes "${notes[i - 1]!.lane}" and "${notes[i]!.lane}" both hit at beat ${notes[i]!.beat}`,
+      );
+    }
+  }
   return chartFromBeats(meta, notes);
 }

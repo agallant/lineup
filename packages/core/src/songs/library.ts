@@ -156,7 +156,7 @@ export const STRUM_SONGS: Readonly<Record<string, Chart>> = {
       instruments: ['ukulele-strum'],
     },
     'C | C | F | C | G7 | G7 | C | C | C | C | F | F | G7 | F | C | C',
-    'D . D U D U',
+    'D . D U D .',
     { beatsPerBar: 3 },
   ),
   'strum-minor': strumChart(
@@ -210,7 +210,7 @@ export const CLAP_SONGS: Readonly<Record<string, Chart>> = {
   ),
 };
 
-/** Rhythms for claps and taps. */
+/** Rhythms for claps and taps (one sound at a time). */
 export const HAND_SONGS: Readonly<Record<string, Chart>> = {
   'hand-call-response': grooveChart(
     {
@@ -228,44 +228,44 @@ export const HAND_SONGS: Readonly<Record<string, Chart>> = {
     { title: 'Clap & tap: heartbeat', artist: 'Lineup', bpm: 76, instruments: ['hand-percussion'] },
     {
       clap: 'x...x... | x...x... | x...x... | x...x...',
-      tap: '..x...x. | ..x...x. | ..xx..x. | ..x.x.x.',
+      tap: '..x...x. | ..x...x. | ..xx..x. | ..x...x.',
     },
   ),
 };
 
-/** Beats for the drum kit. */
+/** Beats for the drum kit: one drum at a time, like the tapped-out rock demo. */
 export const KIT_SONGS: Readonly<Record<string, Chart>> = {
   'kit-disco': grooveChart(
-    { title: 'Disco (four on the floor)', artist: 'Lineup', bpm: 110, instruments: ['drum-kit'] },
+    { title: 'Disco (kick on every beat)', artist: 'Lineup', bpm: 100, instruments: ['drum-kit'] },
     {
-      kick: 'x.x.x.x. | x.x.x.x. | x.x.x.x. | x.x.x.x.',
-      snare: '..x...x. | ..x...x. | ..x...x. | ..x...xx',
+      kick: 'x.x.x.x. | x.x.x.x. | x.x.x.x. | x.x.x...',
+      snare: '........ | ........ | ........ | ......x.',
       hat: '.x.x.x.x | .x.x.x.x | .x.x.x.x | .x.x.x.x',
     },
   ),
   'kit-shuffle': grooveChart(
-    { title: 'Shuffle', artist: 'Lineup', bpm: 84, instruments: ['drum-kit'] },
+    { title: 'Shuffle', artist: 'Lineup', bpm: 72, instruments: ['drum-kit'] },
     {
-      kick: 'x.....x..... | x.....x..... | x.....x..... | x.....x.x...',
-      snare: '...x.....x.. | ...x.....x.. | ...x.....x.. | ...x..x.x.x.',
-      hat: 'x.xx.xx.xx.x | x.xx.xx.xx.x | x.xx.xx.xx.x | x.xx.xx.xx.x',
+      kick: 'x.....x..... | x.....x..... | x.....x..... | x.....x.....',
+      snare: '...x.....x.. | ...x.....x.. | ...x.....x.. | ...x.....x..',
+      hat: '..x..x..x..x | ..x..x..x..x | ..x..x..x..x | ..x..x..x..x',
     },
     3,
   ),
   'kit-rock-fill': grooveChart(
-    { title: 'Rock beat with a fill', artist: 'Lineup', bpm: 96, instruments: ['drum-kit'] },
+    { title: 'Rock beat with a fill', artist: 'Lineup', bpm: 90, instruments: ['drum-kit'] },
     {
-      kick: 'x...x.x. x...x.x. x...x.x. x.......',
-      snare: '..x...x. ..x...x. ..x...x. ..xxxxxx',
-      hat: 'x.x.x.x. x.x.x.x. x.x.x.x. ........',
+      kick: 'x...x... | x...x... | x...x... | x.......',
+      snare: '..x...x. | ..x...x. | ..x...x. | .xxxxxxx',
+      hat: '.x.x.x.x | .x.x.x.x | .x.x.x.x | ........',
     },
   ),
   'kit-halftime': grooveChart(
     { title: 'Half-time groove', artist: 'Lineup', bpm: 80, instruments: ['drum-kit'] },
     {
-      kick: 'x.....x. ..x...x. x.....x. ..x.....',
-      snare: '....x... ....x... ....x... ....x...',
-      hat: 'x.x.x.x. x.x.x.x. x.x.x.x. x.x.x.xx',
+      kick: 'x.....x. | x.x...x. | x.....x. | x.x.....',
+      snare: '....x... | ....x... | ....x... | ....x.xx',
+      hat: '.xxx.x.x | .x.x.x.x | .xxx.x.x | .x.x.x..',
     },
   ),
 };

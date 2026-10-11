@@ -105,6 +105,9 @@ describe('grooveChart', () => {
     expect(() => grooveChart(meta, { a: 'x...', b: 'x..' })).toThrow(/expected 4/);
     expect(() => grooveChart(meta, { a: 'x?..' })).toThrow(/bad groove step/);
   });
+  it('rejects two lanes hitting on the same step (one sound at a time)', () => {
+    expect(() => grooveChart(meta, { kick: 'x...', hat: 'x...' })).toThrow(/both hit/);
+  });
 });
 
 describe('the library', () => {
