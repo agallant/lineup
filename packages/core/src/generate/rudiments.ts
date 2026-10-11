@@ -10,7 +10,7 @@ interface Rudiment {
   bpm: number;
   /** Steps per beat: 2 is eighth notes, 3 is triplets. */
   stepsPerBeat: number;
-  /** One bar per lane (4 beats), repeated. */
+  /** One phrase per lane (a bar of 4 beats, or two for a longer figure), repeated. */
   lanes: Readonly<Record<string, string>>;
 }
 

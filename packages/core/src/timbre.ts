@@ -139,7 +139,9 @@ export function trainTimbreModel(samples: readonly TrainingSample[]): TimbreMode
 }
 
 /**
- * Assigns a hit to the nearest class, or to null (unknown) if it is far outside every class.
+ * Assigns a hit to the nearest class, or to null (unknown) if it is far outside every class. A
+ * model with a single class has nothing to tell apart, so it accepts the nearest class at any
+ * distance.
  * Returns null if the hit cannot be classified.
  */
 export function classify(

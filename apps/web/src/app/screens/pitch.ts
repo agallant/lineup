@@ -495,12 +495,17 @@ export const createPitchScreen =
     S('challenge-new').addEventListener('click', () => {
       const spec = settings.get().challenge;
       const target = settings.get().target;
-      updateChallenge({
-        seed:
-          target !== null
-            ? seedForDifficulty((seed) => generateMelody(c.profileId, { ...spec, seed }), target)
-            : randomSeed(),
-      });
+      const variation = settings.get().variation;
+      // rate each candidate the way it will be played, in the chosen version
+      const played = (seed: number): Chart => {
+        const next = { ...spec, seed };
+        return varyChart(
+          generateMelody(c.profileId, next),
+          variation,
+          hashSeed(melodyId(c.profileId, next)),
+        );
+      };
+      updateChallenge({ seed: target !== null ? seedForDifficulty(played, target) : randomSeed() });
     });
     keySel.addEventListener('change', () => {
       settings.update({

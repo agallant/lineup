@@ -37,7 +37,8 @@ export interface AnalyzerExtras {
 
 /**
  * Builds the analyzer options for a profile's input kind (strum, percussion, or pitch plus
- * onset), converting its milliseconds to seconds.
+ * onset), converting its milliseconds to seconds. A strum profile gets the strum analyzer only
+ * when `chords` is non-empty; without chord data it falls back to pitch and onset options.
  */
 export function analyzerOptionsFromProfile(
   profile: InstrumentProfile,

@@ -441,11 +441,15 @@ export const createHitScreen =
       const spec = settings.get().challenge;
       const target = settings.get().target;
       const kind = randomKind(spec);
+      const variation = settings.get().variation;
+      // rate each candidate the way it will be played, in the chosen version
+      const played = (seed: number): Chart => {
+        const next = { ...spec, seed };
+        const k = randomKind(next)!;
+        return varyChart(k.build(next), variation, hashSeed(k.id));
+      };
       updateChallenge({
-        seed:
-          target !== null && kind
-            ? seedForDifficulty((seed) => kind.build({ ...spec, seed }), target)
-            : randomSeed(),
+        seed: target !== null && kind ? seedForDifficulty(played, target) : randomSeed(),
       });
     });
     S<HTMLInputElement>('opt-metronome').addEventListener('change', (e) =>
