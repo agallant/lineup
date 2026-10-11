@@ -54,6 +54,12 @@ describe('wind: an in-tune player', () => {
     },
   );
 
+  it('a song with sharps (Greensleeves) scores perfect', () => {
+    const song = getSong('wind-greensleeves');
+    const r = play(song);
+    expect(r.score.counts).toEqual({ perfect: song.notes.length, good: 0, miss: 0 });
+  });
+
   it('a whole song (Ode to Joy) scores perfect', () => {
     const song = getSong('wind-ode');
     const r = play(song);
@@ -176,6 +182,7 @@ describe('wind: the built-in exercises', () => {
     ['ex-wind-major-pentatonic-up-down', 11],
     ['ex-wind-mixolydian-up-down', 12],
     ['ex-wind-major-arpeggios', 12],
+    ['ex-wind-chromatic-up-down', 12],
   ])('%s: a steady player scores every note perfect', (id, n) => {
     const chart = take(getSong(id), n);
     const r = play(chart);

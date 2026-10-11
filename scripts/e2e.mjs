@@ -305,8 +305,8 @@ const scenarios = {
         r.map((x) => x.textContent),
       );
       check(
-        rows.length === 14 && /^G4/.test(rows[0] ?? ''),
-        `the fingering chart lists a G whistle from G4 (${rows.length} notes, first "${rows[0]}")`,
+        rows.length === 24 && /^G4/.test(rows[0] ?? ''),
+        `the fingering chart lists a G whistle from G4, every semitone (${rows.length} notes, first "${rows[0]}")`,
       );
       const used = await page.$$eval('[data-id=chart] .fing-row.used', (r) => r.length);
       check(used === 6, `the notes of the song are highlighted in the chart (${used})`);

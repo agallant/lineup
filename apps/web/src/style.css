@@ -478,6 +478,11 @@ pre.debug {
   background: var(--text);
 }
 
+/* half covered: the lower half filled */
+.hole.half {
+  background: linear-gradient(to bottom, transparent 50%, var(--text) 50%);
+}
+
 .holes-none {
   color: var(--muted);
 }
@@ -489,6 +494,10 @@ pre.debug {
   padding: 4px 8px;
   border-radius: 8px;
   opacity: 0.6;
+}
+
+.fingering-chart .fing-row.chromatic .fing-note {
+  color: var(--muted);
 }
 
 .fingering-chart .fing-row.used {

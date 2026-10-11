@@ -93,7 +93,7 @@ Design rules:
    numbers). _Debug overlay_ shows raw frequency, target, deviation, clarity, level,
    frame rate and the applied latency offset.
    The menu lists **Songs** and **Exercises**: scales and modes (major, natural minor, dorian,
-   mixolydian, the pentatonics), thirds, 1-2-3-1 patterns, arpeggios, long tones and an interval
+   mixolydian, the pentatonics, the chromatic scale), thirds, 1-2-3-1 patterns, arpeggios, long tones and an interval
    ladder. Exercises are built from small descriptions in the code, not hand-written charts.
    **🎲 Random melody** (under "Random") makes a new tune from a seed: pick a scale and a level
    (easy, medium, hard), press _New melody_ for another, or type a seed to play one again. The seed
@@ -154,7 +154,7 @@ register, so an octave off is wrong, unlike singing).
    plays a synthetic recorder through the same pipeline.
 
 **Exercises** (under the song menu): the same scales, modes, thirds, patterns, arpeggios, long
-tones and interval ladder as Singline, in the instrument's key. Every one fits every whistle; the
+tones, interval ladder and a chromatic scale (to practise the sharps and flats) as Singline, in the instrument's key. Every one fits every whistle; the
 minor, mixolydian and minor-pentatonic ones run above a recorder's range, where
 the range warning appears.
 
@@ -162,14 +162,17 @@ the range warning appears.
 melody fits every whistle.
 
 Songs: a C major scale, Twinkle Twinkle, Ode to Joy (written in C, all within C5 to A5 before the
-move into your key).
+move into your key), and the Greensleeves verse, which has sharps (F♯ and G♯): the chart shows how
+to finger them. It spans more than a recorder's range, so a recorder shows the range warning.
 
 **About the fingerings:** they are the standard six-hole whistle fingerings (the same by scale degree
-in every key) and the Baroque (English) recorder fingerings for the major scale. Sharps and flats
-outside the key are left out because they vary between instruments (cross-fingerings, half-holes); the
-chart says "use your instrument's own chart" for those. Recorder notes above D6 are not shown. There is
-no ocarina: its fingerings differ between makers, so there is no chart to show. Check them against your own instrument's chart, and tell
-me if one is wrong.
+in every key) and the Baroque (English) recorder fingerings. The chart lists **every semitone**.
+Sharps and flats (grey rows) are the commonly taught half-holes (a hole only partly covered, drawn
+half filled) and cross-fingerings (a hole left open above covered ones). **These vary between
+instruments** and I could not check them against a real whistle or recorder, so check them against
+your own instrument's chart and tell me which are wrong. The recorder chart stops at the upper D,
+and leaves out the C♯ just below it. There is no ocarina: its fingerings differ between makers, so
+there is no chart to show.
 
 ## Beatline (claps, taps, percussion) on the iPad
 

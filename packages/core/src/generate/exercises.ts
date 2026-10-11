@@ -105,6 +105,32 @@ const mod12 = (n: number): number => ((n % 12) + 12) % 12;
  */
 export const EXERCISE_TONICS: Readonly<Record<string, number>> = { voice: 60, wind: 72 };
 
+/** The chromatic scale up one octave and back, every semitone: it needs the cross-fingerings. */
+function chromaticExercise(profileId: string, tonic: number): Chart {
+  const semis = [
+    ...Array.from({ length: 13 }, (_, i) => i),
+    ...Array.from({ length: 12 }, (_, i) => 11 - i),
+  ];
+  const steps = semis.map((s) => ({ s, beats: 1 }));
+  steps[steps.length - 1]!.beats = 2;
+  let beat = 0;
+  const notes: BeatNote[] = steps.map(({ s, beats }) => {
+    const note: BeatNote = { beat, beats: beats * 0.88, pitch: tonic + s };
+    beat += beats;
+    return note;
+  });
+  return chartFromBeats(
+    {
+      title: 'Chromatic scale: up and down',
+      artist: 'Lineup',
+      bpm: 66,
+      instruments: [profileId],
+      tonic,
+    },
+    notes,
+  );
+}
+
 /** The exercises written for one instrument profile, keyed by song id (`ex-<profile>-<scale>-<kind>`). */
 export function exerciseCharts(profileId: string): Record<string, Chart> {
   const parentTonic = EXERCISE_TONICS[profileId];
@@ -141,5 +167,6 @@ export function exerciseCharts(profileId: string): Record<string, Chart> {
       );
     }
   }
+  out[`ex-${profileId}-chromatic-up-down`] = chromaticExercise(profileId, parentTonic);
   return out;
 }

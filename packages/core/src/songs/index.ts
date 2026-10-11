@@ -11,6 +11,7 @@ import strumPicking from './strum-picking.json';
 import singlineScale from './singline-scale.json';
 import ukuleleNotesDemo from './ukulele-notes-demo.json';
 import ukuleleStrumDemo from './ukulele-strum-demo.json';
+import windGreensleeves from './wind-greensleeves.json';
 import windOde from './wind-ode.json';
 import windScale from './wind-scale.json';
 import windTwinkle from './wind-twinkle.json';
@@ -26,6 +27,7 @@ const RAW: Record<string, unknown> = {
   'wind-scale': windScale,
   'wind-twinkle': windTwinkle,
   'wind-ode': windOde,
+  'wind-greensleeves': windGreensleeves,
   'clap-basic': clapBasic,
   'clap-tap-groove': clapTapGroove,
   'drum-rock': drumRock,

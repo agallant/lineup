@@ -87,6 +87,22 @@ describe('fingeringStripHtml', () => {
   });
 });
 
+describe('chromatic notes', () => {
+  it('draws a half-covered hole half filled, and says so to a screen reader', () => {
+    const html = holesHtml('whistle', { holes: '111112', harder: false });
+    expect(html.match(/class="hole on"/g)).toHaveLength(5);
+    expect(html.match(/class="hole half"/g)).toHaveLength(1);
+    expect(html).toContain('covered: 1, 2, 3, 4, 5; half covered: 6');
+  });
+
+  it('marks chromatic rows and says how each is played', () => {
+    const html = fingeringChartHtml(dWhistle, new Set());
+    expect(html.match(/fing-row chromatic/g)).toHaveLength(10);
+    expect(html).toContain('half-hole');
+    expect(html).toContain('cross-fingering');
+  });
+});
+
 describe('the generic instrument', () => {
   const generic = findWindInstrument('generic')!;
   it('has no chart and no fingering strip, and says how to get them', () => {

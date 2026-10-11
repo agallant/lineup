@@ -379,8 +379,8 @@ export const createPitchScreen =
         const names = (ms: number[]) => ms.map(midiName).join(', ');
         if (fit.outOfRange.length)
           text += ` ⚠ Outside this instrument's range: ${names(fit.outOfRange)}. Try another instrument or Extra shift.`;
-        if (fit.notInScale.length)
-          text += ` ⚠ Not in this instrument's scale: ${names(fit.notInScale)} (a note that needs special fingering).`;
+        if (fit.noFingering.length)
+          text += ` ⚠ No fingering known for: ${names(fit.noFingering)} (use your instrument's own chart for these).`;
       }
       S('range').textContent = text;
       // a random melody has no fixed title to find in the menu: say which one this is

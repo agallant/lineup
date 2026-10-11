@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Greensleeves (verse)",
+    "artist": "Traditional",
+    "bpm": 100,
+    "countInBeats": 4,
+    "instruments": ["wind"],
+    "tonic": 72
+  },
+  "notes": [
+    {
+      "t": 0.0,
+      "duration": 0.528,
+      "pitch": 81
+    },
+    {
+      "t": 0.6,
+      "duration": 0.528,
+      "pitch": 84
+    },
+    {
+      "t": 1.2,
+      "duration": 0.264,
+      "pitch": 86
+    },
+    {
+      "t": 1.5,
+      "duration": 0.396,
+      "pitch": 88
+    },
+    {
+      "t": 1.95,
+      "duration": 0.132,
+      "pitch": 89
+    },
+    {
+      "t": 2.1,
+      "duration": 0.264,
+      "pitch": 88
+    },
+    {
+      "t": 2.4,
+      "duration": 0.528,
+      "pitch": 86
+    },
+    {
+      "t": 3.0,
+      "duration": 0.264,
+      "pitch": 83
+    },
+    {
+      "t": 3.3,
+      "duration": 0.396,
+      "pitch": 79
+    },
+    {
+      "t": 3.75,
+      "duration": 0.132,
+      "pitch": 81
+    },
+    {
+      "t": 3.9,
+      "duration": 0.264,
+      "pitch": 83
+    },
+    {
+      "t": 4.2,
+      "duration": 0.528,
+      "pitch": 84
+    },
+    {
+      "t": 4.8,
+      "duration": 0.264,
+      "pitch": 81
+    },
+    {
+      "t": 5.1,
+      "duration": 0.396,
+      "pitch": 81
+    },
+    {
+      "t": 5.55,
+      "duration": 0.132,
+      "pitch": 80
+    },
+    {
+      "t": 5.7,
+      "duration": 0.264,
+      "pitch": 81
+    },
+    {
+      "t": 6.0,
+      "duration": 0.528,
+      "pitch": 83
+    },
+    {
+      "t": 6.6,
+      "duration": 0.264,
+      "pitch": 80
+    },
+    {
+      "t": 6.9,
+      "duration": 0.528,
+      "pitch": 76
+    },
+    {
+      "t": 7.5,
+      "duration": 0.264,
+      "pitch": 81
+    },
+    {
+      "t": 7.8,
+      "duration": 0.528,
+      "pitch": 84
+    },
+    {
+      "t": 8.4,
+      "duration": 0.264,
+      "pitch": 86
+    },
+    {
+      "t": 8.7,
+      "duration": 0.396,
+      "pitch": 88
+    },
+    {
+      "t": 9.15,
+      "duration": 0.132,
+      "pitch": 91
+    },
+    {
+      "t": 9.3,
+      "duration": 0.264,
+      "pitch": 88
+    },
+    {
+      "t": 9.6,
+      "duration": 0.528,
+      "pitch": 86
+    },
+    {
+      "t": 10.2,
+      "duration": 0.264,
+      "pitch": 83
+    },
+    {
+      "t": 10.5,
+      "duration": 0.396,
+      "pitch": 79
+    },
+    {
+      "t": 10.95,
+      "duration": 0.132,
+      "pitch": 81
+    },
+    {
+      "t": 11.1,
+      "duration": 0.264,
+      "pitch": 83
+    },
+    {
+      "t": 11.4,
+      "duration": 0.396,
+      "pitch": 84
+    },
+    {
+      "t": 11.85,
+      "duration": 0.132,
+      "pitch": 83
+    },
+    {
+      "t": 12.0,
+      "duration": 0.264,
+      "pitch": 81
+    },
+    {
+      "t": 12.3,
+      "duration": 0.396,
+      "pitch": 80
+    },
+    {
+      "t": 12.75,
+      "duration": 0.132,
+      "pitch": 78
+    },
+    {
+      "t": 12.9,
+      "duration": 0.264,
+      "pitch": 80
+    },
+    {
+      "t": 13.2,
+      "duration": 1.584,
+      "pitch": 81
+    }
+  ]
+}

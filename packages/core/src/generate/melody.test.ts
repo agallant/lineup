@@ -137,7 +137,7 @@ describe('generateMelody', () => {
             inst,
           );
           expect(fit.outOfRange).toEqual([]);
-          expect(fit.notInScale).toEqual([]);
+          expect(fit.noFingering).toEqual([]);
         }
       }
     }

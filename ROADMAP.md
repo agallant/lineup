@@ -15,6 +15,8 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
   practice speed.
 - **Exercises and random melodies** for Singline and Windline: scales, modes, thirds, arpeggios, long
   tones, and a seeded melody generator (scale, level, seed) in the song menu.
+- **Chromatic fingerings** for whistles and recorders (half-holes and cross-fingerings), a chromatic
+  scale exercise, and Greensleeves as the first song with sharps.
 - **Product**: best scores, song info, offline start, session logs you can copy, end-to-end tests in CI.
 
 ## Development goals
