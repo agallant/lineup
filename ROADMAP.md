@@ -93,10 +93,10 @@ Roughly in order of how well they fit a private, offline edutainment game.
 
 **Learn**
 
-- **Rhythm dictation**: hear a one-bar rhythm, then clap it back (the listen-first mode, but unseen).
+- ~~Rhythm dictation~~ (done: Beatline "Unseen" hides the notes after you listen).
 - **Sight-reading / note names**: a staff view with an option to hide the note labels, and a
   "name that note" quiz in the ear-training screen.
-- ~~Learning paths~~ (done: **Learn**, five paths); next: paths for scales and keys, and a "graduate" trophy.
+- ~~Learning paths~~ (done: **Learn**, seven paths including scales and modes, and a Graduate trophy). Rhythm dictation is the Beatline "Unseen" option with listen first.
 - **Interval singing**: hear a note and sing the note a fourth above it (ear training with the mic).
 - **Chord-change trainer** for the ukulele: two chords alternating at a rising tempo, scored on the
   change.

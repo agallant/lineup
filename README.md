@@ -135,7 +135,7 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   a needle and reference tones. A tool, not a game.
 - **Practice goal**: pick minutes per week in Options; the home menu and scoreboard show the last
   seven and fourteen days.
-- **Learn** (`#/learn`): five short paths (Singline, Windline, ukulele chords, clap rhythm, drum kit) of
+- **Learn** (`#/learn`): seven short paths (Singline, Windline, scales and modes for each, ukulele chords, clap rhythm, drum kit) of
   songs and exercises in order of difficulty. A step opens when the one before has a star (60%) and is
   mastered at two (80%); each step opens its game with the song already chosen.
 - **Scoreboard** (`#/scores`) lists your best score on every song with stars (★ 60%, ★★ 80%, ★★★ 95%
