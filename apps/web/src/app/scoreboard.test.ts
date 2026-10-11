@@ -92,6 +92,7 @@ describe('variant labels for every way of playing', () => {
     expect(variantLabel('strict')).toBe('strict scoring');
     expect(variantLabel('normal|part3')).toBe('part 3');
     expect(variantLabel('normal|x0.8|part2|echo')).toBe('0.8× speed, part 2, listen first');
+    expect(variantLabel('normal|echo|blind')).toBe('listen first, unseen');
     expect(variantLabel('normal|mixed')).toBe('mixed version');
   });
 
