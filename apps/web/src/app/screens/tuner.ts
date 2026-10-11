@@ -19,6 +19,7 @@ export const tunerScreen: Screen = (root) => {
       <label>Tuning <select data-id="tuning">${TUNINGS.map(
         (t) => `<option value="${t.id}">${t.label}</option>`,
       ).join('')}</select></label>
+      <label>String <select data-id="target"><option value="">Nearest (automatic)</option></select></label>
       <button data-id="start" class="primary">Start mic</button>
       <button data-id="stop" disabled>Stop</button>
     </div>
@@ -47,19 +48,26 @@ export const tunerScreen: Screen = (root) => {
 
   const tuning = () => TUNINGS.find((t) => t.id === tuningSel.value) ?? TUNINGS[0]!;
 
+  const targetSel = $<HTMLSelectElement>('target');
   const showRefs = () => {
     const refs = $('refs');
     refs.replaceChildren();
+    // choose the string you are tuning when it is far from where it should be
+    targetSel.replaceChildren(new Option('Nearest (automatic)', ''));
+    for (const s of tuning().strings) targetSel.add(new Option(s.name, s.name));
+    targetSel.parentElement!.hidden = tuning().strings.length === 0;
     $('refs-panel').hidden = tuning().strings.length === 0;
     for (const s of tuning().strings) {
       const b = document.createElement('button');
       b.textContent = s.name;
       b.setAttribute('aria-label', `Play the note ${s.name}`);
       b.addEventListener('click', () => {
-        const ctx = session?.ctx ?? new AudioContext();
+        // use the open microphone's audio context if there is one, else make (and later close) our own
+        const own = session ? null : new AudioContext();
+        const ctx = session?.ctx ?? own!;
         void ctx.resume();
         void playTone(ctx, midiToFrequency(s.midi), 1.5).then(() => {
-          if (!session) void ctx.close();
+          if (own) void own.close();
         });
       });
       refs.appendChild(b);
@@ -73,7 +81,7 @@ export const tunerScreen: Screen = (root) => {
     const s = session;
     if (!s) return;
     const fresh = last && s.ctx.currentTime - last.at < HOLD_S ? last : null;
-    const reading = fresh ? readTuner(fresh.hz, tuning()) : null;
+    const reading = fresh ? readTuner(fresh.hz, tuning(), targetSel.value || undefined) : null;
     if (!reading) {
       $('note').textContent = '–';
       $('advice').textContent = 'Waiting for a note';

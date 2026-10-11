@@ -229,7 +229,11 @@ export const optionsScreen: Screen = (root) => {
     void file.text().then((text) => {
       const n = importBackup(storage as unknown as Storage, text);
       input.value = '';
-      if (n === null)
+      if (n === 'incomplete') {
+        msg(
+          'Restoring failed part way and some of your data could not be put back. Restore your backup file again, after freeing space on this device.',
+        );
+      } else if (n === null)
         msg('That is not a Lineup backup, or this device has no room for it. Nothing was changed.');
       else {
         show();

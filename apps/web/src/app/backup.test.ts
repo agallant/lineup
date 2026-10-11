@@ -42,6 +42,37 @@ describe('backup when storage refuses a write', () => {
   });
 });
 
+describe('backup when storage cannot even be read or put back', () => {
+  it('changes nothing if reading fails, and says so if the rollback is incomplete', () => {
+    class Unreadable extends Mem {
+      override getItem(k: string): string | null {
+        if (k.startsWith('lineup.')) throw new Error('SecurityError');
+        return super.getItem(k);
+      }
+    }
+    const u = new Unreadable();
+    u.data.set('lineup.settings.v1', 'mine');
+    const text = JSON.stringify({ lineup: 'backup', data: { 'lineup.a': '1' } });
+    expect(importBackup(u, text)).toBeNull();
+    expect(u.data.get('lineup.settings.v1')).toBe('mine'); // untouched
+
+    class Broken extends Mem {
+      fail = false;
+      override setItem(k: string, v: string) {
+        if (this.fail) throw new Error('QuotaExceededError');
+        super.setItem(k, v);
+      }
+      override removeItem(k: string) {
+        super.removeItem(k);
+        this.fail = true; // from now on every write is refused, including the rollback
+      }
+    }
+    const b = new Broken();
+    b.data.set('lineup.settings.v1', 'mine');
+    expect(importBackup(b, text)).toBe('incomplete');
+  });
+});
+
 describe('backup', () => {
   it('lists only the app keys', () => {
     const m = new Mem();

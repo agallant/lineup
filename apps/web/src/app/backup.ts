@@ -37,9 +37,10 @@ export function exportBackup(store: EnumerableStore, now = new Date()): string {
 
 /**
  * Restores a backup made by {@link exportBackup}, replacing what the app keeps now. Returns how
- * many items were restored, or null (nothing changed) if the text is not a backup or storage refused it.
+ * many items were restored; null (nothing changed) if the text is not a backup or storage refused it;
+ * or 'incomplete' if storage refused a write and the old data could not all be put back.
  */
-export function importBackup(store: EnumerableStore, text: string): number | null {
+export function importBackup(store: EnumerableStore, text: string): number | null | 'incomplete' {
   if (text.length > MAX_BYTES) return null;
   let raw: unknown;
   try {
@@ -54,19 +55,34 @@ export function importBackup(store: EnumerableStore, text: string): number | nul
     (e): e is [string, string] =>
       e[0].startsWith(PREFIX) && !SKIP.has(e[0]) && typeof e[1] === 'string',
   );
-  const previous = lineupKeys(store).map((k) => [k, store.getItem(k)] as const);
+  // snapshot first: if even reading fails, nothing has been touched
+  let previous: (readonly [string, string | null])[];
+  try {
+    previous = lineupKeys(store).map((k) => [k, store.getItem(k)] as const);
+  } catch {
+    return null;
+  }
   try {
     for (const [k] of previous) store.removeItem(k);
     for (const [k, v] of entries) store.setItem(k, v);
   } catch {
-    // storage refused a write (full?): put back exactly what was there
+    // storage refused a write (full?): put back exactly what was there, key by key, so one
+    // failure does not stop the rest from being restored
+    let incomplete = false;
     try {
       for (const k of lineupKeys(store)) store.removeItem(k);
-      for (const [k, v] of previous) if (v !== null) store.setItem(k, v);
     } catch {
-      // nothing more can be done
+      incomplete = true;
     }
-    return null;
+    for (const [k, v] of previous) {
+      if (v === null) continue;
+      try {
+        store.setItem(k, v);
+      } catch {
+        incomplete = true;
+      }
+    }
+    return incomplete ? 'incomplete' : null;
   }
   return entries.length;
 }

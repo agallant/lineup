@@ -60,8 +60,11 @@ const NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A'
 const noteName = (midi: number): string =>
   `${NOTE_NAMES[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
 
-/** Which string (or note) a pitch is nearest, how far off it is, and what to do about it. */
-export function readTuner(hz: number, tuning: Tuning): TunerReading | null {
+/**
+ * Which string (or note) a pitch is nearest, how far off it is, and what to do about it. With a
+ * `target` string name, the pitch is measured against that string instead of the nearest one.
+ */
+export function readTuner(hz: number, tuning: Tuning, target?: string): TunerReading | null {
   if (!Number.isFinite(hz) || hz <= 0) return null;
   let midi: number;
   let name: string;
@@ -69,14 +72,16 @@ export function readTuner(hz: number, tuning: Tuning): TunerReading | null {
     midi = Math.round(69 + 12 * Math.log2(hz / 440));
     name = noteName(midi);
   } else {
-    let best = tuning.strings[0]!;
-    for (const s of tuning.strings) {
-      if (
-        Math.abs(centsBetween(hz, midiToFrequency(s.midi))) <
-        Math.abs(centsBetween(hz, midiToFrequency(best.midi)))
-      )
-        best = s;
-    }
+    // a string chosen by the player wins, even when the pitch is nearer another one (a string far
+    // out of tune); otherwise the nearest string
+    const chosen = tuning.strings.find((s) => s.name === target);
+    const nearest = tuning.strings.reduce((best, s) =>
+      Math.abs(centsBetween(hz, midiToFrequency(s.midi))) <
+      Math.abs(centsBetween(hz, midiToFrequency(best.midi)))
+        ? s
+        : best,
+    );
+    const best = chosen ?? nearest;
     midi = best.midi;
     name = best.name;
   }
