@@ -565,3 +565,146 @@ pre.debug {
   gap: 10px;
   opacity: 0.65;
 }
+
+/* home, scoreboard and options */
+.muted {
+  color: var(--muted);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card strong {
+  font-size: 18px;
+}
+
+.games {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+a.level {
+  margin: 12px 0 20px;
+}
+
+.level-name {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.bar {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--line);
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.big {
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+
+dl.stats {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 12px 0 0;
+}
+
+dl.stats dt {
+  color: var(--muted);
+}
+
+dl.stats dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+ul.scores,
+ul.trophies {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+  display: grid;
+  gap: 8px;
+}
+
+ul.scores li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+ul.scores .what,
+ul.scores .num {
+  display: flex;
+  flex-direction: column;
+}
+
+ul.scores .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.stars {
+  color: var(--accent);
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+ul.trophies {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+ul.trophies li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+ul.trophies li.earned {
+  border-color: var(--accent);
+}
+
+ul.trophies li.locked {
+  color: var(--muted);
+}
+
+button.danger {
+  border-color: var(--bad);
+}
+
+label.file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reward {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+}
+
+.reward ul {
+  margin: 4px 0 0;
+  padding-left: 20px;
+}

@@ -210,7 +210,7 @@ describe('easier and harder versions, played through the real chain', () => {
     expect(counts.perfect / n).toBeGreaterThanOrEqual(0.88);
   };
 
-  const versions = ['easier', 'harder'] as const;
+  const versions = ['easier', 'harder', 'mixed'] as const;
 
   it.each(
     versions.flatMap((v) => ['sing-silent-night', 'sing-row-boat'].map((id) => [id, v] as const)),

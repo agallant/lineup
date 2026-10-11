@@ -12,6 +12,11 @@ import {
   type Variation,
 } from '@lineup/core';
 
+/** How much backing music plays under a song. */
+export type Accompaniment = 'off' | 'bass' | 'full';
+
+export const ACCOMPANIMENTS: readonly Accompaniment[] = ['off', 'bass', 'full'];
+
 export interface Settings {
   /** Show the live debug overlay while playing. */
   debug: boolean;
@@ -19,6 +24,8 @@ export interface Settings {
   guideTone: boolean;
   /** Play a click on every beat. */
   metronome: boolean;
+  /** Play-along backing under a song: nothing, a bass line, or bass and chords (needs headphones). */
+  accompaniment: Accompaniment;
   /** Key change in semitones applied to the chart. */
   keyShift: number;
   /** Key change per profile (an instrument's key is not a singer's); wins over `keyShift`. */
@@ -52,6 +59,7 @@ export const DEFAULT_SETTINGS: Settings = {
   debug: false,
   guideTone: true,
   metronome: true,
+  accompaniment: 'off',
   keyShift: 0,
   keyShifts: {},
   difficulty: 'normal',
@@ -146,6 +154,9 @@ function sanitize(raw: unknown): Settings {
     debug: typeof r['debug'] === 'boolean' ? r['debug'] : DEFAULT_SETTINGS.debug,
     guideTone: typeof r['guideTone'] === 'boolean' ? r['guideTone'] : DEFAULT_SETTINGS.guideTone,
     metronome: typeof r['metronome'] === 'boolean' ? r['metronome'] : DEFAULT_SETTINGS.metronome,
+    accompaniment: ACCOMPANIMENTS.includes(r['accompaniment'] as Accompaniment)
+      ? (r['accompaniment'] as Accompaniment)
+      : DEFAULT_SETTINGS.accompaniment,
     keyShift: validShift(shift) ? shift : DEFAULT_SETTINGS.keyShift,
     keyShifts,
     difficulty: isDifficulty(r['difficulty']) ? r['difficulty'] : DEFAULT_SETTINGS.difficulty,

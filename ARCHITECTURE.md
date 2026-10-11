@@ -215,6 +215,18 @@ entry's `category` (`song` or `exercise`), and the web app's `song-menu.ts` grou
 Because the charts are generated, tests check them as properties (in range, in key, in order,
 playable through the real analyzer) rather than note by note.
 
+## Progress, backups and backing (web app)
+
+Everything the app remembers is in `localStorage` under `lineup.*` keys, each with its own small,
+tolerant store class (corrupt or blocked storage means "start empty", never a crash):
+`settings.ts`, `scores.ts` (best per song and way of playing), `progress.ts` (XP, levels, day
+streaks, trophies; pure rules plus a store) and the calibration store in core. `backup.ts` exports
+and restores all `lineup.*` keys as one JSON file. `scoreboard.ts` turns stored score keys
+(`profile|song|variant`) back into rows by looking songs up in the library. `game/reward.ts` builds
+the results-screen reward from a finished song. `game/accompaniment.ts` plans bass and chord backing
+as data (`BackingEvent`s in song time, harmonising a melody a bar at a time), merged with the click
+and guide tone by `planAllBacking` and scheduled by `playBacking`.
+
 ## Adding things
 
 - **An instrument profile:** add `profiles/<id>.json`, register it in
@@ -226,6 +238,8 @@ playable through the real analyzer) rather than note by note.
   scale and level and fail if the result stops sounding like a tune.
 - **An exercise:** add a kind to `EXERCISE_KINDS` (a function from the scale's length to degrees)
   and list it under a scale in the plan in `generate/exercises.ts`; it appears in the menus.
+- **A trophy:** add an entry to `ACHIEVEMENTS` in `progress.ts` (a pure test of the progress and the
+  play just finished) and a case in `progress.test.ts`.
 - **A test signal:** add it to `@lineup/testkit`; keep it deterministic (seeded).
 - **Behaviour you must not change by accident:** `packages/input/src/characterization.*`.
 

@@ -61,6 +61,12 @@ export class ScoreStore {
     return b ? { ...b } : null;
   }
 
+  /** Every best result with its key, oldest first. */
+  entries(): { key: string; best: BestScore }[] {
+    this.reconcile();
+    return [...this.value].map(([key, best]) => ({ key, best: { ...best } }));
+  }
+
   /** Files a result. `isNewBest` is true when it beat the previous best, or when there was none. */
   record(
     key: string,

@@ -17,6 +17,8 @@ interface Tune {
   notes: string;
   /** The tune as wind instruments play it, when a note must move to stay above the tonic. */
   windNotes?: string;
+  /** Beats to the bar when not 4. */
+  beatsPerBar?: number;
   /** Dips below the tonic, which a whistle or recorder cannot play, so it is for the voice only. */
   voiceOnly?: boolean;
 }
@@ -81,6 +83,7 @@ const TUNES: readonly Tune[] = [
     artist: 'Gruber',
     bpm: 84,
     tonic: 60,
+    beatsPerBar: 3,
     notes: `G4:1.5 A4:.5 G4 | E4:3 | G4:1.5 A4:.5 G4 | E4:3 |
       D5:2 D5 | B4:3 | C5:2 C5 | G4:3 |
       A4:2 A4 | C5:1.5 B4:.5 A4 | G4:1.5 A4:.5 G4 | E4:3 |
@@ -150,6 +153,7 @@ function tunesFor(
           bpm: t.bpm,
           instruments: [profile],
           tonic: t.tonic + shift,
+          ...(t.beatsPerBar ? { beatsPerBar: t.beatsPerBar } : {}),
         },
         wind && t.windNotes ? t.windNotes : t.notes,
         shift,
@@ -253,7 +257,13 @@ export const CLAP_SONGS: Readonly<Record<string, Chart>> = {
     { hit: 'x..x..x. | .x..x... | x..x..x. | .x.x.x..' },
   ),
   'clap-waltz': grooveChart(
-    { title: 'Clap: waltz (three beats a bar)', artist: 'Lineup', bpm: 100, instruments: ['clap'] },
+    {
+      title: 'Clap: waltz (three beats a bar)',
+      artist: 'Lineup',
+      bpm: 100,
+      instruments: ['clap'],
+      beatsPerBar: 3,
+    },
     { hit: 'x.x.x. | x.x.x. | x.x.xx | x.x.x.' },
   ),
 };

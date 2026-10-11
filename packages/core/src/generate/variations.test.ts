@@ -9,6 +9,45 @@ const all = Object.entries(builtinSongs);
 const score = (id: string, v: 'original' | 'easier' | 'harder', seed = 7) =>
   rateChart(varyChart(getSong(id), v, seed)).score;
 
+describe('mixed versions', () => {
+  it('take each phrase from the easier, original or harder version, at the original tempo', () => {
+    for (const [id, chart] of all) {
+      const mixed = varyChart(chart, 'mixed', 5);
+      expect(mixed.meta.bpm, id).toBe(chart.meta.bpm);
+      expect(mixed.notes.length, id).toBeGreaterThan(1);
+      for (let i = 1; i < mixed.notes.length; i++)
+        expect(mixed.notes[i]!.t, `${id} #${i}`).toBeGreaterThanOrEqual(mixed.notes[i - 1]!.t);
+    }
+  });
+
+  it('is repeatable, differs by seed, and mixes: not simply the original', () => {
+    const song = getSong('sing-silent-night');
+    expect(varyChart(song, 'mixed', 2)).toEqual(varyChart(song, 'mixed', 2));
+    const shapes = new Set(
+      [1, 2, 3, 4, 5, 6].map((s) => JSON.stringify(varyChart(song, 'mixed', s).notes)),
+    );
+    expect(shapes.size).toBeGreaterThan(2);
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      expect(JSON.stringify(varyChart(song, 'mixed', seed).notes)).not.toBe(
+        JSON.stringify(song.notes),
+      );
+    }
+  });
+
+  it('keeps chord songs and grooves valid', () => {
+    for (const chart of [
+      generateChordSong({ seed: 8, level: 'hard' }),
+      generateChordSong({ seed: 8, level: 'medium', waltz: true }),
+      generateGroove('drum-kit', { seed: 8, level: 'hard' }),
+      generateMelody('voice', { seed: 8, scale: 'major', level: 'hard' }),
+    ]) {
+      const mixed = varyChart(chart, 'mixed', 9);
+      expect(rateChart(mixed).score).toBeGreaterThanOrEqual(1);
+      expect(chartKind(mixed)).toBe(chartKind(chart));
+    }
+  });
+});
+
 describe('varyChart', () => {
   it('is the song itself for "original", and the same result every time otherwise', () => {
     const c = getSong('wind-greensleeves');

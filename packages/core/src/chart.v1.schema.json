@@ -17,6 +17,7 @@
         "countInBeats": { "type": "integer", "minimum": 0, "maximum": 16, "default": 4 },
         "audio": { "type": "string", "minLength": 1, "pattern": "\\S" },
         "tonic": { "type": "integer", "minimum": 0, "maximum": 127 },
+        "beatsPerBar": { "type": "integer", "minimum": 1, "maximum": 12, "default": 4 },
         "instruments": {
           "type": "array",
           "items": { "type": "string", "minLength": 1, "pattern": "\\S" }

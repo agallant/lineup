@@ -152,6 +152,7 @@ export function generateChordSong(spec: ChordSongSpec): Chart {
       artist: 'Lineup',
       bpm: BPM[spec.level],
       instruments: ['ukulele-strum'],
+      ...(spec.waltz ? { beatsPerBar: 3 } : {}),
     },
     notes,
   );
