@@ -22,7 +22,7 @@ export const UKULELE_CHORD_FRETS: Readonly<Record<string, readonly number[]>> = 
   'F#m': [2, 1, 2, 0],
   E: [4, 4, 4, 2],
   E7: [1, 2, 0, 2],
-  B7: [2, 2, 2, 3],
+  B7: [2, 3, 2, 2],
 };
 
 /**
