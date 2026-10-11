@@ -185,11 +185,12 @@ in song time and subtract the calibrated latency offset themselves.
   name a melody as `gen-<profile>-<scale>-<level>-<seed>`, which `getSong` can build, so scores
   and session logs treat it like any song.
 
-`generate/` also holds `chordsong.ts` (`generateChordSong`: sixteen bars of common progressions in
-C, G or D, only chords with a ukulele fingering, a repeating strum pattern with a variation every
-four bars, the last stroke before a chord change left out, and a closing downstroke), `groove.ts`
-(`generateGroove` for drum kit, claps and taps, and a single clap: a repeating bar, a variation, a fill
-every four bars, one sound at a time) and `rudiments.ts` (rhythm exercises). Melodies and exercises
+`generate/` also holds `chordsong.ts` (`generateChordSong`: sixteen bars in phrases such as AaBC, each phrase
+walked from a weighted grammar of chord movement (`NEXT`) in a key where every chord has a ukulele fingering,
+a strum pattern per song with a second for the contrast phrase and a variation every four bars, the last stroke
+before a chord change left out, and a closing downstroke; the count-in is one bar, three clicks for a waltz), `groove.ts`
+(`generateGroove` for drum kit, claps and taps, and a single clap: a beat chosen from the seed, a variation, a fill
+every four bars, one sound at a time; tests require hundreds of seeds to give distinct songs at every level) and `rudiments.ts` (rhythm exercises). Melodies and exercises
 also exist for the ukulele, plucked on single strings (`pluckNotes`); ids are `gen-chords-<level>-<seed>`
 and `gen-groove-<profile>-<level>-<seed>`, and `getSong` builds them.
 

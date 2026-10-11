@@ -4,6 +4,15 @@ import { getProfile } from '../profiles';
 import { getSong, songsFor } from './index';
 
 describe('built-in songs', () => {
+  it('counts in one bar: songs in three-four count three beats, the rest four', () => {
+    for (const profile of ['voice', 'wind', 'ukulele-strum', 'clap', 'drum-kit']) {
+      for (const { id, chart } of songsFor(profile)) {
+        expect(chart.meta.countInBeats, id).toBe(chart.meta.beatsPerBar ?? 4);
+      }
+    }
+    expect(getSong('gen-waltz-easy-9').meta.countInBeats).toBe(3);
+  });
+
   it('getSong returns a known song', () => {
     expect(getSong('ukulele-strum-demo').meta.title).toMatch(/Island/);
   });

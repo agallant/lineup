@@ -14,7 +14,13 @@
         "title": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S" },
         "artist": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S" },
         "bpm": { "type": "number", "minimum": 20, "maximum": 400 },
-        "countInBeats": { "type": "integer", "minimum": 0, "maximum": 16, "default": 4 },
+        "countInBeats": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16,
+          "default": 4,
+          "description": "Clicks before the song; one bar (beatsPerBar) when not given."
+        },
         "audio": { "type": "string", "minLength": 1, "pattern": "\\S" },
         "tonic": { "type": "integer", "minimum": 0, "maximum": 127 },
         "beatsPerBar": { "type": "integer", "minimum": 1, "maximum": 12, "default": 4 },

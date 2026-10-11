@@ -180,7 +180,8 @@ export function loadChart(input: unknown): Loaded<Chart> {
       });
     }
     if (title !== undefined && bpm !== undefined) {
-      meta = { title, bpm, countInBeats: countInBeats ?? 4 };
+      // the count-in is one bar unless the chart says otherwise: three beats for a waltz
+      meta = { title, bpm, countInBeats: countInBeats ?? beatsPerBar ?? 4 };
       if (artist !== undefined) meta.artist = artist;
       if (audio !== undefined) meta.audio = audio;
       if (instruments !== undefined) meta.instruments = instruments;
@@ -297,7 +298,7 @@ export function chartFromBeats(
   });
   const result = loadChart({
     version: CHART_VERSION,
-    meta: { countInBeats: 4, ...meta },
+    meta: { countInBeats: meta.beatsPerBar ?? 4, ...meta },
     notes,
   });
   if (!result.ok)

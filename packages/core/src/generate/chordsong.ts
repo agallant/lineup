@@ -1,6 +1,6 @@
 import { chartFromBeats, type BeatNote, type Chart } from '../chart';
 import { UKULELE_CHORD_FRETS } from '../chords';
-import { createRng, pick, type Rng } from './random';
+import { createRng, pick, pickWeighted, type Rng } from './random';
 import { isMelodyLevel, isSeed, MELODY_LEVELS, type MelodyLevel } from './melody';
 
 /** A chord song to strum: a progression in a key, a strum pattern, and a turn at the end. */
@@ -13,118 +13,241 @@ export interface ChordSongSpec {
 
 /** The chords of a major key by Roman numeral: only those with a ukulele fingering are listed. */
 const KEYS: readonly { name: string; chords: Readonly<Record<string, string>> }[] = [
-  { name: 'C', chords: { I: 'C', ii: 'Dm', iii: 'Em', IV: 'F', V: 'G', V7: 'G7', vi: 'Am' } },
-  { name: 'G', chords: { I: 'G', ii: 'Am', IV: 'C', V: 'D', V7: 'D7', vi: 'Em' } },
-  { name: 'D', chords: { I: 'D', ii: 'Em', IV: 'G', V: 'A', V7: 'A7' } },
-  { name: 'F', chords: { I: 'F', ii: 'Gm', iii: 'Am', IV: 'Bb', V: 'C', V7: 'C7', vi: 'Dm' } },
-  { name: 'A', chords: { I: 'A', ii: 'Bm', IV: 'D', V: 'E', V7: 'E7', vi: 'F#m' } },
+  {
+    name: 'C',
+    chords: { I: 'C', ii: 'Dm', iii: 'Em', IV: 'F', V: 'G', V7: 'G7', vi: 'Am', II7: 'D7' },
+  },
+  {
+    name: 'G',
+    chords: { I: 'G', ii: 'Am', iii: 'Bm', IV: 'C', V: 'D', V7: 'D7', vi: 'Em', II7: 'A7' },
+  },
+  {
+    name: 'D',
+    chords: { I: 'D', ii: 'Em', IV: 'G', V: 'A', V7: 'A7', vi: 'Bm', II7: 'E7' },
+  },
+  {
+    name: 'F',
+    chords: { I: 'F', ii: 'Gm', iii: 'Am', IV: 'Bb', V: 'C', V7: 'C7', vi: 'Dm', II7: 'G7' },
+  },
+  {
+    name: 'A',
+    chords: { I: 'A', ii: 'Bm', IV: 'D', V: 'E', V7: 'E7', vi: 'F#m', II7: 'B7' },
+  },
 ];
 
-/** Four-bar progressions that most pop, folk and blues songs are built from. */
-const PROGRESSIONS: readonly { id: string; chords: readonly string[]; easy: boolean }[] = [
-  { id: 'I-IV-V-I', chords: ['I', 'IV', 'V', 'I'], easy: true },
-  { id: 'I-V-vi-IV', chords: ['I', 'V', 'vi', 'IV'], easy: false },
-  { id: 'I-vi-IV-V', chords: ['I', 'vi', 'IV', 'V'], easy: true },
-  { id: 'ii-V-I-I', chords: ['ii', 'V', 'I', 'I'], easy: false },
-  { id: 'I-I-IV-V', chords: ['I', 'I', 'IV', 'V'], easy: true },
-  { id: 'vi-IV-I-V', chords: ['vi', 'IV', 'I', 'V'], easy: false },
-  { id: 'I-IV-I-V', chords: ['I', 'IV', 'I', 'V'], easy: true },
-];
+/** The chords a beginner has met: the easy level keeps to these. */
+const EASY_CHORDS: ReadonlySet<string> = new Set([
+  'C',
+  'G',
+  'Am',
+  'F',
+  'D',
+  'Em',
+  'Dm',
+  'A',
+  'G7',
+  'C7',
+  'A7',
+  'D7',
+]);
+
+/** The numerals a level draws on: the easy level keeps to the home chords, harder ones add colour. */
+const NUMERALS: Readonly<Record<MelodyLevel, readonly string[]>> = {
+  easy: ['I', 'IV', 'V', 'vi'],
+  medium: ['I', 'ii', 'iii', 'IV', 'V', 'V7', 'vi'],
+  hard: ['I', 'ii', 'iii', 'IV', 'V', 'V7', 'vi', 'II7'],
+};
+
+/**
+ * Where each chord likes to go next, with how likely: this is the grammar of folk and pop (the
+ * subdominant leads to the dominant, the dominant home, a secondary dominant resolves to the
+ * dominant) and what keeps a random progression sounding like a song instead of a shuffle.
+ */
+const NEXT: Readonly<Record<string, Readonly<Record<string, number>>>> = {
+  I: { IV: 30, V: 20, vi: 22, ii: 10, iii: 5, I: 8 },
+  ii: { V: 40, V7: 25, IV: 10, vi: 5 },
+  iii: { vi: 35, IV: 30, ii: 10 },
+  IV: { I: 28, V: 28, V7: 8, ii: 10, vi: 10, IV: 3 },
+  V: { I: 45, vi: 20, IV: 14 },
+  V7: { I: 55, vi: 20, IV: 8 },
+  vi: { IV: 30, ii: 22, V: 14, I: 10, iii: 6 },
+  II7: { V: 55, V7: 20 },
+};
+
+/** The phrase forms of sixteen bars. A is stated; A' repeats it but closes at home; B contrasts; C is new. */
+const FORMS: Readonly<Record<MelodyLevel, readonly string[]>> = {
+  easy: ['AaBa', 'ABAa', 'AaBC'],
+  medium: ['AaBC', 'ABaC', 'AaBa', 'ABAC'],
+  hard: ['ABaC', 'ABCa', 'AaBC', 'ABAC'],
+};
 
 /** One bar of strokes on an eighth-note grid: D down, U up, . nothing. */
 const PATTERNS: Readonly<Record<MelodyLevel, { main: readonly string[]; fill: string }>> = {
-  easy: { main: ['D . D . D . D .', 'D . . . D . . .'], fill: 'D . D . D . D .' },
-  medium: { main: ['D . D U . U D U', 'D . . U . U D .'], fill: 'D . D U D U D U' },
+  easy: {
+    main: ['D . D . D . D .', 'D . . . D . . .', 'D . D . D . . .', 'D . . . D . D .'],
+    fill: 'D . D . D . D .',
+  },
+  medium: {
+    main: ['D . D U . U D U', 'D . . U . U D .', 'D . D . D U D .', 'D . D U D . D U'],
+    fill: 'D . D U D U D U',
+  },
   hard: {
-    main: ['D . D U . U D U', 'D . . U . U D U', 'D U . U D U . U'],
+    main: ['D . D U . U D U', 'D . . U . U D U', 'D U . U D U . U', 'D . D U . U D .'],
     fill: 'D . D U D U D U',
   },
 };
 
 const BPM: Readonly<Record<MelodyLevel, number>> = { easy: 76, medium: 88, hard: 96 };
 
-/** Four cycles of four bars: the same progression, or two that alternate (ABAB / AABA). */
-const FORMS: Readonly<Record<MelodyLevel, readonly string[]>> = {
-  easy: ['AAAA'],
-  medium: ['AAAA', 'AABA'],
-  hard: ['ABAB', 'AABA'],
-};
-
 /** One waltz bar on an eighth-note grid: a low stroke then two light ones. */
 const WALTZ_PATTERNS: Readonly<Record<MelodyLevel, { main: readonly string[]; fill: string }>> = {
-  easy: { main: ['D . . . . .', 'D . D . D .'], fill: 'D . D . D .' },
-  medium: { main: ['D . D . D .', 'D . D U D .'], fill: 'D . D U D U' },
-  hard: { main: ['D . D U D .', 'D . D U D U'], fill: 'D U D U D U' },
+  easy: {
+    main: ['D . . . . .', 'D . D . D .', 'D . . . D .', 'D . D . . .'],
+    fill: 'D . D . D .',
+  },
+  medium: {
+    main: ['D . D . D .', 'D . D U D .', 'D . . U D .', 'D . D . D U'],
+    fill: 'D . D U D U',
+  },
+  hard: {
+    main: ['D . D U D .', 'D . D U D U', 'D . . U D U', 'D U D . D U'],
+    fill: 'D U D U D U',
+  },
 };
 
-/** The chords in a progression for a key, or null if the key lacks one of them. */
-function chordsFor(key: (typeof KEYS)[number], numerals: readonly string[]): string[] | null {
-  const out: string[] = [];
-  for (const n of numerals) {
-    const chord = key.chords[n];
-    if (!chord) return null;
-    out.push(chord);
-  }
-  return out;
-}
-
-function pickProgression(
+/**
+ * Four bars of chords as numerals, starting on `first` and finishing on `last`, walking by the
+ * grammar in {@link NEXT}: no chord for more than two bars, and (above the easy level) at least
+ * three different chords so the phrase goes somewhere.
+ */
+function walkPhrase(
   rng: Rng,
-  key: (typeof KEYS)[number],
+  allowed: readonly string[],
+  first: string,
+  last: string,
   level: MelodyLevel,
-  not?: string,
-): { id: string; chords: string[] } {
-  const options = PROGRESSIONS.filter(
-    (p) => (level !== 'easy' || p.easy) && p.id !== not && chordsFor(key, p.chords) !== null,
-  );
-  const chosen = pick(rng, options);
-  return { id: chosen.id, chords: chordsFor(key, chosen.chords)! };
+): string[] {
+  const minDistinct = level === 'easy' ? 2 : 3;
+  let fallback: string[] = [first, first, first, last];
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const bars = [first];
+    for (let i = 1; i < 3; i++) {
+      const prev = bars[i - 1]!;
+      const options = Object.entries(NEXT[prev] ?? {})
+        .filter(([n]) => allowed.includes(n))
+        .map(([item, weight]) => ({ item, weight }));
+      if (options.length === 0) break;
+      bars.push(pickWeighted(rng, options));
+    }
+    if (bars.length < 3) continue;
+    bars.push(last);
+    const runs = bars.every((n, i) => i < 2 || !(n === bars[i - 1] && n === bars[i - 2]));
+    const distinct = new Set(bars).size;
+    // the bar before the cadence has to lead to it
+    const leads = (NEXT[bars[2]!]?.[last] ?? 0) > 0;
+    if (runs && leads && distinct >= minDistinct) return bars;
+    if (runs && (leads || bars[2] === last)) fallback = bars;
+  }
+  return fallback;
 }
 
-/** The bars of a chord song: every chord and the progression it came from, for tests and titles. */
+/** The chords a key can play at a level, as numerals: those the key has (and a beginner knows). */
+function allowedNumerals(key: (typeof KEYS)[number], level: MelodyLevel): string[] {
+  return NUMERALS[level].filter((n) => {
+    const chord = key.chords[n];
+    return chord !== undefined && (level !== 'easy' || EASY_CHORDS.has(chord));
+  });
+}
+
+/** The bars of a chord song: every chord, the key and the form, for tests and titles. */
 export function chordSongBars(spec: ChordSongSpec): {
   key: string;
+  /** The four-bar phrases as numerals ("I-vi-IV-V"), each different phrase once. */
   progressions: string[];
+  /** The phrase letters in order: "AaBa" (a lower-case letter is the phrase again, closing at home). */
+  form: string;
   bars: string[];
 } {
   const rng = createRng(
     spec.seed * 6151 + MELODY_LEVELS.indexOf(spec.level) * 31 + (spec.waltz ? 11 : 7),
   );
-  // the easy level stays in the two friendliest keys
-  const key = pick(rng, spec.level === 'easy' ? KEYS.slice(0, 2) : KEYS);
-  const a = pickProgression(rng, key, spec.level);
-  const b = pickProgression(rng, key, spec.level, a.id);
+  // the easy level stays in the friendliest keys
+  const key = pick(rng, spec.level === 'easy' ? KEYS.filter((k) => 'CGD'.includes(k.name)) : KEYS);
+  const allowed = allowedNumerals(key, spec.level);
   const form = pick(rng, FORMS[spec.level]);
-  const bars: string[] = [];
-  for (const letter of form) bars.push(...(letter === 'A' ? a : b).chords);
+  // the contrast phrase often starts away from home; a closing phrase ends at home
+  const contrastStart = pickWeighted(
+    rng,
+    allowed.filter((n) => ['IV', 'vi', 'ii'].includes(n)).map((item) => ({ item, weight: 1 })),
+  );
+  const halfCadence = allowed.includes('V') ? 'V' : 'IV';
+  let numerals: string[][] = [];
+  // build the phrases; if a chord would be held three bars across a phrase boundary, build again
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const phrases = new Map<string, string[]>();
+    numerals = [];
+    for (const letter of form) {
+      let phrase: string[];
+      if (letter === 'a' && phrases.has('A')) {
+        // the first phrase again, but closing at home
+        phrase = [...phrases.get('A')!.slice(0, 3), 'I'];
+      } else if (phrases.has(letter)) {
+        phrase = phrases.get(letter)!;
+      } else if (letter === 'A') {
+        phrase = walkPhrase(rng, allowed, 'I', halfCadence, spec.level);
+      } else if (letter === 'B') {
+        phrase = walkPhrase(rng, allowed, contrastStart, halfCadence, spec.level);
+      } else {
+        // C: a fresh phrase that heads home
+        const start = pick(
+          rng,
+          allowed.filter((n) => n !== 'II7' && n !== 'V7'),
+        );
+        phrase = walkPhrase(rng, allowed, start, 'I', spec.level);
+      }
+      phrases.set(letter, phrase);
+      numerals.push(phrase);
+    }
+    const flat = numerals.flat();
+    if (!flat.some((n, i) => i >= 2 && n === flat[i - 1] && n === flat[i - 2])) break;
+  }
+  const bars = numerals.flat().map((n) => key.chords[n]!);
   // finish at home, approached from the dominant seventh where the key has one
   bars[bars.length - 1] = key.chords['I']!;
   const approach = key.chords['V7'];
   if (approach && spec.level !== 'easy') bars[bars.length - 2] = approach;
   return {
     key: key.name,
-    progressions: [...new Set(form.split('').map((l) => (l === 'A' ? a : b).id))],
+    progressions: [...new Set(numerals.map((p) => p.join('-')))],
+    form,
     bars,
   };
 }
 
 /**
- * A new chord song for the ukulele: sixteen bars from common progressions in a key where every
- * chord has a fingering, with a strum pattern that repeats and a variation at the end of each
- * four bars. The same spec always gives the same song.
+ * A new chord song for the ukulele: sixteen bars in a key where every chord has a fingering. The
+ * progression is walked fresh from a grammar of chord movement (so two seeds rarely share one),
+ * arranged in phrases such as AaBa, with a strum pattern for the song, another for its contrast
+ * phrase at the harder levels, and a turnaround at the end of each four bars. The same spec always
+ * gives the same song.
  */
 export function generateChordSong(spec: ChordSongSpec): Chart {
-  const { key, progressions, bars } = chordSongBars(spec);
+  const { key, progressions, form, bars } = chordSongBars(spec);
   const rng = createRng(spec.seed * 7211 + 13);
   const beatsPerBar = spec.waltz ? 3 : 4;
   const patterns = (spec.waltz ? WALTZ_PATTERNS : PATTERNS)[spec.level];
-  const main = [...pick(rng, patterns.main).replace(/\s+/g, '')];
-  const fill = [...patterns.fill.replace(/\s+/g, '')];
+  const compact = (text: string): string[] => [...text.replace(/\s+/g, '')];
+  const main = compact(pick(rng, patterns.main));
+  const alternative = compact(pick(rng, patterns.main));
+  const fill = compact(patterns.fill);
   const notes: BeatNote[] = [];
   bars.forEach((chord, bar) => {
     if (!UKULELE_CHORD_FRETS[chord]) throw new Error(`no ukulele fingering for chord "${chord}"`);
+    // the contrast phrase takes the other pattern at the harder levels
+    const letter = form[Math.floor(bar / 4)]!;
+    const base = spec.level !== 'easy' && letter === 'B' ? alternative : main;
     // the last bar of every four (except the last of the song) turns round
-    const steps = bar % 4 === 3 && spec.level !== 'easy' && bar !== bars.length - 1 ? fill : main;
+    const steps = bar % 4 === 3 && spec.level !== 'easy' && bar !== bars.length - 1 ? fill : base;
     // a stroke squeezed in just before a chord change rings into the next one: leave it out
     const changes = bars[bar + 1] !== undefined && bars[bar + 1] !== chord;
     steps.forEach((step, i) => {
@@ -148,7 +271,7 @@ export function generateChordSong(spec: ChordSongSpec): Chart {
   });
   return chartFromBeats(
     {
-      title: `Random ${spec.waltz ? 'waltz' : 'chord song'} ${spec.seed}: ${progressions.join(' / ')} in ${key}, ${spec.level}`,
+      title: `Random ${spec.waltz ? 'waltz' : 'chord song'} ${spec.seed}: ${progressions[0]}… in ${key}, ${spec.level}`,
       artist: 'Lineup',
       bpm: BPM[spec.level],
       instruments: ['ukulele-strum'],

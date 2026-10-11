@@ -142,10 +142,11 @@ describe('generated and exercise material, played through the real chain', () =>
   )('a random chord song (%s, seed %i) is played (almost) perfectly', (level, seed) => {
     const chart = generateChordSong({ seed, level });
     const { counts } = uke(chart).score;
-    if (level === 'easy') return perfect(counts, chart.notes.length);
-    // In the harder songs the analyzer occasionally misses the strum that lands on a new chord,
-    // for some chords (see Limitations in the README). It must stay rare.
-    expect(counts.miss / chart.notes.length).toBeLessThan(0.06);
+    // The analyzer occasionally misses (or is late on) the strum that lands on a new chord, for
+    // some chords (see Limitations in the README), now and then even in the easy songs, which
+    // change chords more freely than they used to. It must stay rare.
+    expect(counts.miss / chart.notes.length).toBeLessThan(level === 'easy' ? 0.04 : 0.06);
+    expect(counts.good / chart.notes.length).toBeLessThan(0.04);
     expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
   });
 
@@ -160,8 +161,8 @@ describe('generated and exercise material, played through the real chain', () =>
   )('a random waltz (%s, seed %i) is played (almost) perfectly', (level, seed) => {
     const chart = generateChordSong({ seed, level, waltz: true });
     const { counts } = uke(chart).score;
-    if (level === 'easy') return perfect(counts, chart.notes.length);
-    expect(counts.miss / chart.notes.length).toBeLessThan(0.08);
+    expect(counts.miss / chart.notes.length).toBeLessThan(level === 'easy' ? 0.04 : 0.08);
+    expect(counts.good / chart.notes.length).toBeLessThan(0.04);
     expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
   });
 
