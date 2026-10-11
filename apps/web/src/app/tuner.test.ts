@@ -38,6 +38,14 @@ describe('readTuner', () => {
     expect(readTuner(hz(61, 10), chromatic)).toMatchObject({ name: 'C♯4', state: 'sharp' });
   });
 
+  it('measures against the string the player chose, even when another is nearer', () => {
+    // a pitch between C4 and E4 is read against whichever string the player says they are tuning
+    const far = hz(62.5);
+    expect(readTuner(far, uke, 'C4')).toMatchObject({ name: 'C4', state: 'sharp' });
+    expect(readTuner(far, uke, 'A4')).toMatchObject({ name: 'A4', state: 'flat' });
+    expect(readTuner(hz(64), uke, 'not a string')!.name).toBe('E4'); // unknown target: nearest
+  });
+
   it('gives nothing for a pitch that is not a frequency', () => {
     expect(readTuner(0, uke)).toBeNull();
     expect(readTuner(Number.NaN, uke)).toBeNull();

@@ -820,9 +820,9 @@ export const createPitchScreen =
       playRaf = requestAnimationFrame(tick);
     };
 
-    /** Whether the song just played is today's challenge, played as written. */
+    /** Whether the song just played is today's challenge, played whole and as written. */
     const isDaily = (id: string): boolean =>
-      id === dailyFor(dailyGame).id && settings.get().variation === 'original';
+      id === dailyFor(dailyGame).id && settings.get().variation === 'original' && partIdx < 0;
 
     const showResults = (game: SinglineGame, chart: Chart, audio: GameAudio) => {
       const s = game.session.score;
