@@ -128,6 +128,12 @@ export class SettingsStore {
     };
   }
 
+  /** Reads settings again from storage (after a backup was restored behind this store's back). */
+  reload(): Settings {
+    this.value = this.read();
+    return this.get();
+  }
+
   update(patch: Partial<Settings>): Settings {
     this.value = sanitize({ ...this.value, ...patch });
     try {

@@ -73,6 +73,18 @@ describe('planAccompaniment', () => {
     expect(up[0]!.midi % 12).toBe((base[0]!.midi + 2) % 12);
   });
 
+  it('starts a chord that changes part way through a bar at the change, not at the bar line', () => {
+    const drill = getSong('ex-ukulele-strum-changes-c-am');
+    const spb = 60 / drill.meta.bpm;
+    const bass = tones(drill, 'bass').filter((t) => t.wave === 'triangle');
+    // no two bass notes start at the same time: the old chord does not keep sounding under the new one
+    const starts = bass.map((t) => Math.round(t.songTime * 1000));
+    expect(new Set(starts).size).toBe(starts.length);
+    // the first change (after 4 beats) puts the Am root on that beat
+    const atChange = bass.find((t) => Math.abs(t.songTime - 4 * spb) < 1e-6)!;
+    expect(atChange.midi % 12).toBe(9);
+  });
+
   it('plays nothing under a rhythm', () => {
     expect(planAccompaniment(getSong('clap-basic'), 'full')).toEqual([]);
   });

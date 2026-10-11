@@ -100,6 +100,16 @@ describe('backup', () => {
     expect(b.getItem('other.site')).toBe('keep');
   });
 
+  it('refuses a backup with nothing usable in it, leaving the data alone', () => {
+    const m = new Mem();
+    m.setItem('lineup.settings.v1', 'mine');
+    expect(importBackup(m, JSON.stringify({ lineup: 'backup', data: {} }))).toBeNull();
+    expect(
+      importBackup(m, JSON.stringify({ lineup: 'backup', data: { 'other.key': 'x' } })),
+    ).toBeNull();
+    expect(m.getItem('lineup.settings.v1')).toBe('mine');
+  });
+
   it('refuses anything that is not a backup, and keys outside the app', () => {
     const m = new Mem();
     m.setItem('lineup.settings.v1', 'mine');

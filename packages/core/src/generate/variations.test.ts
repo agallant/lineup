@@ -9,6 +9,21 @@ const all = Object.entries(builtinSongs);
 const score = (id: string, v: 'original' | 'easier' | 'harder', seed = 7) =>
   rateChart(varyChart(getSong(id), v, seed)).score;
 
+describe('easier chord songs with nothing on the beat', () => {
+  it('keep their strokes instead of failing', () => {
+    const chord = generateChordSong({ seed: 3, level: 'medium' });
+    const spb = 60 / chord.meta.bpm;
+    // keep only the strokes that fall between the beats
+    const offbeat = {
+      ...chord,
+      notes: chord.notes.filter((n) => Math.abs(((n.t / spb) % 1) - 0.5) < 0.05),
+    };
+    expect(offbeat.notes.length).toBeGreaterThan(8);
+    const easier = varyChart(offbeat, 'easier', 1);
+    expect(easier.notes.length).toBe(offbeat.notes.length);
+  });
+});
+
 describe('mixed versions', () => {
   it('take each phrase from the easier, original or harder version, at the original tempo', () => {
     for (const [id, chart] of all) {

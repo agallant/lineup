@@ -21,7 +21,7 @@ export const learnScreen: Screen = (root) => {
   const progressStore = new ProgressStore(storage);
   let newTrophy = '';
   const sections = COURSES.map((course) => {
-    const stars = starsBySong(entries, course.profileId);
+    const stars = starsBySong(entries, course.profileId, true);
     const progress = courseProgress(course, (id) => stars.get(id) ?? null);
     const next = progress.steps.find((s) => s.state === 'open');
     // finishing a path earns the Graduate trophy (once)

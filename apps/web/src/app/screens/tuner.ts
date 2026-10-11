@@ -112,7 +112,7 @@ export const tunerScreen: Screen = (root) => {
       startBtn.disabled = true;
       $('status').textContent = 'Opening microphone…';
       try {
-        const s = await openMic();
+        const s = await openMic(undefined, 0, { pitch: { minHz: 60 } });
         if (disposed) {
           await s.close();
           return;
