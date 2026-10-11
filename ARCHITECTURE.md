@@ -193,6 +193,10 @@ every four bars, one sound at a time) and `rudiments.ts` (rhythm exercises). Mel
 also exist for the ukulele, plucked on single strings (`pluckNotes`); ids are `gen-chords-<level>-<seed>`
 and `gen-groove-<profile>-<level>-<seed>`, and `getSong` builds them.
 
+`difficulty.ts` (`rateChart`) rates any chart from its notes: a 1 to 10 score (five bands), its kind
+(melody, picked, chords, rhythm) and, for melodies, diatonic or chromatic (`isDiatonic`). The web
+app shows it in the song menus (easiest first) and the song info.
+
 `songs/notation.ts` has small text notations for writing songs by hand (`melodyChart`:
 `E4 D4:2 r:1`; `strumChart`: chords per bar and one bar of `D . D U` strokes; `pickedMelodyChart`:
 a melody plucked on single ukulele strings; `grooveChart`: one line per lane, `x` for a hit, one
