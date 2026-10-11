@@ -47,7 +47,22 @@ function heading(label: string): HTMLOptGroupElement {
 /** The value of the song menu's "random melody" entry. */
 export const RANDOM_MELODY = 'random-melody';
 
+/** The value of the "random chord song" entry (Strumline). */
+export const RANDOM_CHORDS = 'random-chords';
+
+/** The value of the "random groove" entry (Beatline). */
+export const RANDOM_GROOVE = 'random-groove';
+
+/** Adds entries to a song menu under a "Random" heading. */
+export function addRandomOptions(
+  select: HTMLSelectElement,
+  entries: readonly { value: string; label: string }[],
+): void {
+  const group = select.appendChild(heading('Random'));
+  for (const { value, label } of entries) group.appendChild(new Option(label, value));
+}
+
 /** Adds the "random melody" entry to a song menu, under its own heading. */
 export function addRandomMelodyOption(select: HTMLSelectElement): void {
-  select.appendChild(heading('Random')).appendChild(new Option('🎲 Random melody', RANDOM_MELODY));
+  addRandomOptions(select, [{ value: RANDOM_MELODY, label: '🎲 Random melody' }]);
 }

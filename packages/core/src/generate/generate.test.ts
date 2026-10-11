@@ -135,11 +135,11 @@ describe('scales', () => {
 });
 
 describe('exercises', () => {
-  const profiles = Object.keys(EXERCISE_TONICS);
+  /** The profiles whose exercises are sounded notes (the ukulele's are plucked: tested below). */
+  const profiles = ['voice', 'wind'];
 
-  it('are built for voice and wind only', () => {
-    expect(profiles.sort()).toEqual(['voice', 'wind']);
-    expect(exerciseCharts('ukulele-strum')).toEqual({});
+  it('are built for voice, wind and ukulele only', () => {
+    expect(Object.keys(EXERCISE_TONICS).sort()).toEqual(['ukulele-strum', 'voice', 'wind']);
     expect(exerciseCharts('nope')).toEqual({});
   });
 
@@ -227,6 +227,58 @@ describe('exercises', () => {
       expect(list.slice(firstExercise).every((s) => s.category === 'exercise')).toBe(true);
       expect(list.slice(0, firstExercise).every((s) => s.category === 'song')).toBe(true);
     }
-    expect(songsFor('ukulele-strum').every((s) => s.category === 'song')).toBe(true);
+  });
+});
+
+describe('ukulele exercises', () => {
+  const OPEN = [67, 60, 64, 69]; // G C E A
+  const charts = exerciseCharts('ukulele-strum');
+  /** The pitch a plucked note sounds, from the string and fret it names. */
+  const pitchOf = (frets: readonly (number | null)[]): number => {
+    const strings = frets.flatMap((f, i) => (f === null ? [] : [OPEN[i]! + f]));
+    expect(strings).toHaveLength(1); // one string at a time
+    return strings[0]!;
+  };
+
+  it('are the scales that stay on the first frets, plucked on single strings', () => {
+    expect(Object.keys(charts).sort()).toEqual([
+      'ex-ukulele-strum-chromatic-up-down',
+      'ex-ukulele-strum-dorian-up-down',
+      'ex-ukulele-strum-major-arpeggios',
+      'ex-ukulele-strum-major-ladder',
+      'ex-ukulele-strum-major-long-tones',
+      'ex-ukulele-strum-major-patterns',
+      'ex-ukulele-strum-major-pentatonic-up-down',
+      'ex-ukulele-strum-major-thirds',
+      'ex-ukulele-strum-major-up-down',
+    ]);
+    for (const [id, chart] of Object.entries(charts)) {
+      expect(chart.meta.instruments, id).toEqual(['ukulele-strum']);
+      expect(chart.meta.tonic, id).toBe(60);
+      for (const n of chart.notes) {
+        expect(n.pitch, id).toBeUndefined();
+        expect(n.expected?.chord, id).toBeUndefined();
+      }
+    }
+  });
+
+  it('start and end on the root and stay in the scale', () => {
+    const major = charts['ex-ukulele-strum-major-up-down']!;
+    const pitches = major.notes.map((n) => pitchOf(n.expected!.frets!));
+    expect(pitches[0]).toBe(60);
+    expect(pitches.at(-1)).toBe(60);
+    expect(Math.max(...pitches)).toBe(72);
+    const parent = majorPitchClasses(60);
+    for (const [id, chart] of Object.entries(charts)) {
+      if (id.includes('chromatic')) continue;
+      for (const n of chart.notes) expect(parent, id).toContain(pitchOf(n.expected!.frets!) % 12);
+    }
+  });
+
+  it('appear in the ukulele menu as exercises, after the songs', () => {
+    const list = songsFor('ukulele-strum');
+    const first = list.findIndex((s) => s.category === 'exercise');
+    expect(first).toBeGreaterThan(0);
+    expect(list.slice(first).every((s) => s.category === 'exercise')).toBe(true);
   });
 });

@@ -3,7 +3,19 @@
  * wind player, ukulele, hands and drum kit -> analyzer -> judge -> scoreboard): a song nobody can
  * score on is a bug in the song. Vouches for the charts and the software, not for real players.
  */
-import { LIBRARY, getProfile, type Chart } from '@lineup/core';
+import {
+  GROOVE_PROFILES,
+  LIBRARY,
+  MELODY_LEVELS,
+  exerciseCharts,
+  generateChordSong,
+  generateGroove,
+  generateMelody,
+  getProfile,
+  melodyScalesFor,
+  rhythmExercises,
+  type Chart,
+} from '@lineup/core';
 import { describe, expect, it } from 'vitest';
 import { enrollSynthetic } from './enroll';
 import { renderPerformance } from './performance';
@@ -69,5 +81,89 @@ describe('library: rhythm songs', () => {
 
   it.each(entries('kit-'))('%s: a steady drummer scores every hit perfect', (_id, chart) => {
     perfect(play(chart, 'drum-kit', { kick, snare, hat: hihat }).score.counts, chart.notes.length);
+  });
+});
+
+describe('generated and exercise material, played through the real chain', () => {
+  const uke = (chart: Chart) => {
+    const rendered = renderPerformance(chart, ukuleleStrumPerformer, { latency: LATENCY });
+    return runDiscrete(rendered, chart, getProfile('ukulele-strum'), { latencyOffset: LATENCY });
+  };
+  const hits = (chart: Chart, profileId: string) => {
+    const lanes = getProfile(profileId).lanes!.map((l) => l.id);
+    const sounds: Record<string, HitSound> = Object.fromEntries(
+      lanes.map((lane) => [
+        lane,
+        ({ kick, snare, hat: hihat, clap, tap, hit: clap } as Record<string, HitSound>)[lane]!,
+      ]),
+    );
+    const profile = getProfile(profileId);
+    const model = lanes.length > 1 ? enrollSynthetic(profile, sounds).model : null;
+    const rendered = renderPerformance(chart, percussionPerformer(sounds), { latency: LATENCY });
+    return runDiscrete(rendered, chart, profile, { latencyOffset: LATENCY, timbreModel: model });
+  };
+
+  it.each(Object.entries(exerciseCharts('ukulele-strum')))(
+    '%s: every plucked note scores perfect',
+    (_id, chart) => perfect(uke(chart).score.counts, chart.notes.length),
+  );
+
+  it.each(
+    MELODY_LEVELS.flatMap(
+      (level) =>
+        [
+          [level, 11],
+          [level, 4093],
+        ] as const,
+    ),
+  )('a random picked melody (%s, seed %i) scores perfect', (level, seed) => {
+    const chart = generateMelody('ukulele-strum', {
+      seed,
+      scale: melodyScalesFor('ukulele-strum')[seed % 3]!,
+      level,
+    });
+    perfect(uke(chart).score.counts, chart.notes.length);
+  });
+
+  it.each(
+    MELODY_LEVELS.flatMap(
+      (level) =>
+        [
+          [level, 3],
+          [level, 777],
+          [level, 90210],
+        ] as const,
+    ),
+  )('a random chord song (%s, seed %i) is played (almost) perfectly', (level, seed) => {
+    const chart = generateChordSong({ seed, level });
+    const { counts } = uke(chart).score;
+    if (level === 'easy') return perfect(counts, chart.notes.length);
+    // In the harder songs the analyzer occasionally misses the strum that lands on a new chord,
+    // for some chords (see Limitations in the README). It must stay rare.
+    expect(counts.miss / chart.notes.length).toBeLessThan(0.06);
+    expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
+  });
+
+  it.each(
+    GROOVE_PROFILES.flatMap((p) =>
+      MELODY_LEVELS.flatMap(
+        (level) =>
+          [
+            [p, level, 5],
+            [p, level, 31337],
+          ] as const,
+      ),
+    ),
+  )('a random %s groove (%s, seed %i) scores every hit perfect', (profileId, level, seed) => {
+    const chart = generateGroove(profileId, { seed, level });
+    perfect(hits(chart, profileId).score.counts, chart.notes.length);
+  });
+
+  it.each(
+    ['hand-percussion', 'drum-kit', 'clap'].flatMap((p) =>
+      Object.entries(rhythmExercises(p)).map(([id, chart]) => [id, p, chart] as const),
+    ),
+  )('%s: every hit scores perfect', (_id, profileId, chart) => {
+    perfect(hits(chart, profileId).score.counts, chart.notes.length);
   });
 });

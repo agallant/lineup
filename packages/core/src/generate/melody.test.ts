@@ -8,6 +8,7 @@ import {
   generateMelody,
   isSeed,
   melodyId,
+  melodyScalesFor,
   parseMelodyId,
   randomSeed,
   type MelodyLevel,
@@ -141,6 +142,46 @@ describe('generateMelody', () => {
         }
       }
     }
+  });
+});
+
+describe('melodies on the ukulele', () => {
+  const OPEN = [67, 60, 64, 69];
+  const pitchOf = (frets: readonly (number | null)[]): number =>
+    frets.flatMap((f, i) => (f === null ? [] : [OPEN[i]! + f]))[0]!;
+
+  it('are plucked on single strings on the first frets, in key, for the scales that fit', () => {
+    expect(melodyScalesFor('ukulele-strum')).toEqual(['major', 'dorian', 'major-pentatonic']);
+    for (const scale of melodyScalesFor('ukulele-strum')) {
+      for (const level of MELODY_LEVELS) {
+        for (const seed of SEEDS.slice(0, 15)) {
+          const chart = generateMelody('ukulele-strum', { seed, scale, level });
+          expect(chart.meta.instruments).toEqual(['ukulele-strum']);
+          expect(chart.notes.length).toBeGreaterThan(15);
+          for (const n of chart.notes) {
+            expect(n.pitch).toBeUndefined();
+            expect(n.expected!.frets!.filter((f) => f !== null)).toHaveLength(1);
+            expect(degreeOf(pitchOf(n.expected!.frets!), scale, 'voice')).not.toBeNull();
+          }
+        }
+      }
+    }
+  });
+
+  it('refuses a scale that goes below the C string', () => {
+    expect(() =>
+      generateMelody('ukulele-strum', { seed: 1, scale: 'minor', level: 'easy' }),
+    ).toThrow(/first frets/);
+  });
+
+  it('has ids that name the ukulele and only its scales', () => {
+    const spec = { seed: 7, scale: 'dorian' as const, level: 'easy' as MelodyLevel };
+    expect(melodyId('ukulele-strum', spec)).toBe('gen-ukulele-strum-dorian-easy-7');
+    expect(parseMelodyId('gen-ukulele-strum-dorian-easy-7')).toEqual({
+      profileId: 'ukulele-strum',
+      spec,
+    });
+    expect(parseMelodyId('gen-ukulele-strum-minor-easy-7')).toBeNull();
   });
 });
 

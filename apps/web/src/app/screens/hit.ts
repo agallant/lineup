@@ -1,18 +1,33 @@
 import {
   CalibrationStore,
   EnrollmentSession,
+  MAX_SEED,
+  MELODY_LEVELS,
+  SCALES,
   SongClock,
   TimbreModelStore,
   chartChords,
   chartEnd,
   chordShapesFor,
+  chordSongId,
   defaultOffsetFromLatencies,
+  generateChordSong,
+  generateGroove,
+  generateMelody,
   getProfile,
+  grooveId,
+  isSeed,
   letterGrade,
+  melodyId,
+  melodyScalesFor,
+  randomSeed,
   rescaleChart,
   songsFor,
   type Chart,
+  type GrooveProfile,
   type InstrumentProfile,
+  type MelodyLevel,
+  type ScaleId,
   type TimbreModel,
 } from '@lineup/core';
 import {
@@ -35,7 +50,13 @@ import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { SettingsStore, safeLocalStorage } from '../settings';
-import { fillSongMenu } from '../song-menu';
+import {
+  RANDOM_CHORDS,
+  RANDOM_GROOVE,
+  RANDOM_MELODY,
+  addRandomOptions,
+  fillSongMenu,
+} from '../song-menu';
 import type { Screen } from '../router';
 
 /** What differs between the hit-based games (Beatline, Strumline); everything else is shared. */
@@ -76,6 +97,12 @@ const setup = (c: HitScreenConfig) => `
     <div class="row">
       <label>Mode <select data-id="mode"></select></label>
       <label>Song <select data-id="song"></select></label>
+    </div>
+    <div class="row" data-id="challenge" hidden>
+      <label data-id="challenge-scale-label">Scale <select data-id="challenge-scale"></select></label>
+      <label>Level <select data-id="challenge-level"></select></label>
+      <label>Seed <input data-id="challenge-seed" type="number" min="0" max="${MAX_SEED}" step="1" inputmode="numeric" /></label>
+      <button data-id="challenge-new">New song</button>
     </div>
     <p data-id="mode-note"></p>
     <p data-id="song-info"></p>
@@ -226,15 +253,62 @@ export const createHitScreen =
 
     const classCount = () => profile.timbreClasses?.length ?? 1;
 
+    // the random song: its spec lives in the settings, and the seed is shown so it can be replayed
+    const challengeRow = S('challenge');
+    const scaleSel = S<HTMLSelectElement>('challenge-scale');
+    const levelSel = S<HTMLSelectElement>('challenge-level');
+    const seedInput = S<HTMLInputElement>('challenge-seed');
+    for (const level of MELODY_LEVELS)
+      levelSel.add(new Option(level[0]!.toUpperCase() + level.slice(1), level));
+    /** The random song chosen in the menu, built for the current spec (once per spec), or null. */
+    let randomCache: { id: string; chart: Chart } | null = null;
+    const randomEntry = (): { id: string; chart: Chart } | null => {
+      const spec = settings.get().challenge;
+      let id: string;
+      let build: () => Chart;
+      if (songSel.value === RANDOM_CHORDS) {
+        id = chordSongId(spec);
+        build = () => generateChordSong(spec);
+      } else if (songSel.value === RANDOM_GROOVE) {
+        id = grooveId(profile.id as GrooveProfile, spec);
+        build = () => generateGroove(profile.id as GrooveProfile, spec);
+      } else if (songSel.value === RANDOM_MELODY) {
+        id = melodyId(profile.id, spec);
+        build = () => generateMelody(profile.id, spec);
+      } else {
+        return null;
+      }
+      if (randomCache?.id !== id) randomCache = { id, chart: build() };
+      return randomCache;
+    };
+    const showChallenge = () => {
+      const spec = settings.get().challenge;
+      scaleSel.replaceChildren();
+      for (const id of melodyScalesFor(profile.id)) scaleSel.add(new Option(SCALES[id].label, id));
+      if (!melodyScalesFor(profile.id).includes(spec.scale)) {
+        settings.update({ challenge: { ...spec, scale: melodyScalesFor(profile.id)[0]! } });
+      }
+      const now = settings.get().challenge;
+      scaleSel.value = now.scale;
+      levelSel.value = now.level;
+      seedInput.value = String(now.seed);
+      challengeRow.hidden = randomEntry() === null;
+      S('challenge-scale-label').hidden = songSel.value !== RANDOM_MELODY;
+    };
+
     /** Best-score bucket: the song, and for Strumline the practice speed and whether chords count. */
     const bestKey = () =>
       scoreKey(
         profile.id,
-        songSel.value,
+        randomEntry()?.id ?? songSel.value,
         c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}` : '',
       );
     const refreshSong = () => {
-      S('song-info').textContent = songSummary(songChart());
+      // a random song has no fixed title to find in the menu: say which one this is
+      const chart = songChart();
+      S('song-info').textContent = randomEntry()
+        ? `${chart.meta.title} · ${songSummary(chart)}`
+        : songSummary(chart);
       S('best').textContent = describeBest(scores.best(bestKey()));
     };
 
@@ -243,8 +317,20 @@ export const createHitScreen =
       songSel.replaceChildren(); // also removes group headings
       const songs = songsFor(profile.id);
       fillSongMenu(songSel, songs);
+      addRandomOptions(
+        songSel,
+        profile.id === 'ukulele-strum'
+          ? [
+              { value: RANDOM_CHORDS, label: '🎲 Random chord song' },
+              { value: RANDOM_MELODY, label: '🎲 Random melody (picked)' },
+            ]
+          : [{ value: RANDOM_GROOVE, label: '🎲 Random groove' }],
+      );
       const saved = settings.get().songs[`${c.keyPrefix}:${profile.id}`];
-      songSel.value = songs.some((s) => s.id === saved) ? saved! : (songs[0]?.id ?? '');
+      songSel.value = [...songSel.options].some((o) => o.value === saved)
+        ? saved!
+        : (songs[0]?.id ?? '');
+      showChallenge();
       S('mode-note').textContent = c.modes.find((m) => m.id === profile.id)?.note ?? '';
       model =
         classCount() > 1
@@ -290,8 +376,25 @@ export const createHitScreen =
       settings.update({
         songs: { ...settings.get().songs, [`${c.keyPrefix}:${profile.id}`]: songSel.value },
       });
+      showChallenge();
       refreshSong();
     });
+    const updateChallenge = (patch: Partial<ReturnType<typeof settings.get>['challenge']>) => {
+      settings.update({ challenge: { ...settings.get().challenge, ...patch } });
+      showChallenge();
+      refreshSong();
+    };
+    scaleSel.addEventListener('change', () =>
+      updateChallenge({ scale: scaleSel.value as ScaleId }),
+    );
+    levelSel.addEventListener('change', () =>
+      updateChallenge({ level: levelSel.value as MelodyLevel }),
+    );
+    seedInput.addEventListener('change', () => {
+      const seed = Number(seedInput.value);
+      updateChallenge(isSeed(seed) ? { seed } : {}); // an invalid entry snaps back to the current seed
+    });
+    S('challenge-new').addEventListener('click', () => updateChallenge({ seed: randomSeed() }));
     S<HTMLInputElement>('opt-metronome').addEventListener('change', (e) =>
       settings.update({ metronome: (e.target as HTMLInputElement).checked }),
     );
@@ -759,6 +862,8 @@ export const createHitScreen =
 
     /** The chosen song at its own tempo. */
     const songChart = (): Chart => {
+      const random = randomEntry();
+      if (random) return random.chart;
       const songs = songsFor(profile.id);
       return (songs.find((s) => s.id === songSel.value) ?? songs[0]!).chart;
     };

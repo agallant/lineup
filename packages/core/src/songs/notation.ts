@@ -86,14 +86,20 @@ export function ukulelePluck(pitch: number): (number | null)[] {
   return UKULELE_OPEN.map((_, i) => (i === best ? bestFret : null));
 }
 
+/** True when `pitch` can be plucked on one string within the first frets. */
+export const ukulelePlayable = (pitch: number): boolean =>
+  UKULELE_OPEN.some((open) => pitch - open >= 0 && pitch - open <= MAX_FRET);
+
+/**
+ * Turns pitched notes into plucked ukulele notes: each names the string and fret that sound it and
+ * has no length (the string rings on its own).
+ */
+export const pluckNotes = (notes: readonly BeatNote[]): BeatNote[] =>
+  notes.map((n) => ({ beat: n.beat, expected: { frets: ukulelePluck(n.pitch!) } }));
+
 /** A melody for the ukulele: each note is plucked on one string at the fret that sounds it. */
 export function pickedMelodyChart(meta: Meta, text: string): Chart {
-  // a plucked note has no length: the string rings on its own
-  const notes: BeatNote[] = melodyNotes(text).map((n) => ({
-    beat: n.beat,
-    expected: { frets: ukulelePluck(n.pitch!) },
-  }));
-  return chartFromBeats(meta, notes);
+  return chartFromBeats(meta, pluckNotes(melodyNotes(text)));
 }
 
 /**

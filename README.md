@@ -120,6 +120,13 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    fingerpicking pattern over C Am F G, one string at a time) and a **Speed** (50% to 100%) to
    practise slowly. The chart's frets and chord names stay the same. A plucked note is judged on
    timing only: Lineup hears that you played, not which string or fret.
+   More songs: chord songs (fifties progression, Skip to My Lou, 12-bar blues, a waltz, a minor
+   one), three melodies to pick (Hot Cross Buns, Mary Had a Little Lamb, Ode to Joy), and
+   **Exercises**: major, dorian and pentatonic scales, thirds, arpeggios, long tones and a chromatic
+   scale, plucked on single strings. Under "Random": **🎲 Random chord song** (sixteen bars from
+   common progressions such as I–IV–V–I and I–V–vi–IV, in C, G or D, the strum pattern repeating
+   with a variation every four bars, ending at home) and **🎲 Random melody (picked)**. Pick a
+   level, press _New song_ or type a seed to replay one; the seed is shown in the song info.
 3. **Also check the chords** (off by default, experimental): the analyzer is told which chords the
    song uses and a strum of a clearly different chord misses ("wrong chord" is counted on the results
    screen). A strum it cannot name still counts for timing. Turn it off if it penalises you unfairly
@@ -195,8 +202,23 @@ counts; **Clap + tap**, two lanes where you teach it your two sounds first; **Dr
 4. Optionally **calibrate timing** (`#/calibrate`), pick a song, **Play**. _Debug overlay_ shows
    the monitor live. Hits flash on the "now" line in the lane they were classified into.
    _Watch auto-play demo_ plays a synthetic clapper through the same pipeline.
+5. More to play: rhythms for each mode (a gallop, off the beat, a waltz, call and response, a
+   heartbeat, disco, a shuffle, a rock beat with a fill, half-time), **Exercises** (single and
+   double strokes, a paradiddle and triplets with clap as the right hand and tap as the left; kick
+   and snare practice; steady quarters, eighths and syncopation for one clap), and
+   **🎲 Random groove**: eight bars with a main bar that repeats, a variation, a fill every four
+   bars and a closing hit. Choose a level, press _New song_ or type a seed to replay one. Rhythms
+   have one sound at a time: the microphone hears one hit per moment, so two drums never land together.
 
 ## Limitations (known)
+
+- **Strokes close behind a different drum or chord can be missed.** In simulation the analyzer
+  sometimes misses a strum that comes half a beat (about 0.3 s at 90 bpm) after a strum of another
+  chord, and a hi-hat that comes that soon after a kick. The random songs and the library avoid those
+  spots (no last stroke before a chord change; the faster grooves are slowed down), so your own
+  playing is the real test. Tell me if a real ukulele or drum shows the same. In the harder random
+  chord songs the simulated ukulele still has the occasional strum on a new chord missed (about
+  2 to 5 in a hundred), for some chords; I have not found why yet.
 
 - **Strumline chord recognition is simulation-verified only.** A synthetic ukulele (Karplus-Strong
   strings) is recognised in all twelve fingerings, in room noise and at 44.1 and 48 kHz, but a real
