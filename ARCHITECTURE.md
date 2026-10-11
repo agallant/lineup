@@ -197,6 +197,12 @@ and `gen-groove-<profile>-<level>-<seed>`, and `getSong` builds them.
 (melody, picked, chords, rhythm) and, for melodies, diatonic or chromatic (`isDiatonic`). The web
 app shows it in the song menus (easiest first) and the song info.
 
+`generate/variations.ts` (`varyChart`) makes a plainer or busier version of any chart: melodies merge
+quick notes and snap sharps/flats to the key (easier) or gain passing notes and turns (harder); chord
+songs drop sevenths and off-beat strokes or gain up-strokes; rhythms keep the beat or gain hits between
+beats; tempo moves a little. A seeded generator makes it repeatable; the screens seed it from the
+song id.
+
 `songs/notation.ts` has small text notations for writing songs by hand (`melodyChart`:
 `E4 D4:2 r:1`; `strumChart`: chords per bar and one bar of `D . D U` strokes; `pickedMelodyChart`:
 a melody plucked on single ukulele strings; `grooveChart`: one line per lane, `x` for a hit, one

@@ -90,6 +90,22 @@ diatonic instrument such as a tin whistle can play it in its own key) or **chrom
 or flats, which need half-holes or cross-fingerings on a whistle or recorder, and a chromatic
 instrument, a voice or a ukulele).
 
+## Easier and harder versions
+
+Next to the song menu, **Version** plays any song, exercise or random song as written, or as a
+plainer or busier version made from it (the same every time, so scores compare):
+
+- **Melodies** (voice, winds, plucked ukulele): _Easier_ replaces sharps and flats with scale notes
+  (so a chromatic song becomes diatonic), merges quick notes into longer ones and is 15% slower.
+  _Harder_ fills in a passing note where the melody leaps a third, gives some long notes a turn (the
+  note above, then back) and is 15% faster.
+- **Chord songs**: _Easier_ keeps the strokes on the beat, drops sevenths (G7 becomes G) and is 15% slower;
+  _Harder_ adds up-strokes where the same chord carries on, and is 10% faster.
+- **Rhythms**: _Easier_ keeps the hits on the beat and is 15% slower; _Harder_ adds hits between the
+  beats (never straight after a kick) at the same tempo.
+
+The difficulty in the song info changes with the version, and best scores are kept per version.
+
 ## Singline (voice) on the iPad
 
 `#/sing` (home screen -> Singline):

@@ -5,3 +5,4 @@ export * from './melody';
 export * from './chordsong';
 export * from './groove';
 export * from './rudiments';
+export * from './variations';

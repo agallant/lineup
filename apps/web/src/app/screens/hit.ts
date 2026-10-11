@@ -14,6 +14,7 @@ import {
   generateChordSong,
   generateGroove,
   generateMelody,
+  hashSeed,
   getProfile,
   grooveId,
   isSeed,
@@ -28,6 +29,10 @@ import {
   type InstrumentProfile,
   type MelodyLevel,
   type ScaleId,
+  VARIATIONS,
+  VARIATION_LABELS,
+  varyChart,
+  type Variation,
   type TimbreModel,
 } from '@lineup/core';
 import {
@@ -97,6 +102,7 @@ const setup = (c: HitScreenConfig) => `
     <div class="row">
       <label>Mode <select data-id="mode"></select></label>
       <label>Song <select data-id="song"></select></label>
+      <label>Version <select data-id="variation"></select></label>
     </div>
     <div class="row" data-id="challenge" hidden>
       <label data-id="challenge-scale-label">Scale <select data-id="challenge-scale"></select></label>
@@ -301,7 +307,9 @@ export const createHitScreen =
       scoreKey(
         profile.id,
         randomEntry()?.id ?? songSel.value,
-        c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}` : '',
+        `${c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}` : ''}${
+          settings.get().variation === 'original' ? '' : `|${settings.get().variation}`
+        }`,
       );
     const refreshSong = () => {
       // a random song has no fixed title to find in the menu: say which one this is
@@ -371,6 +379,15 @@ export const createHitScreen =
       profile = getProfile(modeSel.value);
       settings.update({ songs: { ...settings.get().songs, [`${c.keyPrefix}-mode`]: profile.id } });
       applyMode();
+    });
+    const variationSel = S<HTMLSelectElement>('variation');
+    for (const v of VARIATIONS) variationSel.add(new Option(VARIATION_LABELS[v], v));
+    variationSel.value = settings.get().variation;
+    variationSel.addEventListener('change', () => {
+      settings.update({ variation: variationSel.value as Variation });
+      refreshSong();
+      // an easier or harder version can use other chords: an open mic must listen for those
+      void reopenMicIfNeeded();
     });
     songSel.addEventListener('change', () => {
       settings.update({
@@ -865,9 +882,9 @@ export const createHitScreen =
     /** The chosen song at its own tempo. */
     const songChart = (): Chart => {
       const random = randomEntry();
-      if (random) return random.chart;
       const songs = songsFor(profile.id);
-      return (songs.find((s) => s.id === songSel.value) ?? songs[0]!).chart;
+      const entry = random ?? songs.find((s) => s.id === songSel.value) ?? songs[0]!;
+      return varyChart(entry.chart, settings.get().variation, hashSeed(entry.id));
     };
     /** The chart as played: at the chosen practice speed. */
     const selectedChart = (): Chart =>

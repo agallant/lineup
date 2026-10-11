@@ -130,6 +130,15 @@ describe('SettingsStore', () => {
     expect(s.get().keyShifts).toEqual({ wind: 2, voice: 5 });
   });
 
+  it('remembers an easier or harder version of songs, and ignores anything else', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get().variation).toBe('original');
+    expect(s.update({ variation: 'harder' }).variation).toBe('harder');
+    expect(new SettingsStore(mem).get().variation).toBe('harder');
+    expect(s.update({ variation: 'hardest' as never }).variation).toBe('original');
+  });
+
   it('keeps a valid random-melody spec and repairs a bad one', () => {
     const mem = new Map<string, string>();
     const store = {

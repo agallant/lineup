@@ -144,15 +144,23 @@ function rateRhythm(chart: Chart): number {
   );
 }
 
-/** Rates a chart; see {@link SongRating}. A chart with no notes rates as the easiest. */
-export function rateChart(chart: Chart): SongRating {
-  const kind = chart.notes.some((n) => n.expected?.chord !== undefined)
+/** What kind of chart this is, which decides what is rated and how it can be varied. */
+export function chartKind(chart: Chart): SongRating['kind'] {
+  return chart.notes.some((n) => n.expected?.chord !== undefined)
     ? 'chords'
     : chart.notes.some((n) => n.pitch !== undefined)
       ? 'melody'
       : chart.notes.some((n) => pitchOf(n) !== null)
         ? 'picked'
         : 'rhythm';
+}
+
+/** The pitch of a note: a sounded pitch, or the single string a plucked ukulele note names. */
+export const notePitch = pitchOf;
+
+/** Rates a chart; see {@link SongRating}. A chart with no notes rates as the easiest. */
+export function rateChart(chart: Chart): SongRating {
+  const kind = chartKind(chart);
   const pitches = chart.notes.flatMap((n) => {
     const p = pitchOf(n);
     return p === null ? [] : [p];
