@@ -191,3 +191,26 @@ describe('suggestNext', () => {
     expect(next.step.songId).toBe(wind.steps[1]!.songId);
   });
 });
+
+describe('suggestNext ranking', () => {
+  it('ignores songs outside a path and ranks by the latest play, not the best score’s time', () => {
+    const voice = COURSES.find((c) => c.profileId === 'voice')!;
+    const wind = COURSES.find((c) => c.profileId === 'wind')!;
+    const entry = (profile: string, songId: string, at: string, lastPlayed?: string) => ({
+      key: `${profile}|${songId}|normal`,
+      best: { score: 1, accuracy: 0.7, grade: 'B', at, ...(lastPlayed ? { lastPlayed } : {}) },
+    });
+    // a recent voice song that is in no path does not make a voice path "recent"
+    const outside = suggestNext([
+      entry('voice', 'sing-not-in-a-path', '2026-10-12T10:00:00Z'),
+      entry('wind', wind.steps[0]!.songId, '2026-10-10T10:00:00Z'),
+    ])!;
+    expect(outside.course.id).toBe(wind.id);
+    // the voice best was set long ago but replayed since
+    const replayed = suggestNext([
+      entry('voice', voice.steps[0]!.songId, '2026-10-01T10:00:00Z', '2026-10-12T10:00:00Z'),
+      entry('wind', wind.steps[0]!.songId, '2026-10-10T10:00:00Z'),
+    ])!;
+    expect(replayed.course.id).toBe(voice.id);
+  });
+});

@@ -7,6 +7,8 @@ export interface BestScore {
   accuracy: number;
   /** 0..1, the highest accuracy of any play of this key (a later high score may have been less accurate). */
   bestAccuracy?: number;
+  /** ISO time of the latest play of this key, whether or not it set a high score. */
+  lastPlayed?: string;
   grade: string;
   /** ISO time it was set. */
   at: string;
@@ -25,6 +27,9 @@ const MAX_SCORE = 10_000_000;
 export function scoreKey(profileId: string, songId: string, variant = ''): string {
   return [profileId, songId, variant].join('|');
 }
+
+/** The later of two ISO times (either may be missing). */
+const later = (a?: string, b?: string): string | undefined => (a && b ? (a > b ? a : b) : (a ?? b));
 
 function sanitize(raw: unknown): Map<string, BestScore> {
   const out = new Map<string, BestScore>();
@@ -52,6 +57,7 @@ function sanitize(raw: unknown): Map<string, BestScore> {
         bestAccuracy,
         grade: r['grade'],
         at: r['at'],
+        lastPlayed: typeof r['lastPlayed'] === 'string' ? r['lastPlayed'] : r['at'],
       });
     }
   }
@@ -82,7 +88,7 @@ export class ScoreStore {
   /** Files a result. `isNewBest` is true when it beat the previous best, or when there was none. */
   record(
     key: string,
-    result: Omit<BestScore, 'at' | 'bestAccuracy'>,
+    result: Omit<BestScore, 'at' | 'bestAccuracy' | 'lastPlayed'>,
     now = new Date(),
   ): { isNewBest: boolean; best: BestScore } {
     this.reconcile();
@@ -92,16 +98,16 @@ export class ScoreStore {
       previous?.accuracy ?? 0,
       result.accuracy,
     );
+    const lastPlayed = now.toISOString();
     if (previous && previous.score >= result.score) {
-      // not a new high score, but a more accurate play still counts toward stars
-      if (bestAccuracy > (previous.bestAccuracy ?? previous.accuracy)) {
-        this.value.set(key, { ...previous, bestAccuracy });
-        this.save();
-        return { isNewBest: false, best: { ...previous, bestAccuracy } };
-      }
-      return { isNewBest: false, best: previous };
+      // not a new high score, but a more accurate play still counts toward stars, and any play
+      // counts as the latest activity
+      const kept = { ...previous, bestAccuracy, lastPlayed };
+      this.value.set(key, kept);
+      this.save();
+      return { isNewBest: false, best: { ...kept } };
     }
-    const best: BestScore = { ...result, bestAccuracy, at: now.toISOString() };
+    const best: BestScore = { ...result, bestAccuracy, at: lastPlayed, lastPlayed };
     this.value.delete(key); // re-insert so the newest entry is last
     this.value.set(key, best);
     for (const old of [...this.value.keys()].slice(0, Math.max(0, this.value.size - MAX_ENTRIES))) {
@@ -131,9 +137,14 @@ export class ScoreStore {
         this.value.set(k, {
           ...stored,
           bestAccuracy: Math.max(stored.bestAccuracy ?? stored.accuracy, mine?.bestAccuracy ?? 0),
+          lastPlayed: later(stored.lastPlayed, mine?.lastPlayed) ?? stored.at,
         });
-      } else if ((stored.bestAccuracy ?? 0) > (mine.bestAccuracy ?? mine.accuracy)) {
-        this.value.set(k, { ...mine, bestAccuracy: stored.bestAccuracy as number });
+      } else {
+        const bestAccuracy = Math.max(stored.bestAccuracy ?? 0, mine.bestAccuracy ?? mine.accuracy);
+        const lastPlayed = later(stored.lastPlayed, mine.lastPlayed);
+        if (bestAccuracy > (mine.bestAccuracy ?? mine.accuracy) || lastPlayed !== mine.lastPlayed) {
+          this.value.set(k, { ...mine, bestAccuracy, ...(lastPlayed ? { lastPlayed } : {}) });
+        }
       }
     }
   }

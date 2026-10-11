@@ -191,4 +191,15 @@ describe('ScoreStore across tabs and bad data', () => {
     expect(careful.isNewBest).toBe(false);
     expect(s.best(KEY)).toMatchObject({ score: 800, bestAccuracy: 0.97 });
   });
+
+  it('notes the latest play of a key even when it is not a new best', () => {
+    const s = new ScoreStore(null);
+    s.record(KEY, { score: 800, accuracy: 0.8, grade: 'B' }, new Date('2026-10-01T10:00:00Z'));
+    s.record(KEY, { score: 100, accuracy: 0.5, grade: 'D' }, new Date('2026-10-05T10:00:00Z'));
+    expect(s.best(KEY)).toMatchObject({
+      score: 800,
+      at: '2026-10-01T10:00:00.000Z',
+      lastPlayed: '2026-10-05T10:00:00.000Z',
+    });
+  });
 });
