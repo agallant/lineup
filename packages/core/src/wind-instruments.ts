@@ -160,7 +160,7 @@ const WHISTLE: readonly (Fingering | null)[] = [
  * Recorder fingerings (Baroque / English system) by semitones above the tonic: thumb hole, holes 1
  * to 3, then holes 4 to 7, where 6 and 7 are the double holes (both halves covered; half covered
  * is "2"). The chromatic notes use the commonly taught forks and half-holes, which differ between
- * makes. The notes above the upper D, and the C-sharp below it, are left to the maker's chart.
+ * makes. The notes above the upper D are left to the maker's chart.
  */
 const RECORDER: readonly (Fingering | null)[] = [
   f('1 111 1111'), // 0 C
@@ -176,7 +176,7 @@ const RECORDER: readonly (Fingering | null)[] = [
   f('1 101 1000'), // 10 A#: hole 2 open, 3 and 4 covered
   f('1 100 0000'), // 11 B
   f('1 010 0000'), // 12 upper C: thumb and hole 2
-  null, // 13
+  f('1 011 0000'), // 13 upper C#: thumb, holes 2 and 3
   f('0 010 0000'), // 14 upper D: hole 2 alone
 ];
 

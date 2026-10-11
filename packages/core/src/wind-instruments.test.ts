@@ -141,8 +141,9 @@ describe('recorder fingerings (Baroque system)', () => {
     expect(fingeringFor(s, 78)!.holes).toBe('11110110'); // F#: hole 4 open
     expect(fingeringFor(s, 80)!.holes).toBe('11101111'); // G#: hole 3 open
     expect(fingeringFor(s, 82)!.holes).toBe('11011000'); // B-flat: hole 2 open
-    expect(fingeringFor(s, 85)).toBeNull(); // the C# above the upper D is left to the maker's chart
-    expect(windScale(s).filter((n) => n.chromatic)).toHaveLength(5);
+    expect(fingeringFor(s, 85)!.holes).toBe('10110000'); // upper C#: thumb, holes 2 and 3
+    expect(fingeringFor(s, 87)).toBeNull(); // above the upper D is left to the maker's chart
+    expect(windScale(s).filter((n) => n.chromatic)).toHaveLength(6);
   });
 });
 
@@ -193,7 +194,8 @@ describe("moving a song into the instrument's key", () => {
         );
         // these span more than a recorder's range; everything else fits everything
         const tooWide =
-          ['wind-greensleeves', 'wind-silent-night'].includes(id) && i.family === 'recorder';
+          ['wind-greensleeves', 'wind-silent-night', 'wind-fur-elise'].includes(id) &&
+          i.family === 'recorder';
         if (!tooWide) expect(fit.outOfRange, `${id} on ${i.id}`).toEqual([]);
         expect(fit.noFingering, `${id} on ${i.id}`).toEqual([]);
       }
@@ -207,8 +209,11 @@ describe('checkFit', () => {
     expect(checkFit([74, 75, 60, 100, 76], d)).toEqual({ outOfRange: [60, 100], noFingering: [] });
     expect(checkFit([72, 85, 86], inst('recorder-soprano'))).toEqual({
       outOfRange: [],
-      noFingering: [85],
+      noFingering: [],
     });
+    // a chart with a gap in it: the fingering is missing, not the range
+    const wide = { ...inst('recorder-soprano'), range: { low: 72, high: 90 } };
+    expect(checkFit([87, 91], wide)).toEqual({ outOfRange: [91], noFingering: [87] });
   });
 });
 

@@ -19,7 +19,10 @@ interface Tune {
   windNotes?: string;
 }
 
-/** Tunes for the voice and for wind instruments, easiest first. Every one is in C major. */
+/**
+ * Tunes for the voice and for wind instruments, roughly easiest first. Most are in C major; each
+ * names its own tonic, and a tune with sharps or flats outside its key is chromatic.
+ */
 const TUNES: readonly Tune[] = [
   {
     id: 'hot-cross-buns',
@@ -82,6 +85,30 @@ const TUNES: readonly Tune[] = [
       A4:2 A4 | C5:1.5 B4:.5 A4 | G4:1.5 A4:.5 G4 | E4:3 |
       D5:2 D5 | F5:1.5 D5:.5 B4 | C5:3 | E5:3 |
       C5 G4 E4 | G4:1.5 F4:.5 D4 | C4:3`,
+  },
+  {
+    id: 'joy-to-the-world',
+    title: 'Joy to the World (opening)',
+    artist: 'Handel / Mason',
+    bpm: 104,
+    tonic: 60,
+    notes: `C5 B4:.75 A4:.25 G4:1.5 F4:.5 | E4 D4 C4:2 | G4 A4:1.5 A4:.5 | B4:1.5 B4:.5 C5:2`,
+  },
+  {
+    id: 'minuet-in-g',
+    title: 'Minuet in G (opening)',
+    artist: 'Petzold',
+    bpm: 112,
+    tonic: 67,
+    notes: `D5 G4:.5 A4:.5 B4:.5 C5:.5 | D5 G4 G4 | E5 C5:.5 D5:.5 E5:.5 F#5:.5 | G5 G4 G4`,
+  },
+  {
+    id: 'fur-elise',
+    title: 'Für Elise (opening, chromatic)',
+    artist: 'Beethoven',
+    bpm: 112,
+    tonic: 60,
+    notes: `E5:.5 D#5:.5 E5:.5 D#5:.5 E5:.5 B4:.5 D5:.5 C5:.5 | A4:1.5 r:.5 C4:.5 E4:.5 A4:.5 | B4:1.5 r:.5 E4:.5 G#4:.5 B4:.5 | C5:1.5`,
   },
 ];
 
