@@ -131,7 +131,7 @@ export function strumChart(
       });
     });
   });
-  return chartFromBeats(meta, notes);
+  return chartFromBeats(beatsPerBar === 4 ? meta : { ...meta, beatsPerBar }, notes);
 }
 
 /**

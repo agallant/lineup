@@ -62,6 +62,8 @@ export interface ChartMeta {
    * diatonic instruments (a whistle in D, a recorder in F...) move the song into their own key.
    */
   tonic?: number;
+  /** Beats to the bar (3 for a waltz); 4 when absent. Lets backing music find the bar lines. */
+  beatsPerBar?: number;
 }
 
 /** A validated song chart: format version, metadata and time-ordered notes. */
@@ -79,6 +81,7 @@ const META_KEYS = [
   'audio',
   'instruments',
   'tonic',
+  'beatsPerBar',
 ] as const;
 const NOTE_KEYS = ['t', 'duration', 'lane', 'pitch', 'expected'] as const;
 const TOP_KEYS = ['version', 'meta', 'notes'] as const;
@@ -158,6 +161,11 @@ export function loadChart(input: unknown): Loaded<Chart> {
     const artist = readString(metaRaw, 'artist', 'meta', p, { maxLength: 80 });
     const audio = readString(metaRaw, 'audio', 'meta', p);
     const tonic = readNumber(metaRaw, 'tonic', 'meta', p, { min: 0, max: 127, integer: true });
+    const beatsPerBar = readNumber(metaRaw, 'beatsPerBar', 'meta', p, {
+      min: 1,
+      max: 12,
+      integer: true,
+    });
     let instruments: string[] | undefined;
     const instrumentsRaw = readArray(metaRaw, 'instruments', 'meta', p);
     if (instrumentsRaw) {
@@ -177,6 +185,7 @@ export function loadChart(input: unknown): Loaded<Chart> {
       if (audio !== undefined) meta.audio = audio;
       if (instruments !== undefined) meta.instruments = instruments;
       if (tonic !== undefined) meta.tonic = tonic;
+      if (beatsPerBar !== undefined) meta.beatsPerBar = beatsPerBar;
     }
   }
 

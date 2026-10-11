@@ -1,8 +1,18 @@
 import type { Chart, SongClock } from '@lineup/core';
+import { planAccompaniment, type AccompanimentLevel } from './accompaniment';
 
 export type BackingEvent =
   | { kind: 'click'; songTime: number; accent: boolean }
-  | { kind: 'tone'; songTime: number; duration: number; midi: number };
+  | {
+      kind: 'tone';
+      songTime: number;
+      duration: number;
+      midi: number;
+      /** Loudness from 0 to 1 relative to the guide tone (0.16 on the audio output); 1 when absent. */
+      level?: number;
+      /** Oscillator shape; a sine when absent. */
+      wave?: OscillatorType;
+    };
 
 export interface BackingOptions {
   /** A click on every beat (the count-in always clicks). */
@@ -29,7 +39,7 @@ export function planBacking(
   const end = chart.notes.reduce((m, n) => Math.max(m, n.t + n.duration), 0);
   if (metronome) {
     for (let b = 0, t = 0; t <= end + spb / 2; b++, t = b * spb) {
-      events.push({ kind: 'click', songTime: t, accent: b % 4 === 0 });
+      events.push({ kind: 'click', songTime: t, accent: b % (chart.meta.beatsPerBar ?? 4) === 0 });
     }
   }
   if (guideTone) {
@@ -85,10 +95,12 @@ export function playBacking(
       osc.stop(at + 0.06);
     } else {
       osc.frequency.value = midiToHz(e.midi);
+      if (e.wave) osc.type = e.wave;
+      const peak = 0.16 * (e.level ?? 1);
       const end = at + e.duration;
       gain.gain.setValueAtTime(0.0001, at);
-      gain.gain.linearRampToValueAtTime(0.16, at + 0.02);
-      gain.gain.setValueAtTime(0.16, Math.max(at + 0.02, end - 0.05));
+      gain.gain.linearRampToValueAtTime(peak, at + 0.02);
+      gain.gain.setValueAtTime(peak, Math.max(at + 0.02, end - 0.05));
       gain.gain.linearRampToValueAtTime(0.0001, end);
       osc.start(at);
       osc.stop(end + 0.02);
@@ -107,4 +119,16 @@ export function playBacking(
       nodes.length = 0;
     },
   };
+}
+
+/** Everything audible under a song: clicks, guide tones, and optionally accompaniment, in song-time order. */
+export function planAllBacking(
+  chart: Chart,
+  options: BackingOptions & { accompaniment?: AccompanimentLevel | 'off' },
+): BackingEvent[] {
+  const events = planBacking(chart, options);
+  if (options.accompaniment && options.accompaniment !== 'off') {
+    events.push(...planAccompaniment(chart, options.accompaniment));
+  }
+  return events.sort((a, b) => a.songTime - b.songTime);
 }

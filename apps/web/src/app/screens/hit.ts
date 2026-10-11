@@ -50,7 +50,7 @@ import { renderPerformanceAsync, type Performer } from '@lineup/sim';
 import { scheduleClicks } from '../audio';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
-import { planBacking, playBacking, type BackingHandle } from '../game/backing';
+import { planAllBacking, playBacking, type BackingHandle } from '../game/backing';
 import { BeatlineGame, HitMonitor, formatHits } from '../game/beatline-game';
 import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
@@ -765,7 +765,11 @@ export const createHitScreen =
       backing = playBacking(
         ctx,
         clock,
-        planBacking(chart, { metronome: opts.metronome, guideTone: false }),
+        planAllBacking(chart, {
+          metronome: opts.metronome,
+          guideTone: false,
+          accompaniment: settings.get().accompaniment,
+        }),
       );
       const renderer = createRenderer(profile.renderer);
       const endAt = chartEnd(chart) + 0.9;

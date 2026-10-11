@@ -1,6 +1,6 @@
-import { SongClock, chartFromBeats } from '@lineup/core';
+import { SongClock, chartFromBeats, getSong } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
-import { midiToHz, planBacking, playBacking, type AudioOut } from './backing';
+import { midiToHz, planAllBacking, planBacking, playBacking, type AudioOut } from './backing';
 
 const chart = chartFromBeats({ title: 'T', bpm: 120, countInBeats: 4 }, [
   { beat: 0, beats: 1, pitch: 60 },
@@ -126,5 +126,35 @@ describe('playBacking', () => {
     const before = stopped.length;
     handle.stop();
     expect(stopped.length).toBeGreaterThan(before);
+  });
+});
+
+describe('planAllBacking', () => {
+  const song = getSong('strum-fifties');
+  it('is just the clicks and tones when accompaniment is off', () => {
+    const opts = { metronome: true, guideTone: false };
+    expect(planAllBacking(song, { ...opts, accompaniment: 'off' })).toEqual(
+      planBacking(song, opts),
+    );
+    expect(planAllBacking(song, opts)).toEqual(planBacking(song, opts));
+  });
+
+  it('adds the accompaniment in time order, and accents the first beat of a waltz bar', () => {
+    const events = planAllBacking(song, {
+      metronome: true,
+      guideTone: false,
+      accompaniment: 'bass',
+    });
+    expect(events.length).toBeGreaterThan(
+      planBacking(song, { metronome: true, guideTone: false }).length,
+    );
+    expect(events.map((e) => e.songTime)).toEqual(
+      [...events.map((e) => e.songTime)].sort((a, b) => a - b),
+    );
+    const waltz = getSong('strum-waltz');
+    const accents = planBacking(waltz, { metronome: true, guideTone: false })
+      .filter((e) => e.kind === 'click' && e.accent && e.songTime >= 0)
+      .map((e) => Math.round((e.songTime / (60 / waltz.meta.bpm)) * 100) / 100);
+    expect(accents.slice(0, 3)).toEqual([0, 3, 6]);
   });
 });

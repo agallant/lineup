@@ -54,7 +54,7 @@ import { renderPerformanceAsync, type Performer } from '@lineup/sim';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
 import { escapeHtml, playTone } from '../audio';
-import { planBacking, playBacking, midiToHz, type BackingHandle } from '../game/backing';
+import { planAllBacking, playBacking, midiToHz, type BackingHandle } from '../game/backing';
 import { fingeringChartHtml, fingeringStripHtml } from '../game/fingering-view';
 import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
@@ -703,7 +703,11 @@ export const createPitchScreen =
       backing = playBacking(
         ctx,
         clock,
-        planBacking(chart, { metronome: opts.metronome, guideTone: opts.guideTone }),
+        planAllBacking(chart, {
+          metronome: opts.metronome,
+          guideTone: opts.guideTone,
+          accompaniment: settings.get().accompaniment,
+        }),
       );
       const renderer = createRenderer(profile.renderer);
       const endAt = chartEnd(chart) + 0.9;
