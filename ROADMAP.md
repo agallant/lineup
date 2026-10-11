@@ -17,13 +17,15 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
   tones, and a seeded melody generator (scale, level, seed) in the song menu.
 - **Chromatic fingerings** for whistles and recorders (half-holes and cross-fingerings), a chromatic
   scale exercise, and Greensleeves as the first song with sharps.
+- **A song library** written in small text notations: six easy tunes each for Singline and Windline,
+  five ukulele chord songs and three picked melodies, and clap, hand and drum-kit rhythms.
 - **Product**: best scores, song info, offline start, session logs you can copy, end-to-end tests in CI.
 
 ## Development goals
 
 ### 1. More to play, in every mode
 
-- **More songs** (all public domain or original): easy tunes first, a few harder ones. Melodies for
+- **More songs** (all public domain or original; a first library is in, more welcome): easy tunes first, a few harder ones. Melodies for
   Singline and Windline, chord songs and picking patterns for Strumline, rhythms for Beatline.
 - **Scales and exercises** for every mode: scales and modes, thirds, arpeggios, pentatonics, long
   tones and interval ladders for voice and winds; scales, arpeggios and picking patterns on the

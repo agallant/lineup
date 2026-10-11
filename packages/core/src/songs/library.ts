@@ -236,7 +236,7 @@ export const HAND_SONGS: Readonly<Record<string, Chart>> = {
 /** Beats for the drum kit: one drum at a time, like the tapped-out rock demo. */
 export const KIT_SONGS: Readonly<Record<string, Chart>> = {
   'kit-disco': grooveChart(
-    { title: 'Disco (kick on every beat)', artist: 'Lineup', bpm: 100, instruments: ['drum-kit'] },
+    { title: 'Disco (kick on every beat)', artist: 'Lineup', bpm: 88, instruments: ['drum-kit'] },
     {
       kick: 'x.x.x.x. | x.x.x.x. | x.x.x.x. | x.x.x...',
       snare: '........ | ........ | ........ | ......x.',

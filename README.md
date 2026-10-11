@@ -164,6 +164,9 @@ melody fits every whistle.
 Songs: a C major scale, Twinkle Twinkle, Ode to Joy (written in C, all within C5 to A5 before the
 move into your key), and the Greensleeves verse, which has sharps (F♯ and G♯): the chart shows how
 to finger them. It spans more than a recorder's range, so a recorder shows the range warning.
+There are six more easy tunes (Hot Cross Buns, Mary Had a Little Lamb, Row Row Row Your Boat,
+Frère Jacques, Jingle Bells, Silent Night) in the same list for Singline and Windline; Silent Night
+is also wider than a recorder's range.
 
 **About the fingerings:** they are the standard six-hole whistle fingerings (the same by scale degree
 in every key) and the Baroque (English) recorder fingerings. The chart lists **every semitone**.

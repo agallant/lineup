@@ -88,9 +88,10 @@ export function ukulelePluck(pitch: number): (number | null)[] {
 
 /** A melody for the ukulele: each note is plucked on one string at the fret that sounds it. */
 export function pickedMelodyChart(meta: Meta, text: string): Chart {
-  const notes = melodyNotes(text).map(({ beats: _beats, pitch, ...rest }) => ({
-    ...rest,
-    expected: { frets: ukulelePluck(pitch!) },
+  // a plucked note has no length: the string rings on its own
+  const notes: BeatNote[] = melodyNotes(text).map((n) => ({
+    beat: n.beat,
+    expected: { frets: ukulelePluck(n.pitch!) },
   }));
   return chartFromBeats(meta, notes);
 }
