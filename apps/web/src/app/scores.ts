@@ -102,12 +102,21 @@ export class ScoreStore {
     if (previous && previous.score >= result.score) {
       // not a new high score, but a more accurate play still counts toward stars, and any play
       // counts as the latest activity
-      const kept = { ...previous, bestAccuracy, lastPlayed };
+      const kept = {
+        ...previous,
+        bestAccuracy,
+        lastPlayed: later(previous.lastPlayed, lastPlayed) ?? lastPlayed,
+      };
       this.value.set(key, kept);
       this.save();
       return { isNewBest: false, best: { ...kept } };
     }
-    const best: BestScore = { ...result, bestAccuracy, at: lastPlayed, lastPlayed };
+    const best: BestScore = {
+      ...result,
+      bestAccuracy,
+      at: lastPlayed,
+      lastPlayed: later(previous?.lastPlayed, lastPlayed) ?? lastPlayed,
+    };
     this.value.delete(key); // re-insert so the newest entry is last
     this.value.set(key, best);
     for (const old of [...this.value.keys()].slice(0, Math.max(0, this.value.size - MAX_ENTRIES))) {
