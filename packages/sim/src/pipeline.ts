@@ -35,6 +35,10 @@ class ManualTime implements TimeSource {
   currentTime = 0;
 }
 
+/**
+ * Everything runPipeline needs: the rendered audio, chart, profile, judge and how analyzer
+ * messages become judge inputs. Times are seconds.
+ */
 export interface PipelineConfig<I> {
   performance: RenderedPerformance;
   chart: Chart;
@@ -59,6 +63,10 @@ export interface PipelineConfig<I> {
   scoring?: Partial<ScoreConfig>;
 }
 
+/**
+ * What a pipeline run produced: judgments, final score, judge inputs (song time) and raw
+ * analyzer messages.
+ */
 export interface PipelineResult<I> {
   judgments: readonly Judgment[];
   score: ScoreState;
@@ -130,6 +138,7 @@ export function runPipeline<I>(config: PipelineConfig<I>): PipelineResult<I> {
   return { judgments: judge.judgments, score: session.score, inputs, messages };
 }
 
+/** Options for runDiscrete and runContinuous. Latency and delays are in seconds. */
 export interface DiscreteRunOptions {
   /** Calibrated latency offset handed to the judge, seconds. */
   latencyOffset: number;
@@ -142,6 +151,10 @@ export interface DiscreteRunOptions {
   timbreModel?: TimbreModel | null;
 }
 
+/**
+ * Pipeline result for the discrete game, plus the count of events that matched no note and the
+ * timbre classifications.
+ */
 export interface DiscreteRunResult extends PipelineResult<InputEvent> {
   strays: number;
   /** One per percussion hit that had features, in order (null id = rejected as unknown). */
@@ -200,6 +213,7 @@ export function runDiscrete(
   return { ...result, strays: judge.strays, classifications };
 }
 
+/** Pipeline result for the continuous game, plus the judge so tests can inspect it. */
 export interface ContinuousRunResult extends PipelineResult<PitchFrame> {
   judge: ContinuousJudge;
 }

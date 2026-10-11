@@ -40,6 +40,7 @@ export function drawWaveform(
   g.stroke();
 }
 
+/** Level at the left edge of the meter, dBFS. */
 export const METER_FLOOR_DB = -72;
 
 /** Horizontal level meter: RMS bar plus a peak tick, -72..0 dBFS. */

@@ -8,8 +8,13 @@ export const DISABLED_PROCESSING = [
   'autoGainControl',
 ] as const;
 
+/** One of the browser audio-processing features in DISABLED_PROCESSING. */
 export type ProcessingKey = (typeof DISABLED_PROCESSING)[number];
 
+/**
+ * getUserMedia audio constraints with voice processing off, optionally pinned to one input
+ * device.
+ */
 export function audioConstraints(deviceId?: string): MediaTrackConstraints {
   const c: MediaTrackConstraints = {
     echoCancellation: false,
@@ -27,12 +32,20 @@ export function audioConstraints(deviceId?: string): MediaTrackConstraints {
  */
 export type ConstraintStatus = 'off' | 'on' | 'unreported';
 
+/**
+ * Whether one processing feature is supported and how the browser reports it after opening the
+ * mic.
+ */
 export interface ConstraintRow {
   key: ProcessingKey;
   supported: boolean;
   status: ConstraintStatus;
 }
 
+/**
+ * Reports, for each processing feature we need off, whether the browser supports it and
+ * whether it is actually off.
+ */
 export function constraintReport(
   settings: MediaTrackSettings,
   supported: MediaTrackSupportedConstraints,

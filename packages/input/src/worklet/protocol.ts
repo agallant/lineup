@@ -2,11 +2,13 @@
 // anything that touches worklet-only globals.
 import type { InputAnalyzerOptions } from '../dsp/analyzer';
 
+/** Name the input AudioWorklet processor is registered under. */
 export const INPUT_PROCESSOR_NAME = 'lineup-input';
 
 /** Which input channel to analyze. 'mix' averages all channels. */
 export type ChannelSelection = number | 'mix';
 
+/** Options passed to the input worklet when it is created. */
 export interface InputProcessorOptions {
   channel?: ChannelSelection;
   /** Detector settings (from the instrument profile). Plain data, so it survives structured clone. */

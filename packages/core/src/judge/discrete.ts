@@ -3,6 +3,7 @@ import { deviationCents } from '../notes';
 import type { InputEvent } from '../types';
 import type { Grade, Judge, Judgment, MissReason } from './types';
 
+/** Settings for onset-timing judging. Windows and offsets are in seconds. */
 export interface DiscreteJudgeConfig {
   /** Half-width of the "perfect" window, seconds. */
   perfectWindow: number;
@@ -34,6 +35,10 @@ export interface DiscreteJudgeConfig {
   settle: number;
 }
 
+/**
+ * Defaults for the discrete judge: 45 ms perfect, 110 ms good, no lane, chord or pitch
+ * matching.
+ */
 export const DEFAULT_DISCRETE_CONFIG: DiscreteJudgeConfig = {
   perfectWindow: 0.045,
   goodWindow: 0.11,

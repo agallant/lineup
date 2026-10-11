@@ -7,6 +7,7 @@
  * lead or lag, which is exactly what we want to cancel.
  */
 
+/** Tuning for estimateOffset. All times are in seconds. */
 export interface OffsetOptions {
   /** Ignore this many clicks at the start (people haven't locked in yet). */
   skipFirst?: number;
@@ -22,8 +23,13 @@ export interface OffsetOptions {
   prior?: number;
 }
 
+/**
+ * How trustworthy a measured offset is, judged from how many responses were kept and how tight
+ * they are.
+ */
 export type CalibrationQuality = 'good' | 'ok' | 'poor';
 
+/** A successful latency measurement. Times are in seconds. */
 export interface OffsetEstimate {
   ok: true;
   /** Seconds. Positive = responses land after the click (judge subtracts it). */
@@ -37,6 +43,7 @@ export interface OffsetEstimate {
   quality: CalibrationQuality;
 }
 
+/** A failed latency measurement, with a message the player can act on. */
 export interface OffsetFailure {
   ok: false;
   reason: string;
@@ -50,6 +57,10 @@ function median(values: readonly number[]): number {
   return s.length % 2 ? s[mid]! : (s[mid - 1]! + s[mid]!) / 2;
 }
 
+/**
+ * Median offset (seconds) between click times and the player's responses, with outlier
+ * rejection and a quality grade. Clicks and responses are seconds on the same clock.
+ */
 export function estimateOffset(
   clicks: readonly number[],
   responses: readonly number[],
@@ -136,6 +147,7 @@ export interface KeyValueStore {
   removeItem(key: string): void;
 }
 
+/** A saved calibration result for one device, stored as JSON. */
 export interface CalibrationRecord {
   version: 1;
   /** Milliseconds. */
@@ -147,6 +159,7 @@ export interface CalibrationRecord {
   quality: CalibrationQuality;
 }
 
+/** Converts a seconds-based estimate into a storable record in milliseconds, rounded to 0.1 ms. */
 export function recordFromEstimate(e: OffsetEstimate, now: Date = new Date()): CalibrationRecord {
   return {
     version: 1,

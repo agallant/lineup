@@ -14,6 +14,10 @@ import {
 /** Where the input AudioWorklet module is served from (the service worker keeps a copy for offline use). */
 export const INPUT_WORKLET_URL: string = workletUrl;
 
+/**
+ * An open microphone: its audio context, stream and track, with the worklet's messages
+ * delivered to onMessage.
+ */
 export interface MicSession extends InputAdapter {
   readonly kind: 'mic';
   readonly ctx: AudioContext;
@@ -27,6 +31,7 @@ export interface MicSession extends InputAdapter {
   close(): Promise<void>;
 }
 
+/** True when the browser can capture a mic and run AudioWorklets. */
 export function micSupported(): boolean {
   return !!navigator.mediaDevices?.getUserMedia && workletSupported();
 }
@@ -102,6 +107,7 @@ export async function openMic(
   }
 }
 
+/** The audio input devices the browser currently lists. */
 export async function listAudioInputs(): Promise<MediaDeviceInfo[]> {
   const devices = await navigator.mediaDevices.enumerateDevices();
   return devices.filter((d) => d.kind === 'audioinput');

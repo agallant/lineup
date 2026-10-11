@@ -42,6 +42,10 @@ export function ukuleleNotePerformer(ring = 0.45): Performer {
   };
 }
 
+/**
+ * Options for the synthetic singer: pitch shifts in semitones, detune in cents, and per-note
+ * errors.
+ */
 export interface VoicePerformerOptions extends MelodyOptions {
   /** Semitones added to every note (-12: a man singing a woman's key an octave down). */
   octaveShift?: number;
@@ -72,6 +76,10 @@ export function voicePerformer({
   };
 }
 
+/**
+ * Options for the synthetic wind player: pitch shifts in semitones, detune in cents, and per-
+ * note errors.
+ */
 export interface WindPerformerOptions extends WindOptions {
   /** Semitones added to every note (12: the player overblew into the next octave). */
   octaveShift?: number;
@@ -105,6 +113,7 @@ export function windPerformer({
 /** A synthetic percussion sound (clap, tap, kick...), as exported by @lineup/testkit. */
 export type HitSound = (sampleRate: number, options: HitOptions) => Float32Array;
 
+/** Options for the synthetic percussionist: hit loudness and per-hit variation. */
 export interface PercussionPerformerOptions {
   /** Hit loudness: a multiplier on each sound's natural level, or a function of the note index. */
   gain?: number | ((index: number) => number);

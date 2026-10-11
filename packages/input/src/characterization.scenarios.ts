@@ -8,6 +8,7 @@ import { midiToFrequency, nearestOpenString, noteFromFrequency } from '@lineup/c
 import { InputAnalyzer, OnsetDetector, PitchTracker } from './index';
 import { blocks, karplusStrong, mixAt, pluck, silence, sine, whiteNoise } from '@lineup/testkit';
 
+/** Sample rate used by the characterization scenarios, Hz. */
 export const SR = 48000;
 const GCEA_MIDI = [67, 60, 64, 69];
 const round = (v: number, digits: number) => Number(v.toFixed(digits));
@@ -208,6 +209,10 @@ function notes() {
   });
 }
 
+/**
+ * Runs every scenario and returns the recorded results, for comparing against the stored
+ * snapshot.
+ */
 export function recordAll() {
   return {
     pitchStrings: pitchStrings(),

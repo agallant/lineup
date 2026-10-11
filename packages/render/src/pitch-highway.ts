@@ -10,6 +10,7 @@ import {
 import { PercussionLanesRenderer } from './percussion-lanes';
 import { StringLanesRenderer } from './string-lanes';
 
+/** Pixel geometry of the pitch highway: now line, time scale, visible MIDI range and plot area. */
 export interface HighwayLayout {
   /** x of the "now" line. */
   nowX: number;
@@ -29,6 +30,10 @@ export interface HighwayLayout {
   right: number;
 }
 
+/**
+ * Layout overrides for the pitch highway. Look-ahead is in seconds, margin and span in
+ * semitones, gutter in px.
+ */
 export interface LayoutOptions {
   lookAhead?: number;
   /** Fraction of the plot width at which the now line sits. */
@@ -66,6 +71,10 @@ export function pitchRangeFor(
   return { low, high };
 }
 
+/**
+ * Computes the pitch-highway geometry for a canvas size, fitting the visible pitch range to
+ * the chart's notes.
+ */
 export function computeLayout(
   size: RenderSize,
   notes: readonly ChartNote[],
@@ -91,6 +100,7 @@ export function computeLayout(
   };
 }
 
+/** x in px of a song time t (seconds) when the song clock reads now. */
 export const timeToX = (l: HighwayLayout, t: number, now: number): number =>
   l.nowX + (t - now) * l.pxPerSec;
 
@@ -98,11 +108,13 @@ export const timeToX = (l: HighwayLayout, t: number, now: number): number =>
 export const midiToY = (l: HighwayLayout, midi: number): number =>
   l.bottom - ((midi - l.lowMidi) / (l.highMidi - l.lowMidi)) * (l.bottom - l.top);
 
+/** Height in px of one semitone in the plot. */
 export const pxPerSemitone = (l: HighwayLayout): number =>
   (l.bottom - l.top) / (l.highMidi - l.lowMidi);
 
 const NATURAL = new Set([0, 2, 4, 5, 7, 9, 11]);
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+/** Scientific pitch name for a MIDI note, e.g. 69 gives "A4". */
 export const midiName = (midi: number): string =>
   `${NAMES[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
 

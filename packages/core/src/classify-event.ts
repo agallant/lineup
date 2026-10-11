@@ -2,6 +2,7 @@ import type { InstrumentProfile } from './profile';
 import { classify, laneForClass, type Classification, type TimbreModel } from './timbre';
 import type { InputEvent } from './types';
 
+/** An input event paired with the timbre classification that was computed for it. */
 export interface ClassifiedEvent {
   event: InputEvent;
   /** Null when the event had no usable features. */

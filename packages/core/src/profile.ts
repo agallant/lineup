@@ -13,19 +13,27 @@ import {
   type Loaded,
 } from './validate';
 
+/** The four game modes, one per kind of instrument input. */
 export const MODES = ['strumline', 'singline', 'windline', 'beatline'] as const;
+/** One of the game modes in MODES. */
 export type Mode = (typeof MODES)[number];
 
 /** What the detectors should produce for this instrument. */
 export const INPUT_KINDS = ['pitch', 'onset', 'percussion', 'strum'] as const;
+/** One of the detector kinds in INPUT_KINDS. */
 export type InputKind = (typeof INPUT_KINDS)[number];
 
+/** The highway renderers a profile can ask for. */
 export const RENDERER_KINDS = ['lane-highway', 'pitch-highway', 'percussion-lanes'] as const;
+/** One of the renderer kinds in RENDERER_KINDS. */
 export type RendererKind = (typeof RENDERER_KINDS)[number];
 
+/** How hits are judged: discrete notes (timing and match) or continuous pitch tracking. */
 export const JUDGE_STRATEGIES = ['discrete', 'continuous'] as const;
+/** One of the judging strategies in JUDGE_STRATEGIES. */
 export type JudgeStrategy = (typeof JUDGE_STRATEGIES)[number];
 
+/** A display lane on the highway, e.g. one percussion sound or one string. */
 export interface Lane {
   id: string;
   label: string;
@@ -43,12 +51,14 @@ export interface TimbreClass {
   prompt: string;
 }
 
+/** One open string of a fretted instrument. */
 export interface TuningString {
   label: string;
   /** Concert pitch of the open string, MIDI. */
   midi: number;
 }
 
+/** Onset (attack) detector tuning. Times are in milliseconds, levels in dB. */
 export interface OnsetSettings {
   /** Required rise (dB) over the quietest recent frame. */
   riseDb: number;
@@ -57,6 +67,7 @@ export interface OnsetSettings {
   minLevelDb: number;
 }
 
+/** Per-instrument settings for the audio detectors (pitch window, frequency range, onsets). */
 export interface DetectorSettings {
   /** Pitch analysis window in samples (power of two). */
   windowSize: number;
@@ -78,6 +89,7 @@ export interface DetectorSettings {
   onset: OnsetSettings;
 }
 
+/** How continuous pitch judging scores a sustained note. */
 export interface PitchJudgeSettings {
   /** A frame counts as correct within this many cents of the target. */
   toleranceCents: number;
@@ -91,6 +103,7 @@ export interface PitchJudgeSettings {
   coveragePerfect: number;
 }
 
+/** How a profile's hits are judged: strategy, timing windows (ms) and what must match. */
 export interface JudgmentSettings {
   strategy: JudgeStrategy;
   timing: { perfectMs: number; goodMs: number };
@@ -105,6 +118,10 @@ export interface JudgmentSettings {
   };
 }
 
+/**
+ * A validated instrument definition: its mode, input detector, renderer, tuning and judging
+ * rules. Build one with loadProfile.
+ */
 export interface InstrumentProfile {
   id: string;
   name: string;
@@ -140,6 +157,10 @@ const PROFILE_KEYS = [
   'judgment',
 ] as const;
 
+/**
+ * Validates untrusted profile JSON. Returns the typed profile with any warnings, or readable
+ * errors.
+ */
 export function loadProfile(input: unknown): Loaded<InstrumentProfile> {
   if (!isRecord(input)) {
     return { ok: false, errors: [`a profile must be an object (got ${describeValue(input)})`] };
@@ -540,6 +561,7 @@ export function laneForTimbre(profile: InstrumentProfile, timbre: string): Lane 
   return profile.lanes?.find((l) => l.timbre === timbre);
 }
 
+/** A string and fret on a fretted instrument. */
 export interface TabPosition {
   /** Index into profile.tuning.strings. */
   stringIndex: number;

@@ -10,6 +10,7 @@ import {
 } from './timbre';
 import type { InputEvent } from './types';
 
+/** What happened to one onset offered to an EnrollmentSession. */
 export type EnrollOutcome =
   | 'accepted'
   /** Two onsets inside `doubleWindow`: one physical hit, counted once. */
@@ -21,6 +22,7 @@ export type EnrollOutcome =
   | 'no-features'
   | 'done';
 
+/** Thresholds for accepting enrollment hits. Times are seconds, levels dBFS or dB. */
 export interface EnrollmentOptions {
   /** Hits to collect per class. */
   perClass: number;
@@ -34,6 +36,7 @@ export interface EnrollmentOptions {
   outlierDistance: number;
 }
 
+/** Default enrollment: 6 hits per class, 0.15 s double-hit window, -45 dBFS floor. */
 export const DEFAULT_ENROLLMENT: EnrollmentOptions = {
   perClass: 6,
   doubleWindow: 0.15,

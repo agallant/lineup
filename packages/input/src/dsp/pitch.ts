@@ -1,6 +1,7 @@
 import { PitchDetector } from 'pitchy';
 import { rms, toDb } from './level';
 
+/** Tuning for PitchTracker. Window and hop are in samples, frequencies in Hz and levels in dBFS. */
 export interface PitchTrackerOptions {
   /** Analysis window in samples (power of two). */
   windowSize?: number;
@@ -22,6 +23,7 @@ export interface PitchTrackerOptions {
   foldIntoRange?: boolean;
 }
 
+/** One pitch reading from PitchTracker for a window of the input stream. */
 export interface PitchEstimate {
   /** Sample index (on the input stream) of the centre of the window. */
   centerFrame: number;

@@ -2,6 +2,7 @@
 export type ScaleId =
   'major' | 'minor' | 'dorian' | 'mixolydian' | 'major-pentatonic' | 'minor-pentatonic';
 
+/** A scale: its display label and semitone steps above the root. */
 export interface ScaleDef {
   id: ScaleId;
   label: string;
@@ -15,6 +16,7 @@ export interface ScaleDef {
   rootFromParent: number;
 }
 
+/** The supported scales, keyed by id. */
 export const SCALES: Readonly<Record<ScaleId, ScaleDef>> = {
   major: { id: 'major', label: 'Major scale', steps: [0, 2, 4, 5, 7, 9, 11], rootFromParent: 0 },
   minor: {

@@ -3,6 +3,7 @@ import type { SongClock } from './clock';
 import type { Grade, Judge, Judgment } from './judge/types';
 import { Scoreboard, type ScoreConfig, type ScoreState } from './scoring';
 
+/** Where a chart note stands: its grade once judged, otherwise pending. */
 export type NoteStatus = Grade | 'pending';
 
 /**

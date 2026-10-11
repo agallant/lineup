@@ -18,6 +18,7 @@ export const TIMBRE_FEATURES = [
   'zcr',
   'flatness',
 ] as const;
+/** One of the feature names in TIMBRE_FEATURES. */
 export type TimbreFeature = (typeof TIMBRE_FEATURES)[number];
 
 /** Smallest spread per feature (in transformed units), so near-identical enrollments do not make the model brittle. */
@@ -44,6 +45,7 @@ export function featureVector(
   return out;
 }
 
+/** The learned model for one timbre class: its mean feature vector and enrolled radius. */
 export interface TimbreClassModel {
   id: string;
   mean: number[];
@@ -53,6 +55,7 @@ export interface TimbreClassModel {
   radius: number;
 }
 
+/** A trained set of timbre classes with the shared per-feature standardization scale. */
 export interface TimbreModel {
   version: 1;
   classes: TimbreClassModel[];
@@ -60,6 +63,10 @@ export interface TimbreModel {
   scale: number[];
 }
 
+/**
+ * The result of classifying one hit: the accepted class (or null for unknown) and how
+ * confident that is.
+ */
 export interface Classification {
   /** Best class, or null when the hit is too far from every class. */
   id: string | null;
@@ -71,6 +78,7 @@ export interface Classification {
   margin: number;
 }
 
+/** One enrollment hit: its raw features and the class the player was asked to make. */
 export interface TrainingSample {
   classId: string;
   features: Readonly<Record<string, number>>;
@@ -90,6 +98,10 @@ function distance(a: readonly number[], b: readonly number[], scale: readonly nu
   return Math.sqrt(sum / a.length);
 }
 
+/**
+ * Builds a model from enrollment hits (class means plus a shared, floored per-feature scale).
+ * Throws if no hit has usable features.
+ */
 export function trainTimbreModel(samples: readonly TrainingSample[]): TimbreModel {
   const byClass = new Map<string, number[][]>();
   for (const s of samples) {
@@ -126,6 +138,10 @@ export function trainTimbreModel(samples: readonly TrainingSample[]): TimbreMode
   return { version: 1, classes, scale };
 }
 
+/**
+ * Assigns a hit to the nearest class, or to null (unknown) if it is far outside every class.
+ * Returns null if the hit cannot be classified.
+ */
 export function classify(
   model: TimbreModel,
   features: Readonly<Record<string, number>> | undefined,
@@ -161,6 +177,7 @@ export function classSeparation(model: TimbreModel, a: string, b: string): numbe
   return distance(ca.mean, cb.mean, model.scale);
 }
 
+/** Minimum classSeparation for two classes to be reliably told apart. */
 export const MIN_SEPARATION = 2.5;
 
 // ---- validation / persistence ------------------------------------------------
