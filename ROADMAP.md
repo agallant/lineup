@@ -77,7 +77,8 @@ real instrument to judge is listed again under "Waiting on real-device testing".
 
 ### 6. Quality and plumbing
 
-- Accessibility audit (VoiceOver, contrast, touch targets).
+- Accessibility: audited by reading (labels on every control, 44px touch targets, visible focus,
+  contrast, reduced motion); a real VoiceOver pass on the iPad is still to do.
 - Docstring coverage (CodeRabbit reports about 61% against an 80% target).
 
 ### Waiting on real-device testing
