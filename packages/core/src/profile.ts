@@ -566,3 +566,19 @@ export function tabForPitch(
   });
   return best;
 }
+
+/**
+ * The profile with its pitch judging set to accept the right note in any octave (or strictly the
+ * written octave). A profile with no pitch judging is returned unchanged.
+ */
+export function withOctaveForgiving(
+  profile: InstrumentProfile,
+  forgiving: boolean,
+): InstrumentProfile {
+  const pitch = profile.judgment.pitch;
+  if (!pitch || pitch.octaveForgiving === forgiving) return profile;
+  return {
+    ...profile,
+    judgment: { ...profile.judgment, pitch: { ...pitch, octaveForgiving: forgiving } },
+  };
+}

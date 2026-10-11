@@ -65,7 +65,9 @@ in song time and subtract the calibrated latency offset themselves.
   above the tonic per family (chromatic notes included: half-holes, written `2`, and
   cross-fingerings), so one chart serves every key of whistle; `shiftForInstrument` uses the chart's
   `meta.tonic` to move a song into the instrument's key, `fingeringFor` / `windScale` give the holes,
-  and `checkFit` names notes out of range or with no fingering. The app draws them in
+  and `checkFit` names notes out of range or with no fingering. `bestOctaveShift` finds the octave that
+  suits an instrument's range, and `withOctaveForgiving` (profile.ts) turns on octave-free judging: the
+  Windline screen uses both when its Octave option is "any octave" (the default). The app draws them in
   `game/fingering-view.ts` (chart rows, and the now/next strip while playing).
 - **Judge** (`judge/`): a pure state machine behind one interface
   (`feed`, `advance`, `finish`, `judgments`, `judgmentFor`). `DiscreteJudge` does

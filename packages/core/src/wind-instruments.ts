@@ -210,6 +210,30 @@ export function fingeringFor(instrument: WindInstrument, midi: number): Fingerin
   return (Number.isInteger(steps) && TABLES[instrument.family][steps]) || null;
 }
 
+/**
+ * The whole octaves (in semitones, a multiple of 12) to move a song's pitch span so it sits best in
+ * an instrument's range: the one that leaves the fewest semitones outside it, the smallest move
+ * when several are equal. A player may play a song an octave off the chart (a low whistle, an alto
+ * recorder, a second octave), so a range check should judge the octave that suits the instrument.
+ */
+export function bestOctaveShift(
+  span: { low: number; high: number },
+  range: { low: number; high: number },
+): number {
+  let best = 0;
+  let bestCost = Infinity;
+  for (const k of [0, -1, 1, -2, 2, -3, 3, -4, 4]) {
+    const move = 12 * k;
+    const cost =
+      Math.max(0, range.low - (span.low + move)) + Math.max(0, span.high + move - range.high);
+    if (cost < bestCost) {
+      best = move;
+      bestCost = cost;
+    }
+  }
+  return best;
+}
+
 /** What is wrong with playing a song's notes on this instrument; empty arrays when it fits. */
 export interface Fit {
   /** Notes (MIDI) below or above the instrument's range. */
