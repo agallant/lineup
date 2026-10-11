@@ -30,6 +30,8 @@ export interface Settings {
   guideTone: boolean;
   /** Play a click on every beat. */
   metronome: boolean;
+  /** Singline and Windline: hear the song played first, then play it back. */
+  listenFirst: boolean;
   /** Minutes of practice to aim for each week (0 for no goal). */
   goalMinutes: number;
   /** How large the page's text is. */
@@ -72,6 +74,7 @@ export const DEFAULT_SETTINGS: Settings = {
   guideTone: true,
   metronome: true,
   effects: true,
+  listenFirst: false,
   goalMinutes: 0,
   textSize: 'normal',
   accompaniment: 'off',
@@ -169,6 +172,8 @@ function sanitize(raw: unknown): Settings {
     debug: typeof r['debug'] === 'boolean' ? r['debug'] : DEFAULT_SETTINGS.debug,
     guideTone: typeof r['guideTone'] === 'boolean' ? r['guideTone'] : DEFAULT_SETTINGS.guideTone,
     metronome: typeof r['metronome'] === 'boolean' ? r['metronome'] : DEFAULT_SETTINGS.metronome,
+    listenFirst:
+      typeof r['listenFirst'] === 'boolean' ? r['listenFirst'] : DEFAULT_SETTINGS.listenFirst,
     goalMinutes: GOAL_MINUTES.includes(r['goalMinutes'] as number)
       ? (r['goalMinutes'] as number)
       : DEFAULT_SETTINGS.goalMinutes,

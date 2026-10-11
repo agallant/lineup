@@ -139,6 +139,15 @@ describe('SettingsStore', () => {
     expect(s.update({ variation: 'hardest' as never }).variation).toBe('original');
   });
 
+  it('remembers listen-first, and ignores anything else', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get().listenFirst).toBe(false);
+    expect(s.update({ listenFirst: true }).listenFirst).toBe(true);
+    expect(new SettingsStore(mem).get().listenFirst).toBe(true);
+    expect(s.update({ listenFirst: 'yes' as never }).listenFirst).toBe(false);
+  });
+
   it('remembers the weekly goal and text size, and ignores anything else', () => {
     const mem = new Mem();
     const s = new SettingsStore(mem);

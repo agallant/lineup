@@ -119,6 +119,8 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   and streak on top.
 - **Today's challenge**: one random song per game per day (the same for everyone, no network: it
   comes from the date), on the home menu. Reach 60% for +50 XP, once per game per day.
+- **Listen first** (Singline, Windline): the song is played once as tones, then you play it back
+  from memory (best with a short Part).
 - **Part**: next to Version, practise one phrase of a song (four bars, two in a short song) on its own;
   best scores are kept per part.
 - **Tuner** (`#/tuner`, under Set up): ukulele (G C E A), low-G and baritone tunings or any note, with

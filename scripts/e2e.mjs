@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|listen|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -739,6 +739,21 @@ const scenarios = {
         );
       });
     }
+  },
+
+  async listen() {
+    console.log('\n# Listen first, then play it back: the demo plays the echo to a perfect score');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/sing');
+      await page.selectOption('[data-id=song]', 'sing-hot-cross-buns');
+      await page.check('[data-id=listen]');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(miss === 0 && perfect >= 10, `listen first: ${perfect} perfect, ${miss} missed`);
+    });
   },
 
   async tuner() {

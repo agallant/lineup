@@ -37,6 +37,7 @@ import {
   VARIATIONS,
   VARIATION_LABELS,
   applyPart,
+  echoChart,
   songParts,
   varyChart,
   type Variation,
@@ -56,7 +57,14 @@ import { renderPerformanceAsync, type Performer } from '@lineup/sim';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
 import { escapeHtml, playTone } from '../audio';
-import { planAllBacking, playBacking, midiToHz, type BackingHandle } from '../game/backing';
+import {
+  planAllBacking,
+  planBacking,
+  playBacking,
+  type BackingEvent,
+  midiToHz,
+  type BackingHandle,
+} from '../game/backing';
 import { fingeringChartHtml, fingeringStripHtml } from '../game/fingering-view';
 import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
@@ -140,6 +148,7 @@ const setup = (c: PitchScreenConfig) => `
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
       <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
+      <label class="check"><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
       <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
     </div>
@@ -417,6 +426,12 @@ export const createPitchScreen =
       partIdx = Number(partSel.value);
       refreshRange();
     });
+    const listenBox = S<HTMLInputElement>('listen');
+    listenBox.checked = settings.get().listenFirst;
+    listenBox.addEventListener('change', () => {
+      settings.update({ listenFirst: listenBox.checked });
+      refreshRange();
+    });
     /** The chosen song, version and part. */
     const variedSong = (): Chart => applyPart(wholeSong(), partIdx);
 
@@ -445,7 +460,7 @@ export const createPitchScreen =
             : settings.get().difficulty
         }${settings.get().variation === 'original' ? '' : `|${settings.get().variation}`}${
           partIdx >= 0 ? `|part${partIdx + 1}` : ''
-        }`,
+        }${settings.get().listenFirst ? '|echo' : ''}`,
       );
 
     const refreshRange = () => {
@@ -714,7 +729,14 @@ export const createPitchScreen =
       backing = null;
     };
 
-    const runGame = (audio: GameAudio, chart: Chart, offset: number, startAt: number) => {
+    /** `listenEnd` is when the player's turn starts after hearing the song (0 when there is no listening part). */
+    const runGame = (
+      audio: GameAudio,
+      chart: Chart,
+      offset: number,
+      startAt: number,
+      listen: { end: number; tones: BackingEvent[] } = { end: 0, tones: [] },
+    ) => {
       const { adapter, ctx, demo } = audio;
       sessionStart = new Date();
       stages.play.innerHTML = PLAY;
@@ -746,11 +768,14 @@ export const createPitchScreen =
       backing = playBacking(
         ctx,
         clock,
-        planAllBacking(chart, {
-          metronome: opts.metronome,
-          guideTone: opts.guideTone,
-          accompaniment: settings.get().accompaniment,
-        }),
+        [
+          ...planAllBacking(chart, {
+            metronome: opts.metronome,
+            guideTone: opts.guideTone,
+            accompaniment: settings.get().accompaniment,
+          }),
+          ...listen.tones,
+        ].sort((a, b) => a.songTime - b.songTime),
       );
       const renderer = createRenderer(profile.renderer);
       const endAt = chartEnd(chart) + 0.9;
@@ -801,6 +826,12 @@ export const createPitchScreen =
         if (now < 0) {
           const beats = Math.ceil(-now / spb - 1e-6);
           overlay.textContent = String(Math.max(1, beats));
+          overlay.classList.add('on');
+        } else if (listen.end > 0 && now < listen.end - spb) {
+          overlay.textContent = 'Listen…';
+          overlay.classList.add('on');
+        } else if (listen.end > 0 && now < listen.end) {
+          overlay.textContent = 'Your turn!';
           overlay.classList.add('on');
         } else {
           overlay.classList.remove('on');
@@ -949,7 +980,18 @@ export const createPitchScreen =
       if (beginInFlight) return;
       beginInFlight = true;
       try {
-        const chart = selectedChart();
+        const heard = selectedChart();
+        // "listen first": the song is played once, then the same notes are asked of the player
+        const echo = settings.get().listenFirst ? echoChart(heard) : null;
+        const chart = echo ? echo.chart : heard;
+        const listen = echo
+          ? {
+              end: echo.listenEnd,
+              tones: planBacking(heard, { metronome: false, guideTone: true }).filter(
+                (e) => e.kind === 'tone',
+              ),
+            }
+          : undefined;
         setupStatus.classList.remove('error');
         if (!demo) {
           const m = await startMic();
@@ -957,7 +999,7 @@ export const createPitchScreen =
           const ctx = m.ctx;
           const startAt = ctx.currentTime + 0.6;
           live = { adapter: m, ctx, demo: false };
-          runGame(live, chart, latencyOffset(ctx), startAt);
+          runGame(live, chart, latencyOffset(ctx), startAt, listen);
           return;
         }
         // Demo: a synthetic player plays through the same worklet. Stop the live mic so it isn't confusing.
@@ -992,7 +1034,7 @@ export const createPitchScreen =
         const probe = new SongClock(ctx);
         probe.start(-countIn, startAt);
         live = { adapter: synth, ctx, demo: true };
-        runGame(live, chart, 0, startAt);
+        runGame(live, chart, 0, startAt, listen);
         synth.start(probe.toSourceTime(perf.songStart));
       } catch (err) {
         setupStatus.textContent = err instanceof Error ? err.message : String(err);
