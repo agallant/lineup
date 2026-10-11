@@ -3,8 +3,10 @@ import type { KeyValueStore } from '@lineup/core';
 /** The best result kept for one song and way of playing it. */
 export interface BestScore {
   score: number;
-  /** 0..1 */
+  /** 0..1, of the highest-scoring play */
   accuracy: number;
+  /** 0..1, the highest accuracy of any play of this key (a later high score may have been less accurate). */
+  bestAccuracy?: number;
   grade: string;
   /** ISO time it was set. */
   at: string;
@@ -40,7 +42,17 @@ function sanitize(raw: unknown): Map<string, BestScore> {
       typeof r['grade'] === 'string' &&
       typeof r['at'] === 'string'
     ) {
-      out.set(k, { score: r['score'], accuracy: r['accuracy'], grade: r['grade'], at: r['at'] });
+      const bestAccuracy =
+        typeof r['bestAccuracy'] === 'number' && r['bestAccuracy'] >= 0 && r['bestAccuracy'] <= 1
+          ? Math.max(r['bestAccuracy'], r['accuracy'])
+          : r['accuracy'];
+      out.set(k, {
+        score: r['score'],
+        accuracy: r['accuracy'],
+        bestAccuracy,
+        grade: r['grade'],
+        at: r['at'],
+      });
     }
   }
   return out;
@@ -70,24 +82,41 @@ export class ScoreStore {
   /** Files a result. `isNewBest` is true when it beat the previous best, or when there was none. */
   record(
     key: string,
-    result: Omit<BestScore, 'at'>,
+    result: Omit<BestScore, 'at' | 'bestAccuracy'>,
     now = new Date(),
   ): { isNewBest: boolean; best: BestScore } {
     this.reconcile();
     const previous = this.best(key);
-    if (previous && previous.score >= result.score) return { isNewBest: false, best: previous };
-    const best: BestScore = { ...result, at: now.toISOString() };
+    const bestAccuracy = Math.max(
+      previous?.bestAccuracy ?? 0,
+      previous?.accuracy ?? 0,
+      result.accuracy,
+    );
+    if (previous && previous.score >= result.score) {
+      // not a new high score, but a more accurate play still counts toward stars
+      if (bestAccuracy > (previous.bestAccuracy ?? previous.accuracy)) {
+        this.value.set(key, { ...previous, bestAccuracy });
+        this.save();
+        return { isNewBest: false, best: { ...previous, bestAccuracy } };
+      }
+      return { isNewBest: false, best: previous };
+    }
+    const best: BestScore = { ...result, bestAccuracy, at: now.toISOString() };
     this.value.delete(key); // re-insert so the newest entry is last
     this.value.set(key, best);
     for (const old of [...this.value.keys()].slice(0, Math.max(0, this.value.size - MAX_ENTRIES))) {
       this.value.delete(old);
     }
+    this.save();
+    return { isNewBest: true, best: { ...best } };
+  }
+
+  private save(): void {
     try {
       this.store?.setItem(KEY, JSON.stringify(Object.fromEntries(this.value)));
     } catch {
       // private window / quota: keep working in memory
     }
-    return { isNewBest: true, best: { ...best } };
   }
 
   /**
@@ -99,7 +128,12 @@ export class ScoreStore {
       const mine = this.value.get(k);
       if (!mine || stored.score > mine.score) {
         this.value.delete(k); // newest last, so an improved score is not the first to be evicted
-        this.value.set(k, stored);
+        this.value.set(k, {
+          ...stored,
+          bestAccuracy: Math.max(stored.bestAccuracy ?? stored.accuracy, mine?.bestAccuracy ?? 0),
+        });
+      } else if ((stored.bestAccuracy ?? 0) > (mine.bestAccuracy ?? mine.accuracy)) {
+        this.value.set(k, { ...mine, bestAccuracy: stored.bestAccuracy as number });
       }
     }
   }

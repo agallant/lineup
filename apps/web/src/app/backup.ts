@@ -55,6 +55,8 @@ export function importBackup(store: EnumerableStore, text: string): number | nul
     (e): e is [string, string] =>
       e[0].startsWith(PREFIX) && !SKIP.has(e[0]) && typeof e[1] === 'string',
   );
+  // a file with nothing usable in it must not wipe what is there
+  if (entries.length === 0) return null;
   // snapshot first: if even reading fails, nothing has been touched
   let previous: (readonly [string, string | null])[];
   try {

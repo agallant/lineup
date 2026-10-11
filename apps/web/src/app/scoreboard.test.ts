@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { scoreRows, sortRows, starsBySong, variantLabel } from './scoreboard';
+import { COURSES } from './courses';
+import {
+  completedCourse,
+  isPlainVariant,
+  scoreRows,
+  sortRows,
+  starsBySong,
+  variantLabel,
+} from './scoreboard';
 
 const best = (score: number, accuracy: number, at = '2026-10-11T10:00:00.000Z') => ({
   score,
@@ -13,7 +21,7 @@ describe('variantLabel', () => {
     expect(variantLabel('normal')).toBe('');
     expect(variantLabel('normal|x1|anyoctave')).toBe('');
     expect(variantLabel('x0.8+chords|harder')).toBe('0.8× speed, chords checked, harder version');
-    expect(variantLabel('hard|easier')).toBe('hard scoring, easier version');
+    expect(variantLabel('strict|easier')).toBe('strict scoring, easier version');
   });
 });
 
@@ -79,6 +87,50 @@ describe('scoreRows with the player’s own songs', () => {
   });
 });
 
+describe('variant labels for every way of playing', () => {
+  it('says strict scoring, a part and listen first in words', () => {
+    expect(variantLabel('strict')).toBe('strict scoring');
+    expect(variantLabel('normal|part3')).toBe('part 3');
+    expect(variantLabel('normal|x0.8|part2|echo')).toBe('0.8× speed, part 2, listen first');
+    expect(variantLabel('normal|mixed')).toBe('mixed version');
+  });
+
+  it('knows which ways are the plain way', () => {
+    for (const v of [
+      '',
+      'normal',
+      'strict',
+      'normal|x1|anyoctave',
+      'x1',
+      'x1+chords'.replace('+chords', ''),
+    ])
+      expect(isPlainVariant(v), v).toBe(true);
+    for (const v of [
+      'normal|part1',
+      'normal|echo',
+      'normal|easier',
+      'x0.8',
+      'x1+chords',
+      'normal|mixed',
+    ])
+      expect(isPlainVariant(v), v).toBe(false);
+  });
+
+  it('counts only plain plays toward a learning path', () => {
+    const stars = starsBySong(
+      [
+        { key: 'voice|a|normal|part2', best: best(1, 0.99) },
+        { key: 'voice|b|normal', best: best(1, 0.85) },
+        { key: 'voice|b|normal|easier', best: best(1, 0.99) },
+      ],
+      'voice',
+      true,
+    );
+    expect(stars.has('a')).toBe(false);
+    expect(stars.get('b')).toBe(2);
+  });
+});
+
 describe('starsBySong', () => {
   it('keeps the most stars a song earned in any way of playing it, for one profile', () => {
     const stars = starsBySong(
@@ -94,5 +146,26 @@ describe('starsBySong', () => {
     expect(stars.get('b')).toBe(0);
     expect(stars.has('c')).toBe(false);
     expect([...stars.keys()].sort()).toEqual(['a', 'b']);
+  });
+});
+
+describe('completedCourse', () => {
+  it('finds a path with every step mastered, and keeps stars from the most accurate play', () => {
+    const course = COURSES[0]!;
+    const entry = (songId: string, accuracy: number, bestAccuracy?: number) => ({
+      key: `${course.profileId}|${songId}|normal`,
+      best: {
+        score: 1,
+        accuracy,
+        ...(bestAccuracy === undefined ? {} : { bestAccuracy }),
+        grade: 'A',
+        at: '2026-01-01',
+      },
+    });
+    expect(completedCourse([])).toBeNull();
+    const weak = course.steps.map((s) => entry(s.songId, 0.7));
+    expect(completedCourse(weak)).toBeNull();
+    const done = course.steps.map((s) => entry(s.songId, 0.7, 0.96));
+    expect(completedCourse(done)?.id).toBe(course.id);
   });
 });

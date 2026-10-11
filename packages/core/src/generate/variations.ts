@@ -144,13 +144,21 @@ const plain = (chord: string): string => chord.replace(/7$/, '');
 function easierChords(chart: Chart): ChartNote[] {
   const spb = 60 / chart.meta.bpm;
   const onBeat = (n: ChartNote) => Math.abs(n.t / spb - Math.round(n.t / spb)) < 0.05;
-  return chart.notes
+  const kept = chart.notes
     .filter(onBeat)
     .map((n) =>
       n.expected?.chord
         ? { ...n, expected: { ...n.expected, chord: plain(n.expected.chord) } }
         : { ...n },
     );
+  // a pattern with nothing on the beat (all off-beat strokes) is left as it is rather than emptied
+  return kept.length > 0
+    ? kept
+    : chart.notes.map((n) =>
+        n.expected?.chord
+          ? { ...n, expected: { ...n.expected, chord: plain(n.expected.chord) } }
+          : { ...n },
+      );
 }
 
 function harderChords(chart: Chart, rng: Rng): ChartNote[] {

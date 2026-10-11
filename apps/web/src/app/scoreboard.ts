@@ -1,5 +1,6 @@
 import { EAR_RATING, earTitle, getSong, rateChart, type EarLevel } from '@lineup/core';
 import { gameOf, starsFor } from './progress';
+import { COURSES, courseProgress } from './courses';
 import type { BestScore } from './scores';
 
 /** One line of the personal-best scoreboard. */
@@ -24,14 +25,28 @@ export function variantLabel(variant: string): string {
   const parts: string[] = [];
   for (const token of variant.split('|').filter(Boolean)) {
     const speed = /^x([\d.]+)(\+chords)?$/.exec(token);
+    const part = /^part(\d+)$/.exec(token);
     if (speed) {
       if (Number(speed[1]) !== 1) parts.push(`${Number(speed[1])}× speed`);
       if (speed[2]) parts.push('chords checked');
-    } else if (token === 'easier' || token === 'harder') parts.push(`${token} version`);
-    else if (token === 'easy' || token === 'hard') parts.push(`${token} scoring`);
+    } else if (part) parts.push(`part ${part[1]}`);
+    else if (token === 'echo') parts.push('listen first');
+    else if (token === 'easier' || token === 'harder') parts.push(`${token} version`);
+    else if (token === 'mixed') parts.push('mixed version');
+    else if (token === 'easy' || token === 'strict') parts.push(`${token} scoring`);
     // "normal" scoring and "anyoctave" are the usual way: nothing to say
   }
   return parts.join(', ');
+}
+
+/** Whether a score was set playing a song whole, as written, at full speed and with its usual help. */
+export function isPlainVariant(variant: string): boolean {
+  return variant
+    .split('|')
+    .filter(Boolean)
+    .every(
+      (t) => t === 'normal' || t === 'easy' || t === 'strict' || t === 'x1' || t === 'anyoctave',
+    );
 }
 
 /** Turns the stored best scores into rows, resolving titles and difficulty from the song library. */
@@ -95,16 +110,33 @@ export function sortRows(rows: readonly ScoreRow[], by: ScoreSort): ScoreRow[] {
   return [...rows].sort(cmp[by]);
 }
 
-/** The most stars earned on each song of a profile, over every way it has been played. */
+/**
+ * The most stars earned on each song of a profile, over every way it has been played (or, with
+ * `plainOnly`, only playing it whole and as written).
+ */
 export function starsBySong(
   entries: readonly { key: string; best: BestScore }[],
   profileId: string,
+  plainOnly = false,
 ): Map<string, number> {
   const out = new Map<string, number>();
   for (const { key, best } of entries) {
     const [profile = '', songId = ''] = key.split('|');
     if (profile !== profileId) continue;
-    out.set(songId, Math.max(out.get(songId) ?? 0, starsFor(best.accuracy)));
+    // a learning path counts only the song played whole, not one phrase or an easier version
+    if (plainOnly && !isPlainVariant(key.split('|').slice(2).join('|'))) continue;
+    out.set(songId, Math.max(out.get(songId) ?? 0, starsFor(best.bestAccuracy ?? best.accuracy)));
   }
   return out;
+}
+
+/** The first learning path with every step mastered, or null. */
+export function completedCourse(
+  entries: readonly { key: string; best: BestScore }[],
+): (typeof COURSES)[number] | null {
+  for (const course of COURSES) {
+    const stars = starsBySong(entries, course.profileId, true);
+    if (courseProgress(course, (id) => stars.get(id) ?? null).done) return course;
+  }
+  return null;
 }

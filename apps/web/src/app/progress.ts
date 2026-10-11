@@ -227,6 +227,13 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     earned: (s) => s.dailies.length >= 7,
   },
   {
+    id: 'graduate',
+    title: 'Graduate',
+    description: 'Master every step of a learning path.',
+    // granted when a play finishes a learning path (see completedCourse) (see ProgressStore.grant)
+    earned: () => false,
+  },
+  {
     id: 'level-5',
     title: 'Regular',
     description: 'Reach level 5.',
@@ -358,6 +365,19 @@ export class ProgressStore {
       streak,
       newAchievements,
     };
+  }
+
+  /**
+   * Awards an achievement that is decided somewhere other than a finished song (such as finishing a
+   * learning path). Returns it if it was not already earned, else null.
+   */
+  grant(id: string, now = new Date()): Achievement | null {
+    if (this.store) this.value = this.read();
+    const a = ACHIEVEMENTS.find((x) => x.id === id);
+    if (!a || this.value.achievements[id]) return null;
+    this.value.achievements[id] = now.toISOString();
+    this.write();
+    return a;
   }
 
   /** Progress as JSON text, for a private backup file. */

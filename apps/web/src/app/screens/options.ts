@@ -227,6 +227,15 @@ export const optionsScreen: Screen = (root) => {
     const file = input.files?.[0];
     if (!file || !storage) return;
     void file.text().then((text) => {
+      // restoring replaces everything on this device: make sure that is meant
+      if (
+        !window.confirm(
+          'Restoring a backup replaces your settings, scores, progress and songs on this device. Continue?',
+        )
+      ) {
+        input.value = '';
+        return;
+      }
       const n = importBackup(storage as unknown as Storage, text);
       input.value = '';
       if (n === 'incomplete') {
@@ -236,6 +245,10 @@ export const optionsScreen: Screen = (root) => {
       } else if (n === null)
         msg('That is not a Lineup backup, or this device has no room for it. Nothing was changed.');
       else {
+        // the store in this screen still holds the old settings: read the restored ones
+        const restored = settings.reload();
+        applyTheme(restored.theme);
+        applyTextSize(restored.textSize);
         show();
         msg(
           `Restored ${n} saved ${n === 1 ? 'item' : 'items'}. Reload the page to use them everywhere.`,

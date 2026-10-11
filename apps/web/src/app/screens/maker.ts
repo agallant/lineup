@@ -4,6 +4,7 @@ import { planAllBacking, playBacking, rhythmTones, type BackingHandle } from '..
 import type { Screen } from '../router';
 import { safeLocalStorage } from '../settings';
 import {
+  MAX_USER_SONGS,
   PERCUSSION_PROFILES,
   UserSongStore,
   compileSong,
@@ -233,7 +234,10 @@ export const makerScreen: Screen = (root) => {
     }
     const saved = store.save({ ...song, ...(editing ? { id: editing } : { id: undefined }) });
     if (!saved) {
-      $('preview').textContent = 'Could not save: there is no room for more songs.';
+      $('preview').textContent =
+        store.list().length >= MAX_USER_SONGS
+          ? 'Could not save: there is no room for more songs. Delete one first.'
+          : 'Could not save: that song was not accepted. Check the text above.';
       return;
     }
     renderList();

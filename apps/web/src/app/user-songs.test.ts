@@ -156,6 +156,32 @@ describe('UserSongStore', () => {
   });
 });
 
+describe('UserSongStore ids', () => {
+  it('never gives a new song the id of a saved one, even after a delete in the same millisecond', () => {
+    const store = new UserSongStore(new Mem());
+    const a = store.save({ ...melody(), id: undefined }, 5000)!;
+    const b = store.save({ ...melody({ title: 'B' }), id: undefined }, 5000)!;
+    store.delete(a.id);
+    const c = store.save({ ...melody({ title: 'C' }), id: undefined }, 5000)!;
+    expect(new Set([b.id, c.id]).size).toBe(2);
+    expect(store.list().map((s) => s.title)).toEqual(['B', 'C']);
+  });
+
+  it('says a strum pattern is too long, in the preview, instead of failing at save', () => {
+    const long = {
+      id: 'my-x',
+      title: 'Long',
+      bpm: 90,
+      kind: 'chords' as const,
+      bars: 'C',
+      pattern: 'D'.repeat(201),
+      beatsPerBar: 4 as const,
+    };
+    const c = compileSong(long);
+    expect(!c.ok && c.error).toMatch(/too long/);
+  });
+});
+
 describe('userSongsFor', () => {
   it('offers each song to the instruments it suits', () => {
     const store = new UserSongStore(new Mem());

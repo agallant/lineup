@@ -66,7 +66,8 @@ import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { UserSongStore, userSongsFor } from '../user-songs';
-import { starsBySong } from '../scoreboard';
+import { completedCourse, starsBySong } from '../scoreboard';
+import { hashParam } from '../courses';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
@@ -246,6 +247,31 @@ export const createHitScreen =
           [`${c.keyPrefix}:${profileId}`]: c.strum ? RANDOM_CHORDS : RANDOM_GROOVE,
         },
       });
+    }
+
+    // opened from a learning path step: choose its sound set and song
+    {
+      const wantedMode = hashParam(location.hash, 'mode');
+      const wantedSong = hashParam(location.hash, 'song');
+      const mode = c.modes.some((m) => m.id === wantedMode) ? wantedMode! : null;
+      if (mode || wantedSong) {
+        const profileId = mode ?? settings.get().songs[`${c.keyPrefix}-mode`] ?? c.modes[0]!.id;
+        const songs = settings.get().songs;
+        // a lesson is played whole and as written, or its stars would not count toward the path
+        if (wantedSong) {
+          settings.update({
+            variation: 'original',
+            ...(c.strum ? { speed: 1, checkChords: false } : { listenFirst: false }),
+          });
+        }
+        settings.update({
+          songs: {
+            ...songs,
+            ...(mode ? { [`${c.keyPrefix}-mode`]: mode } : {}),
+            ...(wantedSong ? { [`${c.keyPrefix}:${profileId}`]: wantedSong } : {}),
+          },
+        });
+      }
     }
 
     let profile: InstrumentProfile = getProfile(
@@ -900,6 +926,7 @@ export const createHitScreen =
                 : undefined,
             ),
           );
+      if (outcome && completedCourse(scores.entries())) progress.grant('graduate');
       const reward = outcome ? rewardHtml(s.accuracy, outcome) : '';
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'

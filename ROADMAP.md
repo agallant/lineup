@@ -96,8 +96,7 @@ Roughly in order of how well they fit a private, offline edutainment game.
 - **Rhythm dictation**: hear a one-bar rhythm, then clap it back (the listen-first mode, but unseen).
 - **Sight-reading / note names**: a staff view with an option to hide the note labels, and a
   "name that note" quiz in the ear-training screen.
-- **Scale and key practice paths**: a short sequence of exercises that unlocks the next as you earn stars
-  (a "course"), per instrument.
+- ~~Learning paths~~ (done: **Learn**, five paths); next: paths for scales and keys, and a "graduate" trophy.
 - **Interval singing**: hear a note and sing the note a fourth above it (ear training with the mic).
 - **Chord-change trainer** for the ukulele: two chords alternating at a rising tempo, scored on the
   change.

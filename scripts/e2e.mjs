@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|maker|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -867,6 +867,76 @@ const scenarios = {
       check(
         Number(await text(page, 'r-miss')) === 0,
         'maker: the demo plays the player’s own melody without a miss',
+      );
+    });
+  },
+
+  async learn() {
+    console.log(
+      '\n# Learn: paths open as stars are earned, and a step opens its game with the song chosen',
+    );
+    await session(null, async (page) => {
+      await page.addInitScript(() => {
+        if (localStorage.getItem('seeded')) return;
+        localStorage.setItem('seeded', '1');
+        localStorage.setItem(
+          'lineup.scores.v1',
+          JSON.stringify({
+            'voice|sing-hot-cross-buns|normal': {
+              score: 900,
+              accuracy: 0.85,
+              grade: 'B',
+              at: new Date().toISOString(),
+            },
+            // every step of the clap path, mastered
+            ...Object.fromEntries(
+              [
+                'ex-clap-quarters',
+                'ex-clap-eighths',
+                'ex-clap-off-beats',
+                'ex-clap-gallop',
+                'ex-clap-syncopation',
+                'clap-waltz',
+                'ex-clap-tresillo',
+                'ex-clap-triplets',
+                'ex-clap-son-clave',
+              ].map((id) => [
+                `clap|${id}|`,
+                { score: 500, accuracy: 0.9, grade: 'A', at: new Date().toISOString() },
+              ]),
+            ),
+          }),
+        );
+      });
+      await page.goto(URL_BASE + '#/learn');
+      check(
+        (await page.$('[data-id=graduate]')) !== null,
+        'learn: finishing a whole path earns the Graduate trophy',
+      );
+      const state = (id) => page.getAttribute(`[data-step=${id}]`, 'class');
+      check(
+        (await state('sing-hot-cross-buns')) === 'mastered',
+        'learn: a step with two stars is mastered',
+      );
+      check((await state('sing-mary-lamb')) === 'open', 'learn: the next step is open');
+      check((await state('ex-voice-major-up-down')) === 'locked', 'learn: the one after is locked');
+      check(
+        /1 of \d+ mastered/.test(await page.textContent('[data-course=voice-first-steps] h2')),
+        'learn: progress is counted',
+      );
+      await page.click('[data-id=continue-voice-first-steps]');
+      await page.waitForSelector('[data-id=song]');
+      check(
+        (await page.inputValue('[data-id=song]')) === 'sing-mary-lamb',
+        'learn: the step opens Singline with its song chosen',
+      );
+      await page.goto(URL_BASE + '#/learn');
+      await page.click('[data-id=continue-kit-groove]');
+      await page.waitForSelector('[data-id=song]');
+      check(
+        (await page.inputValue('[data-id=mode]')) === 'drum-kit' &&
+          (await page.inputValue('[data-id=song]')) === 'ex-drum-kit-kick-snare',
+        'learn: a drum step opens Beatline in the kit mode with its exercise chosen',
       );
     });
   },

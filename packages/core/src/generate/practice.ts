@@ -15,18 +15,28 @@ export function phraseBars(chart: Chart): number {
   return chart.notes.at(-1)!.t / barLen >= 12 ? 4 : 2;
 }
 
-/** The phrases of a song, or none if it is too short to split into at least two. */
+/** A phrase needs at least this many notes to be worth practising on its own. */
+const MIN_PART_NOTES = 3;
+
+/**
+ * The phrases of a song, or none if it is too short to split into at least two. Phrases with fewer
+ * than a few notes (silent stretches, or one last note on a bar line) are left out.
+ */
 export function songParts(chart: Chart): Part[] {
   const barLen = (60 / chart.meta.bpm) * (chart.meta.beatsPerBar ?? 4);
   const bars = phraseBars(chart);
   const phraseLen = barLen * bars;
   const count = Math.floor((chart.notes.at(-1)!.t + 1e-6) / phraseLen) + 1;
   if (count < 2) return [];
-  return Array.from({ length: count }, (_, i) => ({
+  const parts = Array.from({ length: count }, (_, i) => ({
     label: `Bars ${i * bars + 1}–${(i + 1) * bars}`,
     from: i * phraseLen,
     to: (i + 1) * phraseLen,
-  }));
+  })).filter(
+    (p) =>
+      chart.notes.filter((n) => n.t >= p.from - 1e-6 && n.t < p.to - 1e-6).length >= MIN_PART_NOTES,
+  );
+  return parts.length >= 2 ? parts : [];
 }
 
 /**

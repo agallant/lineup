@@ -13,6 +13,8 @@ import {
 export const MAX_SONG_TEXT = 4000;
 export const MAX_USER_SONGS = 100;
 const MAX_NOTES = 400;
+/** The longest strum pattern text (one bar of strokes). */
+export const MAX_PATTERN_TEXT = 200;
 
 export type PercussionProfile = 'clap' | 'hand-percussion' | 'drum-kit';
 export const PERCUSSION_PROFILES: readonly PercussionProfile[] = [
@@ -93,6 +95,9 @@ export function compileSong(song: UserSong): Compiled {
       return { ok: true, charts };
     }
     if (song.kind === 'chords') {
+      if (song.pattern.length > MAX_PATTERN_TEXT) {
+        return { ok: false, error: 'That strum pattern is too long.' };
+      }
       if (song.bars.length > MAX_SONG_TEXT) return { ok: false, error: 'That is too many bars.' };
       if (song.bars.split(/\s+/).filter((t) => t !== '' && t !== '|').length === 0) {
         return { ok: false, error: 'Write at least one chord.' };
@@ -165,7 +170,7 @@ function sanitize(raw: unknown): UserSong | null {
   }
   if (r['kind'] === 'chords') {
     const bars = clampText(r['bars'], MAX_SONG_TEXT);
-    const pattern = clampText(r['pattern'], 200);
+    const pattern = clampText(r['pattern'], MAX_PATTERN_TEXT);
     if (bars === null || pattern === null) return null;
     return { ...base, kind: 'chords', bars, pattern, beatsPerBar: r['beatsPerBar'] === 3 ? 3 : 4 };
   }
@@ -210,7 +215,13 @@ export class UserSongStore {
     this.songs = this.read();
     const existing = song.id ? this.songs.findIndex((s) => s.id === song.id) : -1;
     if (existing < 0 && this.songs.length >= MAX_USER_SONGS) return null;
-    const id = existing >= 0 ? song.id! : `my-${now.toString(36)}${this.songs.length.toString(36)}`;
+    let id = song.id!;
+    if (existing < 0) {
+      // a fresh id that no saved song already has (a deleted song leaves gaps in the count)
+      let n = this.songs.length;
+      do id = `my-${now.toString(36)}${(n++).toString(36)}`;
+      while (this.songs.some((x) => x.id === id));
+    }
     const saved = sanitize({ ...song, id });
     if (!saved || !compileSong(saved).ok) return null;
     if (existing >= 0) this.songs[existing] = saved;

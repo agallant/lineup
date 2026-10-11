@@ -205,9 +205,11 @@ export function planAccompaniment(chart: Chart, level: AccompanimentLevel): Back
       const first = Math.floor((c.t + 1e-6) / barLen);
       for (let bar = first; bar * barLen < next - 1e-6; bar++) {
         events.push(
+          // the first bar starts at the stroke that changes the chord, not at the bar line before it
+          // (the chord before is still sounding until then)
           ...chordEvents(
             h,
-            bar * barLen,
+            Math.max(bar * barLen, c.t),
             Math.min((bar + 1) * barLen, next),
             spb,
             level,
