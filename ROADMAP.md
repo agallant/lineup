@@ -42,9 +42,9 @@ real instrument to judge is listed again under "Waiting on real-device testing".
   and a seed): fewer or more passing notes, simpler or busier strum patterns, plainer or more
   syncopated grooves; the difficulty score changes with it. To come: a variation per phrase, and
   "give me a 4" difficulty targets.
-- **More generators, not just more songs**: new forms, keys and levels for random melodies, chord songs
-  (waltz time, more chords such as Bm and B♭ for more keys) and grooves; difficulty targets ("give me a
-  4"); play-along backing for melodies.
+- **More generators, not just more songs** (chord songs now cover waltz time and five keys): new forms
+  and levels for random melodies and grooves; difficulty targets ("give me a 4"); play-along backing
+  for melodies.
 - **More songs**: easy tunes first, then harder and chromatic ones, in every mode. Public domain or
   original.
 - Tests measure "pleasing" with checkable properties over many seeds, because a bad piece is a bug.
@@ -59,18 +59,19 @@ real instrument to judge is listed again under "Waiting on real-device testing".
 
 ### 3. Windline
 
-- The recorder chart: the C♯ below the upper D, and the notes above it.
-- More songs, including chromatic ones, labelled so you can tell what your instrument can play.
-- An ocarina only if a fingering chart can be shown.
+- ~~The C♯ below the upper D on the recorder chart~~ (done); the notes above the upper D are still left to your recorder's own chart.
+- More songs, including chromatic ones (Für Elise opening, Greensleeves), labelled so you can tell
+  what your instrument can play. Songs below a whistle's tonic are voice-only.
+- An ocarina only if a fingering chart can be shown (no ocarina offered until then).
 - If testing shows it: move the chart to the octave you play, instead of accepting any octave.
 
 ### 4. Singline
 
-- More and harder songs; more voice exercises (intervals, range finding).
+- Added: fourths, fifths and octave-leap exercises, a range finder, Auld Lang Syne and Amazing Grace. Still to come: harder songs and exercises that adapt to the range you find.
 
 ### 5. Beatline
 
-- More rhythms and rudiments, harder grooves.
+- Added: paradiddle-diddle, boom-boom-clap, disco, snare triplets, tresillo, son clave and a funk groove. Still to come: harder grooves.
 - Tell sounds apart beyond clap and tap: shaker versus tambourine or jingle, hand-drum tones. Needs
   training the app on your own sounds.
 
