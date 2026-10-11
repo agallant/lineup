@@ -321,7 +321,7 @@ export const isSeed = (v: unknown): v is number =>
 export const melodyId = (profileId: string, spec: MelodySpec): string =>
   `gen-${profileId}-${spec.scale}-${spec.level}-${spec.seed}`;
 
-const MELODY_ID = /^gen-([a-z]+)-([a-z-]+)-(easy|medium|hard)-(\d{1,5})$/;
+const MELODY_ID = /^gen-([a-z]+)-([a-z-]+)-(easy|medium|hard)-(0|[1-9]\d{0,4})$/;
 
 /** The profile and spec an id names, or null if it is not a generated melody's id. */
 export function parseMelodyId(id: string): { profileId: string; spec: MelodySpec } | null {

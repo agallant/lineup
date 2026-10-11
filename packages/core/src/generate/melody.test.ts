@@ -158,6 +158,7 @@ describe('melody ids and seeds', () => {
       'gen-wind-nope-hard-1',
       'gen-wind-major-extreme-1',
       'gen-wind-major-easy-100000',
+      'gen-wind-major-easy-0042', // not the canonical form: one melody, one id
       'gen-guitar-major-easy-1',
       'gen-wind-major-easy-',
       'wind-twinkle',
