@@ -336,12 +336,17 @@ export const createPitchScreen =
     };
     showChallenge();
 
+    /** The random melody for the current spec, generated once per spec. */
+    let melodyCache: { id: string; chart: Chart } | null = null;
+    const randomMelody = () => {
+      const spec = settings.get().challenge;
+      const id = melodyId(c.profileId, spec);
+      if (melodyCache?.id !== id) melodyCache = { id, chart: generateMelody(c.profileId, spec) };
+      return melodyCache;
+    };
     const songEntry = () =>
       songSel.value === RANDOM_MELODY
-        ? {
-            id: melodyId(c.profileId, settings.get().challenge),
-            chart: generateMelody(c.profileId, settings.get().challenge),
-          }
+        ? randomMelody()
         : (songs.find((s) => s.id === songSel.value) ?? songs[0]!);
 
     /** The chart as played: moved into the instrument's key, shifted, and at the practice speed. */
