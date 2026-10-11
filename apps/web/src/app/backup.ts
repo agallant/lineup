@@ -37,7 +37,7 @@ export function exportBackup(store: EnumerableStore, now = new Date()): string {
 
 /**
  * Restores a backup made by {@link exportBackup}, replacing what the app keeps now. Returns how
- * many items were restored, or null (nothing changed) if the text is not a backup.
+ * many items were restored, or null (nothing changed) if the text is not a backup or storage refused it.
  */
 export function importBackup(store: EnumerableStore, text: string): number | null {
   if (text.length > MAX_BYTES) return null;
@@ -54,7 +54,19 @@ export function importBackup(store: EnumerableStore, text: string): number | nul
     (e): e is [string, string] =>
       e[0].startsWith(PREFIX) && !SKIP.has(e[0]) && typeof e[1] === 'string',
   );
-  for (const k of lineupKeys(store)) store.removeItem(k);
-  for (const [k, v] of entries) store.setItem(k, v);
+  const previous = lineupKeys(store).map((k) => [k, store.getItem(k)] as const);
+  try {
+    for (const [k] of previous) store.removeItem(k);
+    for (const [k, v] of entries) store.setItem(k, v);
+  } catch {
+    // storage refused a write (full?): put back exactly what was there
+    try {
+      for (const k of lineupKeys(store)) store.removeItem(k);
+      for (const [k, v] of previous) if (v !== null) store.setItem(k, v);
+    } catch {
+      // nothing more can be done
+    }
+    return null;
+  }
   return entries.length;
 }

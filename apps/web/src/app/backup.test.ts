@@ -20,6 +20,28 @@ class Mem implements EnumerableStore {
   }
 }
 
+describe('backup when storage refuses a write', () => {
+  it('puts back what was there and says it failed', () => {
+    class Full extends Mem {
+      override setItem(k: string, v: string) {
+        if (k === 'lineup.c') throw new Error('QuotaExceededError'); // the third write is refused
+        super.setItem(k, v);
+      }
+    }
+    const m = new Full();
+    m.data.set('lineup.settings.v1', 'mine');
+    m.data.set('lineup.scores.v1', 'also mine');
+    const text = JSON.stringify({
+      lineup: 'backup',
+      data: { 'lineup.a': '1', 'lineup.b': '2', 'lineup.c': '3' },
+    });
+    expect(importBackup(m, text)).toBeNull();
+    expect(m.getItem('lineup.settings.v1')).toBe('mine');
+    expect(m.getItem('lineup.scores.v1')).toBe('also mine');
+    expect(m.getItem('lineup.a')).toBeNull();
+  });
+});
+
 describe('backup', () => {
   it('lists only the app keys', () => {
     const m = new Mem();

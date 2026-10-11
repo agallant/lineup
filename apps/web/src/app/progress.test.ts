@@ -119,6 +119,19 @@ describe('daily challenges', () => {
   });
 });
 
+describe('ProgressStore with two tabs', () => {
+  it('does not erase what another tab saved', () => {
+    const mem = new Mem();
+    const tabA = new ProgressStore(mem);
+    const tabB = new ProgressStore(mem); // loaded before A plays
+    tabA.recordPlay(play({ songId: 'a' }), at(1));
+    tabB.recordPlay(play({ songId: 'b' }), at(1));
+    const fresh = new ProgressStore(mem).get();
+    expect(fresh.plays).toBe(2);
+    expect(fresh.songs.sort()).toEqual(['voice|a', 'voice|b']);
+  });
+});
+
 describe('ProgressStore', () => {
   it('records plays: XP, day bonus once a day, level ups and the first achievements', () => {
     const p = new ProgressStore(new Mem());

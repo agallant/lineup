@@ -256,7 +256,11 @@ function mixPhrases(chart: Chart, seed: number): Chart {
   for (let p = 0; p <= lastPhrase; p++) {
     const from = p * phraseLen - 1e-6;
     const to = (p + 1) * phraseLen - 1e-6;
-    for (const n of sources[choices[p]!]) if (n.t >= from && n.t < to) notes.push({ ...n });
+    const inPhrase = (n: ChartNote): boolean => n.t >= from && n.t < to;
+    let chosen = sources[choices[p]!].filter(inPhrase);
+    // a plainer phrase that lost every stroke (all off the beat) keeps the original ones instead
+    if (chosen.length === 0) chosen = chart.notes.filter(inPhrase);
+    for (const n of chosen) notes.push({ ...n });
   }
   return withNotes(chart, notes);
 }

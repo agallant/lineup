@@ -288,6 +288,8 @@ export class ProgressStore {
 
   /** Files a finished song: adds XP, the day, the song and any achievements it earns. */
   recordPlay(result: PlayResult, now = new Date()): PlayOutcome {
+    // pick up what another tab saved since this one loaded, so writing never erases it
+    if (this.store) this.value = this.read();
     const before = levelFor(this.value.xp).level;
     const v = this.value;
     const gained = xpFor(result);

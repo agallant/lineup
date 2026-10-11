@@ -154,6 +154,7 @@ export const optionsScreen: Screen = (root) => {
         return;
       }
       clearTimeout(timer);
+      armed = false;
       action();
     });
   };
@@ -184,7 +185,7 @@ export const optionsScreen: Screen = (root) => {
     void file.text().then((text) => {
       const n = importBackup(storage as unknown as Storage, text);
       input.value = '';
-      if (n === null) msg('That file is not a Lineup backup. Nothing was changed.');
+      if (n === null) msg('That is not a Lineup backup, or this device has no room for it. Nothing was changed.');
       else {
         show();
         msg(
