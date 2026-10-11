@@ -1,3 +1,4 @@
+import { starText } from './progress';
 import { rateChart, ratingText, type Chart, type SongCategory } from '@lineup/core';
 
 /** The slice of a song the menu needs. */
@@ -24,16 +25,20 @@ const HEADINGS: readonly { category: SongCategory; label: string }[] = [
  * which groups them by scale. Each entry says how hard it is and, for a melody, whether it is
  * diatonic or needs sharps and flats.
  */
-export function songMenuGroups(songs: readonly MenuSong[]): MenuGroup[] {
+export function songMenuGroups(
+  songs: readonly MenuSong[],
+  starsOf: (id: string) => number | null = () => null,
+): MenuGroup[] {
   const groups = HEADINGS.map(({ category, label }) => ({
     label,
     items: songs
       .filter((s) => s.category === category)
       .map((s) => {
         const rating = rateChart(s.chart);
+        const stars = starsOf(s.id);
         return {
           id: s.id,
-          title: `${s.chart.meta.title} · ${ratingText(rating)}`,
+          title: `${s.chart.meta.title} · ${ratingText(rating)}${stars === null ? '' : ` · best ${starText(stars)}`}`,
           score: rating.score,
         };
       })
@@ -46,9 +51,13 @@ export function songMenuGroups(songs: readonly MenuSong[]): MenuGroup[] {
   return groups.length === 1 ? [{ label: null, items: groups[0]!.items }] : groups;
 }
 
-/** Fills a <select> with the songs, under "Songs" and "Exercises" headings when both exist. */
-export function fillSongMenu(select: HTMLSelectElement, songs: readonly MenuSong[]): void {
-  for (const group of songMenuGroups(songs)) {
+/** Fills a <select> with the songs (with the stars earned on each, if given), under "Songs" and "Exercises" headings when both exist. */
+export function fillSongMenu(
+  select: HTMLSelectElement,
+  songs: readonly MenuSong[],
+  starsOf?: (id: string) => number | null,
+): void {
+  for (const group of songMenuGroups(songs, starsOf)) {
     const parent: HTMLElement =
       group.label === null ? select : select.appendChild(heading(group.label));
     for (const item of group.items) parent.appendChild(new Option(item.title, item.id));

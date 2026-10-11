@@ -41,6 +41,7 @@ export const optionsScreen: Screen = (root) => {
       <h2>Sound</h2>
       <label class="check"><input type="checkbox" data-id="metronome" /> Metronome clicks (needs headphones)</label>
       <label class="check"><input type="checkbox" data-id="guide" /> Guide tone: hear the target note (needs headphones)</label>
+      <label class="check"><input type="checkbox" data-id="effects" /> Short jingles for a new best, a trophy or a level up</label>
       <div class="row"><label>Play-along backing <select data-id="accompaniment">${ACCOMPANIMENTS.map(
         (a) => `<option value="${a}">${ACCOMPANIMENT_TEXT[a]}</option>`,
       ).join('')}</select></label></div>
@@ -91,6 +92,7 @@ export const optionsScreen: Screen = (root) => {
     const v = settings.get();
     $<HTMLInputElement>('metronome').checked = v.metronome;
     $<HTMLInputElement>('guide').checked = v.guideTone;
+    $<HTMLInputElement>('effects').checked = v.effects;
     $<HTMLSelectElement>('accompaniment').value = v.accompaniment;
     $<HTMLSelectElement>('difficulty').value = v.difficulty;
     $<HTMLSelectElement>('octave').value = v.windOctave;
@@ -102,13 +104,14 @@ export const optionsScreen: Screen = (root) => {
 
   const checkbox = (
     id: string,
-    key: 'metronome' | 'guideTone' | 'checkChords' | 'showFingerings' | 'debug',
+    key: 'metronome' | 'effects' | 'guideTone' | 'checkChords' | 'showFingerings' | 'debug',
   ) =>
     $<HTMLInputElement>(id).addEventListener('change', (e) =>
       settings.update({ [key]: (e.target as HTMLInputElement).checked }),
     );
   checkbox('metronome', 'metronome');
   checkbox('guide', 'guideTone');
+  checkbox('effects', 'effects');
   checkbox('chords', 'checkChords');
   checkbox('fingerings', 'showFingerings');
   checkbox('debug', 'debug');

@@ -58,8 +58,10 @@ import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
+import { starsBySong } from '../scoreboard';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
+import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { SettingsStore, safeLocalStorage } from '../settings';
 import {
@@ -363,7 +365,8 @@ export const createHitScreen =
     const applyMode = () => {
       songSel.replaceChildren(); // also removes group headings
       const songs = songsFor(profile.id);
-      fillSongMenu(songSel, songs);
+      const stars = starsBySong(scores.entries(), profile.id);
+      fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
       addRandomOptions(
         songSel,
         profile.id === 'ukulele-strum'
@@ -859,22 +862,20 @@ export const createHitScreen =
         : scores.record(bestKey(), { score: s.score, accuracy: s.accuracy, grade });
       refreshSong(); // the setup screen's best-score line now shows this result
       // stars, XP and trophies: the demo earns none
-      const reward = audio.demo
-        ? ''
-        : rewardHtml(
-            s.accuracy,
-            progress.recordPlay(
-              playResultFor(
-                profile.id,
-                randomEntry()?.id ?? songSel.value,
-                chart,
-                s,
-                isDaily(randomEntry()?.id ?? songSel.value)
-                  ? { key: dailyKey(dailyGame) }
-                  : undefined,
-              ),
+      const outcome = audio.demo
+        ? null
+        : progress.recordPlay(
+            playResultFor(
+              profile.id,
+              randomEntry()?.id ?? songSel.value,
+              chart,
+              s,
+              isDaily(randomEntry()?.id ?? songSel.value)
+                ? { key: dailyKey(dailyGame) }
+                : undefined,
             ),
           );
+      const reward = outcome ? rewardHtml(s.accuracy, outcome) : '';
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'
         : best!.isNewBest
@@ -915,6 +916,14 @@ export const createHitScreen =
         <p class="status" data-id="copy-status" role="status"></p>
       </section>`;
       show('results');
+      if (!audio.demo && settings.get().effects) {
+        const kind = jingleFor(outcome, best?.isNewBest ?? false);
+        try {
+          if (kind) playJingle(audio.ctx, kind);
+        } catch {
+          // the audio context may already be closed: the jingle is a nicety
+        }
+      }
       const R = (id: string) =>
         stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
       R('copy-log').addEventListener('click', () => {

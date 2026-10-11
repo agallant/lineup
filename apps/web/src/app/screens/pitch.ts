@@ -63,8 +63,10 @@ import { formatSessionLog } from '../game/session-log';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
+import { starsBySong } from '../scoreboard';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
+import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
 import { RANDOM_MELODY, addRandomMelodyOption, fillSongMenu, fillTargetMenu } from '../song-menu';
@@ -274,7 +276,8 @@ export const createPitchScreen =
     const setupStatus = S('setup-status');
 
     const current = settings.get();
-    fillSongMenu(songSel, songs);
+    const stars = starsBySong(scores.entries(), c.profileId);
+    fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
     addRandomMelodyOption(songSel);
     // opened from today's challenge: choose its random melody (the same for everyone today)
     const dailyGame: DailyGame = c.profileId === 'wind' ? 'windline' : 'singline';
@@ -830,20 +833,18 @@ export const createPitchScreen =
         : scores.record(bestKey(), { score: s.score, accuracy: s.accuracy, grade });
       refreshRange(); // the setup screen's best-score line now shows this result
       // stars, XP and trophies: the demo earns none
-      const reward = audio.demo
-        ? ''
-        : rewardHtml(
-            s.accuracy,
-            progress.recordPlay(
-              playResultFor(
-                profile.id,
-                songEntry().id,
-                chart,
-                s,
-                isDaily(songEntry().id) ? { key: dailyKey(dailyGame) } : undefined,
-              ),
+      const outcome = audio.demo
+        ? null
+        : progress.recordPlay(
+            playResultFor(
+              profile.id,
+              songEntry().id,
+              chart,
+              s,
+              isDaily(songEntry().id) ? { key: dailyKey(dailyGame) } : undefined,
             ),
           );
+      const reward = outcome ? rewardHtml(s.accuracy, outcome) : '';
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'
         : best!.isNewBest
@@ -876,6 +877,14 @@ export const createPitchScreen =
         <p class="status" data-id="copy-status" role="status"></p>
       </section>`;
       show('results');
+      if (!audio.demo && settings.get().effects) {
+        const kind = jingleFor(outcome, best?.isNewBest ?? false);
+        try {
+          if (kind) playJingle(audio.ctx, kind);
+        } catch {
+          // the audio context may already be closed: the jingle is a nicety
+        }
+      }
       const R = (id: string) =>
         stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
       R('copy-log').addEventListener('click', () => {

@@ -66,3 +66,14 @@ describe('songMenuGroups', () => {
     expect(songMenuGroups([])).toEqual([]);
   });
 });
+
+describe('songMenuGroups with stars', () => {
+  it('adds the stars earned to played songs only', () => {
+    const groups = songMenuGroups([song('a', 'song'), song('b', 'song')], (id) =>
+      id === 'a' ? 2 : null,
+    );
+    const titles = groups.flatMap((g) => g.items.map((i) => i.title));
+    expect(titles.find((t) => t.startsWith('Title a'))).toMatch(/ · best ★★☆$/);
+    expect(titles.find((t) => t.startsWith('Title b'))).not.toContain('best');
+  });
+});

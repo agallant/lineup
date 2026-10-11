@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { scoreRows, sortRows, variantLabel } from './scoreboard';
+import { scoreRows, sortRows, starsBySong, variantLabel } from './scoreboard';
 
 const best = (score: number, accuracy: number, at = '2026-10-11T10:00:00.000Z') => ({
   score,
@@ -55,5 +55,23 @@ describe('scoreRows', () => {
     expect(sortRows(rows, 'stars')[0]!.stars).toBe(3);
     const hardest = sortRows(rows, 'hardest');
     expect((hardest[0]!.rating ?? 0) >= (hardest[1]!.rating ?? 0)).toBe(true);
+  });
+});
+
+describe('starsBySong', () => {
+  it('keeps the most stars a song earned in any way of playing it, for one profile', () => {
+    const stars = starsBySong(
+      [
+        { key: 'voice|a|normal', best: best(1, 0.65) },
+        { key: 'voice|a|normal|easier', best: best(1, 0.99) },
+        { key: 'voice|b|normal', best: best(1, 0.3) },
+        { key: 'wind|a|normal', best: best(1, 1) },
+      ],
+      'voice',
+    );
+    expect(stars.get('a')).toBe(3);
+    expect(stars.get('b')).toBe(0);
+    expect(stars.has('c')).toBe(false);
+    expect([...stars.keys()].sort()).toEqual(['a', 'b']);
   });
 });

@@ -24,6 +24,8 @@ export interface Settings {
   guideTone: boolean;
   /** Play a click on every beat. */
   metronome: boolean;
+  /** A short jingle on a new best, a trophy, a level up or a cleared daily challenge. */
+  effects: boolean;
   /** Play-along backing under a song: nothing, a bass line, or bass and chords (needs headphones). */
   accompaniment: Accompaniment;
   /** Key change in semitones applied to the chart. */
@@ -59,6 +61,7 @@ export const DEFAULT_SETTINGS: Settings = {
   debug: false,
   guideTone: true,
   metronome: true,
+  effects: true,
   accompaniment: 'off',
   keyShift: 0,
   keyShifts: {},
@@ -154,6 +157,7 @@ function sanitize(raw: unknown): Settings {
     debug: typeof r['debug'] === 'boolean' ? r['debug'] : DEFAULT_SETTINGS.debug,
     guideTone: typeof r['guideTone'] === 'boolean' ? r['guideTone'] : DEFAULT_SETTINGS.guideTone,
     metronome: typeof r['metronome'] === 'boolean' ? r['metronome'] : DEFAULT_SETTINGS.metronome,
+    effects: typeof r['effects'] === 'boolean' ? r['effects'] : DEFAULT_SETTINGS.effects,
     accompaniment: ACCOMPANIMENTS.includes(r['accompaniment'] as Accompaniment)
       ? (r['accompaniment'] as Accompaniment)
       : DEFAULT_SETTINGS.accompaniment,
