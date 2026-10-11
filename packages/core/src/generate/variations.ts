@@ -1,12 +1,15 @@
 import { loadChart, rescaleChart, type Chart, type ChartNote } from '../chart';
 import { chartKind, notePitch } from '../difficulty';
 import { ukulelePlayable, ukulelePluck } from '../songs/notation';
-import { chance, createRng, type Rng } from './random';
+import { chance, createRng, pick, type Rng } from './random';
 
-/** A song as written, a plainer version, or a busier one. */
-export type Variation = 'original' | 'easier' | 'harder';
+/**
+ * A song as written, a plainer version, a busier one, or a mix that takes each phrase (four bars)
+ * from one of the three.
+ */
+export type Variation = 'original' | 'easier' | 'harder' | 'mixed';
 
-export const VARIATIONS: readonly Variation[] = ['original', 'easier', 'harder'];
+export const VARIATIONS: readonly Variation[] = ['original', 'easier', 'harder', 'mixed'];
 
 export const isVariation = (v: unknown): v is Variation =>
   typeof v === 'string' && (VARIATIONS as readonly string[]).includes(v);
@@ -16,6 +19,7 @@ export const VARIATION_LABELS: Readonly<Record<Variation, string>> = {
   original: 'As written',
   easier: 'Easier: plainer',
   harder: 'Harder: busier',
+  mixed: 'Mixed: phrase by phrase',
 };
 
 const MAJOR = [0, 2, 4, 5, 7, 9, 11];
@@ -206,16 +210,8 @@ function withNotes(chart: Chart, notes: ChartNote[]): Chart {
   return result.value;
 }
 
-/**
- * A plainer or busier version of any song, made from the song and a seed (the same song, variation
- * and seed always give the same result). Melodies: easier merges quick notes and replaces sharps and
- * flats with scale notes; harder fills thirds with a passing note and turns long notes. Chord songs:
- * easier keeps the strokes on the beat and drops sevenths; harder adds up-strokes where there is
- * room. Rhythms: easier keeps the hits on the beat; harder adds hits between them. Easier is also
- * 15% slower; harder melodies are 15% faster and chord songs 10%. "Original" is the song itself.
- */
-export function varyChart(chart: Chart, variation: Variation, seed = 1): Chart {
-  if (variation === 'original' || chart.notes.length < 2) return chart;
+/** The notes of the plainer or busier version of a song, at the song's own tempo. */
+function varyNotes(chart: Chart, variation: 'easier' | 'harder', seed: number): ChartNote[] {
   const kind = chartKind(chart);
   const rng = createRng(
     (Math.imul(seed >>> 0, 2654435761) + (variation === 'easier' ? 1 : 2)) >>> 0,
@@ -229,7 +225,62 @@ export function varyChart(chart: Chart, variation: Variation, seed = 1): Chart {
   } else {
     notes = variation === 'easier' ? easierRhythm(chart) : harderRhythm(chart, rng);
   }
-  notes.sort((a, b) => a.t - b.t);
+  return notes.sort((a, b) => a.t - b.t);
+}
+
+/** Bars in a phrase (fewer for a short song, so there are at least a few phrases to mix). */
+function phraseBars(chart: Chart): number {
+  const spb = 60 / chart.meta.bpm;
+  const barLen = spb * (chart.meta.beatsPerBar ?? 4);
+  const end = chart.notes.at(-1)!.t;
+  return end / barLen >= 12 ? 4 : 2;
+}
+
+/**
+ * Each phrase from the plainer, the original or the busier version, chosen by the seed (never all
+ * the same), at the song's own tempo. Phrases are cut at bar lines, so a long note or a chord keeps
+ * to the version its phrase came from.
+ */
+function mixPhrases(chart: Chart, seed: number): Chart {
+  const spb = 60 / chart.meta.bpm;
+  const phraseLen = spb * (chart.meta.beatsPerBar ?? 4) * phraseBars(chart);
+  const lastPhrase = Math.floor((chart.notes.at(-1)!.t + 1e-6) / phraseLen);
+  const rng = createRng(Math.imul(seed >>> 0, 2246822519) >>> 0);
+  const choices: ('easier' | 'original' | 'harder')[] = [];
+  for (let p = 0; p <= lastPhrase; p++)
+    choices.push(pick(rng, ['easier', 'original', 'harder'] as const));
+  // a mix has to mix: if every phrase came out the same, change the middle one
+  if (lastPhrase >= 1 && new Set(choices).size === 1) {
+    const mid = choices.length >> 1;
+    choices[mid] = choices[mid] === 'original' ? 'harder' : 'original';
+  }
+  const sources = {
+    easier: varyNotes(chart, 'easier', seed),
+    original: chart.notes,
+    harder: varyNotes(chart, 'harder', seed),
+  };
+  const notes: ChartNote[] = [];
+  for (let p = 0; p <= lastPhrase; p++) {
+    const from = p * phraseLen - 1e-6;
+    const to = (p + 1) * phraseLen - 1e-6;
+    for (const n of sources[choices[p]!]) if (n.t >= from && n.t < to) notes.push({ ...n });
+  }
+  return withNotes(chart, notes);
+}
+
+/**
+ * A plainer or busier version of any song, made from the song and a seed (the same song, variation
+ * and seed always give the same result). Melodies: easier merges quick notes and replaces sharps and
+ * flats with scale notes; harder fills thirds with a passing note and turns long notes. Chord songs:
+ * easier keeps the strokes on the beat and drops sevenths; harder adds up-strokes where there is
+ * room. Rhythms: easier keeps the hits on the beat; harder adds hits between them. Easier is also
+ * 15% slower; harder melodies are 15% faster and chord songs 10%. "Original" is the song itself.
+ */
+export function varyChart(chart: Chart, variation: Variation, seed = 1): Chart {
+  if (variation === 'original' || chart.notes.length < 2) return chart;
+  if (variation === 'mixed') return mixPhrases(chart, seed);
+  const kind = chartKind(chart);
+  const notes = varyNotes(chart, variation, seed);
   // a plainer version is also a little slower; a busier melody or chord song a little faster (a
   // rhythm stays put: a drum heard half a beat after a kick needs the time)
   const speed =

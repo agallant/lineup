@@ -26,6 +26,9 @@ use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
 - **Difficulty ratings and diatonic/chromatic labels** on every song and exercise (menus sorted easiest
   first).
 - **Easier and harder versions** of any song, exercise or random song.
+- **Home, scoreboard and options**: home menu in sections (games, progress, set-up tools, options);
+  scoreboard of personal bests with stars; XP, levels, day streaks and trophies; an options screen with
+  backup and restore; mixed-difficulty versions; play-along bass and chords.
 - **Product**: best scores, song info, offline start, session logs you can copy, end-to-end tests in CI.
 
 ## Development goals
@@ -41,7 +44,7 @@ real instrument to judge is listed again under "Waiting on real-device testing".
 - **Song variations** (done): any song can be made **easier** or **harder** (generated from the song
   and a seed): fewer or more passing notes, simpler or busier strum patterns, plainer or more
   syncopated grooves; the difficulty score changes with it. **Aim for** a difficulty (1 to 10) next to
-  "New song" finds a random song near it. To come: a variation per phrase.
+  "New song" finds a random song near it. The **Mixed** version takes each phrase from the easier, original or harder version.
 - **More generators, not just more songs** (chord songs now cover waltz time and five keys): new forms
   and levels for random melodies and grooves; play-along backing
   for melodies.

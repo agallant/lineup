@@ -104,7 +104,32 @@ plainer or busier version made from it (the same every time, so scores compare):
 - **Rhythms**: _Easier_ keeps the hits on the beat and is 15% slower; _Harder_ adds hits between the
   beats (never straight after a kick) at the same tempo.
 
+- **Mixed** takes each phrase (four bars, two in a short song) from the easier, the original or the
+  harder version, chosen from a seed (never all the same), at the song's own tempo: good for
+  practising the jump between plain and busy.
+
 The difficulty in the song info changes with the version, and best scores are kept per version.
+
+## Home, scoreboard, options and backing music
+
+All of this stays on the device (browser storage); nothing is sent anywhere.
+
+- **Home** groups the four games under _Play_, the scoreboard under _Progress_, and the timing
+  calibration and the mic and latency test under _Set up_ (they are tools, not games), with your level
+  and streak on top.
+- **Scoreboard** (`#/scores`) lists your best score on every song with stars (★ 60%, ★★ 80%, ★★★ 95%
+  accuracy), filtered by game and sorted by newest, highest score, most stars or hardest song.
+- **Progress**: every finished song earns XP (more for accuracy and for harder songs, plus a bonus for
+  a clean run and for the first song of the day), which raises your level; playing on days in a row
+  builds a streak; trophies (First notes, Flawless, Sharps and flats, Full band...) are earned once.
+  The auto-play demo earns nothing.
+- **Options** (`#/options`): metronome, guide tone, play-along backing, scoring strictness, Windline
+  octaves and fingerings, chord checking, the debug overlay; reset options, erase scores or progress
+  (two taps), and save or restore a **backup file** of everything the app keeps.
+- **Play-along backing** (Options, off by default): quiet music under a song, for headphones. _Bass
+  line_ plays the root of each bar's chord (and the fifth half way through); _Bass and chords_ adds
+  the chord softly. A chord song uses its own chords; a melody is harmonised a bar at a time from the
+  notes in the bar (I, ii, iii, IV, V or vi of its key), ending at home; a rhythm gets none.
 
 ## Singline (voice) on the iPad
 
