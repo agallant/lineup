@@ -139,6 +139,14 @@ describe('SettingsStore', () => {
     expect(s.update({ variation: 'hardest' as never }).variation).toBe('original');
   });
 
+  it('remembers that the help page was opened', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get().seenHelp).toBe(false);
+    s.update({ seenHelp: true });
+    expect(new SettingsStore(mem).get().seenHelp).toBe(true);
+  });
+
   it('remembers the colour scheme, and ignores anything else', () => {
     const mem = new Mem();
     const s = new SettingsStore(mem);

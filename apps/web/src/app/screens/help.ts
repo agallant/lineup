@@ -1,7 +1,9 @@
 import type { Screen } from '../router';
+import { SettingsStore, safeLocalStorage } from '../settings';
 
 /** A short guide to the games, scoring, progress and privacy. */
 export const helpScreen: Screen = (root) => {
+  new SettingsStore(safeLocalStorage()).update({ seenHelp: true });
   root.innerHTML = `
     <p><a href="#/">← Home</a></p>
     <h1>How to play</h1>

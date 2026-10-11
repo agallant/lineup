@@ -49,12 +49,20 @@ export const homeScreen: Screen = (root) => {
   const state = store.get();
   const lvl = levelFor(state.xp);
   const streak = store.streak(now);
-  const goal = new SettingsStore(safeLocalStorage()).get().goalMinutes;
+  const prefs = new SettingsStore(safeLocalStorage()).get();
+  const goal = prefs.goalMinutes;
   const minutes = weekMinutes(state.log, now);
   const trophies = Object.keys(state.achievements).length;
   root.innerHTML = `
     <h1>Lineup</h1>
     <p>Rhythm games you play with a real instrument. Everything stays on this device.</p>
+
+    ${
+      prefs.seenHelp
+        ? ''
+        : `<a class="card" href="#/help" data-id="new-here"><strong>New here?</strong>
+      <span class="muted">A one-minute guide to the games, scoring and what stays private.</span></a>`
+    }
 
     <a class="card level" href="#/scores" data-id="level-card">
       <span class="level-name">Level ${lvl.level} · ${lvl.title}</span>

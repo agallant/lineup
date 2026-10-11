@@ -47,6 +47,8 @@ export interface Settings {
   goalMinutes: number;
   /** How large the page's text is. */
   textSize: TextSize;
+  /** Whether the how-to-play page has been opened (the home menu stops suggesting it). */
+  seenHelp: boolean;
   /** The colour scheme: dark, light or high contrast. */
   theme: Theme;
   /** A short jingle on a new best, a trophy, a level up or a cleared daily challenge. */
@@ -91,6 +93,7 @@ export const DEFAULT_SETTINGS: Settings = {
   goalMinutes: 0,
   textSize: 'normal',
   theme: 'dark',
+  seenHelp: false,
   accompaniment: 'off',
   keyShift: 0,
   keyShifts: {},
@@ -191,6 +194,7 @@ function sanitize(raw: unknown): Settings {
     goalMinutes: GOAL_MINUTES.includes(r['goalMinutes'] as number)
       ? (r['goalMinutes'] as number)
       : DEFAULT_SETTINGS.goalMinutes,
+    seenHelp: typeof r['seenHelp'] === 'boolean' ? r['seenHelp'] : DEFAULT_SETTINGS.seenHelp,
     theme: THEMES.includes(r['theme'] as Theme) ? (r['theme'] as Theme) : DEFAULT_SETTINGS.theme,
     textSize: TEXT_SIZES.includes(r['textSize'] as TextSize)
       ? (r['textSize'] as TextSize)

@@ -927,6 +927,10 @@ const scenarios = {
       });
       await page.goto(URL_BASE);
       check(
+        (await page.$('[data-id=new-here]')) !== null,
+        'home: a first visit suggests the how-to-play page',
+      );
+      check(
         (await page.$$('[data-id=games] a')).length === 5,
         'home: four instrument games and ear training under Play',
       );
@@ -990,6 +994,12 @@ const scenarios = {
       check(
         (await page.$$('[data-trophy].earned')).length === 1,
         'scoreboard: one trophy earned, the rest locked',
+      );
+      await page.goto(URL_BASE + '#/help');
+      await page.goto(URL_BASE);
+      check(
+        (await page.$('[data-id=new-here]')) === null,
+        'home: the suggestion goes away once the page was opened',
       );
       await page.goto(URL_BASE + '#/help');
       check(
