@@ -153,9 +153,17 @@ export function suggestNext(
     const stars = starsBySong(entries, course.profileId, true);
     const progress = courseProgress(course, (id) => stars.get(id) ?? null);
     const step = progress.steps.find((s) => s.state === 'open');
+    // activity on this path's own songs, by when they were last played (not when the best was set)
+    const songs = new Set<string>(course.steps.map((s) => s.songId));
     const played = entries
-      .filter((e) => e.key.startsWith(`${course.profileId}|`))
-      .reduce((latest, e) => (e.best.at > latest ? e.best.at : latest), '');
+      .filter((e) => {
+        const [profile = '', songId = ''] = e.key.split('|');
+        return profile === course.profileId && songs.has(songId);
+      })
+      .reduce((latest, e) => {
+        const at = e.best.lastPlayed ?? e.best.at;
+        return at > latest ? at : latest;
+      }, '');
     return { course, step, played, order };
   }).filter((c): c is typeof c & { step: StepProgress } => c.step !== undefined);
   candidates.sort((a, b) =>

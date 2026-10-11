@@ -1001,8 +1001,9 @@ const scenarios = {
         'home: a first visit suggests the how-to-play page',
       );
       check(
-        ((await page.getAttribute('[data-id=suggested]', 'href')) ?? '').includes('?song='),
-        'home: the next learning-path step is suggested',
+        (await page.getAttribute('[data-id=suggested]', 'href')) ===
+          '#/strum?song=ex-ukulele-strum-changes-c-am',
+        'home: the most recently played path suggests its open step',
       );
       check(
         (await page.$$('[data-id=games] a')).length === 5,
