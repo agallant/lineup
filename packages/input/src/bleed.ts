@@ -1,5 +1,6 @@
 import type { PitchFrame } from '@lineup/core';
 
+/** Outcome of the test-tone bleed check for pitch input. */
 export interface BleedResult {
   /** Fraction of frames in which the test tone was heard, 0..1. */
   fraction: number;
@@ -9,6 +10,10 @@ export interface BleedResult {
   bleeding: boolean;
 }
 
+/**
+ * Thresholds for detectBleed: tone match tolerance in cents and the fraction of frames that
+ * counts as bleed.
+ */
 export interface BleedOptions {
   /** How close (cents) a frame must be to the tone to count. */
   toleranceCents?: number;
@@ -49,6 +54,7 @@ export function detectBleed(
   };
 }
 
+/** Outcome of the click bleed check for percussion input. */
 export interface ClickBleedResult {
   /** Fraction of the played clicks that were followed by a detected onset, 0..1. */
   fraction: number;
@@ -58,6 +64,10 @@ export interface ClickBleedResult {
   bleeding: boolean;
 }
 
+/**
+ * Thresholds for the click bleed check: the window after a click in seconds and the fraction
+ * that counts as bleed.
+ */
 export interface ClickBleedOptions {
   /** An onset this soon after a click (seconds) counts as that click leaking. */
   window?: number;

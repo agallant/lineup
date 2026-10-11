@@ -66,6 +66,7 @@ export const builtinSongs: Readonly<Record<string, Chart>> = {
 /** What a menu entry is: a song, or practice material such as a scale. */
 export type SongCategory = 'song' | 'exercise';
 
+/** Whether a built-in id is practice material (an exercise) or a song. */
 export const songCategory = (id: string): SongCategory =>
   Object.hasOwn(EXERCISES, id) ? 'exercise' : 'song';
 

@@ -2,6 +2,7 @@ import {
   CalibrationStore,
   EnrollmentSession,
   MAX_SEED,
+  type MelodySpec,
   MELODY_LEVELS,
   SCALES,
   SongClock,
@@ -22,6 +23,7 @@ import {
   melodyId,
   melodyScalesFor,
   randomSeed,
+  seedForDifficulty,
   rescaleChart,
   songsFor,
   type Chart,
@@ -62,6 +64,7 @@ import {
   RANDOM_MELODY,
   addRandomOptions,
   fillSongMenu,
+  fillTargetMenu,
 } from '../song-menu';
 import type { Screen } from '../router';
 
@@ -109,6 +112,7 @@ const setup = (c: HitScreenConfig) => `
       <label data-id="challenge-scale-label">Scale <select data-id="challenge-scale"></select></label>
       <label>Level <select data-id="challenge-level"></select></label>
       <label>Seed <input data-id="challenge-seed" type="number" min="0" max="${MAX_SEED}" step="1" inputmode="numeric" /></label>
+      <label>Aim for <select data-id="challenge-target"></select></label>
       <button data-id="challenge-new">New song</button>
     </div>
     <p data-id="mode-note"></p>
@@ -269,25 +273,34 @@ export const createHitScreen =
       levelSel.add(new Option(level[0]!.toUpperCase() + level.slice(1), level));
     /** The random song chosen in the menu, built for the current spec (once per spec), or null. */
     let randomCache: { id: string; chart: Chart } | null = null;
-    const randomEntry = (): { id: string; chart: Chart } | null => {
-      const spec = settings.get().challenge;
-      let id: string;
-      let build: () => Chart;
+    /** The random song the menu has chosen, as a pair of its id and a builder for any spec. */
+    const randomKind = (
+      spec: MelodySpec,
+    ): { id: string; build: (spec: MelodySpec) => Chart } | null => {
       if (songSel.value === RANDOM_CHORDS || songSel.value === RANDOM_WALTZ) {
         const waltz = songSel.value === RANDOM_WALTZ;
-        const chordSpec = waltz ? { ...spec, waltz } : spec;
-        id = chordSongId(chordSpec);
-        build = () => generateChordSong(chordSpec);
-      } else if (songSel.value === RANDOM_GROOVE) {
-        id = grooveId(profile.id as GrooveProfile, spec);
-        build = () => generateGroove(profile.id as GrooveProfile, spec);
-      } else if (songSel.value === RANDOM_MELODY) {
-        id = melodyId(profile.id, spec);
-        build = () => generateMelody(profile.id, spec);
-      } else {
-        return null;
+        const withWaltz = (s: MelodySpec) => (waltz ? { ...s, waltz } : s);
+        return {
+          id: chordSongId(withWaltz(spec)),
+          build: (s) => generateChordSong(withWaltz(s)),
+        };
       }
-      if (randomCache?.id !== id) randomCache = { id, chart: build() };
+      if (songSel.value === RANDOM_GROOVE) {
+        return {
+          id: grooveId(profile.id as GrooveProfile, spec),
+          build: (s) => generateGroove(profile.id as GrooveProfile, s),
+        };
+      }
+      if (songSel.value === RANDOM_MELODY) {
+        return { id: melodyId(profile.id, spec), build: (s) => generateMelody(profile.id, s) };
+      }
+      return null;
+    };
+    const randomEntry = (): { id: string; chart: Chart } | null => {
+      const spec = settings.get().challenge;
+      const kind = randomKind(spec);
+      if (!kind) return null;
+      if (randomCache?.id !== kind.id) randomCache = { id: kind.id, chart: kind.build(spec) };
       return randomCache;
     };
     const showChallenge = () => {
@@ -417,7 +430,28 @@ export const createHitScreen =
       const seed = Number(seedInput.value);
       updateChallenge(isSeed(seed) ? { seed } : {}); // an invalid entry snaps back to the current seed
     });
-    S('challenge-new').addEventListener('click', () => updateChallenge({ seed: randomSeed() }));
+    const targetSel = S<HTMLSelectElement>('challenge-target');
+    fillTargetMenu(targetSel);
+    targetSel.value = String(settings.get().target ?? 0);
+    targetSel.addEventListener('change', () => {
+      const n = Number(targetSel.value);
+      settings.update({ target: n >= 1 ? n : null });
+    });
+    S('challenge-new').addEventListener('click', () => {
+      const spec = settings.get().challenge;
+      const target = settings.get().target;
+      const kind = randomKind(spec);
+      const variation = settings.get().variation;
+      // rate each candidate the way it will be played, in the chosen version
+      const played = (seed: number): Chart => {
+        const next = { ...spec, seed };
+        const k = randomKind(next)!;
+        return varyChart(k.build(next), variation, hashSeed(k.id));
+      };
+      updateChallenge({
+        seed: target !== null && kind ? seedForDifficulty(played, target) : randomSeed(),
+      });
+    });
     S<HTMLInputElement>('opt-metronome').addEventListener('change', (e) =>
       settings.update({ metronome: (e.target as HTMLInputElement).checked }),
     );

@@ -139,6 +139,16 @@ describe('SettingsStore', () => {
     expect(s.update({ variation: 'hardest' as never }).variation).toBe('original');
   });
 
+  it('remembers the difficulty a new random song aims for, and ignores anything else', () => {
+    const mem = new Mem();
+    const s = new SettingsStore(mem);
+    expect(s.get().target).toBeNull();
+    expect(s.update({ target: 6 }).target).toBe(6);
+    expect(new SettingsStore(mem).get().target).toBe(6);
+    for (const bad of [0, 11, 2.5, '3'])
+      expect(s.update({ target: bad as never }).target).toBeNull();
+  });
+
   it('keeps a valid random-melody spec and repairs a bad one', () => {
     const mem = new Map<string, string>();
     const store = {

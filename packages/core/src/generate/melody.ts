@@ -7,11 +7,14 @@ import { EXERCISE_TONICS, isPicked } from './exercises';
 /** How demanding a generated melody is. */
 export type MelodyLevel = 'easy' | 'medium' | 'hard';
 
+/** All melody levels, easiest first. */
 export const MELODY_LEVELS: readonly MelodyLevel[] = ['easy', 'medium', 'hard'];
 
+/** Type guard for MelodyLevel. */
 export const isMelodyLevel = (v: unknown): v is MelodyLevel =>
   typeof v === 'string' && (MELODY_LEVELS as readonly string[]).includes(v);
 
+/** Type guard for ScaleId. */
 export const isScaleId = (v: unknown): v is ScaleId =>
   typeof v === 'string' && (SCALE_IDS as readonly string[]).includes(v);
 
@@ -19,6 +22,7 @@ export const isScaleId = (v: unknown): v is ScaleId =>
 export const melodyScalesFor = (profileId: string): readonly ScaleId[] =>
   isPicked(profileId) ? ['major', 'dorian', 'major-pentatonic'] : SCALE_IDS;
 
+/** Inputs that determine a generated melody: seed, scale and level. */
 export interface MelodySpec {
   seed: number;
   scale: ScaleId;

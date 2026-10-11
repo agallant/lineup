@@ -1,6 +1,7 @@
 import type { InputEvent } from '@lineup/core';
 import type { AnalyzerMessage } from './types';
 
+/** When to read the pitch after an onset, as seconds after it, skipping the attack transient. */
 export interface OnsetPitchOptions {
   /** Ignore the attack transient: read pitch starting this long after the onset, seconds. */
   skip?: number;

@@ -3,6 +3,10 @@ import { OnsetWindowAnalyzer } from './onset-window';
 import { PercussionOnsetDetector, type PercussionOnsetOptions } from './percussion-onset';
 import { FEATURE_WINDOW, extractFeatures, featuresToRecord } from './percussion';
 
+/**
+ * Tuning for PercussionAnalyzer: the onset detector, analysis window (samples), lead-in
+ * (seconds) and level frame hop (samples).
+ */
 export interface PercussionAnalyzerOptions {
   onset?: PercussionOnsetOptions;
   /** Samples analysed after each onset. */

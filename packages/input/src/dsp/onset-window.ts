@@ -3,6 +3,10 @@ import type { AnalyzerMessage } from '../types';
 import { MIN_DB, toDb } from './level';
 import type { Onset } from './onset';
 
+/**
+ * Configuration for OnsetWindowAnalyzer: sample rate, the window analysed after each onset and
+ * the onset detector. Sizes are in samples.
+ */
 export interface OnsetWindowConfig {
   sampleRate: number;
   /** Samples analysed after each onset. */

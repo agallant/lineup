@@ -22,6 +22,7 @@ export interface SongRating {
   scale: 'diatonic' | 'chromatic' | null;
 }
 
+/** Name of a chart's difficulty tier, from one star (Beginner) to five (Expert). */
 export type RatingLabel = 'Beginner' | 'Easy' | 'Medium' | 'Hard' | 'Expert';
 
 const LABELS: readonly RatingLabel[] = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert'];

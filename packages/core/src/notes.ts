@@ -1,7 +1,9 @@
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
 
+/** Concert pitch reference: frequency of A4 (MIDI 69) in Hz. */
 export const A4_HZ = 440;
 
+/** The nearest equal-tempered note for a frequency, with the offset from it. */
 export interface NoteInfo {
   /** Nearest MIDI note number. */
   midi: number;
@@ -14,6 +16,7 @@ export interface NoteInfo {
   cents: number;
 }
 
+/** Frequency in Hz of a MIDI note number (A4 = 69 = 440 Hz); fractional values are allowed. */
 export function midiToFrequency(midi: number): number {
   return A4_HZ * 2 ** ((midi - 69) / 12);
 }
@@ -23,15 +26,18 @@ export function frequencyToMidi(hz: number): number {
   return 69 + 12 * Math.log2(hz / A4_HZ);
 }
 
+/** Signed distance in cents from referenceHz to hz (positive = hz is sharp). */
 export function centsBetween(hz: number, referenceHz: number): number {
   return 1200 * Math.log2(hz / referenceHz);
 }
 
+/** Scientific pitch name for a MIDI note number, e.g. 60 gives "C4". */
 export function midiLabel(midi: number): string {
   const name = NAMES[((midi % 12) + 12) % 12] ?? '?';
   return `${name}${Math.floor(midi / 12) - 1}`;
 }
 
+/** The nearest note to a frequency in Hz, with its name, octave and cents offset. */
 export function noteFromFrequency(hz: number): NoteInfo {
   const exact = frequencyToMidi(hz);
   const midi = Math.round(exact);
@@ -40,6 +46,7 @@ export function noteFromFrequency(hz: number): NoteInfo {
   return { midi, name, octave, label: `${name}${octave}`, cents: (exact - midi) * 100 };
 }
 
+/** One open string of the ukulele, with its MIDI pitch. */
 export interface UkuleleString {
   /** Physical string number, 4 (nearest the chin, G) to 1 (A). */
   number: 4 | 3 | 2 | 1;

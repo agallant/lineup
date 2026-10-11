@@ -1,10 +1,12 @@
 /** Floor used instead of -Infinity for silence. */
 export const MIN_DB = -120;
 
+/** Converts a linear amplitude (1 = full scale) to dBFS, floored at MIN_DB for silence. */
 export function toDb(amplitude: number): number {
   return amplitude > 0 ? Math.max(MIN_DB, 20 * Math.log10(amplitude)) : MIN_DB;
 }
 
+/** Root-mean-square amplitude of samples[start, end); 0 for an empty range. */
 export function rms(samples: ArrayLike<number>, start = 0, end = samples.length): number {
   if (end <= start) return 0;
   let sum = 0;
@@ -15,6 +17,7 @@ export function rms(samples: ArrayLike<number>, start = 0, end = samples.length)
   return Math.sqrt(sum / (end - start));
 }
 
+/** Largest absolute sample value in samples[start, end). */
 export function peak(samples: ArrayLike<number>, start = 0, end = samples.length): number {
   let max = 0;
   for (let i = start; i < end; i++) max = Math.max(max, Math.abs(samples[i]!));

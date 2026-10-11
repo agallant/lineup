@@ -12,6 +12,7 @@ const FLOOR_CREEP = 0.001;
 /** Frames within this many dB above the floor count as "the room", not a hit. */
 const FLOOR_TRACK_DB = 4;
 
+/** Tuning for PercussionOnsetDetector. Times are in seconds, levels in dB or dBFS. */
 export interface PercussionOnsetOptions {
   /** Analysis frame in samples (128 = one AudioWorklet render quantum). */
   frameSize?: number;

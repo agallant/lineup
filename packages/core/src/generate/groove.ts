@@ -5,8 +5,10 @@ import { isMelodyLevel, isSeed, MELODY_LEVELS, type MelodyLevel } from './melody
 /** The percussion profiles grooves are written for. */
 export type GrooveProfile = 'drum-kit' | 'hand-percussion' | 'clap';
 
+/** All percussion profiles that have generated grooves. */
 export const GROOVE_PROFILES: readonly GrooveProfile[] = ['drum-kit', 'hand-percussion', 'clap'];
 
+/** Inputs that determine a generated groove: a small whole-number seed and a difficulty level. */
 export interface GrooveSpec {
   seed: number;
   level: MelodyLevel;

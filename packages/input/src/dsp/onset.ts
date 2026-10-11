@@ -1,5 +1,6 @@
 import { toDb } from './level';
 
+/** Tuning for OnsetDetector. Times are in seconds and levels in dB. */
 export interface OnsetDetectorOptions {
   /** Analysis frame in samples. 128 = one AudioWorklet render quantum. */
   frameSize?: number;
@@ -13,6 +14,7 @@ export interface OnsetDetectorOptions {
   refractory?: number;
 }
 
+/** A detected attack in the input stream. */
 export interface Onset {
   /** Stream sample index of the attack. */
   frame: number;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadChart } from '../chart';
+import { rateChart } from '../difficulty';
 import { getProfile } from '../profiles';
 import { songsFor } from '../songs';
 import {
@@ -11,11 +12,13 @@ import {
   createRng,
   degreeToMidi,
   exerciseCharts,
+  generateChordSong,
   hashSeed,
   majorPitchClasses,
   pick,
   pickWeighted,
   scalePitchClasses,
+  seedForDifficulty,
 } from '.';
 
 describe('createRng', () => {
@@ -143,16 +146,18 @@ describe('exercises', () => {
     expect(exerciseCharts('nope')).toEqual({});
   });
 
-  it.each(profiles)('%s: lists thirteen exercises with tidy ids and titles', (profileId) => {
+  it.each(profiles)('%s: lists its exercises with tidy ids and titles', (profileId) => {
     const charts = exerciseCharts(profileId);
-    expect(Object.keys(charts)).toHaveLength(13);
+    expect(Object.keys(charts).length).toBeGreaterThanOrEqual(13);
     for (const [id, chart] of Object.entries(charts)) {
       expect(id).toMatch(new RegExp(`^ex-${profileId}-[a-z-]+$`));
       expect(chart.meta.instruments).toEqual([profileId]);
       expect(chart.meta.title).toMatch(/^[A-Z][^:]+: .+/);
       expect(chart.meta.tonic).toBe(EXERCISE_TONICS[profileId]);
     }
-    expect(new Set(Object.values(charts).map((c) => c.meta.title)).size).toBe(13);
+    expect(new Set(Object.values(charts).map((c) => c.meta.title)).size).toBe(
+      Object.keys(charts).length,
+    );
   });
 
   it.each(profiles)('%s: every exercise is a valid chart that is easy to play', (profileId) => {
@@ -178,7 +183,7 @@ describe('exercises', () => {
 
   it.each(profiles)('%s: every note belongs to the key the exercise says it is in', (profileId) => {
     for (const [id, chart] of Object.entries(exerciseCharts(profileId))) {
-      if (id.includes('chromatic')) continue; // every semitone, by design
+      if (id.includes('chromatic') || id.includes('range')) continue; // not in one key, by design
       const parent = majorPitchClasses(chart.meta.tonic!);
       for (const n of chart.notes) expect(parent, `${id} ${n.pitch}`).toContain(n.pitch! % 12);
     }
@@ -243,10 +248,14 @@ describe('ukulele exercises', () => {
   it('are the scales that stay on the first frets, plucked on single strings', () => {
     expect(Object.keys(charts).sort()).toEqual([
       'ex-ukulele-strum-chromatic-up-down',
+      'ex-ukulele-strum-dorian-thirds',
       'ex-ukulele-strum-dorian-up-down',
       'ex-ukulele-strum-major-arpeggios',
+      'ex-ukulele-strum-major-fifths',
+      'ex-ukulele-strum-major-fourths',
       'ex-ukulele-strum-major-ladder',
       'ex-ukulele-strum-major-long-tones',
+      'ex-ukulele-strum-major-octaves',
       'ex-ukulele-strum-major-patterns',
       'ex-ukulele-strum-major-pentatonic-up-down',
       'ex-ukulele-strum-major-thirds',
@@ -280,5 +289,32 @@ describe('ukulele exercises', () => {
     const first = list.findIndex((s) => s.category === 'exercise');
     expect(first).toBeGreaterThan(0);
     expect(list.slice(first).every((s) => s.category === 'exercise')).toBe(true);
+  });
+});
+
+describe('seedForDifficulty', () => {
+  const sequence = (start: number) => {
+    let s = start;
+    return () => {
+      s = (s * 1664525 + 1013904223) % 4294967296;
+      return s / 4294967296;
+    };
+  };
+
+  it('finds a random song at (or next to) the difficulty asked for, repeatably', () => {
+    const build = (seed: number) => generateChordSong({ seed, level: 'hard' });
+    // targets that some seed is known to reach
+    for (const known of [5, 6, 7]) {
+      const target = rateChart(build(known)).score;
+      const seed = seedForDifficulty(build, target, sequence(target), 400);
+      expect(seedForDifficulty(build, target, sequence(target), 400)).toBe(seed);
+      expect(rateChart(build(seed)).score).toBe(target);
+    }
+  });
+
+  it('gives the nearest song when the target cannot be reached', () => {
+    const build = (seed: number) => generateChordSong({ seed, level: 'easy' });
+    const seed = seedForDifficulty(build, 10, sequence(1), 20);
+    expect(rateChart(build(seed)).score).toBeLessThan(10);
   });
 });

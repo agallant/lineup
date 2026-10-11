@@ -7,6 +7,10 @@ import {
 import { InputAnalyzer, analyzerOptionsFromProfile } from '@lineup/input';
 import { addInto, mixAt, rng, roomNoise, silence, type RoomNoiseOptions } from '@lineup/testkit';
 
+/**
+ * Setup for a simulated calibration run: the response sound, the true latency (seconds),
+ * timing jitter, click count and spacing, and room noise.
+ */
 export interface CalibrationSimOptions {
   /** Makes one response sound (a clap, a strum, a tap): sample 0 is the attack. */
   response: (index: number, sampleRate: number) => Float32Array;

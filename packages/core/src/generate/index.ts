@@ -6,3 +6,4 @@ export * from './chordsong';
 export * from './groove';
 export * from './rudiments';
 export * from './variations';
+export * from './target';

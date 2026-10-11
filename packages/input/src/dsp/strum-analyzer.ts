@@ -11,6 +11,10 @@ import { OnsetWindowAnalyzer } from './onset-window';
 /** Shortest stretch of audio a chord is decided from (about 50 ms: a semitone near C4 is 15 Hz, a 50 ms Hann window resolves ~40 Hz, so closed sets only). */
 const MIN_CHORD_SAMPLES = 2400;
 
+/**
+ * Tuning for StrumAnalyzer: the onset detector, the song's chord shapes, the post-attack skip
+ * in seconds and the level frame hop in samples.
+ */
 export interface StrumAnalyzerOptions {
   onset?: OnsetDetectorOptions;
   /** The chords this song uses (name -> MIDI notes of the four strings). Without them events carry no chord. */

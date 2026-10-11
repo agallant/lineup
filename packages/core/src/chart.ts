@@ -16,6 +16,7 @@ import {
 /** Current chart format. Bump it only together with a migration. */
 export const CHART_VERSION = 1;
 
+/** Extra things a note requires beyond timing: chord, strum direction and fret layout. */
 export interface NoteExpectation {
   /** Chord name for strum modes, e.g. "C", "Am". Enforced from L5 on. */
   chord?: string;
@@ -45,6 +46,7 @@ export interface ChartNote {
   expected?: NoteExpectation;
 }
 
+/** Song-level chart information: title, tempo (bpm), count-in and which instruments it targets. */
 export interface ChartMeta {
   title: string;
   artist?: string;
@@ -62,6 +64,7 @@ export interface ChartMeta {
   tonic?: number;
 }
 
+/** A validated song chart: format version, metadata and time-ordered notes. */
 export interface Chart {
   version: typeof CHART_VERSION;
   meta: ChartMeta;
@@ -86,6 +89,10 @@ export type ChartMigration = (raw: Record<string, unknown>) => Record<string, un
 /** There is no older format yet: v1 is the first. Add `1: (raw) => ...` when v2 lands. */
 export const CHART_MIGRATIONS: Readonly<Record<number, ChartMigration>> = {};
 
+/**
+ * Upgrades a raw chart object step by step to the target version using the migrations table.
+ * Fails for unknown or too-new versions.
+ */
 export function migrateChart(
   raw: Record<string, unknown>,
   migrations: Readonly<Record<number, ChartMigration>> = CHART_MIGRATIONS,
@@ -255,6 +262,7 @@ export function parseChart(text: string): Loaded<Chart> {
 
 // ---- authoring helpers --------------------------------------------------
 
+/** A note positioned in beats rather than seconds, as accepted by chartFromBeats. */
 export interface BeatNote {
   /** Position in beats from song time 0. */
   beat: number;

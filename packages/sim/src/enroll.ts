@@ -10,6 +10,10 @@ import { InputAnalyzer, analyzerOptionsFromProfile } from '@lineup/input';
 import { renderPerformance, type PerformanceOptions } from './performance';
 import { percussionPerformer, type HitSound, type PercussionPerformerOptions } from './performers';
 
+/**
+ * Result of a simulated enrollment: the trained model, its warnings and the outcome of every
+ * onset.
+ */
 export interface SyntheticEnrollment {
   model: TimbreModel;
   warnings: string[];

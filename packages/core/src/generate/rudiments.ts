@@ -10,7 +10,7 @@ interface Rudiment {
   bpm: number;
   /** Steps per beat: 2 is eighth notes, 3 is triplets. */
   stepsPerBeat: number;
-  /** One bar per lane (4 beats), repeated. */
+  /** One phrase per lane (a bar of 4 beats, or two for a longer figure), repeated. */
   lanes: Readonly<Record<string, string>>;
 }
 
@@ -49,6 +49,13 @@ const RUDIMENTS: Readonly<Record<(typeof RHYTHM_EXERCISE_PROFILES)[number], read
         stepsPerBeat: 3,
         lanes: { clap: 'x.x.x.x.x.x.', tap: '.x.x.x.x.x.x' },
       },
+      {
+        id: 'paradiddle-diddle',
+        title: 'Paradiddle-diddle (R L R R L L)',
+        bpm: 60,
+        stepsPerBeat: 2,
+        lanes: { clap: 'x.xx..', tap: '.x..xx' },
+      },
     ],
     'drum-kit': [
       {
@@ -78,6 +85,27 @@ const RUDIMENTS: Readonly<Record<(typeof RHYTHM_EXERCISE_PROFILES)[number], read
         bpm: 70,
         stepsPerBeat: 2,
         lanes: { snare: 'xxxxxxxx' },
+      },
+      {
+        id: 'boom-boom-clap',
+        title: 'Boom boom clap (two kicks, then the snare)',
+        bpm: 76,
+        stepsPerBeat: 2,
+        lanes: { kick: 'x.x.....', snare: '....x...' },
+      },
+      {
+        id: 'disco',
+        title: 'Disco: kick on the beat, hat between',
+        bpm: 76,
+        stepsPerBeat: 2,
+        lanes: { kick: 'x.x.x.x.', hat: '.x.x.x.x' },
+      },
+      {
+        id: 'snare-triplets',
+        title: 'Snare triplets',
+        bpm: 56,
+        stepsPerBeat: 3,
+        lanes: { snare: 'xxxxxxxxxxxx' },
       },
     ],
     clap: [
@@ -122,6 +150,20 @@ const RUDIMENTS: Readonly<Record<(typeof RHYTHM_EXERCISE_PROFILES)[number], read
         bpm: 60,
         stepsPerBeat: 3,
         lanes: { hit: 'xxxxxxxxxxxx' },
+      },
+      {
+        id: 'tresillo',
+        title: 'Tresillo (3 + 3 + 2)',
+        bpm: 76,
+        stepsPerBeat: 2,
+        lanes: { hit: 'x..x..x.' },
+      },
+      {
+        id: 'son-clave',
+        title: 'Son clave (3-2)',
+        bpm: 84,
+        stepsPerBeat: 2,
+        lanes: { hit: 'x..x..x...x.x...' },
       },
     ],
   };

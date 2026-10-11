@@ -13,6 +13,10 @@ export type Performer = (
   random: () => number,
 ) => Float32Array | null;
 
+/**
+ * How a simulated player performs a chart: latency and jitter (seconds), skipped notes, noise
+ * and lead-in.
+ */
 export interface PerformanceOptions {
   sampleRate?: number;
   /**
@@ -45,6 +49,7 @@ export interface PerformanceOptions {
   leadSamples?: number;
 }
 
+/** What the simulated player did for one chart note and when the attack reaches the analyzer. */
 export interface PlayedNote {
   noteIndex: number;
   played: boolean;
@@ -52,6 +57,7 @@ export interface PlayedNote {
   soundTime: number;
 }
 
+/** The audio of a simulated performance with its clock anchors and per-note plan. */
 export interface RenderedPerformance {
   signal: Float32Array;
   sampleRate: number;

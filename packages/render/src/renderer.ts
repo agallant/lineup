@@ -33,6 +33,7 @@ export type Canvas2D = Pick<
   | 'shadowColor'
 >;
 
+/** Canvas size in CSS pixels. */
 export interface RenderSize {
   /** CSS pixels. */
   width: number;
@@ -72,6 +73,10 @@ export interface RenderView {
   hits?: readonly HitFlash[];
 }
 
+/**
+ * Draws one frame of a game view onto a 2D canvas context. Each renderer handles one
+ * RendererKind.
+ */
 export interface Renderer {
   readonly kind: RendererKind;
   draw(g: Canvas2D, size: RenderSize, view: RenderView): void;

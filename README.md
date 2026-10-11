@@ -156,7 +156,7 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    common progressions such as I–IV–V–I and I–V–vi–IV, in C, G, D, F or A, the strum pattern repeating
    with a variation every four bars, ending at home), **🎲 Random waltz (3/4)** (the same in three
    beats to the bar) and **🎲 Random melody (picked)**. Pick a
-   level, press _New song_ or type a seed to replay one; the seed is shown in the song info.
+   level (and optionally **Aim for** a difficulty from 1 to 10), press _New song_ or type a seed to replay one; the seed is shown in the song info.
 3. **Also check the chords** (off by default, experimental): the analyzer is told which chords the
    song uses and a strum of a clearly different chord misses ("wrong chord" is counted on the results
    screen). A strum it cannot name still counts for timing. Turn it off if it penalises you unfairly

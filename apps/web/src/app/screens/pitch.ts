@@ -22,6 +22,7 @@ import {
   letterGrade,
   melodyId,
   randomSeed,
+  seedForDifficulty,
   rescaleChart,
   shiftForInstrument,
   songsFor,
@@ -61,7 +62,7 @@ import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { SettingsStore, keyShiftFor, safeLocalStorage } from '../settings';
-import { RANDOM_MELODY, addRandomMelodyOption, fillSongMenu } from '../song-menu';
+import { RANDOM_MELODY, addRandomMelodyOption, fillSongMenu, fillTargetMenu } from '../song-menu';
 import { formatCents, formatDb } from '../format';
 import type { Screen } from '../router';
 
@@ -138,6 +139,7 @@ const setup = (c: PitchScreenConfig) => `
       <label>Scale <select data-id="challenge-scale"></select></label>
       <label>Level <select data-id="challenge-level"></select></label>
       <label>Seed <input data-id="challenge-seed" type="number" min="0" max="${MAX_SEED}" step="1" inputmode="numeric" /></label>
+      <label>Aim for <select data-id="challenge-target"></select></label>
       <button data-id="challenge-new">New melody</button>
     </div>
     <p data-id="range"></p>
@@ -483,7 +485,28 @@ export const createPitchScreen =
       const seed = Number(seedInput.value);
       updateChallenge(isSeed(seed) ? { seed } : {}); // an invalid entry snaps back to the current seed
     });
-    S('challenge-new').addEventListener('click', () => updateChallenge({ seed: randomSeed() }));
+    const targetSel = S<HTMLSelectElement>('challenge-target');
+    fillTargetMenu(targetSel);
+    targetSel.value = String(settings.get().target ?? 0);
+    targetSel.addEventListener('change', () => {
+      const n = Number(targetSel.value);
+      settings.update({ target: n >= 1 ? n : null });
+    });
+    S('challenge-new').addEventListener('click', () => {
+      const spec = settings.get().challenge;
+      const target = settings.get().target;
+      const variation = settings.get().variation;
+      // rate each candidate the way it will be played, in the chosen version
+      const played = (seed: number): Chart => {
+        const next = { ...spec, seed };
+        return varyChart(
+          generateMelody(c.profileId, next),
+          variation,
+          hashSeed(melodyId(c.profileId, next)),
+        );
+      };
+      updateChallenge({ seed: target !== null ? seedForDifficulty(played, target) : randomSeed() });
+    });
     keySel.addEventListener('change', () => {
       settings.update({
         keyShifts: { ...settings.get().keyShifts, [c.profileId]: Number(keySel.value) },

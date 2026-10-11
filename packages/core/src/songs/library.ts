@@ -17,9 +17,14 @@ interface Tune {
   notes: string;
   /** The tune as wind instruments play it, when a note must move to stay above the tonic. */
   windNotes?: string;
+  /** Dips below the tonic, which a whistle or recorder cannot play, so it is for the voice only. */
+  voiceOnly?: boolean;
 }
 
-/** Tunes for the voice and for wind instruments, easiest first. Every one is in C major. */
+/**
+ * Tunes for the voice and for wind instruments, roughly easiest first. Most are in C major; each
+ * names its own tonic, and a tune with sharps or flats outside its key is chromatic.
+ */
 const TUNES: readonly Tune[] = [
   {
     id: 'hot-cross-buns',
@@ -83,6 +88,49 @@ const TUNES: readonly Tune[] = [
       D5:2 D5 | F5:1.5 D5:.5 B4 | C5:3 | E5:3 |
       C5 G4 E4 | G4:1.5 F4:.5 D4 | C4:3`,
   },
+  {
+    id: 'auld-lang-syne',
+    title: 'Auld Lang Syne',
+    artist: 'Traditional',
+    bpm: 92,
+    tonic: 60,
+    voiceOnly: true,
+    notes: `G3 | C4:1.5 C4:.5 C4 E4 | D4:1.5 C4:.5 D4 E4 | C4:1.5 C4:.5 E4 G4 | A4:3 A4 |
+      G4:1.5 E4:.5 E4 C4 | D4:1.5 C4:.5 D4 E4 | C4:1.5 A3:.5 A3 G3 | C4:4`,
+  },
+  {
+    id: 'amazing-grace',
+    title: 'Amazing Grace',
+    artist: 'Traditional',
+    bpm: 80,
+    tonic: 60,
+    voiceOnly: true,
+    notes: `G3 | C4:2 E4:.5 C4:.5 | E4:2 D4 | C4:2 A3 | G3:2 G3 | C4:2 E4:.5 C4:.5 | E4:2 D4 | G4:3`,
+  },
+  {
+    id: 'joy-to-the-world',
+    title: 'Joy to the World (opening)',
+    artist: 'Handel / Mason',
+    bpm: 104,
+    tonic: 60,
+    notes: `C5 B4:.75 A4:.25 G4:1.5 F4:.5 | E4 D4 C4:2 | G4 A4:1.5 A4:.5 | B4:1.5 B4:.5 C5:2`,
+  },
+  {
+    id: 'minuet-in-g',
+    title: 'Minuet in G (opening)',
+    artist: 'Petzold',
+    bpm: 112,
+    tonic: 67,
+    notes: `D5 G4:.5 A4:.5 B4:.5 C5:.5 | D5 G4 G4 | E5 C5:.5 D5:.5 E5:.5 F#5:.5 | G5 G4 G4`,
+  },
+  {
+    id: 'fur-elise',
+    title: 'Für Elise (opening, chromatic)',
+    artist: 'Beethoven',
+    bpm: 112,
+    tonic: 60,
+    notes: `E5:.5 D#5:.5 E5:.5 D#5:.5 E5:.5 B4:.5 D5:.5 C5:.5 | A4:1.5 r:.5 C4:.5 E4:.5 A4:.5 | B4:1.5 r:.5 E4:.5 G#4:.5 B4:.5 | C5:1.5`,
+  },
 ];
 
 /** The same tunes as songs for one pitched profile, `shift` semitones from the written pitch. */
@@ -93,7 +141,7 @@ function tunesFor(
   wind = false,
 ): Record<string, Chart> {
   return Object.fromEntries(
-    TUNES.map((t) => [
+    TUNES.filter((t) => !(wind && t.voiceOnly)).map((t) => [
       `${prefix}-${t.id}`,
       melodyChart(
         {
@@ -266,6 +314,14 @@ export const KIT_SONGS: Readonly<Record<string, Chart>> = {
       kick: 'x.....x. | x.x...x. | x.....x. | x.x.....',
       snare: '....x... | ....x... | ....x... | ....x.xx',
       hat: '.xxx.x.x | .x.x.x.x | .xxx.x.x | .x.x.x..',
+    },
+  ),
+  'kit-funk': grooveChart(
+    { title: 'Funk groove (two bars)', artist: 'Lineup', bpm: 76, instruments: ['drum-kit'] },
+    {
+      kick: 'x..x.... | ..x.....',
+      snare: '....x... | ....x..x',
+      hat: '.xx..xx. | .x.x.x..',
     },
   ),
 };

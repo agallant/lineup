@@ -73,6 +73,10 @@ export function chordChroma(samples: ArrayLike<number>, sampleRate: number): Flo
   return normalise(chroma);
 }
 
+/**
+ * The result of chord recognition: the best candidate, its similarity score and margin over
+ * the runner-up.
+ */
 export interface ChordMatch {
   /** The best-fitting candidate. */
   chord: string;
@@ -84,6 +88,7 @@ export interface ChordMatch {
   ranked: { chord: string; score: number }[];
 }
 
+/** Acceptance thresholds for ChordRecognizer, both in similarity units (0..1). */
 export interface ChordRecognizerOptions {
   /** Below this similarity nothing is reported (silence, noise, an unrelated sound). */
   minScore?: number;
