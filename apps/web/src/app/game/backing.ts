@@ -1,5 +1,6 @@
 import type { Chart, SongClock } from '@lineup/core';
 import { planAccompaniment, type AccompanimentLevel } from './accompaniment';
+import { planDrums, type DrumStyle } from './drums';
 
 export type BackingEvent =
   | { kind: 'click'; songTime: number; accent: boolean }
@@ -124,12 +125,13 @@ export function playBacking(
 /** Everything audible under a song: clicks, guide tones, and optionally accompaniment, in song-time order. */
 export function planAllBacking(
   chart: Chart,
-  options: BackingOptions & { accompaniment?: AccompanimentLevel | 'off' },
+  options: BackingOptions & { accompaniment?: AccompanimentLevel | 'off'; drums?: DrumStyle },
 ): BackingEvent[] {
   const events = planBacking(chart, options);
   if (options.accompaniment && options.accompaniment !== 'off') {
     events.push(...planAccompaniment(chart, options.accompaniment));
   }
+  if (options.drums) events.push(...planDrums(chart, options.drums));
   return events.sort((a, b) => a.songTime - b.songTime);
 }
 

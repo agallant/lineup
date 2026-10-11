@@ -836,6 +836,7 @@ export const createHitScreen =
             metronome: opts.metronome,
             guideTone: false,
             accompaniment: settings.get().accompaniment,
+            drums: c.strum ? settings.get().drums : 'off',
           }),
           ...listen.tones,
         ].sort((a, b) => a.songTime - b.songTime),
@@ -867,9 +868,11 @@ export const createHitScreen =
         const now = clock.now();
         game.update();
         const { g, width, height } = fitCanvas(stage);
-        renderer.draw(g, { width, height }, game.view());
-        // unseen: after the listening part the notes are hidden, so the rhythm is played from memory
-        stage.style.opacity = blind() && listen.end > 0 && now >= listen.end - spb ? '0.08' : '';
+        // unseen: after the listening part the notes are hidden (the lanes and now line stay), so the
+        // rhythm is played from memory
+        const view = game.view();
+        const hideNotes = blind() && listen.end > 0 && now >= listen.end - spb;
+        renderer.draw(g, { width, height }, hideNotes ? { ...view, notes: [] } : view);
 
         const s = game.session.score;
         P('score').textContent = String(s.score);
