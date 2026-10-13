@@ -15,6 +15,7 @@ import {
 /** How much backing music plays under a song. */
 export type Accompaniment = 'off' | 'bass' | 'full';
 
+import { DRONES, type Drone } from './game/backing';
 import { DRUM_STYLES, type DrumStyle } from './game/drums';
 
 export const ACCOMPANIMENTS: readonly Accompaniment[] = ['off', 'bass', 'full'];
@@ -61,6 +62,8 @@ export interface Settings {
   accompaniment: Accompaniment;
   /** A quiet drum loop under Singline, Windline and Strumline songs (needs headphones). */
   drums: DrumStyle;
+  /** Windline: a held tone under the song, the way a pentatonic flute is played (needs headphones). */
+  drone: Drone;
   /** Key change in semitones applied to the chart. */
   keyShift: number;
   /** Key change per profile (an instrument's key is not a singer's); wins over `keyShift`. */
@@ -103,6 +106,7 @@ export const DEFAULT_SETTINGS: Settings = {
   seenHelp: false,
   accompaniment: 'off',
   drums: 'off',
+  drone: 'off',
   keyShift: 0,
   keyShifts: {},
   difficulty: 'normal',
@@ -218,6 +222,7 @@ function sanitize(raw: unknown): Settings {
     accompaniment: ACCOMPANIMENTS.includes(r['accompaniment'] as Accompaniment)
       ? (r['accompaniment'] as Accompaniment)
       : DEFAULT_SETTINGS.accompaniment,
+    drone: DRONES.includes(r['drone'] as Drone) ? (r['drone'] as Drone) : DEFAULT_SETTINGS.drone,
     drums: DRUM_STYLES.includes(r['drums'] as DrumStyle)
       ? (r['drums'] as DrumStyle)
       : DEFAULT_SETTINGS.drums,

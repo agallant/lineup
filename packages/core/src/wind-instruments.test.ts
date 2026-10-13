@@ -10,7 +10,10 @@ import {
   fingeringFor,
   holeGroups,
   inKey,
+  instrumentRoot,
   isGenericWind,
+  isPentatonicFamily,
+  registerShift,
   shiftForInstrument,
   windScale,
   type WindInstrument,
@@ -186,7 +189,8 @@ describe("moving a song into the instrument's key", () => {
 
   it('every built-in wind song fits every instrument once moved into its key', () => {
     for (const { id, chart: c } of songsFor('wind').filter((s) => s.category === 'song')) {
-      for (const i of WIND_INSTRUMENTS) {
+      // the pentatonic flutes have their own songs (below): a diatonic tune has notes they lack
+      for (const i of WIND_INSTRUMENTS.filter((i) => !isPentatonicFamily(i.family))) {
         const shift = shiftForInstrument(c, i);
         const fit = checkFit(
           c.notes.map((n) => n.pitch! + shift),
@@ -261,5 +265,97 @@ describe('bestOctaveShift', () => {
     // 40 semitones wide in a 23-semitone range: no octave fits; the least overhang wins
     const move = bestOctaveShift({ low: 60, high: 100 }, range);
     expect(Math.abs(move)).toBeLessThanOrEqual(12);
+  });
+});
+
+describe('the pentatonic flutes', () => {
+  const naf = inst('naf-a');
+  const shaku = inst('shaku-18');
+
+  it('are listed under their own heading, with their lowest note below the major tonic', () => {
+    const flutes = WIND_INSTRUMENTS.filter((i) => isPentatonicFamily(i.family));
+    expect(flutes.length).toBeGreaterThanOrEqual(8);
+    for (const i of flutes) {
+      expect(i.group, i.id).toBe('Pentatonic flutes');
+      expect(instrumentRoot(i), i.id).toBe(i.tonic - 3);
+      expect(i.range.low, i.id).toBe(instrumentRoot(i));
+    }
+    expect(
+      WIND_INSTRUMENTS.filter((i) => !isPentatonicFamily(i.family)).every((i) => !i.group),
+    ).toBe(true);
+    expect(instrumentRoot(inst('whistle-d'))).toBe(74);
+  });
+
+  it('a six-hole Native American flute opens one more hole at a time, bottom first', () => {
+    // A4 C5 D5 E5 G5 A5 C6: root, minor third, fourth, fifth, minor seventh, octave, minor tenth
+    expect([69, 72, 74, 76, 79, 81, 84].map((m) => fingeringFor(naf, m)!.holes)).toEqual([
+      '111111',
+      '111110',
+      '111100',
+      '111000',
+      '110000',
+      '100000',
+      '000000',
+    ]);
+    // the upper register repeats the fingerings with a stronger breath
+    expect(fingeringFor(naf, 86)).toEqual({ holes: '111100', harder: true }); // D6
+    expect(fingeringFor(naf, 93)).toEqual({ holes: '100000', harder: true }); // A6
+    // a note outside the scale has no fingering, and neither does one below the lowest note
+    expect(fingeringFor(naf, 77)).toBeNull();
+    expect(fingeringFor(naf, 68)).toBeNull();
+    expect(holeGroups('native-flute')).toEqual([3, 3]);
+  });
+
+  it('has a scale with no sharps or flats to learn, and the same steps in every key', () => {
+    expect(windScale(naf).every((n) => !n.chromatic)).toBe(true);
+    const g = inst('naf-g');
+    expect(windScale(g).map((n) => n.midi - instrumentRoot(g))).toEqual(
+      windScale(naf).map((n) => n.midi - instrumentRoot(naf)),
+    );
+  });
+
+  it('a shakuhachi names its notes Ro Tsu Re Chi Ri and draws no holes', () => {
+    // D4 F4 G4 A4 C5 D5: the 1.8 shakuhachi in D
+    expect([62, 65, 67, 69, 72, 74].map((m) => fingeringFor(shaku, m)!.name)).toEqual([
+      'Ro',
+      'Tsu',
+      'Re',
+      'Chi',
+      'Ri',
+      'Ro↑',
+    ]);
+    expect(fingeringFor(shaku, 62)!.holes).toBe('');
+    expect(fingeringFor(shaku, 74)!.harder).toBe(true); // the second octave takes more breath
+    expect(holeGroups('shakuhachi')).toEqual([]);
+  });
+
+  it('place a song in the lowest register that fits, or the best fit when it is too wide', () => {
+    const range = { low: 69, high: 93 };
+    expect(registerShift({ low: 81, high: 93 }, range)).toBe(-12);
+    expect(registerShift({ low: 69, high: 84 }, range)).toBe(0);
+    expect(registerShift({ low: 57, high: 69 }, range)).toBe(12);
+    expect(registerShift({ low: 60, high: 100 }, range) % 12).toBe(0);
+  });
+
+  it('shift a song written in C (the major tonic) onto the flute in its own key', () => {
+    const c = songsFor('wind').find((s) => s.id === 'flute-first-breath')!.chart;
+    for (const i of WIND_INSTRUMENTS.filter((i) => isPentatonicFamily(i.family))) {
+      const shift =
+        shiftForInstrument(c, i) +
+        registerShift(
+          {
+            low: Math.min(...c.notes.map((n) => n.pitch! + shiftForInstrument(c, i))),
+            high: Math.max(...c.notes.map((n) => n.pitch! + shiftForInstrument(c, i))),
+          },
+          i.range,
+        );
+      const fit = checkFit(
+        c.notes.map((n) => n.pitch! + shift),
+        i,
+      );
+      expect(fit, i.id).toEqual({ outOfRange: [], noFingering: [] });
+      // the song comes home on the flute's lowest note
+      expect(c.notes.at(-1)!.pitch! + shift, i.id).toBe(instrumentRoot(i));
+    }
   });
 });

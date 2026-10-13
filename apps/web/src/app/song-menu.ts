@@ -15,6 +15,7 @@ export interface MenuGroup {
 }
 
 const HEADINGS: readonly { category: SongCategory; label: string }[] = [
+  { category: 'flute', label: 'Pentatonic flute songs' },
   { category: 'song', label: 'Songs' },
   { category: 'exercise', label: 'Exercises' },
 ];
@@ -44,7 +45,9 @@ export function songMenuGroups(
       })
       .map((item, index) => ({ item, index }))
       .sort((a, b) =>
-        category === 'song' ? a.item.score - b.item.score || a.index - b.index : a.index - b.index,
+        category !== 'exercise'
+          ? a.item.score - b.item.score || a.index - b.index
+          : a.index - b.index,
       )
       .map(({ item }) => item),
   })).filter((g) => g.items.length > 0);
@@ -72,6 +75,9 @@ function heading(label: string): HTMLOptGroupElement {
 
 /** The value of the song menu's "random melody" entry. */
 export const RANDOM_MELODY = 'random-melody';
+
+/** The value of the "random flute song" entry (Windline, on a pentatonic flute). */
+export const RANDOM_FLUTE = 'random-flute';
 
 /** The value of the "random chord song" entry (Strumline). */
 export const RANDOM_CHORDS = 'random-chords';

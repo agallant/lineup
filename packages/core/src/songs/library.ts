@@ -384,3 +384,86 @@ export const LIBRARY: Readonly<Record<string, Chart>> = {
   ...HAND_SONGS,
   ...KIT_SONGS,
 };
+
+/** One song for the pentatonic flutes, written in C (the tonic of the major scale holding its notes). */
+interface FluteTune {
+  id: string;
+  title: string;
+  bpm: number;
+  notes: string;
+}
+
+/**
+ * Original songs for the pentatonic flutes (a Native American flute, a shakuhachi): slow phrases of
+ * long held notes with a breath between them, using only the five notes of the scale, easiest
+ * first. Written in the major tonic C5 like every wind song, so an A minor flute plays them as
+ * written, its lowest note the A below. The first four are in the minor mood and end on that A;
+ * the major mood ends on the C above it.
+ */
+const FLUTE_TUNES: readonly FluteTune[] = [
+  {
+    id: 'first-breath',
+    title: 'First Breath',
+    bpm: 52,
+    notes: `A4:4 r:2 | C5:4 r:2 | A4:2 C5:2 D5:4 r:2 | C5:2 A4:2 C5:4 r:2 | D5:2 C5:2 A4:6`,
+  },
+  {
+    id: 'two-stones',
+    title: 'Two Stones',
+    bpm: 52,
+    notes: `A4:2 E5:4 r:2 | A4:2 E5:2 D5:2 C5:2 r:2 | A4:2 C5:2 E5:4 r:2 | D5:2 C5:2 A4:6`,
+  },
+  {
+    id: 'morning-ridge',
+    title: 'Morning Ridge',
+    bpm: 56,
+    notes: `C5:4 r:2 | D5:2 E5:2 G5:4 r:2 | E5:2 D5:2 C5:4 r:2 | G5:2 A5:2 G5:2 E5:2 | D5:2 C5:2 C5:6`,
+  },
+  {
+    id: 'river-song',
+    title: 'River Song',
+    bpm: 60,
+    notes: `A4:2 C5:1 D5:1 E5:4 r:2 | E5:2 D5:1 C5:1 D5:4 r:2 | A4:2 C5:1 D5:1 E5:2 G5:2 r:2 |
+      G5:2 E5:2 D5:2 C5:2 | A4:8`,
+  },
+  {
+    id: 'heron-at-dusk',
+    title: 'Heron at Dusk',
+    bpm: 60,
+    notes: `E5:4 r:1 D5:1 C5:2 | A4:3 r:1 C5:2 D5:2 | E5:2 G5:2 E5:4 | D5:2 C5:2 A4:6 r:2 |
+      C5:2 D5:2 E5:2 G5:2 | A5:4 G5:2 E5:2 | D5:2 C5:2 A4:8`,
+  },
+  {
+    id: 'canyon-echo',
+    title: 'Canyon Echo',
+    bpm: 66,
+    notes: `A4:2 C5:2 E5:4 | A5:2 G5:2 E5:4 r:2 | A4:2 C5:2 E5:4 | C6:2 A5:2 G5:4 r:2 |
+      E5:2 D5:2 C5:2 A4:2 | A4:8`,
+  },
+  {
+    id: 'rain-on-the-mesa',
+    title: 'Rain on the Mesa',
+    bpm: 76,
+    notes: `A4:.5 C5:.5 D5:.5 E5:.5 G5:1 E5:1 | D5:.5 E5:.5 D5:.5 C5:.5 A4:2 |
+      C5:.5 D5:.5 E5:.5 G5:.5 A5:1 G5:1 | E5:.5 D5:.5 C5:.5 D5:.5 E5:2 |
+      G5:.5 A5:.5 G5:.5 E5:.5 D5:1 C5:1 | A4:4`,
+  },
+  {
+    id: 'eagle-song',
+    title: 'Eagle Song',
+    bpm: 72,
+    notes: `A4:1 E5:1 A5:2 | G5:1 E5:1 C5:2 | D5:.5 E5:.5 G5:1 A5:2 | C6:2 A5:1 G5:1 |
+      E6:2 D6:1 C6:1 | A5:1 G5:1 E5:2 | D5:1 C5:1 A4:2 | A4:4`,
+  },
+];
+
+/** The flute songs by id (`flute-<name>`), for the wind profile in the tonic C5. */
+export const FLUTE_SONGS: Readonly<Record<string, Chart>> = Object.fromEntries(
+  FLUTE_TUNES.map((t) => [
+    `flute-${t.id}`,
+    melodyChart(
+      { title: t.title, artist: 'Lineup', bpm: t.bpm, instruments: ['wind'], tonic: 72 },
+      t.notes,
+    ),
+  ]),
+);

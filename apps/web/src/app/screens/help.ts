@@ -22,7 +22,7 @@ export const helpScreen: Screen = (root) => {
       <h2>The games</h2>
       <dl class="help">
         <dt>Singline</dt><dd>Sing each note and hold it. Any octave of the right note counts, so sing where it is comfortable.</dd>
-        <dt>Windline</dt><dd>Whistles, recorders and other winds. Pick your instrument and the song moves into its key, with a fingering chart.</dd>
+        <dt>Windline</dt><dd>Whistles, recorders, Native American flutes, shakuhachi and other winds. Pick your instrument and the song moves into its key, with a fingering chart. The pentatonic flutes have songs of their own, a random flute song, and an optional drone (Options).</dd>
         <dt>Strumline</dt><dd>Strum chords or pluck melodies on a ukulele. The four lanes show the fret to hold on each string; a ring is an open string.</dd>
         <dt>Beatline</dt><dd>Clap, tap or drum in time. With two or more lanes you first teach it the sounds.</dd>
         <dt>Ear training</dt><dd>No instrument needed: name the interval between two notes, or the kind of chord.</dd>

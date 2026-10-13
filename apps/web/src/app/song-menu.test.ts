@@ -30,6 +30,17 @@ describe('songMenuGroups', () => {
     expect(ids(groups[1]!)).toEqual(['e1', 'e2']); // exercises keep their own order
   });
 
+  it('lists the pentatonic flute songs first, under their own heading', () => {
+    const groups = songMenuGroups([
+      song('s1', 'song'),
+      song('f1', 'flute'),
+      song('e1', 'exercise'),
+      song('f2', 'flute'),
+    ]);
+    expect(groups.map((g) => g.label)).toEqual(['Pentatonic flute songs', 'Songs', 'Exercises']);
+    expect(ids(groups[0]!)).toEqual(['f1', 'f2']);
+  });
+
   it('puts the easiest song first, and keeps the given order between equal ones', () => {
     const groups = songMenuGroups([
       song('fast', 'song', 200),

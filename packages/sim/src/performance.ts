@@ -103,7 +103,8 @@ function* performanceSteps(
   const skipped = new Set(skip);
   const countIn = (chart.meta.countInBeats * 60) / chart.meta.bpm;
   const songStart = -countIn - 0.5 - leadSamples / sampleRate;
-  const lastT = chart.notes.reduce((m, n) => Math.max(m, n.t), 0);
+  // the buffer must hold the last note to its end, however long it is held
+  const lastT = chart.notes.reduce((m, n) => Math.max(m, n.t, n.t + n.duration - 1), 0);
   const total = Math.ceil((lastT - songStart + tail + 0.5) * sampleRate);
   const signal = silence(total / sampleRate, sampleRate);
   const plan: PlayedNote[] = [];

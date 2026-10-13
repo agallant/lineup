@@ -4,12 +4,15 @@
  * score on is a bug in the song. Vouches for the charts and the software, not for real players.
  */
 import {
+  FLUTE_SCALES,
+  FLUTE_SONGS,
   GROOVE_PROFILES,
   LIBRARY,
   MELODY_LEVELS,
   exerciseCharts,
   chordChangeDrills,
   generateChordSong,
+  generateFluteSong,
   generateGroove,
   generateMelody,
   getSong,
@@ -52,6 +55,31 @@ describe('library: pitched songs', () => {
     const rendered = renderPerformance(chart, windPerformer({}), { latency: LATENCY });
     const r = runContinuous(rendered, chart, getProfile('wind'), { latencyOffset: LATENCY });
     perfect(r.score.counts, chart.notes.length);
+  });
+});
+
+describe('library: pentatonic flute songs', () => {
+  const play = (chart: Chart) => {
+    const rendered = renderPerformance(chart, windPerformer({}), { latency: LATENCY });
+    return runContinuous(rendered, chart, getProfile('wind'), { latencyOffset: LATENCY });
+  };
+
+  it.each(Object.entries(FLUTE_SONGS))(
+    '%s: a steady player scores every note perfect',
+    (_id, chart) => {
+      perfect(play(chart).score.counts, chart.notes.length);
+    },
+  );
+
+  it.each(
+    FLUTE_SCALES.flatMap((scale) =>
+      MELODY_LEVELS.flatMap((level) =>
+        [5, 818, 40404].map((seed) => [scale, level, seed] as const),
+      ),
+    ),
+  )('a random flute song (%s, %s, seed %i) is played perfectly', (scale, level, seed) => {
+    const chart = generateFluteSong({ seed, scale, level });
+    perfect(play(chart).score.counts, chart.notes.length);
   });
 });
 

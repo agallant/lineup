@@ -61,7 +61,7 @@ in song time and subtract the calibrated latency offset themselves.
 - **Chords** (`chords.ts`): ukulele fingerings -> the MIDI notes a chord sounds on the profile's
   tuning, plus `chartChords` / `chordShapesFor` to get just the chords a song uses.
 - **Wind instruments** (`wind-instruments.ts`): a list of diatonic instruments (a generic one in C whose key is the
-  semitone setting, `inKey`, then whistles and recorders), each a family, a tonic (its lowest note) and a range. Fingerings are tables by SEMITONE
+  semitone setting, `inKey`, then whistles and recorders, then the pentatonic flutes: Native American flutes and shakuhachi, under a `group`), each a family, a tonic and a range. A whistle's tonic is its lowest note; a pentatonic flute's lowest note is 3 below its tonic (`instrumentRoot`; the tonic is the major scale holding its minor pentatonic, so every song names its tonic the same way). `registerShift` places a song in a flute's lowest fitting register. A fingering may carry a `name` (a shakuhachi's Ro, Tsu, Re) and no holes. Fingerings are tables by SEMITONE
   above the tonic per family (chromatic notes included: half-holes, written `2`, and
   cross-fingerings), so one chart serves every key of whistle; `shiftForInstrument` uses the chart's
   `meta.tonic` to move a song into the instrument's key, `fingeringFor` / `windScale` give the holes,
@@ -184,6 +184,8 @@ in song time and subtract the calibrated latency offset themselves.
   degree, then home) and the last note is the tonic held for a bar. `melodyId`/`parseMelodyId`
   name a melody as `gen-<profile>-<scale>-<level>-<seed>`, which `getSong` can build, so scores
   and session logs treat it like any song.
+
+`generate/flute.ts` (`generateFluteSong`: four eight-beat phrases with a breath, in the minor or major pentatonic; ids `gen-flute-<scale>-<level>-<seed>`) and the `flute-*` songs in `songs/library.ts` serve the pentatonic flutes (song category `flute`, listed first for them and hidden from other instruments). The Windline drone is `planDrone` in `game/backing.ts`.
 
 `generate/` also holds `chordsong.ts` (`generateChordSong`: sixteen bars in phrases such as AaBC, each phrase
 walked from a weighted grammar of chord movement (`NEXT`) in a key where every chord has a ukulele fingering,

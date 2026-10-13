@@ -232,7 +232,7 @@ describe('exercises', () => {
       const firstExercise = list.findIndex((s) => s.category === 'exercise');
       expect(firstExercise, profileId).toBeGreaterThan(0);
       expect(list.slice(firstExercise).every((s) => s.category === 'exercise')).toBe(true);
-      expect(list.slice(0, firstExercise).every((s) => s.category === 'song')).toBe(true);
+      expect(list.slice(0, firstExercise).every((s) => s.category !== 'exercise')).toBe(true);
     }
   });
 });

@@ -145,6 +145,25 @@ export const COURSES: readonly Course[] = [
       { songId: 'ex-wind-chromatic-up-down', focus: 'Every semitone' },
     ],
   },
+  {
+    id: 'wind-pentatonic-flutes',
+    title: 'Windline: pentatonic flutes',
+    route: 'wind',
+    profileId: 'wind',
+    blurb:
+      'For a Native American flute or a shakuhachi (choose yours under Instrument; the first lesson picks an A minor flute if you have not): long notes, breath, and phrases that come home.',
+    steps: [
+      { songId: 'flute-first-breath', focus: 'Three notes and a long breath' },
+      { songId: 'ex-wind-minor-pentatonic-up-down', focus: 'The five notes of the scale' },
+      { songId: 'flute-two-stones', focus: 'Leaping a fifth' },
+      { songId: 'flute-morning-ridge', focus: 'The major mood, coming home to C' },
+      { songId: 'flute-river-song', focus: 'Flowing phrases' },
+      { songId: 'flute-heron-at-dusk', focus: 'Pausing on the fifth' },
+      { songId: 'flute-canyon-echo', focus: 'Call and answer across the octave' },
+      { songId: 'flute-rain-on-the-mesa', focus: 'Quicker notes' },
+      { songId: 'flute-eagle-song', focus: 'The upper register' },
+    ],
+  },
 ];
 
 /** Stars needed on a step to open the next one, and to count it as mastered. */
