@@ -19,6 +19,7 @@ import {
   instrumentRoot,
   isFluteScale,
   isPentatonicFamily,
+  parseFluteId,
   PENTATONIC_GROUP,
   registerShift,
   generateMelody,
@@ -335,6 +336,11 @@ export const createPitchScreen =
     // a link to a flute song needs a flute to play it on: choose the A minor Native American flute
     {
       const linked = hashParam(location.hash, 'song');
+      // a link can also name a random flute song by its id: open that one
+      const linkedFlute = linked ? parseFluteId(linked) : null;
+      if (linked && linkedFlute && c.instruments && !allSongs.some((s) => s.id === linked)) {
+        allSongs.push({ id: linked, chart: generateFluteSong(linkedFlute), category: 'flute' });
+      }
       if (
         linked &&
         c.instruments &&

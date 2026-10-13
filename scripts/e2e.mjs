@@ -467,6 +467,16 @@ const scenarios = {
       );
       check((await page.inputValue('[data-id=song]')) === 'flute-river-song', 'and the song');
 
+      // a link can name a random flute song too
+      await page.selectOption('[data-id=instrument]', 'whistle-d');
+      await page.goto(URL_BASE + '#/wind?song=gen-flute-minor-pentatonic-easy-77');
+      await page.reload();
+      check(
+        (await page.inputValue('[data-id=instrument]')) === 'naf-a' &&
+          (await page.inputValue('[data-id=song]')) === 'gen-flute-minor-pentatonic-easy-77',
+        `a link to a random flute song opens it on a flute (${await page.inputValue('[data-id=instrument]')}, ${await page.inputValue('[data-id=song]')})`,
+      );
+
       // play one through (with the drone)
       await page.selectOption('[data-id=song]', 'flute-rain-on-the-mesa');
       const notes = Number(/(\d+) notes/.exec(await text(page, 'song-info'))?.[1]);
