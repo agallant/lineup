@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { rateChart } from '../difficulty';
-import { getSong, songsFor } from '../songs';
+import { getSong, songCategory, songsFor } from '../songs';
 import { checkFit, findWindInstrument, instrumentRoot } from '../wind-instruments';
 import {
   FLUTE_SCALES,
@@ -121,6 +121,9 @@ describe('generateFluteSong', () => {
     ])
       expect(parseFluteId(bad), bad).toBeNull();
     expect(isFluteScale('dorian')).toBe(false);
+    // a generated flute song is filed with the flute songs, so a link to one picks a flute
+    expect(songCategory('gen-flute-minor-pentatonic-easy-77')).toBe('flute');
+    expect(songCategory('gen-wind-major-easy-77')).toBe('song');
   });
 });
 

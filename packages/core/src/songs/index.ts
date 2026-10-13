@@ -71,7 +71,11 @@ export type SongCategory = 'song' | 'exercise' | 'flute';
 
 /** Whether a built-in id is practice material (an exercise) or a song. */
 export const songCategory = (id: string): SongCategory =>
-  Object.hasOwn(EXERCISES, id) ? 'exercise' : Object.hasOwn(FLUTE_SONGS, id) ? 'flute' : 'song';
+  Object.hasOwn(EXERCISES, id)
+    ? 'exercise'
+    : Object.hasOwn(FLUTE_SONGS, id) || parseFluteId(id) !== null
+      ? 'flute'
+      : 'song';
 
 /** A built-in song, or a generated melody named by its id (`gen-<profile>-<scale>-<level>-<seed>`). */
 export function getSong(id: string): Chart {
