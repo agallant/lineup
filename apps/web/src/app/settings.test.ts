@@ -192,6 +192,9 @@ describe('SettingsStore', () => {
     expect(s.get().drums).toBe('off');
     expect(s.update({ drums: 'bossa' }).drums).toBe('bossa');
     expect(s.update({ drums: 'polka' as never }).drums).toBe('off');
+    expect(s.get().drone).toBe('off');
+    expect(s.update({ drone: 'fifth' }).drone).toBe('fifth');
+    expect(s.update({ drone: 'choir' as never }).drone).toBe('off');
   });
 
   it('remembers the difficulty a new random song aims for, and ignores anything else', () => {

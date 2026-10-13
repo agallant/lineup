@@ -69,6 +69,7 @@ real instrument to judge is listed again under "Waiting on real-device testing".
 - More songs, including chromatic ones (Für Elise opening, Greensleeves), labelled so you can tell
   what your instrument can play. Songs below a whistle's tonic are voice-only.
 - An ocarina only if a fingering chart can be shown (no ocarina offered until then).
+- ~~Pentatonic flutes~~ (done: Native American flute and shakuhachi instruments, flute songs, random flute songs, a drone, a Learn path). Next: a verified shakuhachi hole chart per school (Kinko, Tozan), meri/kari pitch bends and ornaments judged leniently, more flute keys and low flutes (needs the detector below C4), and more traditional repertoire.
 - If testing shows it: move the chart to the octave you play, instead of accepting any octave.
 
 ### 4. Singline

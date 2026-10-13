@@ -29,6 +29,10 @@ function spoken(f: Fingering, family: WindInstrument['family']): string {
 
 /** A row of circles for one fingering: filled = covered, hollow = open, grouped by hand. */
 export function holesHtml(family: WindInstrument['family'], f: Fingering): string {
+  // an instrument with note names and no hole diagram (the shakuhachi) shows the name
+  if (f.holes === '' && f.name !== undefined) {
+    return `<span class="fing-name" role="img" aria-label="${f.name.replaceAll('↑', ' high')}">${f.name}</span>`;
+  }
   const groups = holeGroups(family);
   let at = 0;
   const parts = groups.map((size) => {
@@ -56,7 +60,17 @@ export function fingeringChartHtml(instrument: WindInstrument, used: ReadonlySet
         `<div class="fing-row${used.has(n.midi) ? ' used' : ''}${n.chromatic ? ' chromatic' : ''}"><span class="fing-note">${n.label}</span>${holesHtml(instrument.family, n.fingering)}${hintHtml(n)}</div>`,
     )
     .join('');
+  if (instrument.family === 'shakuhachi') {
+    return `${rows}<p class="fing-key">Notes in this song are highlighted, with their traditional syllables (Ro Tsu Re Chi Ri); an arrow marks the higher octave (kan), played with a stronger, more focused breath. Fingerings, and the half-hole and meri notes between these, differ between schools (Kinko, Tozan and others): use your teacher’s chart.</p>`;
+  }
+  const own =
+    instrument.family === 'native-flute'
+      ? ' Open the holes one at a time from the bottom to climb the scale. The upper register reuses the fingerings with a stronger breath. Makers differ a little: check them against your own flute.'
+      : '';
   const thumb = instrument.family === 'recorder' ? ' The first circle is the thumb hole.' : '';
+  if (own) {
+    return `${rows}<p class="fing-key">Filled circle: hole covered. Hollow: open. Notes in this song are highlighted.${own}</p>`;
+  }
   return `${rows}<p class="fing-key">Filled circle: hole covered. Hollow: open. Half-filled: half covered.${thumb} Notes in this song are highlighted. Sharps and flats (grey) are the commonly taught cross-fingerings and half-holes: they vary between instruments, so check them against your own.</p>`;
 }
 

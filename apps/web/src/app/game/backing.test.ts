@@ -4,6 +4,7 @@ import {
   midiToHz,
   planAllBacking,
   planBacking,
+  planDrone,
   playBacking,
   rhythmTones,
   type AudioOut,
@@ -175,5 +176,46 @@ describe('rhythmTones', () => {
     const pitchOf = (lane: string) => ticks[groove.notes.findIndex((n) => n.lane === lane)]!.midi;
     expect(pitchOf('kick')).toBeLessThan(pitchOf('snare'));
     expect(pitchOf('snare')).toBeLessThan(pitchOf('hat'));
+  });
+});
+
+describe('planDrone', () => {
+  it('plays nothing when off', () => {
+    expect(planDrone(chart, 69, 'off')).toEqual([]);
+  });
+
+  it('holds the key note low for the whole song, starting with the count-in', () => {
+    const [root, ...rest] = planDrone(chart, 69, 'root');
+    expect(rest).toEqual([]);
+    // A4 held as A3 (below the detector's range), from the first count-in click to the end
+    expect(root).toMatchObject({ kind: 'tone', midi: 57, wave: 'sine', songTime: -2 });
+    const end =
+      (root as { songTime: number; duration: number }).songTime +
+      (root as { duration: number }).duration;
+    expect(end).toBeGreaterThanOrEqual(2.5 + 0.5); // the last note ends at 2.5 s
+  });
+
+  it('adds the fifth, and keeps every key in the same octave', () => {
+    const events = planDrone(chart, 62, 'fifth');
+    expect(events.map((e) => (e.kind === 'tone' ? e.midi : 0))).toEqual([50, 57]);
+    for (const root of [60, 61, 66, 71, 75, 90]) {
+      const [e] = planDrone(chart, root, 'root');
+      const midi = e!.kind === 'tone' ? e!.midi : 0;
+      expect(midi).toBeGreaterThanOrEqual(48);
+      expect(midi).toBeLessThan(60);
+      expect(Math.abs(midi - root) % 12).toBe(0);
+    }
+  });
+
+  it('is part of the backing when asked for', () => {
+    const all = planAllBacking(chart, {
+      metronome: false,
+      guideTone: false,
+      drone: { type: 'root', root: 69 },
+    });
+    expect(all.some((e) => e.kind === 'tone' && e.midi === 57)).toBe(true);
+    expect(all.map((e) => e.songTime)).toEqual(
+      [...all.map((e) => e.songTime)].sort((a, b) => a - b),
+    );
   });
 });

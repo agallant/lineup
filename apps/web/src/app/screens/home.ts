@@ -21,8 +21,9 @@ const CARDS = [
     id: 'windline',
     href: '#/wind',
     name: 'Windline',
-    who: 'Whistle, recorder, other winds',
-    blurb: 'Play along in your instrument’s key, with a fingering chart.',
+    who: 'Whistle, recorder, flutes, other winds',
+    blurb:
+      'Play along in your instrument’s key, with a fingering chart. Native American flute and shakuhachi too.',
   },
   {
     id: 'strumline',

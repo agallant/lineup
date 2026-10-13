@@ -1,10 +1,11 @@
 import { loadChart, type Chart } from '../chart';
 import { chordChangeDrills, exerciseCharts } from '../generate/exercises';
 import { generateChordSong, parseChordSongId } from '../generate/chordsong';
+import { generateFluteSong, parseFluteId } from '../generate/flute';
 import { generateGroove, parseGrooveId } from '../generate/groove';
 import { generateMelody, parseMelodyId } from '../generate/melody';
 import { rhythmExercises } from '../generate/rudiments';
-import { LIBRARY } from './library';
+import { FLUTE_SONGS, LIBRARY } from './library';
 import clapBasic from './clap-basic.json';
 import clapTapGroove from './clap-tap-groove.json';
 import drumRock from './drum-rock.json';
@@ -61,15 +62,16 @@ export const builtinSongs: Readonly<Record<string, Chart>> = {
     }),
   ),
   ...LIBRARY,
+  ...FLUTE_SONGS,
   ...EXERCISES,
 };
 
-/** What a menu entry is: a song, or practice material such as a scale. */
-export type SongCategory = 'song' | 'exercise';
+/** What a menu entry is: a song, practice material such as a scale, or a song for the pentatonic flutes. */
+export type SongCategory = 'song' | 'exercise' | 'flute';
 
 /** Whether a built-in id is practice material (an exercise) or a song. */
 export const songCategory = (id: string): SongCategory =>
-  Object.hasOwn(EXERCISES, id) ? 'exercise' : 'song';
+  Object.hasOwn(EXERCISES, id) ? 'exercise' : Object.hasOwn(FLUTE_SONGS, id) ? 'flute' : 'song';
 
 /** A built-in song, or a generated melody named by its id (`gen-<profile>-<scale>-<level>-<seed>`). */
 export function getSong(id: string): Chart {
@@ -77,6 +79,8 @@ export function getSong(id: string): Chart {
   if (generated) return generateMelody(generated.profileId, generated.spec);
   const chords = parseChordSongId(id);
   if (chords) return generateChordSong(chords);
+  const flute = parseFluteId(id);
+  if (flute) return generateFluteSong(flute);
   const groove = parseGrooveId(id);
   if (groove) return generateGroove(groove.profile, groove.spec);
   const c = Object.hasOwn(builtinSongs, id) ? builtinSongs[id] : undefined;
@@ -93,5 +97,5 @@ export function songsFor(
     .map(([id, chart]) => ({ id, chart, category: songCategory(id) }));
 }
 
-export { LIBRARY } from './library';
+export { FLUTE_SONGS, LIBRARY } from './library';
 export * from './notation';

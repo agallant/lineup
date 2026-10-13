@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -350,6 +350,140 @@ const scenarios = {
       );
       await shot(page, 'wind-results');
       await checkCopyLog(page, 'Windline', 12);
+    });
+  },
+
+  async flute() {
+    console.log(
+      '\n# Pentatonic flutes: charts, flute songs, a random flute song, the drone, a demo run',
+    );
+    await session(null, async (page) => {
+      // the drone is on, to check that playing with it works
+      await page.addInitScript(() => {
+        if (localStorage.getItem('lineup.seeded')) return;
+        localStorage.setItem('lineup.seeded', '1');
+        localStorage.setItem('lineup.settings.v1', JSON.stringify({ drone: 'fifth' }));
+      });
+      await page.goto(URL_BASE + '#/wind');
+      const hasOption = (value) => page.$(`[data-id=song] option[value="${value}"]`).then(Boolean);
+      check(
+        !(await hasOption('flute-first-breath')),
+        'flute songs are not offered to a generic instrument',
+      );
+      check(!(await hasOption('random-flute')), 'nor is the random flute song');
+      // the instrument menu groups the pentatonic flutes
+      const group = await page.$$eval('[data-id=instrument] optgroup option', (o) => o.length);
+      check(
+        group >= 8,
+        `the instrument menu lists the pentatonic flutes under a heading (${group})`,
+      );
+
+      // a six-hole Native American flute: the holes open one at a time
+      await page.selectOption('[data-id=instrument]', 'naf-a');
+      check(
+        await hasOption('flute-first-breath'),
+        'flute songs appear for a Native American flute',
+      );
+      check(await hasOption('random-flute'), 'and so does the random flute song');
+      const heading = await page.$$eval('[data-id=song] optgroup', (g) => g[0]?.label);
+      check(
+        heading === 'Pentatonic flute songs',
+        `they come first, under their own heading (${heading})`,
+      );
+      await page.selectOption('[data-id=song]', 'flute-rain-on-the-mesa');
+      const rows = await page.$$eval('[data-id=chart] .fing-row', (r) =>
+        r.map((x) => x.textContent),
+      );
+      check(
+        rows.length === 11 && /^A4/.test(rows[0] ?? ''),
+        `the chart lists the flute from A4 (${rows.length} notes, first "${rows[0]}")`,
+      );
+      const holes = await page.$$eval(
+        '[data-id=chart] .fing-row:first-child .hole',
+        (h) => h.length,
+      );
+      const filled = await page.$$eval(
+        '[data-id=chart] .fing-row:first-child .hole.on',
+        (h) => h.length,
+      );
+      check(
+        holes === 6 && filled === 6,
+        `the root has all six holes covered (${filled} of ${holes})`,
+      );
+      const used = await page.$$eval('[data-id=chart] .fing-row.used', (r) => r.length);
+      check(used === 6, `the notes of the song are highlighted (${used})`);
+      check(
+        !/⚠/.test(await text(page, 'range')),
+        `the song fits the flute (${await text(page, 'range')})`,
+      );
+
+      // a shakuhachi: syllables instead of holes
+      await page.selectOption('[data-id=instrument]', 'shaku-18');
+      const names = await page.$$eval('[data-id=chart] .fing-name', (n) =>
+        n.map((x) => x.textContent),
+      );
+      check(
+        names.slice(0, 5).join(' ') === 'Ro Tsu Re Chi Ri',
+        `a shakuhachi names its notes (${names.slice(0, 6).join(' ')})`,
+      );
+      check((await page.$$('[data-id=chart] .hole')).length === 0, 'and draws no holes');
+      check(
+        (await page.inputValue('[data-id=song]')) === 'flute-rain-on-the-mesa',
+        'changing instrument keeps the song',
+      );
+      check(
+        /D4 to D5/.test(await text(page, 'range')),
+        `it moves into the shakuhachi's key (${await text(page, 'range')})`,
+      );
+      check(
+        !/⚠/.test(await text(page, 'range')),
+        `the song fits the shakuhachi (${await text(page, 'range')})`,
+      );
+
+      // the random flute song: two pentatonic scales, a seed, a new song
+      await page.selectOption('[data-id=song]', 'random-flute');
+      const scales = await page.$$eval('[data-id=challenge-scale] option', (o) =>
+        o.map((x) => x.value),
+      );
+      check(
+        scales.join() === 'minor-pentatonic,major-pentatonic',
+        `the random flute song offers the two pentatonic scales (${scales.join()})`,
+      );
+      const before = await page.inputValue('[data-id=challenge-seed]');
+      await page.click('[data-id=challenge-new]');
+      const after = await page.inputValue('[data-id=challenge-seed]');
+      check(before !== after, `New song picks another seed (${before} -> ${after})`);
+      check(/Random flute song/.test(await text(page, 'song-info')), 'the song info names it');
+
+      // a link to a flute song chooses a flute to play it on
+      await page.goto(URL_BASE + '#/wind');
+      await page.selectOption('[data-id=instrument]', 'whistle-d');
+      check(!(await hasOption('flute-river-song')), 'a whistle does not offer the flute songs');
+      await page.goto(URL_BASE + '#/wind?song=flute-river-song');
+      await page.reload();
+      check(
+        (await page.inputValue('[data-id=instrument]')) === 'naf-a',
+        `a link to a flute song picks the A minor flute (${await page.inputValue('[data-id=instrument]')})`,
+      );
+      check((await page.inputValue('[data-id=song]')) === 'flute-river-song', 'and the song');
+
+      // play one through (with the drone)
+      await page.selectOption('[data-id=song]', 'flute-rain-on-the-mesa');
+      const notes = Number(/(\d+) notes/.exec(await text(page, 'song-info'))?.[1]);
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForSelector('[data-id=fingering] .fing-now', { timeout: 30000 });
+      check(
+        (await page.$$('[data-id=fingering] .hole')).length >= 6,
+        'the play screen shows the holes for the current note',
+      );
+      await page.waitForSelector('[data-id=r-score]', { timeout: 60000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        notes > 20 && perfect === notes && miss === 0,
+        `the demo flute player scores ${notes}/${notes} (got ${perfect} perfect, ${miss} missed)`,
+      );
     });
   },
 

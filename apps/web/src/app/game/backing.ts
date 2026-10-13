@@ -15,6 +15,10 @@ export type BackingEvent =
       wave?: OscillatorType;
     };
 
+/** A held tone under the whole song: nothing, the key note, or the key note with its fifth. */
+export type Drone = 'off' | 'root' | 'fifth';
+export const DRONES: readonly Drone[] = ['off', 'root', 'fifth'];
+
 export interface BackingOptions {
   /** A click on every beat (the count-in always clicks). */
   metronome: boolean;
@@ -122,16 +126,46 @@ export function playBacking(
   };
 }
 
+/**
+ * A drone for the whole song: the key note held low (in the octave from C3 to B3, below where the
+ * detector listens) and, if asked, its fifth, as a pentatonic flute is traditionally played over.
+ * `rootMidi` is the key note in any octave.
+ */
+export function planDrone(chart: Chart, rootMidi: number, drone: Drone): BackingEvent[] {
+  if (drone === 'off') return [];
+  // it starts with the count-in, so the key note is in the ear before the song begins
+  const lead = (chart.meta.countInBeats * 60) / chart.meta.bpm;
+  const end = chart.notes.reduce((m, n) => Math.max(m, n.t + n.duration), 0) + 0.5;
+  let low = rootMidi;
+  while (low >= 60) low -= 12;
+  while (low < 48) low += 12;
+  const tone = (midi: number, level: number): BackingEvent => ({
+    kind: 'tone',
+    songTime: -lead,
+    duration: end + lead,
+    midi,
+    level,
+    wave: 'sine',
+  });
+  return [tone(low, 0.9), ...(drone === 'fifth' ? [tone(low + 7, 0.5)] : [])];
+}
+
 /** Everything audible under a song: clicks, guide tones, and optionally accompaniment, in song-time order. */
 export function planAllBacking(
   chart: Chart,
-  options: BackingOptions & { accompaniment?: AccompanimentLevel | 'off'; drums?: DrumStyle },
+  options: BackingOptions & {
+    accompaniment?: AccompanimentLevel | 'off';
+    drums?: DrumStyle;
+    /** A drone and the key note (MIDI, any octave) it holds. */
+    drone?: { type: Drone; root: number };
+  },
 ): BackingEvent[] {
   const events = planBacking(chart, options);
   if (options.accompaniment && options.accompaniment !== 'off') {
     events.push(...planAccompaniment(chart, options.accompaniment));
   }
   if (options.drums) events.push(...planDrums(chart, options.drums));
+  if (options.drone) events.push(...planDrone(chart, options.drone.root, options.drone.type));
   return events.sort((a, b) => a.songTime - b.songTime);
 }
 

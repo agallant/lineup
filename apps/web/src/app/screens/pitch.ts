@@ -12,7 +12,15 @@ import {
   bestOctaveShift,
   chartPitchRange,
   defaultOffsetFromLatencies,
+  FLUTE_SCALES,
   findWindInstrument,
+  fluteId,
+  generateFluteSong,
+  instrumentRoot,
+  isFluteScale,
+  isPentatonicFamily,
+  PENTATONIC_GROUP,
+  registerShift,
   generateMelody,
   hashSeed,
   getProfile,
@@ -79,7 +87,13 @@ import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { SettingsStore, nextSpeed, keyShiftFor, safeLocalStorage } from '../settings';
-import { RANDOM_MELODY, addRandomMelodyOption, fillSongMenu, fillTargetMenu } from '../song-menu';
+import {
+  RANDOM_FLUTE,
+  RANDOM_MELODY,
+  addRandomOptions,
+  fillSongMenu,
+  fillTargetMenu,
+} from '../song-menu';
 import { formatCents, formatDb } from '../format';
 import type { Screen } from '../router';
 
@@ -250,7 +264,9 @@ export const createPitchScreen =
 
     const profile = getProfile(c.profileId);
     const mine = new UserSongStore(safeLocalStorage());
-    const songs = [...songsFor(c.profileId), ...userSongsFor(c.profileId, mine)];
+    const allSongs = [...songsFor(c.profileId), ...userSongsFor(c.profileId, mine)];
+    /** The songs on the menu: the flute songs only for a pentatonic flute, which is what they are written for. */
+    let songs = allSongs;
     const settings = new SettingsStore(safeLocalStorage());
     const calibration = new CalibrationStore(safeLocalStorage());
     const scores = new ScoreStore(safeLocalStorage());
@@ -289,8 +305,49 @@ export const createPitchScreen =
 
     const current = settings.get();
     const stars = starsBySong(scores.entries(), c.profileId);
-    fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
-    addRandomMelodyOption(songSel);
+    /** The instrument chosen on a Windline screen. The generic one takes its key from the shift. */
+    const instrument = (): WindInstrument => {
+      const base =
+        findWindInstrument(settings.get().windInstrument) ??
+        findWindInstrument(DEFAULT_WIND_INSTRUMENT)!;
+      return isGenericWind(base) ? inKey(base, keyShiftFor(settings.get(), c.profileId)) : base;
+    };
+    const onFlute = (): boolean =>
+      c.instruments === true && isPentatonicFamily(instrument().family);
+    /** Fills the song menu for the instrument now chosen, keeping `keep` selected when it is still there. */
+    const buildSongMenu = (keep?: string) => {
+      const previous = keep ?? songSel.value;
+      songs = allSongs.filter((s) => s.category !== 'flute' || onFlute());
+      songSel.replaceChildren();
+      fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
+      addRandomOptions(songSel, [
+        ...(onFlute() ? [{ value: RANDOM_FLUTE, label: '🎲 Random flute song' }] : []),
+        { value: RANDOM_MELODY, label: '🎲 Random melody' },
+      ]);
+      const wanted = previous;
+      songSel.value =
+        wanted === RANDOM_MELODY ||
+        (wanted === RANDOM_FLUTE && onFlute()) ||
+        songs.some((s) => s.id === wanted)
+          ? wanted
+          : (songs[0]?.id ?? RANDOM_MELODY);
+    };
+    // a link to a flute song needs a flute to play it on: choose the A minor Native American flute
+    {
+      const linked = hashParam(location.hash, 'song');
+      if (
+        linked &&
+        c.instruments &&
+        allSongs.some((s) => s.id === linked && s.category === 'flute') &&
+        !isPentatonicFamily(instrument().family)
+      ) {
+        settings.update({
+          windInstrument: 'naf-a',
+          keyShifts: { ...settings.get().keyShifts, [c.profileId]: 0 },
+        });
+      }
+    }
+    buildSongMenu(settings.get().songs[c.profileId] ?? undefined);
     // opened from today's challenge: choose its random melody (the same for everyone today)
     const dailyGame: DailyGame = c.profileId === 'wind' ? 'windline' : 'singline';
     if (wantsDaily(location.hash)) {
@@ -313,18 +370,7 @@ export const createPitchScreen =
       settings.update({ songs: { ...current.songs, [c.profileId]: wantedSong } });
       current.songs[c.profileId] = wantedSong;
     }
-    const savedSong = current.songs[c.profileId];
-    songSel.value =
-      savedSong === RANDOM_MELODY || songs.some((s) => s.id === savedSong)
-        ? savedSong!
-        : songs[0]!.id;
-    /** The instrument chosen on a Windline screen. The generic one takes its key from the shift. */
-    const instrument = (): WindInstrument => {
-      const base =
-        findWindInstrument(settings.get().windInstrument) ??
-        findWindInstrument(DEFAULT_WIND_INSTRUMENT)!;
-      return isGenericWind(base) ? inKey(base, keyShiftFor(settings.get(), c.profileId)) : base;
-    };
+    buildSongMenu(current.songs[c.profileId]);
     /** The shift applied on top of moving the song into the instrument's key (none for the generic one, which is the shift). */
     const extraShift = (): number =>
       c.instruments && isGenericWind(instrument()) ? 0 : Number(keySel.value);
@@ -350,7 +396,15 @@ export const createPitchScreen =
     fillKeyMenu();
     if (c.instruments) {
       const instrumentSel = S<HTMLSelectElement>('instrument');
-      for (const i of WIND_INSTRUMENTS) instrumentSel.add(new Option(i.label, i.id));
+      // the pentatonic flutes sit under their own heading
+      const flutes = document.createElement('optgroup');
+      flutes.label = PENTATONIC_GROUP;
+      for (const i of WIND_INSTRUMENTS) {
+        (i.group === PENTATONIC_GROUP ? flutes : instrumentSel).appendChild(
+          new Option(i.label, i.id),
+        );
+      }
+      instrumentSel.appendChild(flutes);
       instrumentSel.value = instrument().id;
       instrumentSel.addEventListener('change', () => {
         // a new instrument starts from its own key: the old shift belongs to the old instrument
@@ -359,6 +413,11 @@ export const createPitchScreen =
           keyShifts: { ...settings.get().keyShifts, [c.profileId]: 0 },
         });
         fillKeyMenu();
+        buildSongMenu(); // the flute songs come and go with a pentatonic flute
+        if (songSel.value) {
+          settings.update({ songs: { ...settings.get().songs, [c.profileId]: songSel.value } });
+        }
+        showChallenge();
         refreshRange();
       });
       const speedSel = S<HTMLSelectElement>('speed');
@@ -390,15 +449,29 @@ export const createPitchScreen =
     const scaleSel = S<HTMLSelectElement>('challenge-scale');
     const levelSel = S<HTMLSelectElement>('challenge-level');
     const seedInput = S<HTMLInputElement>('challenge-seed');
-    for (const id of SCALE_IDS) scaleSel.add(new Option(SCALES[id].label, id));
     for (const level of MELODY_LEVELS)
       levelSel.add(new Option(level[0]!.toUpperCase() + level.slice(1), level));
+    /** True while the random song on the menu is a flute song, which comes in the two pentatonic scales only. */
+    const randomFlute = (): boolean => songSel.value === RANDOM_FLUTE;
+    let scalesFor: 'all' | 'flute' | null = null;
     const showChallenge = () => {
+      const kind = randomFlute() ? 'flute' : 'all';
+      if (scalesFor !== kind) {
+        scalesFor = kind;
+        scaleSel.replaceChildren();
+        for (const id of kind === 'flute' ? FLUTE_SCALES : SCALE_IDS) {
+          scaleSel.add(new Option(SCALES[id].label, id));
+        }
+      }
+      // a flute song needs a pentatonic scale: start from the minor one
+      if (kind === 'flute' && !isFluteScale(settings.get().challenge.scale)) {
+        settings.update({ challenge: { ...settings.get().challenge, scale: 'minor-pentatonic' } });
+      }
       const spec = settings.get().challenge;
       scaleSel.value = spec.scale;
       levelSel.value = spec.level;
       seedInput.value = String(spec.seed);
-      challengeRow.hidden = songSel.value !== RANDOM_MELODY;
+      challengeRow.hidden = songSel.value !== RANDOM_MELODY && !randomFlute();
     };
     showChallenge();
 
@@ -410,10 +483,24 @@ export const createPitchScreen =
       if (melodyCache?.id !== id) melodyCache = { id, chart: generateMelody(c.profileId, spec) };
       return melodyCache;
     };
+    /** The random flute song for the current spec, generated once per spec. */
+    let fluteCache: { id: string; chart: Chart } | null = null;
+    const randomFluteSong = () => {
+      const spec = settings.get().challenge;
+      const flute = {
+        ...spec,
+        scale: isFluteScale(spec.scale) ? spec.scale : 'minor-pentatonic',
+      } as const;
+      const id = fluteId(flute);
+      if (fluteCache?.id !== id) fluteCache = { id, chart: generateFluteSong(flute) };
+      return fluteCache;
+    };
     const songEntry = () =>
       songSel.value === RANDOM_MELODY
         ? randomMelody()
-        : (songs.find((s) => s.id === songSel.value) ?? songs[0]!);
+        : randomFlute()
+          ? randomFluteSong()
+          : (songs.find((s) => s.id === songSel.value) ?? songs[0]!);
 
     /** The chosen song, as written or in its easier or harder version. */
     const wholeSong = (): Chart => {
@@ -453,8 +540,13 @@ export const createPitchScreen =
     /** The chart as played: moved into the instrument's key, shifted, and at the practice speed. */
     const selectedChart = (): Chart => {
       const song = variedSong();
-      const toInstrument = c.instruments ? shiftForInstrument(song, instrument()) : 0;
-      const moved = transposeChart(song, toInstrument + extraShift());
+      let shift = (c.instruments ? shiftForInstrument(song, instrument()) : 0) + extraShift();
+      // a pentatonic flute plays a song in its easy first register where it fits
+      if (c.instruments && isPentatonicFamily(instrument().family)) {
+        const span = chartPitchRange(transposeChart(song, shift));
+        if (span) shift += registerShift(span, instrument().range);
+      }
+      const moved = transposeChart(song, shift);
       return c.instruments ? rescaleChart(moved, settings.get().speed) : moved;
     };
 
@@ -511,7 +603,7 @@ export const createPitchScreen =
       S('range').textContent = text;
       // a random melody has no fixed title to find in the menu: say which one this is
       S('song-info').textContent =
-        songSel.value === RANDOM_MELODY
+        songSel.value === RANDOM_MELODY || randomFlute()
           ? `${chart.meta.title} · ${songSummary(chart)}`
           : songSummary(chart);
       S('best').textContent = describeBest(scores.best(bestKey()));
@@ -575,6 +667,10 @@ export const createPitchScreen =
       // rate each candidate the way it will be played, in the chosen version
       const played = (seed: number): Chart => {
         const next = { ...spec, seed };
+        if (randomFlute() && isFluteScale(next.scale)) {
+          const flute = { ...next, scale: next.scale };
+          return varyChart(generateFluteSong(flute), variation, hashSeed(fluteId(flute)));
+        }
         return varyChart(
           generateMelody(c.profileId, next),
           variation,
@@ -789,6 +885,10 @@ export const createPitchScreen =
             guideTone: opts.guideTone,
             accompaniment: settings.get().accompaniment,
             drums: settings.get().drums,
+            drone: {
+              type: c.instruments ? settings.get().drone : 'off',
+              root: instrumentRoot(instrument()) + extraShift(),
+            },
           }),
           ...listen.tones,
         ].sort((a, b) => a.songTime - b.songTime),

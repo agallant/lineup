@@ -214,7 +214,7 @@ the direction arrow is a guide, since direction is not detected (see Limitations
 4. Use headphones for the metronome, check for a click leak, calibrate timing, **Play**. _Watch
    auto-play demo_ plays a synthetic ukulele through the same pipeline.
 
-## Windline (whistle, recorder) on the iPad
+## Windline (whistle, recorder, pentatonic flutes) on the iPad
 
 `#/wind` (home screen -> Windline). It is Singline's pitch pipeline with a wind profile: range
 C4 to C7, a shorter analysis window for high notes, and an **Octave** option: by default the right
@@ -243,6 +243,23 @@ _exactly the octave shown_ and an octave off is wrong, since a fingering has one
 4. Use headphones (the guide tone is otherwise heard by the mic), calibrate timing if the first
    notes always feel early or late, pick **Scoring**, and **Play**. _Watch auto-play demo_
    plays a synthetic recorder through the same pipeline.
+
+**Pentatonic flutes** (a Native American flute, a shakuhachi): in the **Instrument** menu, under
+_Pentatonic flutes_. Their scale is the minor pentatonic on the lowest note (A, C, D, E, G on an A
+flute), so there are no sharps and flats to learn and the notes of a song are the same five in any key.
+Choose a key: Native American flutes in A, G, F♯, F, E, D and C minor (a six-hole flute, whose chart
+shows the holes opening one at a time from the bottom), or a shakuhachi 1.8 (D), 1.6 (E) or 2.1 (C),
+whose notes are shown by their traditional syllables Ro Tsu Re Chi Ri (no hole diagram, because the
+half-hole and meri fingerings differ between schools: use your teacher's chart). A pentatonic flute
+plays a song in its easy first register where it fits; the upper register is marked "blow harder".
+On one of these instruments the song menu starts with **Pentatonic flute songs** (eight slow original
+pieces of long notes and breaths, from three notes to the upper register, in a minor and a major
+mood) and offers **🎲 Random flute song**: four phrases with a breath between, pausing on the fifth
+and coming home to a long held note, in the minor or major pentatonic scale at three levels. Any
+other song is still on the menu; notes outside the scale show the usual warning. Under Options, a
+**Windline drone** holds the key note (or the key note and its fifth) low under the whole song,
+starting with the count-in, the way these flutes are played. There is a Learn path for them
+(_Windline: pentatonic flutes_).
 
 **Exercises** (under the song menu): the same scales, modes, thirds, patterns, arpeggios, long
 tones, interval ladder and a chromatic scale (to practise the sharps and flats) as Singline, in the instrument's key. Every one fits every whistle; the
@@ -320,7 +337,7 @@ counts; **Clap + tap**, two lanes where you teach it your two sounds first; **Dr
   reliably at realistic strum speeds (gaps of 4 to 10 ms between strings: 55 to 80% right), so the
   charts show the arrows as a guide and only timing and the chord are judged.
 - **Windline is simulation-verified only, and its fingerings are from standard charts, not checked on
-  every make.** The wind profile and synthetic whistle/recorder
+  every make** (a six-hole Native American flute opens its holes in order from the bottom, but makers differ; the shakuhachi shows syllables, not holes, on purpose). The wind profile and synthetic whistle/recorder
   prove the software chain (high notes, chiff, drift, airy breath); a real whistle's shrill peaks,
   breath blasts into the mic and room reflections are untested.
 - **Overlapping ringing notes confuse single-note pitch tracking.** Two notes

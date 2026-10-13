@@ -5,7 +5,7 @@ export const windScreen = createPitchScreen({
   mode: 'Windline',
   profileId: 'wind',
   title: 'Windline',
-  subtitle: 'whistle, recorder',
+  subtitle: 'whistle, recorder, flute',
   micPrompt: 'Tap “Start mic”, then play a long steady note.',
   adviceText: {
     clipping: 'Too loud: the signal is clipping. Move back from the mic or blow more gently.',

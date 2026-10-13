@@ -1,8 +1,23 @@
 import type { Chart } from './chart';
 import { midiLabel } from './notes';
 
-/** The kinds of simple wind instrument Windline knows. */
-export type WindFamily = 'whistle' | 'recorder' | 'generic';
+/**
+ * The kinds of simple wind instrument Windline knows. The native flute (a six-hole Native American
+ * flute) and the shakuhachi are pentatonic: the scale they play is the minor pentatonic, so there
+ * are no sharps or flats to learn, and a note below the tonic is part of the scale.
+ */
+export type WindFamily = 'whistle' | 'recorder' | 'native-flute' | 'shakuhachi' | 'generic';
+
+/** True for the pentatonic flutes, whose own scale is the minor pentatonic on their lowest note. */
+export const isPentatonicFamily = (family: WindFamily): boolean =>
+  family === 'native-flute' || family === 'shakuhachi';
+
+/**
+ * Semitones from a pentatonic flute's lowest note (the root of its minor pentatonic scale) up to the
+ * tonic of the major scale holding the same notes: an A minor flute sits 3 below C. A song's
+ * `meta.tonic` always names that major tonic, so the same song fits a whistle and a flute.
+ */
+export const PENTATONIC_ROOT_BELOW_TONIC = 3;
 
 /**
  * A simple wind instrument in a particular key. Whistles and recorders are diatonic: their
@@ -12,8 +27,14 @@ export type WindFamily = 'whistle' | 'recorder' | 'generic';
 export interface WindInstrument {
   id: string;
   label: string;
+  /** The heading it is listed under in the instrument menu, when it has one. */
+  group?: string;
   family: WindFamily;
-  /** MIDI note of the lowest note, which is also the tonic of the scale its fingerings are written in. */
+  /**
+   * MIDI note of the tonic of the major scale its fingerings are written in. For a whistle or
+   * recorder that is also the lowest note; a pentatonic flute's lowest note is 3 semitones below
+   * (see {@link PENTATONIC_ROOT_BELOW_TONIC}).
+   */
   tonic: number;
   /** Lowest and highest note it can play (MIDI), whether or not a fingering is shown for it. */
   range: { low: number; high: number };
@@ -35,6 +56,24 @@ const recorder = (id: string, label: string, tonic: number): WindInstrument => (
   family: 'recorder',
   tonic,
   range: { low: tonic, high: tonic + 14 },
+});
+
+/** The group heading the pentatonic flutes are listed under. */
+export const PENTATONIC_GROUP = 'Pentatonic flutes';
+
+/** A pentatonic flute whose lowest note (the root of its minor pentatonic scale) is `root`. */
+const pentatonicFlute = (
+  id: string,
+  label: string,
+  family: 'native-flute' | 'shakuhachi',
+  root: number,
+): WindInstrument => ({
+  id,
+  label,
+  group: PENTATONIC_GROUP,
+  family,
+  tonic: root + PENTATONIC_ROOT_BELOW_TONIC,
+  range: { low: root, high: Math.min(root + 24, TOP_NOTE) },
 });
 
 /**
@@ -68,7 +107,21 @@ export const WIND_INSTRUMENTS: readonly WindInstrument[] = [
   whistle('whistle-f', 'Tin whistle in F', 65),
   whistle('whistle-eb', 'Tin whistle in E♭', 63),
   whistle('whistle-low-d', 'Low whistle in D', 62),
+  pentatonicFlute('naf-a', 'Native American flute in A minor', 'native-flute', 69),
+  pentatonicFlute('naf-g', 'Native American flute in G minor', 'native-flute', 67),
+  pentatonicFlute('naf-fs', 'Native American flute in F♯ minor', 'native-flute', 66),
+  pentatonicFlute('naf-f', 'Native American flute in F minor', 'native-flute', 65),
+  pentatonicFlute('naf-e', 'Native American flute in E minor', 'native-flute', 64),
+  pentatonicFlute('naf-d', 'Native American flute in D minor', 'native-flute', 62),
+  pentatonicFlute('naf-c', 'Native American flute in C minor', 'native-flute', 60),
+  pentatonicFlute('shaku-18', 'Shakuhachi 1.8 (D)', 'shakuhachi', 62),
+  pentatonicFlute('shaku-16', 'Shakuhachi 1.6 (E)', 'shakuhachi', 64),
+  pentatonicFlute('shaku-21', 'Shakuhachi 2.1 (C)', 'shakuhachi', 60),
 ];
+
+/** The lowest note an instrument plays: its tonic, or for a pentatonic flute the root below it. */
+export const instrumentRoot = (instrument: Pick<WindInstrument, 'family' | 'tonic'>): number =>
+  instrument.tonic - (isPentatonicFamily(instrument.family) ? PENTATONIC_ROOT_BELOW_TONIC : 0);
 
 /** True for the generic instrument, whose key is the semitone shift you set. */
 export const isGenericWind = (instrument: Pick<WindInstrument, 'id'>): boolean =>
@@ -105,17 +158,30 @@ export interface Fingering {
   holes: string;
   /** Played with a stronger breath (the second octave of a whistle). */
   harder: boolean;
+  /** What the note is called on this instrument, when it has names (a shakuhachi's Ro, Tsu, Re). */
+  name?: string;
 }
 
 /** How the holes are grouped for drawing, in the order of {@link Fingering.holes}. */
 export function holeGroups(family: WindFamily): number[] {
   if (family === 'whistle') return [3, 3]; // top hand, bottom hand
   if (family === 'recorder') return [1, 3, 4]; // thumb, then the left and right hands
-  return []; // generic: no holes to draw
+  if (family === 'native-flute') return [3, 3]; // the six holes, three under each hand
+  return []; // generic and shakuhachi: no holes to draw (the shakuhachi shows syllables)
 }
 
 /** The semitones above the tonic that are notes of the major scale (the rest are chromatic). */
 const MAJOR_STEPS: ReadonlySet<number> = new Set([0, 2, 4, 5, 7, 9, 11]);
+
+/** A table with the given fingerings at their semitones above the lowest note, and gaps between. */
+function sparse(entries: readonly (readonly [number, Fingering])[]): (Fingering | null)[] {
+  const out: (Fingering | null)[] = [];
+  for (const [steps, fingering] of entries) {
+    while (out.length < steps) out.push(null);
+    out[steps] = fingering;
+  }
+  return out;
+}
 
 const f = (holes: string, harder = false): Fingering => ({
   holes: holes.replaceAll(' ', ''),
@@ -181,11 +247,62 @@ const RECORDER: readonly (Fingering | null)[] = [
   f('0 010 0000'), // 14 upper D: hole 2 alone
 ];
 
+/**
+ * A six-hole Native American flute, by semitones above its lowest note: the minor pentatonic
+ * scale from opening one more hole at a time, bottom first (root, minor third, fourth, fifth,
+ * minor seventh, octave, minor tenth). The upper register reuses the same fingerings with a
+ * stronger breath. Makers differ a little, so check them against your own flute.
+ */
+const NATIVE_FLUTE: readonly (Fingering | null)[] = sparse([
+  [0, f('111111')],
+  [3, f('111110')],
+  [5, f('111100')],
+  [7, f('111000')],
+  [10, f('110000')],
+  [12, f('100000')],
+  [15, f('000000')],
+  [17, f('111100', true)],
+  [19, f('111000', true)],
+  [22, f('110000', true)],
+  [24, f('100000', true)],
+]);
+
+/** The shakuhachi's syllables for the five notes of its scale, from the lowest: Ro Tsu Re Chi Ri. */
+const SHAKUHACHI_SYLLABLES = ['Ro', 'Tsu', 'Re', 'Chi', 'Ri'] as const;
+
+/**
+ * A shakuhachi, by semitones above its lowest note (Ro): the notes are named by their traditional
+ * syllables, and no hole diagram is drawn, because the fingerings of the half-hole and meri notes
+ * differ between schools (Kinko, Tozan and others). The second octave (kan) is played with a
+ * stronger, more focused breath.
+ */
+const SHAKUHACHI: readonly (Fingering | null)[] = sparse(
+  [0, 3, 5, 7, 10, 12, 15, 17, 19, 22, 24].map((steps) => {
+    const octave = Math.floor(steps / 12);
+    const degree = [0, 3, 5, 7, 10].indexOf(steps % 12);
+    return [
+      steps,
+      {
+        holes: '',
+        harder: octave > 0,
+        name: `${SHAKUHACHI_SYLLABLES[degree]}${'↑'.repeat(octave)}`,
+      },
+    ] as const;
+  }),
+);
+
 const TABLES: Record<WindFamily, readonly (Fingering | null)[]> = {
   whistle: WHISTLE,
   recorder: RECORDER,
+  'native-flute': NATIVE_FLUTE,
+  shakuhachi: SHAKUHACHI,
   generic: [],
 };
+
+/** The semitones above the root that are notes of the instrument's own scale (the rest are extras). */
+const MINOR_PENTATONIC_STEPS: ReadonlySet<number> = new Set([0, 3, 5, 7, 10]);
+const ownScale = (family: WindFamily): ReadonlySet<number> =>
+  isPentatonicFamily(family) ? MINOR_PENTATONIC_STEPS : MAJOR_STEPS;
 
 /** One note the instrument has a fingering for, with the fingering to play it. */
 export interface ScaleNote {
@@ -198,16 +315,18 @@ export interface ScaleNote {
 
 /** The notes the instrument has fingerings for, lowest first, chromatic notes included. */
 export function windScale(instrument: WindInstrument): ScaleNote[] {
+  const root = instrumentRoot(instrument);
+  const own = ownScale(instrument.family);
   return TABLES[instrument.family].flatMap((fingering, steps) => {
     if (!fingering) return [];
-    const midi = instrument.tonic + steps;
-    return [{ midi, label: midiLabel(midi), fingering, chromatic: !MAJOR_STEPS.has(steps % 12) }];
+    const midi = root + steps;
+    return [{ midi, label: midiLabel(midi), fingering, chromatic: !own.has(steps % 12) }];
   });
 }
 
 /** The fingering for a note, or null when the instrument has no chart or no fingering for the note. */
 export function fingeringFor(instrument: WindInstrument, midi: number): Fingering | null {
-  const steps = midi - instrument.tonic;
+  const steps = midi - instrumentRoot(instrument);
   return (Number.isInteger(steps) && TABLES[instrument.family][steps]) || null;
 }
 
@@ -233,6 +352,22 @@ export function bestOctaveShift(
     }
   }
   return best;
+}
+
+/**
+ * The whole octaves (a multiple of 12) to move a song so it sits in an instrument's range as low as
+ * it can: the lowest placement that keeps every note in range, which for a flute is its easy first
+ * register. When the song is wider than the range, the placement that leaves the fewest notes out.
+ */
+export function registerShift(
+  span: { low: number; high: number },
+  range: { low: number; high: number },
+): number {
+  for (let k = -5; k <= 5; k++) {
+    const move = 12 * k;
+    if (span.low + move >= range.low && span.high + move <= range.high) return move;
+  }
+  return bestOctaveShift(span, range);
 }
 
 /** What is wrong with playing a song's notes on this instrument; empty arrays when it fits. */

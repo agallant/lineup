@@ -508,6 +508,13 @@ pre.debug {
   color: var(--muted);
 }
 
+/* a shakuhachi note is shown by its syllable, with no hole diagram */
+.fing-name {
+  min-width: 3.5em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .fingering-chart .fing-row {
   display: flex;
   align-items: center;

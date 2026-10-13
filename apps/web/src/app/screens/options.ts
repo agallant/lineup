@@ -13,6 +13,7 @@ import {
   type Theme,
 } from '../settings';
 import { DIFFICULTIES } from '@lineup/core';
+import { DRONES } from '../game/backing';
 import { DRUM_STYLES } from '../game/drums';
 
 const DIFFICULTY_TEXT: Record<string, string> = {
@@ -20,6 +21,12 @@ const DIFFICULTY_TEXT: Record<string, string> = {
   normal: 'Normal',
   strict: 'Strict: tight pitch and timing',
 };
+const DRONE_TEXT: Record<string, string> = {
+  off: 'Off',
+  root: 'The key note',
+  fifth: 'The key note and its fifth',
+};
+
 const DRUM_TEXT: Record<string, string> = { off: 'Off', rock: 'Rock beat', bossa: 'Bossa nova' };
 
 const ACCOMPANIMENT_TEXT: Record<string, string> = {
@@ -59,6 +66,9 @@ export const optionsScreen: Screen = (root) => {
       ).join('')}</select></label></div>
       <div class="row"><label>Drum loop <select data-id="drums">${DRUM_STYLES.map(
         (d) => `<option value="${d}">${DRUM_TEXT[d]}</option>`,
+      ).join('')}</select></label></div>
+      <div class="row"><label>Windline drone <select data-id="drone">${DRONES.map(
+        (d) => `<option value="${d}">${DRONE_TEXT[d]}</option>`,
       ).join('')}</select></label></div>
       <p class="muted">Backing is quiet music under the song. Use headphones, or the microphone will hear it.</p>
     </section>
@@ -126,6 +136,7 @@ export const optionsScreen: Screen = (root) => {
     $<HTMLInputElement>('effects').checked = v.effects;
     $<HTMLSelectElement>('accompaniment').value = v.accompaniment;
     $<HTMLSelectElement>('drums').value = v.drums;
+    $<HTMLSelectElement>('drone').value = v.drone;
     $<HTMLSelectElement>('difficulty').value = v.difficulty;
     $<HTMLSelectElement>('octave').value = v.windOctave;
     $<HTMLInputElement>('chords').checked = v.checkChords;
@@ -150,6 +161,9 @@ export const optionsScreen: Screen = (root) => {
   checkbox('chords', 'checkChords');
   checkbox('fingerings', 'showFingerings');
   checkbox('debug', 'debug');
+  $<HTMLSelectElement>('drone').addEventListener('change', (e) =>
+    settings.update({ drone: (e.target as HTMLSelectElement).value as (typeof DRONES)[number] }),
+  );
   $<HTMLSelectElement>('drums').addEventListener('change', (e) =>
     settings.update({
       drums: (e.target as HTMLSelectElement).value as (typeof DRUM_STYLES)[number],
