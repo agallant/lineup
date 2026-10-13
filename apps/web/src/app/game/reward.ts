@@ -1,6 +1,7 @@
 import { escapeHtml } from '../audio';
 import { chartEnd, rateChart, type Chart } from '@lineup/core';
 import { starText, starsFor, type PlayOutcome, type PlayResult } from '../progress';
+import { THEMES } from '../themes';
 
 /** The stars, XP, level and new trophies a finished song earned, as HTML for the results screen. */
 export function rewardHtml(accuracy: number, outcome: PlayOutcome): string {
@@ -14,6 +15,26 @@ export function rewardHtml(accuracy: number, outcome: PlayOutcome): string {
   if (outcome.dailyBonus > 0) {
     lines.push(
       `<strong data-id="daily-cleared">Daily challenge cleared! +${outcome.dailyBonus} XP</strong>`,
+    );
+  }
+  if (outcome.freezeUsed) {
+    lines.push(
+      `<strong data-id="freeze-used">❄ A streak freeze kept your ${outcome.streak}-day streak alive over the day you missed.</strong>`,
+    );
+  }
+  if (outcome.freezeEarned) {
+    lines.push(
+      `<strong data-id="freeze-earned">❄ You earned a streak freeze (${outcome.freezes} banked).</strong>`,
+    );
+  }
+  const theme = THEMES.find((t) => t.id === outcome.week.themeId);
+  if (theme && outcome.week.justDone) {
+    lines.push(
+      `<strong data-id="week-done">${escapeHtml(theme.title)} finished! +${outcome.week.bonus} XP</strong>`,
+    );
+  } else if (theme && outcome.week.counted) {
+    lines.push(
+      `<span data-id="week-progress">${escapeHtml(theme.title)}: ${outcome.week.plays} of ${outcome.week.goal}</span>`,
     );
   }
   if (outcome.leveledUp)
@@ -38,6 +59,7 @@ export function playResultFor(
   chart: Chart,
   score: { accuracy: number; counts: { perfect: number; good: number; miss: number } },
   daily?: { key: string },
+  speed?: number,
 ): PlayResult {
   const rating = rateChart(chart);
   const { perfect, good, miss } = score.counts;
@@ -50,6 +72,8 @@ export function playResultFor(
     misses: miss,
     notes: perfect + good + miss,
     seconds: chartEnd(chart),
+    ...(chart.meta.beatsPerBar === 3 ? { waltz: true } : {}),
+    ...(speed !== undefined ? { speed } : {}),
     ...(daily ? { daily } : {}),
   };
 }

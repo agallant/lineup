@@ -1,8 +1,11 @@
 import type { KeyValueStore } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
+import { THEMES, themeForWeek, weekStart } from './themes';
 import {
   ACHIEVEMENTS,
   DAILY_BONUS,
+  FREEZE_EVERY,
+  MAX_FREEZES,
   ProgressStore,
   dayKey,
   gameOf,
@@ -273,5 +276,197 @@ describe('practice log', () => {
       '{"log": {"2026-10-01": {"plays": 2, "seconds": 70}, "bad": {"plays": 1}, "2026-10-02": 5}}',
     );
     expect(new ProgressStore(mem).get().log).toEqual({ '2026-10-01': { plays: 2, seconds: 70 } });
+  });
+});
+
+/** A date in a week whose theme is `id` (searching forward from October 2026). */
+function inThemeWeek(id: string, offsetDays = 0): Date {
+  const d = new Date(2026, 9, 12, 12); // a Monday
+  for (let i = 0; i < THEMES.length * 7 * 2; i += 7) {
+    const candidate = new Date(2026, 9, 12 + i, 12);
+    if (themeForWeek(candidate).id === id) {
+      d.setTime(candidate.getTime());
+      break;
+    }
+  }
+  d.setDate(d.getDate() + offsetDays);
+  return d;
+}
+
+describe('streaks with a rest day or a frozen day', () => {
+  it('a frozen day keeps the streak alive without counting as played', () => {
+    const days = ['2026-10-05', '2026-10-06', '2026-10-08', '2026-10-09'];
+    expect(streakOf(days, at(9))).toBe(2);
+    expect(streakOf(days, at(9), { frozen: ['2026-10-07'] })).toBe(4);
+    expect(streakOf(days, at(10), { frozen: ['2026-10-07'] })).toBe(4); // today not played yet
+  });
+
+  it('a rest day never breaks a streak, but only that weekday', () => {
+    // 2026-10-04 is a Sunday
+    const days = ['2026-10-02', '2026-10-03', '2026-10-05', '2026-10-06'];
+    expect(streakOf(days, at(6))).toBe(2);
+    expect(streakOf(days, at(6), { restDay: 0 })).toBe(4);
+    expect(streakOf(days, at(6), { restDay: 3 })).toBe(2); // a Wednesday is no help
+    // two missed days in a row still break it, even with a rest day
+    expect(streakOf(['2026-10-02', '2026-10-06'], at(6), { restDay: 0 })).toBe(1);
+  });
+
+  it('never loops on a streak made only of bridged days', () => {
+    expect(streakOf([], at(10), { frozen: ['2026-10-09', '2026-10-08'], restDay: 5 })).toBe(0);
+  });
+});
+
+describe('streak freezes', () => {
+  /** Plays on each given October day, in order. */
+  function playDays(store: ProgressStore, days: number[]) {
+    let last = null as ReturnType<ProgressStore['recordPlay']> | null;
+    for (const d of days) last = store.recordPlay(play({ songId: `s${d}` }), at(d));
+    return last!;
+  }
+
+  it(`earns one freeze for every ${FREEZE_EVERY} days of streak, at most ${MAX_FREEZES} banked`, () => {
+    const store = new ProgressStore(new Mem());
+    const sixth = playDays(store, [1, 2, 3, 4, 5, 6]);
+    expect(sixth.freezeEarned).toBe(false);
+    const seventh = playDays(store, [7]);
+    expect(seventh.freezeEarned).toBe(true);
+    expect(seventh.freezes).toBe(1);
+    expect(playDays(store, [8, 9, 10, 11, 12, 13]).freezeEarned).toBe(false);
+    expect(playDays(store, [14]).freezes).toBe(2);
+    // a third week of streak earns nothing more while two are banked
+    playDays(store, [15, 16, 17, 18, 19, 20]);
+    const twentyFirst = playDays(store, [21]);
+    expect(twentyFirst.freezeEarned).toBe(false);
+    expect(twentyFirst.freezes).toBe(MAX_FREEZES);
+  });
+
+  it('a freeze bridges exactly one missed day, and says so', () => {
+    const store = new ProgressStore(new Mem());
+    playDays(store, [1, 2, 3, 4, 5, 6, 7]); // a week: one freeze banked
+    expect(store.get().freezes).toBe(1);
+    const back = store.recordPlay(play({ songId: 'back' }), at(9)); // missed the 8th
+    expect(back.freezeUsed).toBe(true);
+    expect(back.freezes).toBe(0);
+    expect(back.streak).toBe(8); // the seven days and today, the 8th bridged
+    expect(store.get().frozen).toEqual(['2026-10-08']);
+    expect(store.streak(at(9))).toBe(8);
+  });
+
+  it('does not save a streak after two missed days, or when none is banked', () => {
+    const store = new ProgressStore(new Mem());
+    playDays(store, [1, 2, 3, 4, 5, 6, 7]);
+    const late = store.recordPlay(play({ songId: 'late' }), at(10)); // missed the 8th and 9th
+    expect(late.freezeUsed).toBe(false);
+    expect(late.streak).toBe(1);
+    expect(store.get().freezes).toBe(1); // still banked for next time
+
+    const none = new ProgressStore(new Mem());
+    playDays(none, [1, 2, 3]);
+    expect(none.recordPlay(play({ songId: 'x' }), at(5)).freezeUsed).toBe(false);
+  });
+
+  it('a rest day needs no freeze', () => {
+    const store = new ProgressStore(new Mem());
+    store.setRestDay(0); // Sunday: 2026-10-04
+    playDays(store, [1, 2, 3]);
+    const monday = store.recordPlay(play({ songId: 'mon' }), at(5));
+    expect(monday.streak).toBe(4);
+    expect(store.get().restDay).toBe(0);
+    store.setRestDay(9);
+    expect(store.get().restDay).toBeNull();
+  });
+
+  it('survives a reload and ignores junk', () => {
+    const mem = new Mem();
+    const store = new ProgressStore(mem);
+    playDays(store, [1, 2, 3, 4, 5, 6, 7]);
+    store.setRestDay(2);
+    const again = new ProgressStore(mem).get();
+    expect(again).toMatchObject({ freezes: 1, restDay: 2, freezeAward: 7 });
+    mem.setItem(
+      'lineup.progress.v1',
+      JSON.stringify({ freezes: 99, frozen: ['x', '2026-10-01'], restDay: 12, week: { start: 5 } }),
+    );
+    expect(new ProgressStore(mem).get()).toMatchObject({
+      freezes: MAX_FREEZES,
+      frozen: ['2026-10-01'],
+      restDay: null,
+      week: null,
+    });
+  });
+});
+
+describe('themed weeks', () => {
+  it('give everyone the same theme for a whole week, and take turns', () => {
+    const monday = new Date(2026, 9, 12, 9);
+    const sunday = new Date(2026, 9, 18, 22);
+    expect(weekStart(monday)).toBe('2026-10-12');
+    expect(weekStart(sunday)).toBe('2026-10-12');
+    expect(themeForWeek(monday)).toBe(themeForWeek(sunday));
+    expect(weekStart(new Date(2026, 9, 19, 1))).toBe('2026-10-19');
+    const seen = new Set<string>();
+    for (let w = 0; w < THEMES.length; w++)
+      seen.add(themeForWeek(new Date(2026, 9, 12 + 7 * w)).id);
+    expect(seen.size).toBe(THEMES.length);
+  });
+
+  it('count matching songs cleared at 60%, finish at the goal, and pay a bonus once', () => {
+    const store = new ProgressStore(new Mem());
+    const mon = inThemeWeek('waltz');
+    const waltz = (n: number, patch: Partial<PlayResult> = {}) =>
+      play({ songId: `w${n}`, waltz: true, ...patch });
+    const first = store.recordPlay(waltz(1), mon);
+    expect(first.week).toMatchObject({
+      themeId: 'waltz',
+      plays: 1,
+      goal: 3,
+      counted: true,
+      justDone: false,
+    });
+    // not a waltz, or not cleared: it does not count
+    expect(store.recordPlay(play({ songId: 'plain' }), mon).week.counted).toBe(false);
+    expect(store.recordPlay(waltz(9, { accuracy: 0.4 }), mon).week.counted).toBe(false);
+    expect(store.recordPlay(waltz(2), mon).week.plays).toBe(2);
+    const done = store.recordPlay(waltz(3), mon);
+    expect(done.week).toMatchObject({ plays: 3, justDone: true, bonus: 100 });
+    expect(store.get().weeksDone).toBe(1);
+    expect(done.newAchievements.map((a) => a.id)).toContain('themed-week');
+    // once finished it stays finished, with no second bonus
+    const more = store.recordPlay(waltz(4), mon);
+    expect(more.week).toMatchObject({ justDone: false, bonus: 0, counted: false });
+    expect(store.weekProgress(mon)).toMatchObject({ themeId: 'waltz', plays: 3, done: true });
+  });
+
+  it('start afresh the next week', () => {
+    const store = new ProgressStore(new Mem());
+    const mon = inThemeWeek('waltz');
+    store.recordPlay(play({ songId: 'w1', waltz: true }), mon);
+    const next = new Date(mon);
+    next.setDate(next.getDate() + 7);
+    expect(store.weekProgress(next)).toMatchObject({ plays: 0, done: false });
+  });
+
+  it('can be matched by what is played: new songs, slow practice, exercises', () => {
+    const store = new ProgressStore(new Mem());
+    const fresh = inThemeWeek('fresh');
+    expect(store.recordPlay(play({ songId: 'a' }), fresh).week.counted).toBe(true);
+    expect(store.recordPlay(play({ songId: 'a' }), fresh).week.counted).toBe(false); // seen before
+    const slow = inThemeWeek('slow');
+    const s2 = new ProgressStore(new Mem());
+    expect(s2.recordPlay(play({ speed: 0.8 }), slow).week.counted).toBe(true);
+    expect(s2.recordPlay(play({ speed: 1 }), slow).week.counted).toBe(false);
+    const ex = inThemeWeek('exercise');
+    const s3 = new ProgressStore(new Mem());
+    expect(s3.recordPlay(play({ songId: 'ex-voice-major-up-down' }), ex).week.counted).toBe(true);
+    const pent = inThemeWeek('pentatonic');
+    const s4 = new ProgressStore(new Mem());
+    for (const id of [
+      'flute-first-breath',
+      'ex-wind-minor-pentatonic-up-down',
+      'gen-flute-minor-pentatonic-easy-4',
+    ]) {
+      expect(s4.recordPlay(play({ songId: id }), pent).week.counted, id).toBe(true);
+    }
+    expect(s4.recordPlay(play({ songId: 'gen-chords-easy-3' }), pent).week.counted).toBe(false);
   });
 });

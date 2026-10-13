@@ -889,3 +889,70 @@ ol.steps .what {
   display: flex;
   flex-direction: column;
 }
+
+/* the collection: a medal per family, and its songs as touch-sized links */
+ul.collection {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 6px;
+}
+
+ul.collection li a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+ul.collection li.cleared a {
+  border-color: var(--accent);
+}
+
+ul.collection li.new a {
+  opacity: 0.75;
+}
+
+.family .badge {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+/* the records timeline on the scoreboard */
+ol.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+  display: grid;
+  gap: 8px;
+}
+
+ol.timeline li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+ol.timeline .when {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* a card on Home for the themed week */
+.theme-card .bar {
+  margin-top: 6px;
+}

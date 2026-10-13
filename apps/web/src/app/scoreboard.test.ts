@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { COURSES } from './courses';
 import {
   completedCourse,
+  recordTimeline,
   suggestNext,
   isPlainVariant,
   scoreRows,
@@ -212,5 +213,44 @@ describe('suggestNext ranking', () => {
       entry('wind', wind.steps[0]!.songId, '2026-10-10T10:00:00Z'),
     ])!;
     expect(replayed.course.id).toBe(voice.id);
+  });
+});
+
+describe('recordTimeline', () => {
+  const entry = (
+    key: string,
+    score: number,
+    at: string,
+    history: { score: number; accuracy: number; at: string }[] = [],
+  ) => ({
+    key,
+    best: { score, accuracy: score / 1000, grade: 'B', at, history },
+  });
+
+  it('lists each time a best was set, newest first, with what it improved on', () => {
+    const entries = [
+      entry('voice|sing-hot-cross-buns|normal', 900, '2026-10-05T10:00:00Z', [
+        { score: 500, accuracy: 0.5, at: '2026-10-01T10:00:00Z' },
+        { score: 700, accuracy: 0.7, at: '2026-10-03T10:00:00Z' },
+      ]),
+      entry('wind|wind-ode|normal', 600, '2026-10-04T10:00:00Z'),
+    ];
+    const rows = scoreRows(entries);
+    const events = recordTimeline(entries, rows);
+    expect(events.map((e) => `${e.title}:${e.score}`)).toEqual([
+      'Hot Cross Buns:900',
+      'Ode to Joy:600',
+      'Hot Cross Buns:700',
+      'Hot Cross Buns:500',
+    ]);
+    expect(events[0]!.before).toEqual({ score: 700, accuracy: 0.7 });
+    expect(events[1]!.before).toBeNull(); // the first score on that song
+    expect(events[3]!.before).toBeNull();
+    expect(recordTimeline(entries, rows, 2)).toHaveLength(2);
+  });
+
+  it('skips songs this version does not know, and tolerates scores with no history', () => {
+    const entries = [entry('nobody|x|normal', 1, '2026-10-01T00:00:00Z')];
+    expect(recordTimeline(entries, scoreRows(entries))).toEqual([]);
   });
 });

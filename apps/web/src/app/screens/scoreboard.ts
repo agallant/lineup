@@ -10,7 +10,7 @@ import {
 } from '../progress';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
-import { scoreRows, sortRows, type ScoreSort } from '../scoreboard';
+import { recordTimeline, scoreRows, sortRows, type ScoreSort } from '../scoreboard';
 import { safeLocalStorage } from '../settings';
 import { UserSongStore, lookupUserSong } from '../user-songs';
 
@@ -37,7 +37,9 @@ export const scoreboardScreen: Screen = (root) => {
   const days = recentDays(state.log, now, 14);
   const peak = Math.max(60, ...days.map((d) => d.seconds));
   const songs = new UserSongStore(storage);
-  const all = scoreRows(new ScoreStore(storage).entries(), (id) => lookupUserSong(id, songs));
+  const entries = new ScoreStore(storage).entries();
+  const all = scoreRows(entries, (id) => lookupUserSong(id, songs));
+  const timeline = recordTimeline(entries, all, 20);
 
   root.innerHTML = `
     <p><a href="#/">← Home</a></p>
@@ -52,7 +54,13 @@ export const scoreboardScreen: Screen = (root) => {
         <dt>Different songs</dt><dd>${state.songs.length}</dd>
         <dt>Days played</dt><dd>${state.days.length}</dd>
         <dt>Streak</dt><dd data-id="streak">${streak} ${streak === 1 ? 'day' : 'days'}</dd>
+        <dt>Streak freezes</dt><dd data-id="freezes">${state.freezes} of 2 banked</dd>
+        <dt>Themed weeks finished</dt><dd data-id="weeks-done">${state.weeksDone}</dd>
       </dl>
+      <p class="muted">A streak freeze covers one missed day and is earned for every week of a streak. A rest day,
+        chosen in Options, never breaks a streak.</p>
+      <p><a class="card" href="#/collection" data-id="collection-link"><strong>Collection</strong>
+        <span>Songs cleared with three stars, and a medal for each group.</span></a></p>
     </section>
 
     <section class="panel" data-id="practice">
@@ -79,6 +87,28 @@ export const scoreboardScreen: Screen = (root) => {
       <ul class="scores" data-id="rows"></ul>
       <p class="muted" data-id="empty" hidden>No scores yet. Finish a song in any game and it appears here.</p>
       <p class="muted">Stars: ★ 60%, ★★ 80%, ★★★ 95% accuracy. The demo never sets a score.</p>
+    </section>
+
+    <section class="panel" data-id="records">
+      <h2>Records <small>when your bests were set</small></h2>
+      ${
+        timeline.length === 0
+          ? '<p class="muted">No records yet. Every new best on a song appears here.</p>'
+          : `<ol class="timeline" data-id="timeline">${timeline
+              .map(
+                (e) => `<li>
+          <span class="when">${escapeHtml(dateText(e.at))}</span>
+          <span><strong>${escapeHtml(e.title)}</strong>
+            <span class="muted">${e.game}${e.how ? ` · ${escapeHtml(e.how)}` : ''}</span><br />
+            ${
+              e.before
+                ? `${Math.round(e.before.accuracy * 100)}% → <strong>${Math.round(e.accuracy * 100)}%</strong>, ${e.score.toLocaleString('en-US')} points (was ${e.before.score.toLocaleString('en-US')})`
+                : `First score: <strong>${Math.round(e.accuracy * 100)}%</strong>, ${e.score.toLocaleString('en-US')} points`
+            }</span>
+        </li>`,
+              )
+              .join('')}</ol>`
+      }
     </section>
 
     <section class="panel">

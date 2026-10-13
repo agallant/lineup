@@ -9,6 +9,10 @@ const outcome = (patch: Partial<PlayOutcome> = {}): PlayOutcome => ({
   streak: 1,
   dailyBonus: 0,
   newAchievements: [],
+  freezeUsed: false,
+  freezeEarned: false,
+  freezes: 0,
+  week: { themeId: 'waltz', plays: 0, goal: 3, counted: false, justDone: false, bonus: 0 },
   ...patch,
 });
 

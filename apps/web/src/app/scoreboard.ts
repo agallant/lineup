@@ -172,3 +172,53 @@ export function suggestNext(
   const best = candidates[0];
   return best ? { course: best.course, step: best.step } : null;
 }
+
+/** One time a personal best was set. */
+export interface RecordEvent {
+  key: string;
+  gameId: string;
+  game: string;
+  title: string;
+  how: string;
+  at: string;
+  score: number;
+  accuracy: number;
+  /** The best it replaced, or null for the first score on that song. */
+  before: { score: number; accuracy: number } | null;
+}
+
+/**
+ * The timeline of personal records, newest first: each time a best was set on a song, and what it
+ * improved on. Only the last few bests of a song are kept, so a long history shows its recent part.
+ */
+export function recordTimeline(
+  entries: readonly { key: string; best: BestScore }[],
+  rows: readonly ScoreRow[],
+  limit = 25,
+): RecordEvent[] {
+  const byKey = new Map(rows.map((r) => [r.key, r] as const));
+  const events: RecordEvent[] = [];
+  for (const { key, best } of entries) {
+    const row = byKey.get(key);
+    if (!row) continue;
+    const chain = [
+      ...(best.history ?? []),
+      { score: best.score, accuracy: best.accuracy, at: best.at },
+    ];
+    chain.forEach((c, i) => {
+      const prev = chain[i - 1];
+      events.push({
+        key,
+        gameId: row.gameId,
+        game: row.game,
+        title: row.title,
+        how: row.how,
+        at: c.at,
+        score: c.score,
+        accuracy: c.accuracy,
+        before: prev ? { score: prev.score, accuracy: prev.accuracy } : null,
+      });
+    });
+  }
+  return events.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
+}
