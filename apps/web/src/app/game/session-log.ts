@@ -3,7 +3,7 @@ import type { Judgment, ScoreState } from '@lineup/core';
 export interface SessionLogInput {
   /** Build label, commit and time (the page footer text). */
   build: string;
-  mode: 'Singline' | 'Windline' | 'Beatline' | 'Strumline';
+  mode: 'Singline' | 'Windline' | 'Beatline' | 'Strumline' | 'Bassline';
   at: Date;
   userAgent: string;
   profileId: string;

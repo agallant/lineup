@@ -34,6 +34,13 @@ const CARDS = [
     blurb: 'Strum chord songs or pick melodies, with the fret to hold on each string.',
   },
   {
+    id: 'bassline',
+    href: '#/bass',
+    name: 'Bassline',
+    who: 'Bass guitar',
+    blurb: 'Learn bass lines: blues, pop and rock, with the string and fret for every note.',
+  },
+  {
     id: 'beatline',
     href: '#/beat',
     name: 'Beatline',

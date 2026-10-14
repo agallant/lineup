@@ -3,7 +3,7 @@ import { midiToFrequency } from '@lineup/core';
 import { playTone } from '../audio';
 import { describeError } from '../mic-error';
 import type { Screen } from '../router';
-import { TUNINGS, readTuner } from '../tuner';
+import { TUNINGS, readTuner, tunerPitchOptions } from '../tuner';
 
 /** How long a reading stays on screen after the note stops. */
 const HOLD_S = 0.6;
@@ -74,7 +74,11 @@ export const tunerScreen: Screen = (root) => {
     }
   };
   showRefs();
-  tuningSel.addEventListener('change', showRefs);
+  tuningSel.addEventListener('change', () => {
+    showRefs();
+    // a bass needs a different listening range, so a running microphone is reopened
+    if (session) startBtn.click();
+  });
 
   const tick = () => {
     raf = requestAnimationFrame(tick);
@@ -112,7 +116,7 @@ export const tunerScreen: Screen = (root) => {
       startBtn.disabled = true;
       $('status').textContent = 'Opening microphone…';
       try {
-        const s = await openMic(undefined, 0, { pitch: { minHz: 60 } });
+        const s = await openMic(undefined, 0, { pitch: tunerPitchOptions(tuning()) });
         if (disposed) {
           await s.close();
           return;

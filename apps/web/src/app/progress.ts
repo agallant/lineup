@@ -89,6 +89,7 @@ export const GAMES = [
   { id: 'windline', label: 'Windline', profiles: ['wind'] },
   { id: 'beatline', label: 'Beatline', profiles: ['clap', 'hand-percussion', 'drum-kit'] },
   { id: 'strumline', label: 'Strumline', profiles: ['ukulele-strum'] },
+  { id: 'bassline', label: 'Bassline', profiles: ['bass'] },
   { id: 'ear', label: 'Ear training', profiles: ['ear'] },
 ] as const;
 
@@ -242,7 +243,8 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     id: 'all-games',
     title: 'Full band',
     description: 'Play all four instrument games.',
-    earned: (s) => GAMES.filter((g) => g.id !== 'ear').every((g) => (s.perGame[g.id] ?? 0) > 0),
+    earned: (s) =>
+      ['singline', 'windline', 'beatline', 'strumline'].every((g) => (s.perGame[g] ?? 0) > 0),
   },
   {
     id: 'streak-3',

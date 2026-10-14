@@ -6,7 +6,15 @@ export interface Tuning {
   label: string;
   /** Empty for the chromatic tuner, which names any note. */
   strings: readonly { name: string; midi: number }[];
+  /** Strings below about 60 Hz (a bass): the microphone listens for lower notes, over a longer window. */
+  low?: boolean;
 }
+
+/** What the microphone listens for when tuning: lower and slower for a bass, else the usual range. */
+export const tunerPitchOptions = (
+  tuning: Pick<Tuning, 'low'>,
+): { minHz: number; windowSize?: number } =>
+  tuning.low ? { minHz: 30, windowSize: 4096 } : { minHz: 60 };
 
 export const TUNINGS: readonly Tuning[] = [
   {
@@ -37,6 +45,17 @@ export const TUNINGS: readonly Tuning[] = [
       { name: 'G3', midi: 55 },
       { name: 'B3', midi: 59 },
       { name: 'E4', midi: 64 },
+    ],
+  },
+  {
+    id: 'bass',
+    label: 'Bass guitar (E A D G)',
+    low: true,
+    strings: [
+      { name: 'E1', midi: 28 },
+      { name: 'A1', midi: 33 },
+      { name: 'D2', midi: 38 },
+      { name: 'G2', midi: 43 },
     ],
   },
   { id: 'chromatic', label: 'Any note (chromatic)', strings: [] },

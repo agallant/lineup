@@ -32,6 +32,14 @@ export const TIPS: Readonly<Record<string, Tip>> = {
       'Start slow with Speed, then try “Also check the chords”.',
     ],
   },
+  bassline: {
+    title: 'Playing bass',
+    steps: [
+      'Tap “Start mic” and play an open string; keep the bass near the device.',
+      'Pick a song, then “Play”. Each note shows its string and fret; play it as it reaches the line.',
+      'Start slow with Speed, and try the drum loop in Options for a band feel.',
+    ],
+  },
   beatline: {
     title: 'Clapping and drumming',
     steps: [
