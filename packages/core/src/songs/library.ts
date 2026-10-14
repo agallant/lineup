@@ -226,6 +226,58 @@ const TUNES: readonly Tune[] = [
       C5 B4 A#4 A4 | G#4 G4 F#4 F4 | E4 D#4 D4 C#4 | C4:4`,
   },
   {
+    id: 'itsy-bitsy',
+    title: 'Itsy Bitsy Spider',
+    artist: 'Traditional',
+    bpm: 108,
+    tonic: 60,
+    notes: `G3:.5 C4:1 C4:.5 C4:1 D4:.5 | E4:1.5 E4:.5 E4:1 D4:.5 C4:.5 | D4:1 E4:.5 C4:1.5 | r:.5 E4:.5 E4:.5 F4:1 F4:.5 |
+      G4:1.5 G4:.5 F4:1 E4:.5 F4:.5 | G4:1 C4:1.5`,
+    windNotes: `G4:.5 C4:1 C4:.5 C4:1 D4:.5 | E4:1.5 E4:.5 E4:1 D4:.5 C4:.5 | D4:1 E4:.5 C4:1.5 | r:.5 E4:.5 E4:.5 F4:1 F4:.5 |
+      G4:1.5 G4:.5 F4:1 E4:.5 F4:.5 | G4:1 C4:1.5`,
+  },
+  {
+    id: 'baa-baa',
+    title: 'Baa, Baa, Black Sheep',
+    artist: 'Traditional',
+    bpm: 100,
+    tonic: 60,
+    notes: `C4 C4 G4 G4 | A4 B4 C5 A4 | G4:2 r | F4 F4 E4 E4 | D4 D4 C4:2`,
+  },
+  {
+    id: 'scale-sprint',
+    title: 'Scale Sprint',
+    artist: 'Lineup',
+    bpm: 96,
+    tonic: 60,
+    notes: `C4:.5 D4:.5 E4:.5 F4:.5 G4:.5 A4:.5 B4:.5 C5:.5 | C5:.5 B4:.5 A4:.5 G4:.5 F4:.5 E4:.5 D4:.5 C4:.5 |
+      E4:.5 F4:.5 G4:.5 A4:.5 B4:.5 C5:.5 D5:1 | D5:.5 C5:.5 B4:.5 A4:.5 G4:.5 F4:.5 E4:1 | C4:4`,
+  },
+  {
+    id: 'three-steps',
+    title: 'Three Steps Up',
+    artist: 'Lineup',
+    bpm: 88,
+    tonic: 60,
+    notes: `C4 E4 G4:2 | D4 F4 A4:2 | E4 G4 B4:2 | F4 A4 C5:2 | G4 E4 C4:4`,
+  },
+  {
+    id: 'dusk-in-a',
+    title: 'Dusk in A minor',
+    artist: 'Lineup',
+    bpm: 72,
+    tonic: 60,
+    notes: `A4:2 C5 B4 | A4:2 E4:2 | F4 A4 G4 E4 | A4:4 | C5:2 D5 C5 | D5:2 B4:2 | C5 B4 A4 G4 | A4:4`,
+  },
+  {
+    id: 'leap-frog',
+    title: 'Leap Frog',
+    artist: 'Lineup',
+    bpm: 104,
+    tonic: 60,
+    notes: `C4 G4 C4 G4 | D4 A4 D4 A4 | E4 B4 E4 B4 | F4 C5 F4 C5 | G4 D5 G4 D5 | C5:4`,
+  },
+  {
     id: 'fur-elise',
     title: 'Für Elise (opening, chromatic)',
     artist: 'Beethoven',
@@ -390,6 +442,36 @@ export const STRUM_SONGS: Readonly<Record<string, Chart>> = {
     'G | Em | C | D | G | Em | C | D | G | Bm | C | D | G | C | D | G',
     'D . D U D .',
     { beatsPerBar: 3 },
+  ),
+  'strum-fiddle-tune': strumChart(
+    {
+      title: 'Fiddle tune (G C D Em)',
+      artist: 'Lineup',
+      bpm: 112,
+      instruments: ['ukulele-strum'],
+    },
+    'G | G | C | G | G | Em | D | D | G | C | G | Em | C | D | G | G',
+    'D . D U . U D U',
+  ),
+  'strum-hymn-c': strumChart(
+    {
+      title: 'Hymn in C (C F G Am)',
+      artist: 'Lineup',
+      bpm: 80,
+      instruments: ['ukulele-strum'],
+    },
+    'C | F | C | G | Am | F | G | C | C | F | C | G | Am | Dm | G | C',
+    'D . . U D . . U',
+  ),
+  'strum-rain-day': strumChart(
+    {
+      title: 'Rainy day (Am F C G)',
+      artist: 'Lineup',
+      bpm: 90,
+      instruments: ['ukulele-strum'],
+    },
+    'Am | F | C | G | Am | F | C | G | Am | F | G | E | Am | F | E | Am',
+    'D . D U . U D U',
   ),
   'pick-hot-cross-buns': pickedMelodyChart(
     {

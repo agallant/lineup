@@ -109,6 +109,25 @@ const DEFS: readonly PackDef[] = [
     test: (c) => !RHYTHM.has(c.profileId) && !c.flute && c.rating <= 2,
   },
   {
+    id: 'minor',
+    title: 'Minor moods',
+    blurb: 'Songs that sit in a minor key: darker, calmer, a little wistful.',
+    test: ids(
+      'sing-dusk-in-a',
+      'wind-dusk-in-a',
+      'strum-minor',
+      'strum-minor-blues',
+      'strum-rain-day',
+      'strum-rising-sun',
+    ),
+  },
+  {
+    id: 'originals',
+    title: 'Made for Lineup',
+    blurb: 'Original tunes, chord songs and grooves written for this app, easiest first.',
+    test: (c) => c.chart.meta.artist === 'Lineup' && !c.flute,
+  },
+  {
     id: 'chromatic',
     title: 'Beyond the white notes',
     blurb: 'Songs with sharps and flats outside their key.',

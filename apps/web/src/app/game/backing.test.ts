@@ -4,6 +4,7 @@ import {
   midiToHz,
   planAllBacking,
   planBacking,
+  droneKeyNote,
   planDrone,
   playBacking,
   rhythmTones,
@@ -217,5 +218,24 @@ describe('planDrone', () => {
     expect(all.map((e) => e.songTime)).toEqual(
       [...all.map((e) => e.songTime)].sort((a, b) => a - b),
     );
+  });
+});
+
+describe('droneKeyNote', () => {
+  const song = (tonic: number | undefined, pitches: number[]) =>
+    chartFromBeats(
+      { title: 't', artist: 'a', bpm: 100, ...(tonic === undefined ? {} : { tonic }) },
+      pitches.map((pitch, i) => ({ beat: i, beats: 1, pitch })),
+    );
+  it('is the tonic for a song that ends on it', () => {
+    expect(droneKeyNote(song(60, [64, 62, 60]))).toBe(60);
+  });
+  it('is the relative minor for a song that ends there (A minor over a C tonic)', () => {
+    expect(droneKeyNote(song(60, [69, 72, 64, 57]))).toBe(57);
+    expect(droneKeyNote(song(60, [69, 72, 64, 69]))).toBe(57);
+  });
+  it('falls back to the tonic, or C, when unsure', () => {
+    expect(droneKeyNote(song(62, [64, 66]))).toBe(62);
+    expect(droneKeyNote(song(undefined, [64, 66]))).toBe(60);
   });
 });
