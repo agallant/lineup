@@ -566,7 +566,7 @@ export const STRUM_SONGS: Readonly<Record<string, Chart>> = {
     {
       title: 'Bossa nova strum (Brazil style: Am Dm G C)',
       artist: 'Lineup',
-      bpm: 100,
+      bpm: 84,
       instruments: ['ukulele-strum'],
     },
     'Am | Dm | G | C | Am | Dm | G | C | F | G | C | Am | Dm | G | C | C',
@@ -594,23 +594,23 @@ export const STRUM_SONGS: Readonly<Record<string, Chart>> = {
   ),
   'strum-polka': strumChart(
     {
-      title: 'Polka (central Europe style: C G7)',
+      title: 'Polka (central Europe style: C F G)',
       artist: 'Lineup',
-      bpm: 116,
+      bpm: 92,
       instruments: ['ukulele-strum'],
     },
-    'C | C | G7 | G7 | C | C | G7 | C | C | F | G7 | C | C | F | G7 | C',
+    'C | C | G | G | C | C | G | C | C | F | G | C | C | F | G | C',
     'D U D U',
     { beatsPerBar: 2 },
   ),
   'strum-ranchera': strumChart(
     {
-      title: 'Ranchera waltz (Mexico style: C G7 F)',
+      title: 'Ranchera waltz (Mexico style: C F G)',
       artist: 'Lineup',
-      bpm: 108,
+      bpm: 88,
       instruments: ['ukulele-strum'],
     },
-    'C | C | G7 | G7 | C | C | F | G7 | C | F | G7 | C | C | F | G7 | C',
+    'C | C | G | G | C | C | F | G | C | F | G | C | C | F | G | C',
     'D . D U D U',
     { beatsPerBar: 3 },
   ),
