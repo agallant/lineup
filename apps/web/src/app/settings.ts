@@ -11,6 +11,7 @@ import {
   type MelodySpec,
   type Variation,
 } from '@lineup/core';
+import { isVoiceChoice } from './voice-range';
 
 /** How much backing music plays under a song. */
 export type Accompaniment = 'off' | 'bass' | 'full';
@@ -83,6 +84,8 @@ export interface Settings {
   checkChords: boolean;
   /** Strumline: also check the pitch of each plucked note (experimental), not just the timing. */
   checkPitch: boolean;
+  /** Singline: the voice type that songs are checked against ('any' for no preference). */
+  voiceRange: string;
   /** Singline and Windline: two players take turns, phrase by phrase, with a score each. */
   duet: boolean;
   /** Strumline: tempo multiplier for practice (1 = the song's own tempo). */
@@ -119,6 +122,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showFingerings: true,
   checkChords: false,
   checkPitch: false,
+  voiceRange: 'any',
   duet: false,
   speed: 1,
   songs: {},
@@ -248,6 +252,7 @@ function sanitize(raw: unknown): Settings {
       typeof r['checkChords'] === 'boolean' ? r['checkChords'] : DEFAULT_SETTINGS.checkChords,
     checkPitch:
       typeof r['checkPitch'] === 'boolean' ? r['checkPitch'] : DEFAULT_SETTINGS.checkPitch,
+    voiceRange: isVoiceChoice(r['voiceRange']) ? r['voiceRange'] : DEFAULT_SETTINGS.voiceRange,
     duet: typeof r['duet'] === 'boolean' ? r['duet'] : DEFAULT_SETTINGS.duet,
     speed:
       typeof r['speed'] === 'number' && r['speed'] >= 0.5 && r['speed'] <= 1.25

@@ -1,3 +1,4 @@
+import { VOICE_RANGES } from '../voice-range';
 import { eraseAll, exportBackup, importBackup, lineupKeys } from '../backup';
 import { ProgressStore } from '../progress';
 import type { Screen } from '../router';
@@ -75,6 +76,11 @@ export const optionsScreen: Screen = (root) => {
 
     <section class="panel">
       <h2>Scoring</h2>
+      <div class="row"><label>Singline voice <select data-id="voice-range"><option value="any">Not set</option>${VOICE_RANGES.map(
+        (v) => `<option value="${v.id}">${v.label}</option>`,
+      ).join('')}</select></label></div>
+      <p class="muted">Tell Singline your voice and it says how each song sits in it, and the guide tone
+        plays in your octave. Any octave of the right note still counts.</p>
       <div class="row"><label>Singline and Windline pitch <select data-id="difficulty">${DIFFICULTIES.map(
         (d) => `<option value="${d}">${DIFFICULTY_TEXT[d] ?? d}</option>`,
       ).join('')}</select></label></div>
@@ -152,6 +158,7 @@ export const optionsScreen: Screen = (root) => {
     $<HTMLSelectElement>('drums').value = v.drums;
     $<HTMLSelectElement>('drone').value = v.drone;
     $<HTMLSelectElement>('difficulty').value = v.difficulty;
+    $<HTMLSelectElement>('voice-range').value = v.voiceRange;
     $<HTMLSelectElement>('octave').value = v.windOctave;
     $<HTMLInputElement>('chords').checked = v.checkChords;
     $<HTMLInputElement>('fingerings').checked = v.showFingerings;
@@ -193,6 +200,9 @@ export const optionsScreen: Screen = (root) => {
     settings.update({
       accompaniment: (e.target as HTMLSelectElement).value as (typeof ACCOMPANIMENTS)[number],
     }),
+  );
+  $<HTMLSelectElement>('voice-range').addEventListener('change', (e) =>
+    settings.update({ voiceRange: (e.target as HTMLSelectElement).value }),
   );
   $<HTMLSelectElement>('difficulty').addEventListener('change', (e) =>
     settings.update({

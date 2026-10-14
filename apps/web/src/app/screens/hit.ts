@@ -85,6 +85,7 @@ import {
   fillSongMenu,
   fillTargetMenu,
 } from '../song-menu';
+import { TourStore, mountTour } from '../tour';
 import type { Screen } from '../router';
 
 /** What differs between the hit-based games (Beatline, Strumline); everything else is shared. */
@@ -225,6 +226,7 @@ export const createHitScreen =
   (c: HitScreenConfig): Screen =>
   (root) => {
     root.innerHTML = template(c);
+    mountTour(root, c.mode.toLowerCase(), new TourStore(safeLocalStorage()));
     const $ = <T extends HTMLElement = HTMLElement>(id: string): T => {
       const el = root.querySelector<T>(`[data-id="${id}"]`);
       if (!el) throw new Error(`missing [data-id=${id}]`);

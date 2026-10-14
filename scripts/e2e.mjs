@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1025,6 +1025,38 @@ const scenarios = {
       check(await page.isHidden('[data-id=take]'), 'free: a take can be discarded');
       await page.goto(URL_BASE + '#/');
       check((await page.$('[data-id=free-link]')) !== null, 'home: free play is listed');
+    });
+  },
+
+  async tour() {
+    console.log('\n# First-time tips per game, and Start over in Options');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/sing');
+      check(await page.isVisible('[data-id=tour]'), 'tour: Singline shows its tips the first time');
+      await page.click('[data-id=tour-dismiss]');
+      await page.goto(URL_BASE + '#/wind');
+      check(await page.isVisible('[data-id=tour]'), 'tour: Windline has its own tips');
+      await page.goto(URL_BASE + '#/sing');
+      check(
+        (await page.$('[data-id=tour]')) === null,
+        'tour: a dismissed game does not show them again',
+      );
+      await page.goto(URL_BASE + '#/options');
+      await page.selectOption('[data-id=voice-range]', 'tenor');
+      await page.click('[data-id=export]');
+      await page.click('details.reset-all summary');
+      await page.click('[data-id=reset-all]');
+      await page.click('[data-id=reset-all]');
+      await page.waitForLoadState('load');
+      await page.waitForFunction(
+        () =>
+          !Object.keys(localStorage).some((k) => k.startsWith('lineup.') && k !== 'lineup.probe'),
+        null,
+        { timeout: 10000 },
+      );
+      check(true, 'options: Start over erased everything the app kept');
+      await page.goto(URL_BASE + '#/sing');
+      check(await page.isVisible('[data-id=tour]'), 'tour: and the tips are back after Start over');
     });
   },
 

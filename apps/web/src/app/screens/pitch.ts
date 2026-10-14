@@ -92,6 +92,7 @@ import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { LadderStore, ladderText } from '../ladder';
+import { VOICE_RANGES, voiceFit, voiceFitText } from '../voice-range';
 import { lyricIndexAt, lyricWindow, syllables } from '../lyrics';
 import { SettingsStore, nextSpeed, keyShiftFor, safeLocalStorage } from '../settings';
 import {
@@ -102,6 +103,7 @@ import {
   fillTargetMenu,
 } from '../song-menu';
 import { formatCents, formatDb } from '../format';
+import { TourStore, mountTour } from '../tour';
 import type { Screen } from '../router';
 
 /** What differs between the pitch-based games (Singline, Windline); everything else is shared. */
@@ -262,6 +264,7 @@ export const createPitchScreen =
   (c: PitchScreenConfig): Screen =>
   (root) => {
     root.innerHTML = template(c);
+    mountTour(root, c.mode.toLowerCase(), new TourStore(safeLocalStorage()));
     const $ = <T extends HTMLElement = HTMLElement>(id: string): T => {
       const el = root.querySelector<T>(`[data-id="${id}"]`);
       if (!el) throw new Error(`missing [data-id=${id}]`);
@@ -610,6 +613,12 @@ export const createPitchScreen =
         (midiToHz(r.low) < d.minHz || midiToHz(r.high) > d.maxHz)
       )
         text += ` ${c.mode} cannot hear every note in this key: try another.`;
+      // Singline: how the song sits in the voice the player chose in Options
+      if (!c.instruments && r) {
+        const fit = voiceFit(r, settings.get().voiceRange);
+        const voice = VOICE_RANGES.find((v) => v.id === settings.get().voiceRange);
+        if (fit && voice) text += ` ${voiceFitText(fit, voice.id)}`;
+      }
       if (c.instruments) {
         const inst = instrument();
         const pitches = chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch]));
@@ -901,11 +910,23 @@ export const createPitchScreen =
         difficulty: opts.difficulty,
       });
       adapter.onMessage = (m) => game.handleMessage(m);
+      // Singline: the guide tone and backing sit in the octave of the voice the player chose
+      const backingChart = ((): Chart => {
+        const span = chartPitchRange(chart);
+        const fit = !c.instruments && span ? voiceFit(span, opts.voiceRange) : null;
+        if (!fit || fit.octave === 0) return chart;
+        return {
+          ...chart,
+          notes: chart.notes.map((n) =>
+            n.pitch === undefined ? n : { ...n, pitch: n.pitch + fit.octave },
+          ),
+        };
+      })();
       backing = playBacking(
         ctx,
         clock,
         [
-          ...planAllBacking(chart, {
+          ...planAllBacking(backingChart, {
             metronome: opts.metronome,
             guideTone: opts.guideTone,
             accompaniment: settings.get().accompaniment,
