@@ -199,6 +199,8 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] **Computer keyboard** (A S D F ...): do the notes line up with the keys drawn? Z and X change octave.
 - [ ] Both hands on **Ode to Joy, hands together** and the **chord pieces**: are they at a comfortable tempo?
       Which pieces are too hard or too easy for a beginner?
+- [ ] **Keyline > Beginner**: it plays the asked note or chord and waits; press the keys to move on. Is that
+      a gentle way in? Does the sound of the asked keys come out loud enough, and is "Hear it again" enough?
 - [ ] Learn > **Keyline: first steps** opens the right pieces in order.
 
 ### Beginner step mode (Singline, Windline)
