@@ -1,4 +1,5 @@
 import type { Chart, ChartNote } from './chart';
+import { GUITAR_STANDARD, guitarFamily, retuneFrets } from './guitar';
 import type { InstrumentProfile } from './profile';
 
 /** Ukulele chord fingerings as frets on strings 4 -> 1 (the order of the profile's tuning: G C E A). */
@@ -49,13 +50,23 @@ export const GUITAR_CHORD_FRETS: Readonly<Record<string, readonly (number | null
   B7: [null, 2, 1, 2, 0, 2],
 };
 
-/** The chord fingerings for an instrument profile (a guitar's, else the ukulele's). */
+const tuned = new Map<string, Readonly<Record<string, readonly (number | null)[]>>>();
+
+/** The chord fingerings for an instrument profile: a guitar's (in its tuning), else the ukulele's. */
 export function chordFretsFor(
   profileId: string | undefined,
 ): Readonly<Record<string, readonly (number | null)[]>> {
-  return profileId === 'guitar-strum' || profileId === 'guitar-note'
-    ? GUITAR_CHORD_FRETS
-    : UKULELE_CHORD_FRETS;
+  const g = guitarFamily(profileId);
+  if (!g) return UKULELE_CHORD_FRETS;
+  if (g.tuning.open === GUITAR_STANDARD) return GUITAR_CHORD_FRETS;
+  let t = tuned.get(g.tuning.suffix);
+  if (!t) {
+    t = Object.fromEntries(
+      Object.entries(GUITAR_CHORD_FRETS).map(([name, f]) => [name, retuneFrets(f, g.tuning.open)]),
+    );
+    tuned.set(g.tuning.suffix, t);
+  }
+  return t;
 }
 
 /**

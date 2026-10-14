@@ -17,7 +17,7 @@ import {
 import { GUITAR_CHORDS } from '@lineup/testkit';
 import { describe, expect, it } from 'vitest';
 import { renderPerformance, type PerformanceOptions } from './performance';
-import { guitarStrumPerformer } from './performers';
+import { guitarStrumPerformer, guitarStrumPerformerFor } from './performers';
 import { runDiscrete } from './pipeline';
 
 const profile = getProfile('guitar-strum');
@@ -104,4 +104,19 @@ describe('guitar: a calibrated player who strums the right chords', () => {
     const r = play(four, {}, { chords: chordShapesFor(profile, chartChords(four)) });
     expect(r.score.accuracy).toBeGreaterThan(0.9);
   });
+});
+
+describe('alternate tunings', () => {
+  it.each(['guitar-strum-dropd', 'guitar-strum-dadgad', 'guitar-strum-openg'])(
+    '%s: a player strumming the song is heard, every strum on time',
+    (id) => {
+      const p = getProfile(id);
+      const chart = guitarChart(getSong('strum-four-chords'), id);
+      const rendered = renderPerformance(chart, guitarStrumPerformerFor(id), { latency: LATENCY });
+      const r = runDiscrete(rendered, chart, p, { latencyOffset: LATENCY });
+      expect(r.inputs.length).toBe(chart.notes.length);
+      expect(r.score.accuracy).toBeGreaterThan(0.85);
+    },
+    120000,
+  );
 });

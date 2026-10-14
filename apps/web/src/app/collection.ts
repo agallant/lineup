@@ -209,7 +209,10 @@ export function songHref(profileId: string, songId: string): string {
     case 'ukulele-strum':
       return `#/strum?song=${id}`;
     case 'guitar-strum':
-      return `#/strum?mode=guitar-strum&song=${id}`;
+    case 'guitar-strum-dropd':
+    case 'guitar-strum-dadgad':
+    case 'guitar-strum-openg':
+      return `#/strum?mode=${profileId}&song=${id}`;
     case 'bass':
       return `#/bass?song=${id}`;
     case 'keyboard':

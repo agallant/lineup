@@ -1,5 +1,6 @@
 import type { Chart } from '../chart';
-import { GUITAR_CHORD_FRETS, UKULELE_CHORD_FRETS } from '../chords';
+import { UKULELE_CHORD_FRETS, chordFretsFor } from '../chords';
+import { guitarOpenFor } from '../guitar';
 import { midiLabel } from '../notes';
 
 /**
@@ -38,7 +39,6 @@ const KIT_LANE_OF: Readonly<Record<number, string>> = {
 };
 
 const UKULELE_OPEN = [67, 60, 64, 69] as const;
-const GUITAR_OPEN = [40, 45, 50, 55, 59, 64] as const;
 
 // ---------------------------------------------------------------------------------------- writing
 
@@ -110,11 +110,11 @@ function untext(data: Uint8Array): string {
 /** The notes a chart note sounds: its pitch, a ukulele chord's four strings, or one drum. */
 function soundingNotes(
   n: Chart['notes'][number],
-  guitar: boolean,
+  guitarProfile: string | undefined,
 ): { pitches: number[]; drum: boolean } | null {
   if (n.pitch !== undefined) return { pitches: [n.pitch], drum: false };
-  const open: readonly number[] = guitar ? GUITAR_OPEN : UKULELE_OPEN;
-  const table = guitar ? GUITAR_CHORD_FRETS : UKULELE_CHORD_FRETS;
+  const open: readonly number[] = guitarOpenFor(guitarProfile) ?? UKULELE_OPEN;
+  const table = guitarProfile ? chordFretsFor(guitarProfile) : UKULELE_CHORD_FRETS;
   const frets = n.expected?.frets;
   if (frets && frets.length === open.length) {
     const held = frets.flatMap((f, i) => (f === null ? [] : [open[i]! + f]));
@@ -151,7 +151,10 @@ export function chartToMidi(chart: Chart): Uint8Array {
   const title = text(chart.meta.title).slice(0, 100);
   events.push({ tick: 0, order: 0, bytes: [0xff, 0x03, ...vlq(title.length), ...title] });
   for (const n of chart.notes) {
-    const s = soundingNotes(n, chart.meta.instruments?.includes('guitar-strum') === true);
+    const s = soundingNotes(
+      n,
+      chart.meta.instruments?.find((i) => guitarOpenFor(i) !== null),
+    );
     if (!s) continue;
     const start = tick(n.t);
     // a hit with no length is a short note; a sustained note keeps its length

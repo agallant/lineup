@@ -153,8 +153,8 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   the beat stays steady, and the screen stays awake while it runs.
 - **Guitar** (Strumline, a choice at the top of the setup page, like Windline's instrument): the six-string
   guitar in standard tuning plays the ukulele's songs with guitar chords and picks melodies on its own
-  strings, shown on six string lines. The tuner has standard, drop D, DADGAD and open G. Other tunings in
-  the game itself come later.
+  strings, shown on six string lines. The tuner has standard, drop D, DADGAD and open G. Drop D, DADGAD and open G
+  are modes of their own, with the same chords fingered to sound the same notes.
 - **Beginner mode** (Singline, Windline, Bassline and Keyline, an option on the setup page): no timing at all. Each note of the
   song is shown on the line and played; sing or play it back and hold it to move on, or skip it. Stars come
   from the notes passed.

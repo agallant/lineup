@@ -18,6 +18,7 @@ export function guitarStrum(
     duration = 0.9,
     seed = 1,
   }: StrumOptions = {},
+  open: readonly number[] = GUITAR_OPEN_MIDI,
 ): Float32Array {
   const r = rng(seed);
   const gap = stringGapMs / 1000;
@@ -27,7 +28,7 @@ export function guitarStrum(
   order.forEach((stringIdx, k) => {
     const fret = frets[stringIdx];
     if (fret === null || fret === undefined) return;
-    const hz = midiToHz(GUITAR_OPEN_MIDI[stringIdx]! + fret);
+    const hz = midiToHz(open[stringIdx]! + fret);
     const a = amplitude * (0.85 + 0.15 * (r() + 1));
     const body = pluck(hz, duration, sampleRate, {
       amplitude: a * 0.25,

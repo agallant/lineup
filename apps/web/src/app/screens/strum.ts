@@ -1,5 +1,9 @@
-import { guitarStrumPerformer, ukuleleNotePerformer, ukuleleStrumPerformer } from '@lineup/sim';
+import { GUITAR_TUNINGS } from '@lineup/core';
+import { guitarStrumPerformerFor, ukuleleNotePerformer, ukuleleStrumPerformer } from '@lineup/sim';
 import { createHitScreen } from './hit';
+
+/** Note letters, for naming a tuning's strings. */
+const NOTE = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
 
 export const strumScreen = createHitScreen({
   mode: 'Strumline',
@@ -13,11 +17,16 @@ export const strumScreen = createHitScreen({
       label: 'Ukulele strumming',
       note: 'Four lines, one per string (A E C G, as in tab). The number on a line is the fret to hold on that string: 0 is open. A bar across the strings is a strum; a single number is a pluck. The timing is what is judged, and optionally the chord.',
     },
-    {
-      id: 'guitar-strum',
-      label: 'Guitar strumming (six strings, standard tuning)',
-      note: 'Six lines, one per string (e B G D A E, as in tab). The number on a line is the fret to hold on that string: 0 is open, and a string with no mark is not played. A bar across the strings is a strum; a single number is a pluck. The timing is what is judged, and optionally the chord. The songs are the ukulele ones, with guitar chords.',
-    },
+    ...GUITAR_TUNINGS.map((t) => ({
+      id: `guitar-strum${t.suffix}`,
+      label: `Guitar strumming, ${t.label}`,
+      note: `Six lines, one per string (${[...t.open]
+        .reverse()
+        .map((m) => NOTE[m % 12])
+        .join(
+          ' ',
+        )}, as in tab). The number on a line is the fret to hold on that string: 0 is open, and a string with no mark is not played. A bar across the strings is a strum; a single number is a pluck. The timing is what is judged, and optionally the chord. The songs are the ukulele ones, with guitar chords${t.suffix ? ' fingered for this tuning' : ''}.`,
+    })),
   ],
   micPrompt:
     'Tap “Start mic”, then strum near the device. Every strum appears below (with its chord when chord checking is on).',
@@ -25,8 +34,8 @@ export const strumScreen = createHitScreen({
   demo: (profile, options) => ({
     performer: options?.pitched
       ? ukuleleNotePerformer()
-      : profile.id === 'guitar-strum'
-        ? guitarStrumPerformer
+      : profile.id.startsWith('guitar-')
+        ? guitarStrumPerformerFor(profile.id)
         : ukuleleStrumPerformer,
     model: null,
   }),

@@ -16,6 +16,7 @@ import {
   generateGroove,
   generateMelody,
   guitarChart,
+  guitarFamily,
   hashSeed,
   getProfile,
   grooveId,
@@ -299,9 +300,10 @@ export const createHitScreen =
     }
 
     /** The guitar plays the ukulele's songs and generators, moved onto its own strings. */
-    const guitar = (): boolean => profile.id === 'guitar-strum';
+    const guitar = (): boolean => guitarFamily(profile.id) !== null;
     const generatorProfile = (): string => (guitar() ? 'ukulele-strum' : profile.id);
-    const forInstrument = (chart: Chart): Chart => (guitar() ? guitarChart(chart) : chart);
+    const forInstrument = (chart: Chart): Chart =>
+      guitar() ? guitarChart(chart, profile.id) : chart;
     /** Every song in the menu: the built-in ones and the player's own. */
     const menuSongs = () => [
       ...songsFor(profile.id),
@@ -892,7 +894,15 @@ export const createHitScreen =
         latencyOffset: offset,
         model: audio.model,
         ...(pitchMode()
-          ? { pitched: c.plucked ? profile : getProfile(guitar() ? 'guitar-note' : 'ukulele-note') }
+          ? {
+              pitched: c.plucked
+                ? profile
+                : getProfile(
+                    guitar()
+                      ? `guitar-note${guitarFamily(profile.id)!.tuning.suffix}`
+                      : 'ukulele-note',
+                  ),
+            }
           : {}),
       });
       adapter.onMessage = (m) => game.handleMessage(m);

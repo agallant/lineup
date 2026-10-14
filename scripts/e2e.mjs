@@ -1355,6 +1355,29 @@ const scenarios = {
         perfect >= 44 && miss <= 2,
         `guitar: the demo guitarist strums the song (${perfect} perfect, ${miss} missed)`,
       );
+      // alternate tunings are modes of their own
+      await page.click('[data-id=back]');
+      const modes = await page.$$eval('[data-id=mode] option', (o) => o.map((x) => x.value));
+      check(
+        ['guitar-strum-dropd', 'guitar-strum-dadgad', 'guitar-strum-openg'].every((m) =>
+          modes.includes(m),
+        ),
+        `guitar: drop D, DADGAD and open G are offered (${modes.length} modes)`,
+      );
+      await page.selectOption('[data-id=mode]', 'guitar-strum-dropd');
+      await page.waitForFunction(() =>
+        document
+          .querySelector('[data-id=mode-note]')
+          ?.textContent?.includes('fingered for this tuning'),
+      );
+      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      check(
+        Number(await text(page, 'r-perfect')) >= 40 && Number(await text(page, 'r-miss')) <= 4,
+        `guitar: the drop D demo plays the song (${await text(page, 'r-perfect')} perfect, ${await text(page, 'r-miss')} missed)`,
+      );
       // the choice is remembered, and the guitar has its own scores
       await page.goto(URL_BASE + '#/scores');
       await page.waitForSelector('h1');

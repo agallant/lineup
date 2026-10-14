@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { GUITAR_CHORD_FRETS, UKULELE_CHORD_FRETS, chordMidis, noteFrets } from '../chords';
 import { getProfile } from '../profiles';
 import { getSong, songsFor } from './index';
-import { GUITAR_OPEN, guitarChart, guitarPluck } from './notation';
+import {
+  GUITAR_STANDARD as GUITAR_OPEN,
+  GUITAR_TUNINGS,
+  guitarFamily,
+  guitarOpenFor,
+  guitarPluck,
+  retuneFrets,
+} from '../guitar';
+import { guitarChart } from './notation';
 import { chartToMidi } from './midi';
 
 describe('guitar chords', () => {
@@ -118,5 +126,57 @@ describe('guitar in MIDI', () => {
     const ukeBytes = chartToMidi(getSong('strum-four-chords'));
     const gtrBytes = chartToMidi(chart);
     expect(gtrBytes.length).toBeGreaterThan(ukeBytes.length); // six strings instead of four
+  });
+});
+
+describe('alternate guitar tunings', () => {
+  it('reads guitar profile ids', () => {
+    expect(guitarFamily('guitar-strum')).toMatchObject({ kind: 'strum' });
+    expect(guitarFamily('guitar-note-dropd')).toMatchObject({ kind: 'note' });
+    expect(guitarOpenFor('guitar-strum-dadgad')).toEqual([38, 45, 50, 55, 57, 62]);
+    expect(guitarFamily('ukulele-strum')).toBeNull();
+    expect(guitarFamily('guitar-strum-nope')).toBeNull();
+    expect(guitarFamily(undefined)).toBeNull();
+  });
+
+  it('a profile exists for every tuning, strum and note, with that tuning', () => {
+    for (const t of GUITAR_TUNINGS) {
+      for (const kind of ['strum', 'note']) {
+        const p = getProfile(`guitar-${kind}${t.suffix}`);
+        expect(p.tuning!.strings.map((s) => s.midi)).toEqual([...t.open]);
+      }
+    }
+  });
+
+  it('chords sound the same notes in every tuning', () => {
+    const std = chordMidis(getProfile('guitar-strum'), 'G')!;
+    for (const t of GUITAR_TUNINGS) {
+      const midis = chordMidis(getProfile(`guitar-strum${t.suffix}`), 'G')!;
+      expect([...midis].sort()).toEqual([...std].sort());
+    }
+  });
+
+  it('drop D moves the low string down a tone: a D chord gets a fifth string note', () => {
+    expect(retuneFrets([3, 2, 0, 0, 0, 3], [38, 45, 50, 55, 59, 64])).toEqual([5, 2, 0, 0, 0, 3]);
+    // a fret that would go below the nut is muted
+    expect(retuneFrets([0, null, null, null, null, null], [42, 45, 50, 55, 59, 64])).toEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+  });
+
+  it('picks melodies on the strings of the tuning', () => {
+    const chart = guitarChart(getSong('strum-picking'), 'guitar-strum-dropd');
+    expect(chart.meta.instruments).toEqual(['guitar-strum-dropd']);
+    for (const n of chart.notes) {
+      const f = n.expected!.frets!;
+      const s = f.findIndex((x) => x !== null);
+      expect(guitarOpenFor('guitar-strum-dropd')![s]! + f[s]!).toBe(n.pitch);
+    }
+    expect(songsFor('guitar-strum-openg')).toHaveLength(songsFor('ukulele-strum').length);
   });
 });

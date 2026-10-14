@@ -88,7 +88,17 @@ export const GAMES = [
   { id: 'singline', label: 'Singline', profiles: ['voice'] },
   { id: 'windline', label: 'Windline', profiles: ['wind'] },
   { id: 'beatline', label: 'Beatline', profiles: ['clap', 'hand-percussion', 'drum-kit'] },
-  { id: 'strumline', label: 'Strumline', profiles: ['ukulele-strum', 'guitar-strum'] },
+  {
+    id: 'strumline',
+    label: 'Strumline',
+    profiles: [
+      'ukulele-strum',
+      'guitar-strum',
+      'guitar-strum-dropd',
+      'guitar-strum-dadgad',
+      'guitar-strum-openg',
+    ],
+  },
   { id: 'bassline', label: 'Bassline', profiles: ['bass'] },
   { id: 'keyline', label: 'Keyline', profiles: ['keyboard'] },
   { id: 'ear', label: 'Ear training', profiles: ['ear'] },

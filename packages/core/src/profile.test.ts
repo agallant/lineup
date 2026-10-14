@@ -50,7 +50,8 @@ const base = () =>
 
 describe('built-in profiles', () => {
   it('all validate (they are checked when the module loads)', () => {
-    expect(Object.keys(builtinProfiles).sort()).toEqual([
+    const ids = Object.keys(builtinProfiles);
+    for (const id of [
       'bass',
       'clap',
       'drum-kit',
@@ -62,7 +63,10 @@ describe('built-in profiles', () => {
       'ukulele-strum',
       'voice',
       'wind',
-    ]);
+    ])
+      expect(ids).toContain(id);
+    // a strum and a note profile for each guitar tuning
+    expect(ids.filter((i) => i.startsWith('guitar-'))).toHaveLength(8);
   });
 
   it.each([
@@ -106,7 +110,7 @@ describe('built-in profiles', () => {
 
   it('getProfile explains an unknown id', () => {
     expect(() => getProfile('kazoo')).toThrow(
-      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, guitar-strum, guitar-note, bass, keyboard, voice, wind, clap, hand-percussion, drum-kit\)/,
+      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, guitar-strum, guitar-note, /,
     );
   });
 

@@ -1,0 +1,110 @@
+{
+  "id": "guitar-note-dropd",
+  "name": "Guitar, drop D (single notes)",
+  "mode": "strumline",
+  "input": "pitch",
+  "renderer": "lane-highway",
+  "range": {
+    "lowMidi": 38,
+    "highMidi": 88
+  },
+  "transposition": {
+    "writtenMinusSounding": 0
+  },
+  "tuning": {
+    "name": "drop D",
+    "reentrant": false,
+    "strings": [
+      {
+        "label": "D2",
+        "midi": 38
+      },
+      {
+        "label": "A2",
+        "midi": 45
+      },
+      {
+        "label": "D3",
+        "midi": 50
+      },
+      {
+        "label": "G3",
+        "midi": 55
+      },
+      {
+        "label": "B3",
+        "midi": 59
+      },
+      {
+        "label": "E4",
+        "midi": 64
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "e2",
+      "label": "E",
+      "color": "#ffd166"
+    },
+    {
+      "id": "a2",
+      "label": "A",
+      "color": "#ef476f"
+    },
+    {
+      "id": "d3",
+      "label": "D",
+      "color": "#06d6a0"
+    },
+    {
+      "id": "g3",
+      "label": "G",
+      "color": "#118ab2"
+    },
+    {
+      "id": "b3",
+      "label": "B",
+      "color": "#c77dff"
+    },
+    {
+      "id": "e4",
+      "label": "e",
+      "color": "#ff9f43"
+    }
+  ],
+  "detector": {
+    "windowSize": 4096,
+    "hopSize": 512,
+    "clarityThreshold": 0.9,
+    "minLevelDb": -60,
+    "minHz": 70,
+    "maxHz": 1400,
+    "stabilityGateMs": 0,
+    "onset": {
+      "riseDb": 10,
+      "refractoryMs": 70,
+      "lookbackMs": 30,
+      "minLevelDb": -60
+    }
+  },
+  "judgment": {
+    "strategy": "discrete",
+    "timing": {
+      "perfectMs": 50,
+      "goodMs": 120
+    },
+    "match": {
+      "lane": false,
+      "pitch": true,
+      "chord": false
+    },
+    "pitch": {
+      "toleranceCents": 60,
+      "octaveForgiving": false,
+      "vibratoSmoothingMs": 0,
+      "coverageGood": 0.5,
+      "coveragePerfect": 0.8
+    }
+  }
+}

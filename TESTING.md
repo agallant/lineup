@@ -224,6 +224,8 @@ Items for features still to come are added here as they ship, under the mileston
       Am with C now and then, because the ringing chord before leaks into the next.)
 - [ ] **Tuner > Guitar** (standard, drop D, DADGAD, open G): the low E (82 Hz) reads, and agrees with
       another tuner.
+- [ ] **Drop D, DADGAD, open G** modes: tune the guitar that way (Tuner has all three). Do the chord
+      fingerings shown (the same chords, moved to the new strings) sound right? Anything you would fix?
 - [ ] Picked songs (Hot Cross Buns, Ode to Joy, Mary had a little lamb): shown on guitar strings at low
       frets? Try **Also check the pitch** with a real guitar.
 

@@ -7,6 +7,7 @@ import { generateMelody, parseMelodyId } from '../generate/melody';
 import { rhythmExercises } from '../generate/rudiments';
 import { BASS_EXERCISES, BASS_SONGS } from './bass';
 import { KEY_EXERCISES, KEY_PIECES } from './keys';
+import { guitarFamily } from '../guitar';
 import { guitarChart } from './notation';
 import { FLUTE_SONGS, KEY_TUNES, LIBRARY } from './library';
 import clapBasic from './clap-basic.json';
@@ -105,8 +106,11 @@ export function songsFor(
   profileId: string,
 ): { id: string; chart: Chart; category: SongCategory }[] {
   // the guitar plays the ukulele's songs, with the guitar's fingerings
-  if (profileId === 'guitar-strum') {
-    return songsFor('ukulele-strum').map((s) => ({ ...s, chart: guitarChart(s.chart) }));
+  if (guitarFamily(profileId)?.kind === 'strum') {
+    return songsFor('ukulele-strum').map((s) => ({
+      ...s,
+      chart: guitarChart(s.chart, profileId),
+    }));
   }
   return Object.entries(builtinSongs)
     .filter(([, chart]) => chart.meta.instruments?.includes(profileId))
