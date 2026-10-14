@@ -142,6 +142,15 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   major scales, string crossing). Speed, the drum loop and the first-time tips work as in Strumline. The
   tuner has a bass tuning (E A D G) that listens lower than for other instruments. A Learn path walks
   from open strings to a funk groove.
+- **Tuner** (`#/tuner`): a universal tuner for any single note (voice, whistle, flute, strings), with the note,
+  Hz and cents and a smooth needle. Tap a note to hold a **reference tone** (any note in an octave, or the
+  strings of the instrument), and set the reference pitch (A = 415 to 466 Hz). Ukulele (three tunings),
+  guitar (standard, drop D, DADGAD, open G) and bass modes have their strings.
+- **Metronome** (`#/metronome`): tempo from 20 to 300 bpm (big − and +, hold to repeat, a slider, tap
+  tempo, typed), one to twelve beats a bar where each beat can be strong, normal, soft or silent,
+  subdivisions (eighths, triplets, sixteenths, swing), four sounds, volume, a **speed trainer** (change the
+  tempo every few bars toward a target) and saved presets. Clicks are scheduled ahead on the audio clock so
+  the beat stays steady, and the screen stays awake while it runs.
 - **Guitar** (Strumline, a choice at the top of the setup page, like Windline's instrument): the six-string
   guitar in standard tuning plays the ukulele's songs with guitar chords and picks melodies on its own
   strings, shown on six string lines. The tuner has standard, drop D, DADGAD and open G. Other tunings in

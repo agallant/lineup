@@ -227,6 +227,21 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] Picked songs (Hot Cross Buns, Ode to Joy, Mary had a little lamb): shown on guitar strings at low
       frets? Try **Also check the pitch** with a real guitar.
 
+### Tuner and Metronome
+
+- [ ] **Tuner** opens as a universal tuner (any note). Sing, whistle or play a flute: does it name the note and
+      show cents steadily, without jumping an octave? Is the needle smooth enough?
+- [ ] **Reference tone**: tap a note, it holds until you tap it again. Is it loud and clear on the iPad
+      speaker, also for low notes? Does **A = 442** (the + button) change the tone and the reading?
+- [ ] Ukulele, guitar and bass modes: the string buttons play each string, and the tuner reads the one you
+      pick. Is the switch easy to find and use?
+- [ ] **Metronome**: is the click **steady** (listen on a phone and the iPad, with the screen off and
+      on)? Does the lit beat match what you hear? Try 40, 120 and 240 bpm, and eighths and triplets.
+- [ ] Does **Tap tempo** feel right, and do **− and + held down** change the tempo at a good speed?
+- [ ] Does the **speed trainer** (open Speed trainer, set 5 bpm every 4 bars up to 140) feel right?
+- [ ] On iPhone: does the sound play with the ringer switch off? Does it keep the screen awake?
+- [ ] What would you want from a metronome that this one lacks (rhythm patterns, count-in, a flash)?
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

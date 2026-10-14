@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1362,6 +1362,77 @@ const scenarios = {
     });
   },
 
+  async metronome() {
+    console.log('\n# Metronome: tempo, tap tempo, bar, presets and a running click');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/metronome');
+      await page.waitForSelector('[data-id=bpm]');
+      check((await page.inputValue('[data-id=bpm]')) === '100', 'metronome: starts at 100 bpm');
+      await page.click('[data-id=bpm-up-5]');
+      check((await page.inputValue('[data-id=bpm]')) === '105', 'metronome: +5 raises the tempo');
+      await page.fill('[data-id=bpm]', '72');
+      await page.dispatchEvent('[data-id=bpm]', 'change');
+      check(
+        /Adagio/.test(await text(page, 'name')),
+        `metronome: names the tempo (${await text(page, 'name')})`,
+      );
+      // tap tempo: four taps about half a second apart
+      for (let i = 0; i < 4; i++) {
+        await page.click('[data-id=tap]');
+        await page.waitForTimeout(500);
+      }
+      const tapped = Number(await page.inputValue('[data-id=bpm]'));
+      check(tapped >= 100 && tapped <= 135, `metronome: tap tempo found about 120 bpm (${tapped})`);
+      // the bar: three beats, and a beat's strength cycles when tapped
+      await page.click('[data-id=beats-down]');
+      check((await page.$$('.metro-beat')).length === 3, 'metronome: three beats in the bar');
+      await page.click('.metro-beat[data-beat="1"]');
+      check(
+        (await page.getAttribute('.metro-beat[data-beat="1"]', 'data-level')) === 'soft',
+        'metronome: tapping a beat makes it softer',
+      );
+      // running: the beat lights up in turn
+      await page.fill('[data-id=bpm]', '240');
+      await page.dispatchEvent('[data-id=bpm]', 'change');
+      await page.click('[data-id=toggle]');
+      await page.waitForSelector('.metro-beat.now', { timeout: 5000 });
+      check(
+        (await page.getAttribute('[data-id=toggle]', 'aria-pressed')) === 'true',
+        'metronome: running, and a beat is lit',
+      );
+      const seenBeats = new Set();
+      for (let i = 0; i < 30; i++) {
+        const b = await page.$eval('.metro-beat.now', (el) => el.dataset.beat).catch(() => null);
+        if (b !== null) seenBeats.add(b);
+        await page.waitForTimeout(60);
+      }
+      check(
+        seenBeats.size === 3,
+        `metronome: the light walks through all three beats (${[...seenBeats]})`,
+      );
+      await shot(page, 'metronome');
+      await page.click('[data-id=toggle]');
+      check((await page.$('.metro-beat.now')) === null, 'metronome: stopping clears the light');
+      // a preset is saved, and survives a reload
+      await page.fill('[data-id=preset-name]', 'Waltz');
+      await page.click('[data-id=preset-save]');
+      await page.reload();
+      await page.waitForSelector('[data-id=bpm]');
+      check((await page.$('[data-preset="Waltz"]')) !== null, 'metronome: the preset is kept');
+      check(
+        (await page.inputValue('[data-id=bpm]')) === '240',
+        'metronome: the set-up is remembered',
+      );
+      await page.fill('[data-id=bpm]', '60');
+      await page.dispatchEvent('[data-id=bpm]', 'change');
+      await page.click('[data-preset="Waltz"]');
+      check(
+        (await page.inputValue('[data-id=bpm]')) === '240',
+        'metronome: a preset restores its tempo',
+      );
+    });
+  },
+
   async duet() {
     console.log('\n# Duet: two players share the phrases of a song, each with a score');
     await session(null, async (page) => {
@@ -1407,6 +1478,7 @@ const scenarios = {
       'make',
       'free',
       'tuner',
+      'metronome',
       'ear',
       'mic',
       'calibrate',
@@ -1821,7 +1893,7 @@ const scenarios = {
           /0 of \d/.test(await text(page, 'theme')),
         `home: the themed week and its progress (${(await text(page, 'theme')).replace(/\s+/g, ' ')})`,
       );
-      check((await page.$('[data-id=tuner-link]')) !== null, 'home: the tuner is under Set up');
+      check((await page.$('[data-id=tuner-link]')) !== null, 'home: the tuner is under Tools');
       check(
         /10 minutes of practice/.test(await text(page, 'week')),
         `home: shows this week's practice (${await text(page, 'week')})`,

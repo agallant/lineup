@@ -21,6 +21,7 @@ import { singScreen } from './app/screens/sing';
 import { strumScreen } from './app/screens/strum';
 import { freeScreen } from './app/screens/free';
 import { packsScreen } from './app/screens/packs';
+import { metronomeScreen } from './app/screens/metronome';
 import { tunerScreen } from './app/screens/tuner';
 import { windScreen } from './app/screens/wind';
 
@@ -50,6 +51,7 @@ startRouter(
     keys: keylineScreen,
     scores: scoreboardScreen,
     tuner: tunerScreen,
+    metronome: metronomeScreen,
     free: freeScreen,
     ear: earScreen,
     make: makerScreen,
