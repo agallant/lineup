@@ -94,7 +94,7 @@ describe('TapTempo', () => {
   it('averages over the last few taps only', () => {
     const t = new TapTempo(3);
     [0, 1, 2, 2.5].forEach((x) => t.tap(x));
-    // the last three taps: 1, 2, 2.5 → 1.5 s for two gaps
+    // the last three taps: 2, 2.5, 3 → 1.0 s for two gaps
     expect(t.tap(3)).toBe(clampBpm((60 * 2) / 1.0));
   });
 });
@@ -156,6 +156,19 @@ describe('MetronomeScheduler', () => {
     expect(gaps.at(-1)).toBe(1);
   });
 
+  it('skips clicks that are already late instead of playing them in a burst', () => {
+    const clicks: Click[] = [];
+    const m = new MetronomeScheduler(
+      () => cfg(),
+      (c) => clicks.push(c),
+    );
+    m.start(0);
+    m.advance(5); // a timer that did not run for five seconds
+    expect(clicks.every((c) => c.time >= 5 - 0.02)).toBe(true);
+    // and the beat grid is kept: the next click is on the 0.5 s grid
+    expect(clicks[0]!.time % 0.5).toBeCloseTo(0, 6);
+  });
+
   it('stops', () => {
     const clicks: Click[] = [];
     const m = new MetronomeScheduler(
@@ -163,7 +176,7 @@ describe('MetronomeScheduler', () => {
       (c) => clicks.push(c),
     );
     m.start(0);
-    m.advance(0.1);
+    m.advance(0.01);
     m.stop();
     m.advance(10);
     expect(clicks).toHaveLength(1);

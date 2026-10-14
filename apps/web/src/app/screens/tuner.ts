@@ -306,6 +306,8 @@ export const tunerScreen: Screen = (root) => {
     session = null;
     last = null;
     smoother.reset();
+    // a tone playing on the microphone's own audio context goes with it
+    if (s && tone && tone.gain.context === s.ctx) stopTone();
     startBtn.disabled = false;
     stopBtn.disabled = true;
     if (s) await s.close();

@@ -215,7 +215,8 @@ export class MetronomeScheduler {
       const level = cfg.pattern[this.beat] ?? 'normal';
       const onBeat = this.sub === 0;
       const gain = LEVEL_GAIN[level] * (onBeat ? 1 : SUB_GAIN);
-      if (gain > 0) {
+      // a click already in the past (a throttled timer, a stall) is skipped, not played late in a burst
+      if (gain > 0 && this.next >= now - 0.02) {
         this.emit({
           time: this.next,
           gain,

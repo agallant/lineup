@@ -443,6 +443,8 @@ export const keylineScreen: Screen = (root) => {
       let finished = false;
       const teardown = () => {
         cancelAnimationFrame(playRaf);
+        for (const t of stepTimers) clearTimeout(t);
+        stepTimers.clear();
         stage.removeEventListener('pointerdown', onDown);
         stage.removeEventListener('pointermove', onMove);
         stage.removeEventListener('pointerup', onUp);
@@ -475,6 +477,7 @@ export const keylineScreen: Screen = (root) => {
 
       // beginner mode: the asked keys are played, then waited for
       let shownFor = -1;
+      const stepTimers = new Set<ReturnType<typeof setTimeout>>();
       const say = () => {
         if (!stepGame) return;
         void ctx.resume();
@@ -507,9 +510,13 @@ export const keylineScreen: Screen = (root) => {
             : `Press ${sg.remaining.map((m) => midiName(m)).join(' + ')}`;
         if (shownFor !== sg.index) {
           shownFor = sg.index;
-          setTimeout(() => {
-            if (!finished && shownFor === sg.index) say();
+          // the step this was scheduled for: a quick player may have moved on by the time it fires
+          const at = sg.index;
+          const t = setTimeout(() => {
+            stepTimers.delete(t);
+            if (!finished && shownFor === at) say();
           }, 500);
+          stepTimers.add(t);
         }
       };
 

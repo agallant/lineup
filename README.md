@@ -199,8 +199,6 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   song's ladder; the results show which rungs are cleared, and climbing a whole ladder earns a trophy.
   Interval singing (fourths, fifths, octaves with _Listen first_) and the chord-change drills are
   exercises in the song menus.
-- **Tuner** (`#/tuner`, under Set up): ukulele (G C E A), low-G and baritone tunings or any note, with
-  a needle and reference tones. A tool, not a game.
 - **Practice goal**: pick minutes per week in Options; the home menu and scoreboard show the last
   seven and fourteen days.
 - **Up next** (home): a card pointing at the open step of the learning path you played most recently.

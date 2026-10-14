@@ -334,10 +334,18 @@ export const metronomeScreen: Screen = (root) => {
     }
   };
 
+  /** True while the audio context is being woken, so a second tap cannot start a second timer. */
+  let starting = false;
   const start = async () => {
+    if (starting || sched.isRunning) return;
+    starting = true;
     ctx ??= new AudioContext();
-    await ctx.resume();
-    if (disposed) return;
+    try {
+      await ctx.resume();
+    } finally {
+      starting = false;
+    }
+    if (disposed || sched.isRunning) return;
     seen = [];
     lit = -1;
     sched.start(ctx.currentTime + LEAD_S);

@@ -44,7 +44,7 @@
   "lanes": [
     {
       "id": "e2",
-      "label": "E",
+      "label": "D",
       "color": "#ffd166"
     },
     {
@@ -64,12 +64,12 @@
     },
     {
       "id": "b3",
-      "label": "B",
+      "label": "A",
       "color": "#c77dff"
     },
     {
       "id": "e4",
-      "label": "e",
+      "label": "d",
       "color": "#ff9f43"
     }
   ],
