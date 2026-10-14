@@ -33,7 +33,13 @@ import type { Screen } from '../router';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { starsBySong } from '../scoreboard';
 import { SettingsStore, nextSpeed, safeLocalStorage } from '../settings';
-import { fillSongMenu } from '../song-menu';
+import {
+  defaultSongId,
+  loadPicker,
+  mountPickerControls,
+  rebuildPicker,
+  savePicker,
+} from '../song-picker';
 import { TourStore, mountTour } from '../tour';
 import { UserSongStore, userSongsFor } from '../user-songs';
 import { hashParam } from '../courses';
@@ -49,7 +55,8 @@ const TEMPLATE = `
   <h1>Keyline <small>keyboard and piano</small></h1>
   <div data-id="stage-setup">
     <section class="panel">
-      <h2>1. Song</h2>
+      <h2 class="step">Song</h2>
+      <div data-id="song-filters"></div>
       <div class="row">
         <label>Song <select data-id="song"></select></label>
         <label>Speed
@@ -65,7 +72,7 @@ const TEMPLATE = `
       <p data-id="best"></p>
     </section>
     <section class="panel">
-      <h2>2. Your keyboard</h2>
+      <h2 class="step">Your keyboard</h2>
       <p>Plug in a MIDI keyboard and connect it for exact timing, or play on the on-screen keys (touch or click) or the computer keyboard (A S D F G H J K for white keys, W E T Y U O P for black; Z and X change octave).</p>
       <div class="row">
         <button data-id="midi-connect">Connect a MIDI keyboard</button>
@@ -73,7 +80,7 @@ const TEMPLATE = `
       <p class="status" data-id="midi-status" role="status"></p>
     </section>
     <section class="panel">
-      <h2>3. Options</h2>
+      <h2 class="step">Options</h2>
       <label class="check"><input type="checkbox" data-id="opt-sound" /> Make a piano sound when I press a key (turn off if your keyboard makes its own)</label>
       <label class="check"><input type="checkbox" data-id="opt-step" /> Beginner: one step at a time, no timing (it plays the notes, you press them)</label>
       <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks</label>
@@ -211,9 +218,27 @@ export const keylineScreen: Screen = (root) => {
   const chartToPlay = (): Chart => rescaleChart(entry().chart, speed());
 
   const stars = starsBySong(scores.entries(), PROFILE_ID);
-  fillSongMenu(songSel, songs(), (id) => stars.get(id) ?? null);
-  const savedSong = settings.get().songs[SONG_KEY];
-  if (savedSong && songs().some((s) => s.id === savedSong)) songSel.value = savedSong;
+  const picker = loadPicker(store);
+  /** Refills the menu from the filters, keeping the chosen song when it is still shown. */
+  const rebuild = (wanted: string | null) => {
+    const all = songs();
+    const changed = rebuildPicker(
+      songSel,
+      { songs: all, stars: (id) => stars.get(id) ?? null, random: [], state: picker },
+      wanted,
+      defaultSongId(PROFILE_ID, all),
+    );
+    if (changed) songSel.dispatchEvent(new Event('change'));
+  };
+  mountPickerControls($('song-filters'), picker, {
+    hasRandom: false,
+    onChange: () => {
+      savePicker(store, picker);
+      rebuild(songSel.value);
+    },
+  });
+  // the song last played, else (for a new player) the first step of the learning path
+  rebuild(settings.get().songs[SONG_KEY] ?? null);
   const refreshSong = () => {
     $('song-info').textContent = songSummary(entry().chart);
     $('best').textContent = describeBest(scores.best(bestKey()));

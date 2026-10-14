@@ -79,6 +79,24 @@ const DEFS: readonly PackDef[] = [
     ),
   },
   {
+    id: 'world',
+    title: 'Around the world',
+    blurb: 'Tunes from Mexico, Japan, France, Germany, Wales and beyond.',
+    test: (c) =>
+      /^(sing|wind|keys)-(la-cucaracha|sakura|twinkle|canon-theme|deck-the-halls|frere-jacques|au-clair)$/.test(
+        c.id,
+      ),
+  },
+  {
+    id: 'christmas',
+    title: 'Winter holidays',
+    blurb: 'Carols to sing, whistle or play: bells, a silent night and a merry Christmas.',
+    test: (c) =>
+      /^(sing|wind|keys)-(jingle-bells|silent-night|joy-to-the-world|deck-the-halls|merry-christmas)$/.test(
+        c.id,
+      ),
+  },
+  {
     id: 'lullabies',
     title: 'Lullabies and hymns',
     blurb: 'Slow, gentle songs and waltzes for a quiet evening.',

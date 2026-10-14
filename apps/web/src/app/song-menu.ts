@@ -11,7 +11,7 @@ export interface MenuSong {
 export interface MenuGroup {
   /** The heading, or null when there is only one kind of entry and no heading is needed. */
   label: string | null;
-  items: { id: string; title: string; score: number }[];
+  items: { id: string; title: string; score: number; name: string }[];
 }
 
 const HEADINGS: readonly { category: SongCategory; label: string }[] = [
@@ -26,9 +26,13 @@ const HEADINGS: readonly { category: SongCategory; label: string }[] = [
  * which groups them by scale. Each entry says how hard it is and, for a melody, whether it is
  * diatonic or needs sharps and flats.
  */
+/** How the songs of a menu are ordered. */
+export type SongSort = 'easy' | 'hard' | 'az' | 'stars';
+
 export function songMenuGroups(
   songs: readonly MenuSong[],
   starsOf: (id: string) => number | null = () => null,
+  sort: SongSort = 'easy',
 ): MenuGroup[] {
   const groups = HEADINGS.map(({ category, label }) => ({
     label,
@@ -41,14 +45,19 @@ export function songMenuGroups(
           id: s.id,
           title: `${s.chart.meta.title} · ${ratingText(rating)}${stars === null ? '' : ` · best ${starText(stars)}`}`,
           score: rating.score,
+          name: s.chart.meta.title,
         };
       })
       .map((item, index) => ({ item, index }))
-      .sort((a, b) =>
-        category !== 'exercise'
-          ? a.item.score - b.item.score || a.index - b.index
-          : a.index - b.index,
-      )
+      .sort((a, b) => {
+        // exercises keep their own order (by scale) unless asked for a different one
+        if (category === 'exercise' && sort === 'easy') return a.index - b.index;
+        if (sort === 'az') return a.item.name.localeCompare(b.item.name) || a.index - b.index;
+        if (sort === 'hard') return b.item.score - a.item.score || a.index - b.index;
+        if (sort === 'stars')
+          return (starsOf(b.item.id) ?? -1) - (starsOf(a.item.id) ?? -1) || a.index - b.index;
+        return a.item.score - b.item.score || a.index - b.index;
+      })
       .map(({ item }) => item),
   })).filter((g) => g.items.length > 0);
   return groups.length === 1 ? [{ label: null, items: groups[0]!.items }] : groups;
@@ -59,8 +68,9 @@ export function fillSongMenu(
   select: HTMLSelectElement,
   songs: readonly MenuSong[],
   starsOf?: (id: string) => number | null,
+  sort: SongSort = 'easy',
 ): void {
-  for (const group of songMenuGroups(songs, starsOf)) {
+  for (const group of songMenuGroups(songs, starsOf, sort)) {
     const parent: HTMLElement =
       group.label === null ? select : select.appendChild(heading(group.label));
     for (const item of group.items) parent.appendChild(new Option(item.title, item.id));

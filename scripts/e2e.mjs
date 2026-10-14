@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -214,6 +214,14 @@ async function session(wavPath, run) {
 }
 const shot = (page, name) =>
   shotsDir ? page.screenshot({ path: join(shotsDir, `${name}.png`), fullPage: true }) : null;
+/** Chooses a song in the menu, switching between the library and the random songs as needed. */
+async function pickSong(page, value) {
+  const button = value.startsWith('random-') ? 'src-random' : 'src-library';
+  const sel = `[data-id=${button}]`;
+  if ((await page.$(sel)) && (await page.getAttribute(sel, 'aria-pressed')) !== 'true')
+    await page.click(sel);
+  await page.selectOption('[data-id=song]', value);
+}
 const text = async (page, id) => ((await page.textContent(`[data-id=${id}]`)) ?? '').trim();
 
 /** Clicks "Copy session log" on the results screen and checks what landed on the clipboard. */
@@ -243,7 +251,7 @@ const scenarios = {
     );
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/sing');
-      await page.selectOption('[data-id=song]', 'singline-scale');
+      await pickSong(page, 'singline-scale');
       await page.check('[data-id=opt-debug]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
@@ -280,7 +288,7 @@ const scenarios = {
     );
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/wind');
-      await page.selectOption('[data-id=song]', 'wind-scale');
+      await pickSong(page, 'wind-scale');
       // the default is a generic instrument in C whose key is the shift: +2 makes it a D whistle
       check(
         (await page.inputValue('[data-id=instrument]')) === 'generic',
@@ -371,7 +379,13 @@ const scenarios = {
         !(await hasOption('flute-first-breath')),
         'flute songs are not offered to a generic instrument',
       );
-      check(!(await hasOption('random-flute')), 'nor is the random flute song');
+      const hasRandomFlute = async () => {
+        await page.click('[data-id=src-random]');
+        const r = await hasOption('random-flute');
+        await page.click('[data-id=src-library]');
+        return r;
+      };
+      check(!(await hasRandomFlute()), 'nor is the random flute song');
       // the instrument menu groups the pentatonic flutes
       const group = await page.$$eval('[data-id=instrument] optgroup option', (o) => o.length);
       check(
@@ -385,13 +399,13 @@ const scenarios = {
         await hasOption('flute-first-breath'),
         'flute songs appear for a Native American flute',
       );
-      check(await hasOption('random-flute'), 'and so does the random flute song');
+      check(await hasRandomFlute(), 'and so does the random flute song');
       const heading = await page.$$eval('[data-id=song] optgroup', (g) => g[0]?.label);
       check(
         heading === 'Pentatonic flute songs',
         `they come first, under their own heading (${heading})`,
       );
-      await page.selectOption('[data-id=song]', 'flute-rain-on-the-mesa');
+      await pickSong(page, 'flute-rain-on-the-mesa');
       const rows = await page.$$eval('[data-id=chart] .fing-row', (r) =>
         r.map((x) => x.textContent),
       );
@@ -442,7 +456,7 @@ const scenarios = {
       );
 
       // the random flute song: two pentatonic scales, a seed, a new song
-      await page.selectOption('[data-id=song]', 'random-flute');
+      await pickSong(page, 'random-flute');
       const scales = await page.$$eval('[data-id=challenge-scale] option', (o) =>
         o.map((x) => x.value),
       );
@@ -479,7 +493,7 @@ const scenarios = {
       );
 
       // play one through (with the drone)
-      await page.selectOption('[data-id=song]', 'flute-rain-on-the-mesa');
+      await pickSong(page, 'flute-rain-on-the-mesa');
       const notes = Number(/(\d+) notes/.exec(await text(page, 'song-info'))?.[1]);
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
@@ -508,10 +522,10 @@ const scenarios = {
         await page.goto(URL_BASE + '#/' + route);
         const groups = await page.$$eval('[data-id=song] optgroup', (g) => g.map((x) => x.label));
         check(
-          groups.join() === 'Songs,Exercises,Random',
-          `${route}: the song menu has Songs, Exercises and Random (${groups.join(', ')})`,
+          groups.join() === 'Songs,Exercises' && (await page.$('[data-id=src-random]')) !== null,
+          `${route}: the song menu has Songs and Exercises, with the random songs apart (${groups.join(', ')})`,
         );
-        await page.selectOption('[data-id=song]', id);
+        await pickSong(page, id);
         await page.uncheck('[data-id=opt-metronome]');
         await page.click('[data-id=demo]');
         await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
@@ -530,7 +544,7 @@ const scenarios = {
     await session(null, async (page) => {
       for (const route of ['sing', 'wind']) {
         await page.goto(URL_BASE + '#/' + route);
-        await page.selectOption('[data-id=song]', 'random-melody');
+        await pickSong(page, 'random-melody');
         check(
           await page.isVisible('[data-id=challenge]'),
           `${route}: choosing the random melody shows its scale, level and seed`,
@@ -568,7 +582,7 @@ const scenarios = {
     );
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/strum');
-      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await pickSong(page, 'strum-four-chords');
       await page.check('[data-id=opt-chords]');
       await page.check('[data-id=opt-debug]');
       await page.uncheck('[data-id=opt-metronome]');
@@ -606,7 +620,7 @@ const scenarios = {
     );
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/strum');
-      await page.selectOption('[data-id=song]', 'strum-picking');
+      await pickSong(page, 'strum-picking');
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
@@ -634,7 +648,7 @@ const scenarios = {
         `demo plucks judged by pitch: ${pitchedPerfect} perfect, ${wrong} wrong notes, ${await text(page, 'r-miss')} missed`,
       );
       await page.click('[data-id=back]');
-      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await pickSong(page, 'strum-four-chords');
       check(
         !(await page.isVisible('[data-id=pitch-opt]')),
         'the pitch option is hidden for a strummed song',
@@ -648,7 +662,7 @@ const scenarios = {
     );
     await session(fixtures.strums, async (page) => {
       await page.goto(URL_BASE + '#/strum');
-      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await pickSong(page, 'strum-four-chords');
       await page.check('[data-id=opt-chords]');
       await page.click('[data-id=mic-start]');
       await page.waitForFunction(
@@ -761,7 +775,7 @@ const scenarios = {
     console.log('\n# Singline with a live (fake) microphone');
     await session(fixtures.sung, async (page) => {
       await page.goto(URL_BASE + '#/sing');
-      await page.selectOption('[data-id=song]', 'singline-scale');
+      await pickSong(page, 'singline-scale');
       await page.check('[data-id=opt-debug]');
       await page.click('[data-id=mic-start]');
       await page.waitForFunction(
@@ -827,7 +841,7 @@ const scenarios = {
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/beat');
       await page.selectOption('[data-id=mode]', 'clap');
-      await page.selectOption('[data-id=song]', 'clap-gallop');
+      await pickSong(page, 'clap-gallop');
       check(await page.isVisible('[data-id=call-label]'), 'call: offered in Beatline');
       await page.check('[data-id=call]');
       check(
@@ -864,7 +878,7 @@ const scenarios = {
       await session(null, async (page) => {
         await page.goto(URL_BASE + '#/beat');
         await page.selectOption('[data-id=mode]', mode);
-        await page.selectOption('[data-id=song]', song);
+        await pickSong(page, song);
         await page.check('[data-id=opt-debug]');
         await page.uncheck('[data-id=opt-metronome]');
         await page.click('[data-id=demo]');
@@ -905,7 +919,7 @@ const scenarios = {
       await session(null, async (page) => {
         await page.goto(URL_BASE + '#/' + route);
         if (route === 'beat') await page.selectOption('[data-id=mode]', mode);
-        await page.selectOption('[data-id=song]', entry);
+        await pickSong(page, entry);
         check(
           await page.isVisible('[data-id=challenge]'),
           `${mode} ${entry}: the level and seed controls appear`,
@@ -941,7 +955,7 @@ const scenarios = {
     console.log('\n# Listen first, then play it back: the demo plays the echo to a perfect score');
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/sing');
-      await page.selectOption('[data-id=song]', 'sing-hot-cross-buns');
+      await pickSong(page, 'sing-hot-cross-buns');
       await page.check('[data-id=listen]');
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
@@ -953,7 +967,7 @@ const scenarios = {
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/beat');
       await page.selectOption('[data-id=mode]', 'drum-kit');
-      await page.selectOption('[data-id=song]', 'kit-halftime');
+      await pickSong(page, 'kit-halftime');
       await page.check('[data-id=listen]');
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
@@ -1139,7 +1153,7 @@ const scenarios = {
     console.log('\n# Staff view: the song as written music, with or without note names');
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/sing');
-      await page.selectOption('[data-id=song]', 'sing-hot-cross-buns');
+      await pickSong(page, 'sing-hot-cross-buns');
       check(
         !(await page.isVisible('[data-id=names-label]')),
         'staff: names option hidden for bars',
@@ -1174,7 +1188,7 @@ const scenarios = {
       check(songs >= 30, `bass: ${songs} songs and exercises in the menu`);
       check(await page.isHidden('[data-id=chords-opt]'), 'bass: no chord option');
       check(await page.isVisible('[data-id=speed]'), 'bass: a practice speed is offered');
-      await page.selectOption('[data-id=song]', 'bass-ex-open-strings');
+      await pickSong(page, 'bass-ex-open-strings');
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
@@ -1216,7 +1230,7 @@ const scenarios = {
         document.querySelector('[data-id=midi-status]').textContent.includes('Test Piano'),
       );
       check(true, 'keys: a connected MIDI keyboard is named');
-      await page.selectOption('[data-id=song]', 'keys-ex-five-finger');
+      await pickSong(page, 'keys-ex-five-finger');
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
@@ -1268,7 +1282,7 @@ const scenarios = {
     console.log('\n# Beginner step mode: one note at a time, no timing (fake microphone sings C4)');
     await session(fixtures.sung, async (page) => {
       await page.goto(URL_BASE + '#/sing');
-      await page.selectOption('[data-id=song]', 'singline-scale');
+      await pickSong(page, 'singline-scale');
       await page.check('[data-id=step]');
       await page.click('[data-id=mic-start]');
       await page.waitForFunction(
@@ -1302,7 +1316,7 @@ const scenarios = {
     await session(fixtures.strums, async (page) => {
       await page.goto(URL_BASE + '#/strum');
       await page.waitForSelector('[data-id=song]');
-      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await pickSong(page, 'strum-four-chords');
       await page.check('[data-id=opt-step]');
       await page.click('[data-id=mic-start]');
       await page.waitForFunction(
@@ -1358,7 +1372,7 @@ const scenarios = {
     await session(fixtures.sung, async (page) => {
       await page.goto(URL_BASE + '#/bass');
       await page.waitForSelector('[data-id=song]');
-      await page.selectOption('[data-id=song]', 'bass-ex-open-strings');
+      await pickSong(page, 'bass-ex-open-strings');
       await page.check('[data-id=opt-step]');
       await page.click('[data-id=mic-start]');
       await page.waitForFunction(
@@ -1398,7 +1412,7 @@ const scenarios = {
         gtrSongs >= ukeSongs,
         `guitar: the same songs as the ukulele (${gtrSongs} against ${ukeSongs})`,
       );
-      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await pickSong(page, 'strum-four-chords');
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
@@ -1426,7 +1440,7 @@ const scenarios = {
           .querySelector('[data-id=mode-note]')
           ?.textContent?.includes('fingered for this tuning'),
       );
-      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await pickSong(page, 'strum-four-chords');
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
@@ -1512,11 +1526,44 @@ const scenarios = {
     });
   },
 
+  async ux() {
+    // not a test: screenshots of every main screen for a first-time user, for the UX review
+    console.log('\n# UX review screenshots (first-time user, tablet size)');
+    await session(null, async (page) => {
+      for (const route of [
+        '',
+        'sing',
+        'wind',
+        'strum',
+        'bass',
+        'keys',
+        'beat',
+        'learn',
+        'packs',
+        'scores',
+        'collection',
+        'make',
+        'free',
+        'tuner',
+        'metronome',
+        'ear',
+        'options',
+        'help',
+      ]) {
+        await page.goto(URL_BASE + '#/' + route);
+        await page.waitForSelector('h1');
+        await page.waitForTimeout(250);
+        await shot(page, `ux-${route || 'home'}`);
+      }
+      check(true, 'ux: screenshots taken');
+    });
+  },
+
   async duet() {
     console.log('\n# Duet: two players share the phrases of a song, each with a score');
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/sing');
-      await page.selectOption('[data-id=song]', 'sing-ode-to-joy');
+      await pickSong(page, 'sing-ode-to-joy');
       check(await page.isVisible('[data-id=duet-label]'), 'duet: offered for a song with phrases');
       await page.check('[data-id=opt-duet]');
       await page.uncheck('[data-id=opt-metronome]');
@@ -1595,7 +1642,7 @@ const scenarios = {
       }
       // the results screen of a played song
       await page.goto(URL_BASE + '#/sing');
-      await page.selectOption('[data-id=song]', 'sing-hot-cross-buns');
+      await pickSong(page, 'sing-hot-cross-buns');
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
@@ -1670,7 +1717,7 @@ const scenarios = {
             o.textContent.startsWith('E2E tune'),
           ).value,
       );
-      await page.selectOption('[data-id=song]', value);
+      await pickSong(page, value);
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
@@ -1766,7 +1813,7 @@ const scenarios = {
             o.textContent.startsWith('E2E abc'),
           ).value,
       );
-      await page.selectOption('[data-id=song]', abcValue);
+      await pickSong(page, abcValue);
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
       await page.waitForSelector('[data-id=lyrics]:not([hidden])', { timeout: 20000 });
@@ -2118,7 +2165,7 @@ const scenarios = {
       await session(null, async (page) => {
         await page.goto(URL_BASE + '#/' + route);
         if (mode) await page.selectOption('[data-id=mode]', mode);
-        await page.selectOption('[data-id=song]', song);
+        await pickSong(page, song);
         await page.selectOption('[data-id=challenge-level]', 'hard');
         // hard chord songs do not go below a 5, nor do hard kit grooves
         const targets =
@@ -2152,7 +2199,7 @@ const scenarios = {
       await session(null, async (page) => {
         await page.goto(URL_BASE + '#/' + route);
         if (mode) await page.selectOption('[data-id=mode]', mode);
-        await page.selectOption('[data-id=song]', song);
+        await pickSong(page, song);
         const scores = {};
         for (const v of ['original', 'easier', 'harder']) {
           await page.selectOption('[data-id=variation]', v);
@@ -2290,6 +2337,9 @@ const scenarios = {
       await session(wavPath, async (page) => {
         await page.goto(URL_BASE + '#/beat');
         await page.click('[data-id=mic-start]');
+        await page.evaluate(() => {
+          document.querySelector('[data-id=monitor-box]').open = true;
+        });
         await page.waitForSelector('[data-id=leak-check]:not([disabled])');
         await page.waitForTimeout(500);
         await page.click('[data-id=leak-check]');
