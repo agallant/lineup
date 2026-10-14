@@ -1,6 +1,7 @@
 import type { Chart, SongClock } from '@lineup/core';
 import { planAccompaniment, type AccompanimentLevel } from './accompaniment';
 import { planDrums, type DrumStyle } from './drums';
+import { canPlayDrums, playDrum, type DrumVoice } from './drum-sound';
 
 export type BackingEvent =
   | { kind: 'click'; songTime: number; accent: boolean }
@@ -13,6 +14,8 @@ export type BackingEvent =
       level?: number;
       /** Oscillator shape; a sine when absent. */
       wave?: OscillatorType;
+      /** A drum to synthesize instead of a pitched tone (the pitch is then only a fallback). */
+      drum?: DrumVoice;
     };
 
 /** A held tone under the whole song: nothing, the key note, or the key note with its fifth. */
@@ -68,6 +71,11 @@ export interface AudioOut {
   createOscillator(): OscillatorNode;
   createGain(): GainNode;
   readonly destination: AudioNode;
+  /** With these (a real context has them) drums are synthesized; without, they are pitched ticks. */
+  readonly sampleRate?: number;
+  createBuffer?: BaseAudioContext['createBuffer'];
+  createBufferSource?: BaseAudioContext['createBufferSource'];
+  createBiquadFilter?: BaseAudioContext['createBiquadFilter'];
 }
 
 export interface BackingHandle {
@@ -83,11 +91,15 @@ export function playBacking(
   clock: SongClock,
   events: readonly BackingEvent[],
 ): BackingHandle {
-  const nodes: OscillatorNode[] = [];
+  const nodes: AudioScheduledSourceNode[] = [];
   const now = ctx.currentTime;
   for (const e of events) {
     const at = clock.toSourceTime(e.songTime);
     if (at < now - 0.02) continue;
+    if (e.kind === 'tone' && e.drum && canPlayDrums(ctx)) {
+      nodes.push(...playDrum(ctx, e.drum, Math.max(at, now), e.level ?? 1));
+      continue;
+    }
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain).connect(ctx.destination);
