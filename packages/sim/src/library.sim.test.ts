@@ -95,6 +95,7 @@ describe('library: ukulele songs', () => {
       // the simulated analyzer can miss the odd strum right after a chord change (see the README)
       const { counts } = r.score;
       expect(counts.miss / chart.notes.length).toBeLessThan(0.03);
+      expect(counts.good).toBe(0);
       expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
     },
   );
