@@ -55,6 +55,14 @@ Done after the first seven (and Bassline, the bass guitar game, and Keyline, the
 song packs, MIDI in and out, short per-game tips, and Start over in Options. Ideas kept for later, none
 blocking: left-handed layouts (lower priority), more song packs, MIDI folders as packs. (Haptics were considered and dropped: iPad Safari has no vibration API.)
 
+Next up, in this order (asked for by the user):
+
+1. **Guitar in Strumline**: choose ukulele or six-string guitar the way Windline chooses its instrument.
+   Standard tuning (E A D G B E) first, alternate tunings (drop D, DADGAD, open G) afterwards.
+2. **Beginner step mode** in every game: not timed. Each note is shown on the line and played for the
+   player, who plays or sings it back; getting it right moves on to the next, one note at a time. Singline
+   first, then the instrument games, and Beatline once its sounds are taught.
+
 ## Not buildable without a real instrument or sounds you teach it
 
 - Telling a **shaker from a tambourine or a hand drum**: needs your own recordings to train on.
