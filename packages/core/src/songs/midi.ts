@@ -281,7 +281,8 @@ export function parseMidi(bytes: Uint8Array): MidiFile {
       if (status === 0xff) {
         const type = read8();
         const len = readVlq();
-        need(len);
+        // a meta event stays inside its own track, so no byte is read (or decoded) twice
+        if (pos + len > end) throw new Error('That MIDI file is damaged.');
         const data = bytes.subarray(pos, pos + len);
         pos += len;
         if (type === 0x51 && len === 3 && bpm === null) {
@@ -295,7 +296,9 @@ export function parseMidi(bytes: Uint8Array): MidiFile {
         continue;
       }
       if (status === 0xf0 || status === 0xf7) {
-        pos += readVlq();
+        const len = readVlq();
+        if (pos + len > end) throw new Error('That MIDI file is damaged.');
+        pos += len;
         continue;
       }
       running = status;

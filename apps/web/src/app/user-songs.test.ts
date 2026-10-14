@@ -318,3 +318,31 @@ describe('packs of songs as text', () => {
     expect(back.ok && back.songs.length).toBe(50);
   });
 });
+
+describe('songs after the profile is erased elsewhere', () => {
+  it('does not bring erased songs back on the next save', () => {
+    const mem = new Mem();
+    const song = { kind: 'melody' as const, title: 'Old', bpm: 90, key: 0, notes: 'C4 D4 E4' };
+    expect(new UserSongStore(mem).save(song)).not.toBeNull();
+    const open = new UserSongStore(mem); // another tab, already holding the old song
+    expect(open.list()).toHaveLength(1);
+    mem.data.delete('lineup.songs.v1'); // this tab: Start over
+    expect(open.save({ ...song, title: 'New' })).not.toBeNull();
+    expect(new UserSongStore(mem).list().map((s) => s.title)).toEqual(['New']);
+  });
+
+  it('keeps songs in memory when storage refuses to write', () => {
+    const refusing: KeyValueStore = {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error('full');
+      },
+      removeItem: () => undefined,
+    };
+    const s = new UserSongStore(refusing);
+    const song = { kind: 'melody' as const, title: 'Mem', bpm: 90, key: 0, notes: 'C4 D4 E4' };
+    expect(s.save(song)).not.toBeNull();
+    expect(s.save({ ...song, title: 'Mem2' })).not.toBeNull();
+    expect(s.list().map((x) => x.title)).toEqual(['Mem', 'Mem2']);
+  });
+});

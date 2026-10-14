@@ -105,6 +105,36 @@ describe('MIDI in', () => {
     expect(r.lanes.split('\n').map((l) => l.split(':')[0])).toEqual(['kick', 'snare', 'hat']);
   });
 
+  it('refuses a track whose events run past its own end instead of re-reading later bytes', () => {
+    // two tracks; the first declares 8 bytes but holds a title of 200 bytes, which would spill into the next
+    const head = [0x4d, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, 0, 2, 0x01, 0xe0];
+    const trackA = [0x4d, 0x54, 0x72, 0x6b, 0, 0, 0, 8, 0, 0xff, 0x03, 0x81, 0x48, 65, 65, 65];
+    const rest = new Array(300).fill(65);
+    const bad = new Uint8Array([...head, ...trackA, ...rest]);
+    expect(() => parseMidi(bad)).toThrow(/damaged/);
+    // a system-exclusive message past the end is refused the same way
+    const sysex = new Uint8Array([
+      ...head.slice(0, 11),
+      1,
+      ...head.slice(12),
+      0x4d,
+      0x54,
+      0x72,
+      0x6b,
+      0,
+      0,
+      0,
+      6,
+      0,
+      0xf0,
+      0x7f,
+      1,
+      2,
+      3,
+    ]);
+    expect(() => parseMidi(sysex)).toThrow(/damaged/);
+  });
+
   it('explains files it cannot read', () => {
     expect(() =>
       parseMidi(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])),

@@ -196,6 +196,8 @@ function sanitize(raw: unknown): UserSong | null {
 /** The songs a player wrote, kept in a key-value store; tolerant of missing, blocked or corrupt storage. */
 export class UserSongStore {
   private songs: UserSong[];
+  /** Storage refused a write, so the songs live only in memory and a missing key must not erase them. */
+  private memoryOnly = false;
 
   constructor(private readonly store: KeyValueStore | null) {
     this.songs = this.read();
@@ -242,15 +244,19 @@ export class UserSongStore {
   private write(): void {
     try {
       this.store?.setItem(KEY, JSON.stringify(this.songs));
+      this.memoryOnly = false;
     } catch {
       // private window / quota: keep working in memory
+      this.memoryOnly = true;
     }
   }
 
   private read(): UserSong[] {
     try {
       const text = this.store?.getItem(KEY);
-      if (!text) return this.songs ?? [];
+      // a missing key means the profile was erased (maybe in another tab): start empty, unless
+      // storage has been refusing writes and these songs exist only in memory
+      if (!text) return this.memoryOnly ? this.songs : [];
       const raw = JSON.parse(text) as unknown;
       return Array.isArray(raw)
         ? raw.flatMap((r) => {
