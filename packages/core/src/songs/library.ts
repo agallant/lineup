@@ -336,6 +336,24 @@ const TUNES: readonly Tune[] = [
       E4 E4:.5 F4:.5 E4:.5 D4:.5 | C4 A3 G3:.5 G3:.5 | A3 D4 B3 | C4:3`,
   },
   {
+    id: 'alle-meine-entchen',
+    title: 'Alle meine Entchen',
+    artist: 'Traditional (Germany)',
+    bpm: 104,
+    tonic: 60,
+    notes: `C4 D4 E4 F4 | G4:2 G4:2 | A4 A4 A4 A4 | G4:4 |
+      A4 A4 A4 A4 | G4:4 | F4 F4 F4 F4 | E4:2 E4:2 | D4 D4 D4 D4 | C4:4`,
+  },
+  {
+    id: 'haenschen-klein',
+    title: 'Hänschen klein',
+    artist: 'Traditional (Germany)',
+    bpm: 100,
+    tonic: 60,
+    notes: `G4 E4 E4:2 | F4 D4 D4:2 | C4 D4 E4 F4 | G4 G4 G4:2 |
+      G4 E4 E4:2 | F4 D4 D4:2 | C4 E4 G4 G4 | C4:4`,
+  },
+  {
     id: 'fur-elise',
     title: 'Für Elise (opening, chromatic)',
     artist: 'Beethoven',
@@ -533,6 +551,68 @@ export const STRUM_SONGS: Readonly<Record<string, Chart>> = {
     },
     'Am | F | C | G | Am | F | C | G | Am | F | G | E | Am | F | E | Am',
     'D . D U . U D U',
+  ),
+  'strum-reggae': strumChart(
+    {
+      title: 'Reggae offbeat (Jamaica style: C F G)',
+      artist: 'Lineup',
+      bpm: 76,
+      instruments: ['ukulele-strum'],
+    },
+    'C | C | F | F | C | C | G | G | C | C | F | F | C | G | C | C',
+    '. U . U . U . U',
+  ),
+  'strum-bossa': strumChart(
+    {
+      title: 'Bossa nova strum (Brazil style: Am Dm G C)',
+      artist: 'Lineup',
+      bpm: 100,
+      instruments: ['ukulele-strum'],
+    },
+    'Am | Dm | G | C | Am | Dm | G | C | F | G | C | Am | Dm | G | C | C',
+    'D . D U . U D .',
+  ),
+  'strum-flamenco': strumChart(
+    {
+      title: 'Andalusian cadence (Spain style: Am G F E)',
+      artist: 'Lineup',
+      bpm: 96,
+      instruments: ['ukulele-strum'],
+    },
+    'Am | G | F | E | Am | G | F | E | Am | G | F | E | Am | G | F | E',
+    'D D U . D U D U',
+  ),
+  'strum-tango': strumChart(
+    {
+      title: 'Tango (Argentina style: Am Dm E7 Am)',
+      artist: 'Lineup',
+      bpm: 88,
+      instruments: ['ukulele-strum'],
+    },
+    'Am | Am | Dm | Am | E7 | E7 | Am | Am | Am | Dm | Am | E7 | Am | E7 | Am | Am',
+    'D . . D . D U .',
+  ),
+  'strum-polka': strumChart(
+    {
+      title: 'Polka (central Europe style: C G7)',
+      artist: 'Lineup',
+      bpm: 116,
+      instruments: ['ukulele-strum'],
+    },
+    'C | C | G7 | G7 | C | C | G7 | C | C | F | G7 | C | C | F | G7 | C',
+    'D U D U',
+    { beatsPerBar: 2 },
+  ),
+  'strum-ranchera': strumChart(
+    {
+      title: 'Ranchera waltz (Mexico style: C G7 F)',
+      artist: 'Lineup',
+      bpm: 108,
+      instruments: ['ukulele-strum'],
+    },
+    'C | C | G7 | G7 | C | C | F | G7 | C | F | G7 | C | C | F | G7 | C',
+    'D . D U D U',
+    { beatsPerBar: 3 },
   ),
   'pick-hot-cross-buns': pickedMelodyChart(
     {
