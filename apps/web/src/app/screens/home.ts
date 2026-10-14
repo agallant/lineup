@@ -138,6 +138,8 @@ export const homeScreen: Screen = (root) => {
     <ul class="menu">
       <li><a class="card" href="#/learn" data-id="learn-link"><strong>Learn</strong>
         <span>Step-by-step paths for each instrument: open the next song by earning stars.</span></a></li>
+      <li><a class="card" href="#/packs" data-id="packs-link"><strong>Song packs</strong>
+        <span>Themed sets of songs: campfire, lullabies, waltzes, rhythms, pentatonic calm and more.</span></a></li>
       <li><a class="card" href="#/collection" data-id="collection-link"><strong>Collection</strong>
         <span>Songs cleared with three stars, with a bronze, silver or gold medal for each group.</span></a></li>
       <li><a class="card" href="#/scores" data-id="scores-link"><strong>Scoreboard &amp; trophies</strong>

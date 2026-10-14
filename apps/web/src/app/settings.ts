@@ -11,6 +11,7 @@ import {
   type MelodySpec,
   type Variation,
 } from '@lineup/core';
+import { isVoiceChoice } from './voice-range';
 
 /** How much backing music plays under a song. */
 export type Accompaniment = 'off' | 'bass' | 'full';
@@ -48,6 +49,8 @@ export interface Settings {
   listenFirst: boolean;
   /** Beatline, with listen first: hide the notes on your turn, so you clap back from memory. */
   blind: boolean;
+  /** Beatline: hear each bar, then play it back, bar by bar. */
+  callResponse: boolean;
   /** Minutes of practice to aim for each week (0 for no goal). */
   goalMinutes: number;
   /** How large the page's text is. */
@@ -83,6 +86,12 @@ export interface Settings {
   checkChords: boolean;
   /** Strumline: also check the pitch of each plucked note (experimental), not just the timing. */
   checkPitch: boolean;
+  /** Singline: the voice type that songs are checked against ('any' for no preference). */
+  voiceRange: string;
+  /** Singline and Windline: the song as scrolling bars or as written music on a staff. */
+  notation: 'bars' | 'staff';
+  /** On the staff: write the name of each note beside it (off to practise reading). */
+  staffNames: boolean;
   /** Singline and Windline: two players take turns, phrase by phrase, with a score each. */
   duet: boolean;
   /** Strumline: tempo multiplier for practice (1 = the song's own tempo). */
@@ -104,6 +113,7 @@ export const DEFAULT_SETTINGS: Settings = {
   effects: true,
   listenFirst: false,
   blind: false,
+  callResponse: false,
   goalMinutes: 0,
   textSize: 'normal',
   theme: 'dark',
@@ -119,6 +129,9 @@ export const DEFAULT_SETTINGS: Settings = {
   showFingerings: true,
   checkChords: false,
   checkPitch: false,
+  voiceRange: 'any',
+  notation: 'bars',
+  staffNames: true,
   duet: false,
   speed: 1,
   songs: {},
@@ -216,6 +229,8 @@ function sanitize(raw: unknown): Settings {
     listenFirst:
       typeof r['listenFirst'] === 'boolean' ? r['listenFirst'] : DEFAULT_SETTINGS.listenFirst,
     blind: typeof r['blind'] === 'boolean' ? r['blind'] : DEFAULT_SETTINGS.blind,
+    callResponse:
+      typeof r['callResponse'] === 'boolean' ? r['callResponse'] : DEFAULT_SETTINGS.callResponse,
     goalMinutes: GOAL_MINUTES.includes(r['goalMinutes'] as number)
       ? (r['goalMinutes'] as number)
       : DEFAULT_SETTINGS.goalMinutes,
@@ -248,6 +263,10 @@ function sanitize(raw: unknown): Settings {
       typeof r['checkChords'] === 'boolean' ? r['checkChords'] : DEFAULT_SETTINGS.checkChords,
     checkPitch:
       typeof r['checkPitch'] === 'boolean' ? r['checkPitch'] : DEFAULT_SETTINGS.checkPitch,
+    voiceRange: isVoiceChoice(r['voiceRange']) ? r['voiceRange'] : DEFAULT_SETTINGS.voiceRange,
+    notation: r['notation'] === 'staff' ? 'staff' : 'bars',
+    staffNames:
+      typeof r['staffNames'] === 'boolean' ? r['staffNames'] : DEFAULT_SETTINGS.staffNames,
     duet: typeof r['duet'] === 'boolean' ? r['duet'] : DEFAULT_SETTINGS.duet,
     speed:
       typeof r['speed'] === 'number' && r['speed'] >= 0.5 && r['speed'] <= 1.25

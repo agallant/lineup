@@ -920,7 +920,7 @@ ul.collection li.cleared a {
 }
 
 ul.collection li.new a {
-  opacity: 0.75;
+  border-style: dashed;
 }
 
 .family .badge {

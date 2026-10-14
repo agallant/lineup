@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { exportBackup, importBackup, lineupKeys, type EnumerableStore } from './backup';
+import { eraseAll, exportBackup, importBackup, lineupKeys, type EnumerableStore } from './backup';
 
 class Mem implements EnumerableStore {
   data = new Map<string, string>();
@@ -122,5 +122,51 @@ describe('backup', () => {
     });
     expect(importBackup(m, sneaky)).toBe(1);
     expect(m.getItem('evil.key')).toBeNull();
+  });
+});
+
+describe('erasing everything', () => {
+  it('removes every app key and nothing else', () => {
+    const m = new Mem();
+    m.setItem('lineup.scores.v1', '{}');
+    m.setItem('lineup.songs.v1', '[]');
+    m.setItem('lineup.probe', '1');
+    m.setItem('other.site.key', 'keep');
+    expect(eraseAll(m)).toEqual({ removed: 2, failed: false });
+    expect(lineupKeys(m)).toEqual([]);
+    expect(m.getItem('other.site.key')).toBe('keep');
+    expect(eraseAll(m)).toEqual({ removed: 0, failed: false });
+  });
+
+  it('copes with storage that refuses', () => {
+    const broken: EnumerableStore = {
+      length: 1,
+      key: () => 'lineup.scores.v1',
+      getItem: () => '{}',
+      setItem: () => undefined,
+      removeItem: () => {
+        throw new Error('blocked');
+      },
+    };
+    expect(eraseAll(broken)).toEqual({ removed: 0, failed: true });
+  });
+
+  it('says so when storage refuses part way, with how many went', () => {
+    const m = new Mem();
+    for (const k of ['lineup.a', 'lineup.b', 'lineup.c']) m.setItem(k, '1');
+    let calls = 0;
+    const flaky: EnumerableStore = {
+      get length() {
+        return m.length;
+      },
+      key: (i) => m.key(i),
+      getItem: (k) => m.getItem(k),
+      setItem: (k, v) => m.setItem(k, v),
+      removeItem: (k) => {
+        if (++calls > 1) throw new Error('blocked');
+        m.removeItem(k);
+      },
+    };
+    expect(eraseAll(flaky)).toEqual({ removed: 1, failed: true });
   });
 });

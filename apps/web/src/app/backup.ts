@@ -88,3 +88,21 @@ export function importBackup(store: EnumerableStore, text: string): number | nul
   }
   return entries.length;
 }
+
+/**
+ * Removes everything the app keeps in a store: settings, scores, progress, songs, calibration,
+ * trained sounds. Reports how many items were removed and whether storage refused part way (so
+ * some may remain), which a caller must not mistake for "there was nothing to erase".
+ */
+export function eraseAll(store: EnumerableStore): { removed: number; failed: boolean } {
+  let removed = 0;
+  try {
+    for (const k of lineupKeys(store)) {
+      store.removeItem(k);
+      removed++;
+    }
+    return { removed, failed: false };
+  } catch {
+    return { removed, failed: true };
+  }
+}

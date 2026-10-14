@@ -64,7 +64,14 @@ import {
   type InputAdapter,
 } from '@lineup/input';
 import { micSupported, openMic, openSyntheticInput, type MicSession } from '@lineup/input/mic';
-import { createRenderer, drawMeter, fitCanvas, midiName } from '@lineup/render';
+import {
+  StaffRenderer,
+  createRenderer,
+  preferFlats,
+  drawMeter,
+  fitCanvas,
+  midiName,
+} from '@lineup/render';
 import { renderPerformanceAsync, type Performer } from '@lineup/sim';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
@@ -92,6 +99,7 @@ import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { LadderStore, ladderText } from '../ladder';
+import { VOICE_RANGES, voiceFit, voiceFitText } from '../voice-range';
 import { lyricIndexAt, lyricWindow, syllables } from '../lyrics';
 import { SettingsStore, nextSpeed, keyShiftFor, safeLocalStorage } from '../settings';
 import {
@@ -102,6 +110,7 @@ import {
   fillTargetMenu,
 } from '../song-menu';
 import { formatCents, formatDb } from '../format';
+import { TourStore, mountTour } from '../tour';
 import type { Screen } from '../router';
 
 /** What differs between the pitch-based games (Singline, Windline); everything else is shared. */
@@ -171,6 +180,8 @@ const setup = (c: PitchScreenConfig) => `
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
       <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
+      <label>View <select data-id="notation"><option value="bars">Bars</option><option value="staff">Staff (written music)</option></select></label>
+      <label class="check" data-id="names-label" hidden><input type="checkbox" data-id="opt-names" /> Show note names on the staff</label>
       <label class="check" data-id="duet-label" hidden><input type="checkbox" data-id="opt-duet" /> Duet: two players take turns, phrase by phrase</label>
       <label class="check"><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
       <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
@@ -262,6 +273,7 @@ export const createPitchScreen =
   (c: PitchScreenConfig): Screen =>
   (root) => {
     root.innerHTML = template(c);
+    mountTour(root, c.mode.toLowerCase(), new TourStore(safeLocalStorage()));
     const $ = <T extends HTMLElement = HTMLElement>(id: string): T => {
       const el = root.querySelector<T>(`[data-id="${id}"]`);
       if (!el) throw new Error(`missing [data-id=${id}]`);
@@ -544,6 +556,19 @@ export const createPitchScreen =
       partIdx = Number(partSel.value);
       refreshRange();
     });
+    const notationSel = S<HTMLSelectElement>('notation');
+    const namesBox = S<HTMLInputElement>('opt-names');
+    notationSel.value = settings.get().notation;
+    namesBox.checked = settings.get().staffNames;
+    const syncNotation = () => {
+      S('names-label').hidden = settings.get().notation !== 'staff';
+    };
+    syncNotation();
+    notationSel.addEventListener('change', () => {
+      settings.update({ notation: notationSel.value === 'staff' ? 'staff' : 'bars' });
+      syncNotation();
+    });
+    namesBox.addEventListener('change', () => settings.update({ staffNames: namesBox.checked }));
     const duetBox = S<HTMLInputElement>('opt-duet');
     duetBox.checked = settings.get().duet;
     duetBox.addEventListener('change', () => {
@@ -610,6 +635,12 @@ export const createPitchScreen =
         (midiToHz(r.low) < d.minHz || midiToHz(r.high) > d.maxHz)
       )
         text += ` ${c.mode} cannot hear every note in this key: try another.`;
+      // Singline: how the song sits in the voice the player chose in Options
+      if (!c.instruments && r) {
+        const fit = voiceFit(r, settings.get().voiceRange);
+        const voice = VOICE_RANGES.find((v) => v.id === settings.get().voiceRange);
+        if (fit && voice) text += ` ${voiceFitText(fit, voice.id)}`;
+      }
       if (c.instruments) {
         const inst = instrument();
         const pitches = chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch]));
@@ -901,11 +932,23 @@ export const createPitchScreen =
         difficulty: opts.difficulty,
       });
       adapter.onMessage = (m) => game.handleMessage(m);
+      // Singline: the guide tone and backing sit in the octave of the voice the player chose
+      const backingChart = ((): Chart => {
+        const span = chartPitchRange(chart);
+        const fit = !c.instruments && span ? voiceFit(span, opts.voiceRange) : null;
+        if (!fit || fit.octave === 0) return chart;
+        return {
+          ...chart,
+          notes: chart.notes.map((n) =>
+            n.pitch === undefined ? n : { ...n, pitch: n.pitch + fit.octave },
+          ),
+        };
+      })();
       backing = playBacking(
         ctx,
         clock,
         [
-          ...planAllBacking(chart, {
+          ...planAllBacking(backingChart, {
             metronome: opts.metronome,
             guideTone: opts.guideTone,
             accompaniment: settings.get().accompaniment,
@@ -918,7 +961,10 @@ export const createPitchScreen =
           ...listen.tones,
         ].sort((a, b) => a.songTime - b.songTime),
       );
-      const renderer = createRenderer(profile.renderer);
+      const renderer =
+        opts.notation === 'staff'
+          ? new StaffRenderer({ names: opts.staffNames, flats: preferFlats(chart.meta.tonic) })
+          : createRenderer(profile.renderer);
       const endAt = chartEnd(chart) + 0.9;
       // Windline: the fingering of the note being played and the next one, redrawn when they change
       const inst = instrument();

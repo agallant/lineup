@@ -196,6 +196,8 @@ function sanitize(raw: unknown): UserSong | null {
 /** The songs a player wrote, kept in a key-value store; tolerant of missing, blocked or corrupt storage. */
 export class UserSongStore {
   private songs: UserSong[];
+  /** Storage refused a write, so the songs live only in memory and a missing key must not erase them. */
+  private memoryOnly = false;
 
   constructor(private readonly store: KeyValueStore | null) {
     this.songs = this.read();
@@ -242,15 +244,19 @@ export class UserSongStore {
   private write(): void {
     try {
       this.store?.setItem(KEY, JSON.stringify(this.songs));
+      this.memoryOnly = false;
     } catch {
       // private window / quota: keep working in memory
+      this.memoryOnly = true;
     }
   }
 
   private read(): UserSong[] {
     try {
       const text = this.store?.getItem(KEY);
-      if (!text) return this.songs ?? [];
+      // a missing key means the profile was erased (maybe in another tab): start empty, unless
+      // storage has been refusing writes and these songs exist only in memory
+      if (!text) return this.memoryOnly ? this.songs : [];
       const raw = JSON.parse(text) as unknown;
       return Array.isArray(raw)
         ? raw.flatMap((r) => {
@@ -347,4 +353,49 @@ export function songFromText(text: string): ImportedSong {
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
+}
+
+/** The prefix of a bundle of songs shared as text. */
+const PACK_PREFIX = 'LINEUP-PACK-1';
+
+/** The most songs one pack may hold, so a pasted pack cannot fill the device. */
+export const MAX_PACK_SONGS = 50;
+
+/** Several songs as one block of text, to send to someone or keep (see {@link packFromText}). */
+export function packToText(songs: readonly UserSong[]): string {
+  return `${PACK_PREFIX} ${JSON.stringify(songs.slice(0, MAX_PACK_SONGS).map(withoutId))}`;
+}
+
+/** What pasted text turned out to be as a pack: its songs, or the reason it is not one. */
+export type ImportedPack =
+  { ok: true; songs: NewUserSong[]; skipped: number } | { ok: false; error: string };
+
+/**
+ * Reads a pack made by {@link packToText}. Songs that do not compile are skipped (and counted);
+ * a pack with no usable song is an error.
+ */
+export function packFromText(text: string): ImportedPack {
+  const t = text.trim();
+  if (!t.startsWith(PACK_PREFIX)) return { ok: false, error: 'That is not a pack of songs.' };
+  let raw: unknown;
+  try {
+    raw = JSON.parse(t.slice(PACK_PREFIX.length));
+  } catch {
+    return { ok: false, error: 'That pack is damaged: copy it again in full.' };
+  }
+  if (!Array.isArray(raw))
+    return { ok: false, error: 'That pack is damaged: copy it again in full.' };
+  const songs: NewUserSong[] = [];
+  let skipped = 0;
+  for (const item of raw.slice(0, MAX_PACK_SONGS)) {
+    const song =
+      typeof item === 'object' && item !== null
+        ? sanitize({ ...(item as object), id: 'my-import' })
+        : null;
+    if (song && compileSong(song).ok) songs.push(withoutId(song));
+    else skipped++;
+  }
+  skipped += Math.max(0, raw.length - MAX_PACK_SONGS);
+  if (songs.length === 0) return { ok: false, error: 'There is no usable song in that pack.' };
+  return { ok: true, songs, skipped };
 }

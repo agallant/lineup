@@ -5,6 +5,8 @@ import {
   UserSongStore,
   compileSong,
   describeCompiled,
+  packFromText,
+  packToText,
   songFromText,
   songToText,
   userSongsFor,
@@ -277,5 +279,70 @@ describe('sharing songs as text', () => {
     // junk lyrics are dropped, the song stays
     expect(new UserSongStore(store).list()[0]!.kind === 'melody').toBe(true);
     expect('lyrics' in new UserSongStore(store).list()[0]!).toBe(false);
+  });
+});
+
+describe('packs of songs as text', () => {
+  const a = { id: 'my-a', kind: 'melody' as const, title: 'A', bpm: 90, key: 0, notes: 'C4 D4 E4' };
+  const b = {
+    id: 'my-b',
+    kind: 'chords' as const,
+    title: 'B',
+    bpm: 80,
+    bars: 'C | G',
+    pattern: 'D . D U . U D U',
+    beatsPerBar: 4 as const,
+  };
+
+  it('round-trips several songs without their ids', () => {
+    const text = packToText([a, b]);
+    expect(text).not.toContain('my-a');
+    const back = packFromText(text);
+    expect(back).toMatchObject({ ok: true, skipped: 0 });
+    if (back.ok) expect(back.songs.map((s) => s.title)).toEqual(['A', 'B']);
+  });
+
+  it('skips songs that do not compile, and refuses anything that is not a pack', () => {
+    const bad = packToText([a]).replace('C4 D4 E4', 'H9');
+    expect(packFromText(bad)).toMatchObject({ ok: false });
+    const mixed = `LINEUP-PACK-1 ${JSON.stringify([{ ...a, id: undefined }, { kind: 'melody', title: 'X', bpm: 90, key: 0, notes: 'H9' }, 7])}`;
+    expect(packFromText(mixed)).toMatchObject({ ok: true, skipped: 2 });
+    expect(packFromText('hello')).toMatchObject({ ok: false });
+    expect(packFromText('LINEUP-PACK-1 {nope')).toMatchObject({ ok: false });
+    expect(packFromText('LINEUP-PACK-1 {"a":1}')).toMatchObject({ ok: false });
+  });
+
+  it('takes at most the limit of songs', () => {
+    const many = Array.from({ length: 60 }, (_, i) => ({ ...a, id: `my-${i}`, title: `S${i}` }));
+    const back = packFromText(packToText(many));
+    expect(back.ok && back.songs.length).toBe(50);
+  });
+});
+
+describe('songs after the profile is erased elsewhere', () => {
+  it('does not bring erased songs back on the next save', () => {
+    const mem = new Mem();
+    const song = { kind: 'melody' as const, title: 'Old', bpm: 90, key: 0, notes: 'C4 D4 E4' };
+    expect(new UserSongStore(mem).save(song)).not.toBeNull();
+    const open = new UserSongStore(mem); // another tab, already holding the old song
+    expect(open.list()).toHaveLength(1);
+    mem.data.delete('lineup.songs.v1'); // this tab: Start over
+    expect(open.save({ ...song, title: 'New' })).not.toBeNull();
+    expect(new UserSongStore(mem).list().map((s) => s.title)).toEqual(['New']);
+  });
+
+  it('keeps songs in memory when storage refuses to write', () => {
+    const refusing: KeyValueStore = {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error('full');
+      },
+      removeItem: () => undefined,
+    };
+    const s = new UserSongStore(refusing);
+    const song = { kind: 'melody' as const, title: 'Mem', bpm: 90, key: 0, notes: 'C4 D4 E4' };
+    expect(s.save(song)).not.toBeNull();
+    expect(s.save({ ...song, title: 'Mem2' })).not.toBeNull();
+    expect(s.list().map((x) => x.title)).toEqual(['Mem', 'Mem2']);
   });
 });

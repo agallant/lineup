@@ -1,4 +1,5 @@
-import { exportBackup, importBackup, lineupKeys } from '../backup';
+import { VOICE_RANGES } from '../voice-range';
+import { eraseAll, exportBackup, importBackup, lineupKeys } from '../backup';
 import { ProgressStore } from '../progress';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
@@ -75,6 +76,11 @@ export const optionsScreen: Screen = (root) => {
 
     <section class="panel">
       <h2>Scoring</h2>
+      <div class="row"><label>Singline voice <select data-id="voice-range"><option value="any">Not set</option>${VOICE_RANGES.map(
+        (v) => `<option value="${v.id}">${v.label}</option>`,
+      ).join('')}</select></label></div>
+      <p class="muted">Tell Singline your voice and it says how each song sits in it, and the guide tone
+        plays in your octave. Any octave of the right note still counts.</p>
       <div class="row"><label>Singline and Windline pitch <select data-id="difficulty">${DIFFICULTIES.map(
         (d) => `<option value="${d}">${DIFFICULTY_TEXT[d] ?? d}</option>`,
       ).join('')}</select></label></div>
@@ -126,6 +132,13 @@ export const optionsScreen: Screen = (root) => {
         <button data-id="clear-scores" class="danger">Erase scores</button>
         <button data-id="clear-progress" class="danger">Erase progress and trophies</button>
       </div>
+      <details class="reset-all">
+        <summary>Start over</summary>
+        <p class="muted">Erases everything this app keeps on this device in one go: options, scores,
+          progress and trophies, your own songs, timing calibration and trained sounds, as if the app
+          had just been installed. Save a backup file first if you may want any of it back.</p>
+        <div class="row"><button data-id="reset-all" class="danger">Reset the whole profile</button></div>
+      </details>
       <p class="status" data-id="msg" role="status"></p>
     </section>
   `;
@@ -145,6 +158,7 @@ export const optionsScreen: Screen = (root) => {
     $<HTMLSelectElement>('drums').value = v.drums;
     $<HTMLSelectElement>('drone').value = v.drone;
     $<HTMLSelectElement>('difficulty').value = v.difficulty;
+    $<HTMLSelectElement>('voice-range').value = v.voiceRange;
     $<HTMLSelectElement>('octave').value = v.windOctave;
     $<HTMLInputElement>('chords').checked = v.checkChords;
     $<HTMLInputElement>('fingerings').checked = v.showFingerings;
@@ -186,6 +200,9 @@ export const optionsScreen: Screen = (root) => {
     settings.update({
       accompaniment: (e.target as HTMLSelectElement).value as (typeof ACCOMPANIMENTS)[number],
     }),
+  );
+  $<HTMLSelectElement>('voice-range').addEventListener('change', (e) =>
+    settings.update({ voiceRange: (e.target as HTMLSelectElement).value }),
   );
   $<HTMLSelectElement>('difficulty').addEventListener('change', (e) =>
     settings.update({
@@ -251,6 +268,25 @@ export const optionsScreen: Screen = (root) => {
     msg('Progress erased.');
     $('clear-progress').textContent = 'Erase progress and trophies';
   });
+
+  confirmed(
+    $<HTMLButtonElement>('reset-all'),
+    'everything: options, scores, progress, songs and sounds',
+    () => {
+      const { removed, failed } = storage
+        ? eraseAll(storage as unknown as Storage)
+        : { removed: 0, failed: false };
+      msg(
+        failed
+          ? `Could not erase everything (${removed} items went; this browser refused the rest). Reloading with what is left.`
+          : removed > 0
+            ? 'Everything erased. Starting over…'
+            : 'There was nothing to erase.',
+      );
+      if (removed > 0) setTimeout(() => location.reload(), failed ? 2500 : 600);
+      $('reset-all').textContent = 'Reset the whole profile';
+    },
+  );
 
   $('export').addEventListener('click', () => {
     if (!storage || lineupKeys(storage as unknown as Storage).length === 0) {

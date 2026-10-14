@@ -59,7 +59,13 @@ describe('SettingsStore', () => {
 
   it('keeps the Strumline options (chord checking off, normal speed) and rejects bad values', () => {
     const s = new SettingsStore(new Mem());
-    expect(s.get()).toMatchObject({ checkChords: false, checkPitch: false, duet: false, speed: 1 });
+    expect(s.get()).toMatchObject({
+      checkChords: false,
+      checkPitch: false,
+      duet: false,
+      voiceRange: 'any',
+      speed: 1,
+    });
     expect(s.update({ checkChords: true, checkPitch: true, speed: 0.75 })).toMatchObject({
       checkChords: true,
       checkPitch: true,
@@ -243,5 +249,24 @@ describe('nextSpeed', () => {
     expect(nextSpeed(1)).toBeNull();
     expect(nextSpeed(0.7)).toBe(0.8);
     expect(nextSpeed(1.25)).toBeNull();
+  });
+});
+
+describe('voice range setting', () => {
+  it('keeps a known voice and ignores an unknown one', () => {
+    const s = new SettingsStore(null);
+    expect(s.update({ voiceRange: 'tenor' }).voiceRange).toBe('tenor');
+    expect(s.update({ voiceRange: 'castrato' }).voiceRange).toBe('any');
+  });
+});
+
+describe('notation setting', () => {
+  it('keeps staff or bars and falls back to bars', () => {
+    const s = new SettingsStore(null);
+    expect(s.update({ notation: 'staff', staffNames: false })).toMatchObject({
+      notation: 'staff',
+      staffNames: false,
+    });
+    expect(s.update({ notation: 'tablature' as never }).notation).toBe('bars');
   });
 });
