@@ -91,7 +91,7 @@ export const GUIDES: Readonly<Record<Platform, InstallGuide>> = {
   'desktop-firefox': {
     label: 'Computer (Firefox)',
     steps: [
-      'Firefox for Windows (version 143 or later) can install web apps: click the web-app button in the address bar.',
+      'Firefox for Windows (version 143 or later; 150 or later if installed from the Microsoft Store) can install web apps: click the web-app button in the address bar.',
       'On other systems Firefox cannot install web apps. Open Lineup in Chrome, Edge or Safari to install it, or just keep using it here: it works offline once loaded.',
     ],
   },
