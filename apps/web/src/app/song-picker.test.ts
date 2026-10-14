@@ -1,4 +1,4 @@
-import { chartFromBeats, getSong, type Chart } from '@lineup/core';
+import { chartFromBeats, type Chart } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
 import { songMenuGroups, type MenuSong } from './song-menu';
 import { DEFAULT_PICKER, defaultSongId, filterSongs, loadPicker, savePicker } from './song-picker';
@@ -96,9 +96,8 @@ describe('defaultSongId', () => {
     expect(defaultSongId('bass', [{ id: 'z' }, { id: 'bass-ex-open-strings' }])).toBe(
       'bass-ex-open-strings',
     );
-    const clap = getSong('clap-basic');
-    expect(defaultSongId('clap', [{ id: clap.meta.title }, { id: 'q' }], 'clap')).toBe(
-      clap.meta.title,
+    expect(defaultSongId('clap', [{ id: 'clap-waltz' }, { id: 'ex-clap-quarters' }], 'clap')).toBe(
+      'ex-clap-quarters',
     );
   });
 });

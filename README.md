@@ -238,7 +238,8 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
 - **Play-along music** (same places, off by default): quiet music under a song, for headphones, in twelve
   feels: a bass line, bass and chords, soft chords, broken chords (arpeggio), a lullaby, a waltz
   (oom-pah-pah), folk boom-chick, a march, a walking bass, bossa nova and reggae. **Match the song** picks
-  from them by tempo, meter and mood, and a long song changes feel every eight bars, with a step into the
+  from them by tempo, meter and mood, and a song of sixteen bars or more changes feel every eight bars
+  (a feel you pick yourself stays the same all the way through), with a step into the
   next chord at the end of each phrase. A chord song uses its own chords; a melody is harmonised a bar at
   a time from the notes in the bar (I, ii, iii, IV, V or vi of its key), ending at home; a rhythm gets none.
 - **Drone** (Singline and Windline): the key note, with its fifth or octave, or a plucked **tanpura**.
