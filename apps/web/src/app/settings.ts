@@ -13,13 +13,17 @@ import {
 } from '@lineup/core';
 import { isVoiceChoice } from './voice-range';
 
-/** How much backing music plays under a song. */
-export type Accompaniment = 'off' | 'bass' | 'full';
+/** What backing music plays under a song (a feel, `auto` to match the song, or off). */
+export type Accompaniment = 'off' | AccompanimentLevel;
 
+import { ACCOMPANIMENT_FEELS, type AccompanimentLevel } from './game/accompaniment';
 import { DRONES, type Drone } from './game/backing';
 import { DRUM_STYLES, type DrumStyle } from './game/drums';
 
-export const ACCOMPANIMENTS: readonly Accompaniment[] = ['off', 'bass', 'full'];
+export const ACCOMPANIMENTS: readonly Accompaniment[] = [
+  'off',
+  ...ACCOMPANIMENT_FEELS.map((f) => f.id),
+];
 
 /** Weekly practice goals offered, in minutes (0 for none). */
 export const GOAL_MINUTES: readonly number[] = [0, 15, 30, 60, 120];

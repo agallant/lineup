@@ -231,11 +231,19 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
 - **Options** (`#/options`): colours (dark, light, high contrast), metronome, guide tone, jingles, play-along backing, weekly goal, text size, scoring strictness, Windline
   octaves and fingerings, chord checking, the debug overlay; reset options, erase scores or progress
   (two taps), and save or restore a **backup file** of everything the app keeps.
-- **Drum loop** (Options, off by default): a quiet _rock_ or _bossa nova_ beat under Singline, Windline and Strumline songs (a waltz gets a kick and two ticks). Beatline never plays it, since the mic would hear it.
-- **Play-along backing** (Options, off by default): quiet music under a song, for headphones. _Bass
-  line_ plays the root of each bar's chord (and the fifth half way through); _Bass and chords_ adds
-  the chord softly. A chord song uses its own chords; a melody is harmonised a bar at a time from the
-  notes in the bar (I, ii, iii, IV, V or vi of its key), ending at home; a rhythm gets none.
+- **Drums** (Options and each game's set-up page, off by default): a quiet loop under Singline, Windline,
+  Strumline, Bassline and Keyline songs, in eleven feels (rock, pop, ballad, folk boom-chick, shuffle,
+  disco, funk, march, reggae one drop, bossa nova) or **Match the song**, which picks a feel from the song's
+  tempo and meter. Every feel varies its kick every other bar and the busier ones play a fill at the end of
+  each four-bar phrase; a waltz gets a kick and two ticks. The same song always gets the same drums, and
+  every random song its own. Beatline never plays them, since the mic would hear it.
+- **Play-along music** (same places, off by default): quiet music under a song, for headphones, in twelve
+  feels: a bass line, bass and chords, soft chords, broken chords (arpeggio), a lullaby, a waltz
+  (oom-pah-pah), folk boom-chick, a march, a walking bass, bossa nova and reggae. **Match the song** picks
+  from them by tempo, meter and mood, and a long song changes feel every eight bars, with a step into the
+  next chord at the end of each phrase. A chord song uses its own chords; a melody is harmonised a bar at
+  a time from the notes in the bar (I, ii, iii, IV, V or vi of its key), ending at home; a rhythm gets none.
+- **Drone** (Singline and Windline): the key note, with its fifth or octave, or a plucked **tanpura**.
 
 ## Singline (voice) on the iPad
 
