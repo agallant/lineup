@@ -3,6 +3,7 @@ import {
   grooveChart,
   melodyChart,
   melodyNotes,
+  parseAbc,
   rateChart,
   strumChart,
   type Chart,
@@ -31,6 +32,8 @@ export type UserSong = { id: string; title: string; bpm: number } & (
       key: number;
       /** Notes in the melody notation: "C4 D4 E4:2 r:1". */
       notes: string;
+      /** Words to sing, one syllable for each note, separated by spaces; empty for none. */
+      lyrics?: string;
     }
   | {
       kind: 'chords';
@@ -166,7 +169,8 @@ function sanitize(raw: unknown): UserSong | null {
     const key = r['key'];
     if (notes === null || typeof key !== 'number' || !Number.isInteger(key) || key < 0 || key > 11)
       return null;
-    return { ...base, kind: 'melody', key, notes };
+    const lyrics = clampText(r['lyrics'] ?? '', MAX_SONG_TEXT);
+    return { ...base, kind: 'melody', key, notes, ...(lyrics ? { lyrics } : {}) };
   }
   if (r['kind'] === 'chords') {
     const bars = clampText(r['bars'], MAX_SONG_TEXT);
@@ -285,4 +289,62 @@ export function lookupUserSong(
   const compiled = compileSong(song);
   if (!compiled.ok) return null;
   return { title: song.title, rating: rateChart(compiled.charts[0]!.chart).score };
+}
+
+/** The prefix of a song shared as text, so it is recognised when pasted back. */
+const SHARE_PREFIX = 'LINEUP-SONG-1';
+
+/**
+ * A song as one block of text that can be sent in a message or kept in a note and pasted into
+ * another copy of the app. It carries the song's text, never its scores.
+ */
+export function songToText(song: UserSong): string {
+  return `${SHARE_PREFIX} ${JSON.stringify(withoutId(song))}`;
+}
+
+/** A song without its id: the form it is shared and imported in. */
+function withoutId(song: UserSong): NewUserSong {
+  const copy: Record<string, unknown> = { ...song };
+  delete copy['id'];
+  return copy as NewUserSong;
+}
+
+/** What pasted text turned out to be: a song to save, or the reason it is not one. */
+export type ImportedSong = { ok: true; song: NewUserSong } | { ok: false; error: string };
+
+/**
+ * Reads pasted text as a song: a block made by {@link songToText}, or a tune in ABC notation. Does
+ * not save it; the caller shows it for the player to check first.
+ */
+export function songFromText(text: string): ImportedSong {
+  const t = text.trim();
+  if (t === '') return { ok: false, error: 'Paste a song first.' };
+  if (t.startsWith(SHARE_PREFIX)) {
+    try {
+      const raw = JSON.parse(t.slice(SHARE_PREFIX.length)) as unknown;
+      if (typeof raw !== 'object' || raw === null) throw new Error('not an object');
+      const song = sanitize({ ...(raw as object), id: 'my-import' });
+      if (!song) return { ok: false, error: 'That does not look like a song from this app.' };
+      const compiled = compileSong(song);
+      if (!compiled.ok) return { ok: false, error: compiled.error };
+      return { ok: true, song: withoutId(song) };
+    } catch {
+      return { ok: false, error: 'That song text is damaged: copy it again in full.' };
+    }
+  }
+  try {
+    const tune = parseAbc(t);
+    const song: NewUserSong = {
+      kind: 'melody',
+      title: tune.title.slice(0, 80),
+      bpm: tune.bpm,
+      key: tune.key,
+      notes: tune.notes,
+      ...(tune.lyrics ? { lyrics: tune.lyrics } : {}),
+    };
+    const compiled = compileSong({ ...song, id: 'my-import' });
+    return compiled.ok ? { ok: true, song } : { ok: false, error: compiled.error };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
 }

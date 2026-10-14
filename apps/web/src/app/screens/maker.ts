@@ -1,4 +1,5 @@
-import { SongClock, getProfile, type Chart } from '@lineup/core';
+import { SongClock, getProfile, transposeNotation, type Chart } from '@lineup/core';
+import { copyText } from '../clipboard';
 import { escapeHtml } from '../audio';
 import { planAllBacking, playBacking, rhythmTones, type BackingHandle } from '../game/backing';
 import type { Screen } from '../router';
@@ -9,6 +10,9 @@ import {
   UserSongStore,
   compileSong,
   describeCompiled,
+  songFromText,
+  songToText,
+  type NewUserSong,
   type UserSong,
 } from '../user-songs';
 
@@ -55,6 +59,16 @@ export const makerScreen: Screen = (root) => {
           (k, i) => `<option value="${i}">${k} major</option>`,
         ).join('')}</select></label></div>
         <label class="block">Notes <textarea data-id="notes" rows="5" spellcheck="false"></textarea></label>
+        <div class="row" role="group" aria-label="Move the melody to another key">
+          <span class="label">Move to another key</span>
+          <button data-move="-12">Octave down</button>
+          <button data-move="-1">Semitone down</button>
+          <button data-move="1">Semitone up</button>
+          <button data-move="12">Octave up</button>
+        </div>
+        <label class="block">Words to sing (optional) <textarea data-id="lyrics" rows="2" spellcheck="false"></textarea></label>
+        <p class="muted">One syllable for each note, separated by spaces: <code>Twin kle twin kle</code>.
+          They show under the notes while you sing.</p>
         <p class="muted">Note names with an octave: <code>C4</code> is middle C. A colon gives the length in
           beats: <code>E4:2</code> is two beats, <code>G4:.5</code> half a beat, <code>A4:1/3</code> a third.
           <code>r:1</code> is a rest, <code>#</code> and <code>b</code> make sharps and flats (<code>F#4</code>).
@@ -89,6 +103,15 @@ export const makerScreen: Screen = (root) => {
         <button class="primary" data-id="save">Save song</button>
         <button data-id="new">Start a new one</button>
       </div>
+    </section>
+
+    <section class="panel">
+      <h2>Paste a song</h2>
+      <p class="muted">Paste a tune in ABC notation (from a tune book or folk-tune site), or a song copied
+        from another copy of this app. You can check it and change it before saving.</p>
+      <label class="block">Song text <textarea data-id="paste" rows="5" spellcheck="false"></textarea></label>
+      <div class="row"><button data-id="read-paste">Read it</button></div>
+      <p class="status" data-id="paste-status" role="status"></p>
     </section>
 
     <section class="panel">
@@ -127,15 +150,23 @@ export const makerScreen: Screen = (root) => {
         stepsPerBeat: text('steps').value === '3' ? 3 : 2,
       };
     }
-    return { ...base, kind: 'melody', key: Number(text('key').value), notes: text('notes').value };
+    const lyrics = text('lyrics').value.trim();
+    return {
+      ...base,
+      kind: 'melody',
+      key: Number(text('key').value),
+      notes: text('notes').value,
+      ...(lyrics ? { lyrics } : {}),
+    };
   };
 
-  const fill = (song: UserSong | null): void => {
+  const fill = (song: NewUserSong | null): void => {
     text('title').value = song?.title ?? '';
     text('bpm').value = String(song?.bpm ?? 100);
     text('kind').value = song?.kind ?? 'melody';
     text('key').value = String(song?.kind === 'melody' ? song.key : 0);
     text('notes').value = song?.kind === 'melody' ? song.notes : EXAMPLES.melody;
+    text('lyrics').value = song?.kind === 'melody' ? (song.lyrics ?? '') : '';
     text('bars').value = song?.kind === 'chords' ? song.bars : EXAMPLES.chords;
     text('pattern').value = song?.kind === 'chords' ? song.pattern : 'D . D U . U D U';
     text('beats').value = String(song?.kind === 'chords' ? song.beatsPerBar : 4);
@@ -143,7 +174,11 @@ export const makerScreen: Screen = (root) => {
     text('lanes').value = song?.kind === 'rhythm' ? song.lanes : EXAMPLES.rhythm;
     text('steps').value = String(song?.kind === 'rhythm' ? song.stepsPerBeat : 2);
     editing = song?.id ?? null;
-    $('form-title').textContent = song ? `Editing “${song.title}”` : 'New song';
+    $('form-title').textContent = song
+      ? editing
+        ? `Editing “${song.title}”`
+        : `New song: “${song.title}”`
+      : 'New song';
     refresh();
   };
 
@@ -171,7 +206,7 @@ export const makerScreen: Screen = (root) => {
             <span class="muted">${
               s.kind === 'melody' ? 'Melody' : s.kind === 'chords' ? 'Chord song' : 'Rhythm'
             } · ${s.bpm} bpm</span></span>
-          <span class="row"><button data-act="edit">Edit</button><button data-act="delete" class="danger">Delete</button></span>
+          <span class="row"><button data-act="edit">Edit</button><button data-act="copy">Copy as text</button><button data-act="delete" class="danger">Delete</button></span>
         </li>`,
       )
       .join('');
@@ -210,6 +245,7 @@ export const makerScreen: Screen = (root) => {
     'kind',
     'key',
     'notes',
+    'lyrics',
     'bars',
     'pattern',
     'beats',
@@ -220,6 +256,32 @@ export const makerScreen: Screen = (root) => {
     $(id).addEventListener('input', refresh);
     $(id).addEventListener('change', refresh);
   }
+  // move the melody up or down: every note, and the key with it
+  for (const b of root.querySelectorAll<HTMLButtonElement>('button[data-move]')) {
+    b.addEventListener('click', () => {
+      const by = Number(b.dataset['move']);
+      try {
+        text('notes').value = transposeNotation(text('notes').value, by);
+        text('key').value = String((((Number(text('key').value) + by) % 12) + 12) % 12);
+      } catch {
+        // the notes do not parse yet: the preview says why, and nothing moves
+      }
+      refresh();
+    });
+  }
+  $('read-paste').addEventListener('click', () => {
+    const imported = songFromText(text('paste').value);
+    const status = $('paste-status');
+    status.classList.toggle('error', !imported.ok);
+    if (!imported.ok) {
+      status.textContent = imported.error;
+      return;
+    }
+    stop();
+    fill(imported.song);
+    status.textContent = `Read “${imported.song.title}”. Check it above, then save.`;
+    window.scrollTo({ top: 0 });
+  });
   $('hear').addEventListener('click', hear);
   $('new').addEventListener('click', () => {
     stop();
@@ -252,6 +314,15 @@ export const makerScreen: Screen = (root) => {
       const song = store.get(id);
       if (song) fill(song);
       window.scrollTo({ top: 0 });
+    } else if (button.dataset['act'] === 'copy') {
+      const song = store.get(id);
+      if (!song) return;
+      void copyText(songToText(song)).then((ok) => {
+        $('preview').textContent = ok
+          ? `Copied “${song.title}” as text. Paste it into a message, or into Paste a song on another device.`
+          : 'Could not copy. Select the text in Paste a song instead.';
+        if (!ok) text('paste').value = songToText(song);
+      });
     } else {
       store.delete(id);
       if (editing === id) fill(null);

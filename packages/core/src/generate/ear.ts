@@ -1,9 +1,12 @@
 import { createRng, pick, type Rng } from './random';
 
-/** The ear-training exercises: name an interval, or the kind of chord. */
-export type EarKind = 'intervals' | 'chords';
+/**
+ * The ear-training exercises: name an interval, the kind of chord, or which note of the key a note
+ * is (after hearing the key, like singing do-re-mi by ear).
+ */
+export type EarKind = 'intervals' | 'chords' | 'degrees';
 
-export const EAR_KINDS: readonly EarKind[] = ['intervals', 'chords'];
+export const EAR_KINDS: readonly EarKind[] = ['intervals', 'chords', 'degrees'];
 
 export type EarLevel = 'easy' | 'medium' | 'hard';
 
@@ -19,6 +22,24 @@ export const isEarLevel = (v: unknown): v is EarLevel =>
 export const EAR_LABELS: Readonly<Record<EarKind, string>> = {
   intervals: 'Intervals: how far apart are two notes?',
   chords: 'Chords: major, minor and friends',
+  degrees: 'Name that note: which note of the key? (do, re, mi...)',
+};
+
+/** The notes of the major scale by their solfège names and semitones above the key note. */
+const DEGREES: readonly { name: string; semitones: number }[] = [
+  { name: 'Do', semitones: 0 },
+  { name: 'Re', semitones: 2 },
+  { name: 'Mi', semitones: 4 },
+  { name: 'Fa', semitones: 5 },
+  { name: 'Sol', semitones: 7 },
+  { name: 'La', semitones: 9 },
+  { name: 'Ti', semitones: 11 },
+];
+
+const DEGREE_POOL: Readonly<Record<EarLevel, readonly string[]>> = {
+  easy: ['Do', 'Mi', 'Sol'],
+  medium: ['Do', 'Re', 'Mi', 'Sol', 'La'],
+  hard: ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Ti'],
 };
 
 /** An interval by its size in semitones. */
@@ -68,6 +89,8 @@ export interface EarQuestion {
   notes: number[];
   /** Play the notes one after another (an interval), or all together (a chord). */
   together: boolean;
+  /** Notes played first to set the key (a name-that-note question), then a pause. */
+  lead?: number[];
   /** The names to choose from, in a steady order. */
   choices: string[];
   answer: string;
@@ -75,9 +98,10 @@ export interface EarQuestion {
 
 /** The names a level offers for a kind, in a steady order. */
 export function earChoices(kind: EarKind, level: EarLevel): string[] {
-  return kind === 'intervals'
-    ? INTERVAL_POOL[level].map((s) => INTERVALS.find((i) => i.semitones === s)!.name)
-    : [...CHORD_POOL[level]];
+  if (kind === 'intervals') {
+    return INTERVAL_POOL[level].map((s) => INTERVALS.find((i) => i.semitones === s)!.name);
+  }
+  return kind === 'degrees' ? [...DEGREE_POOL[level]] : [...CHORD_POOL[level]];
 }
 
 /** The next question, not the same answer twice in a row. */
@@ -104,6 +128,12 @@ export function earQuestion(
     const notes = falling ? [root + semitones, root] : [root, root + semitones];
     return { kind, notes, together: false, choices, answer };
   }
+  if (kind === 'degrees') {
+    const semitones = DEGREES.find((d) => d.name === answer)!.semitones;
+    // the key is set by its arpeggio (do, mi, sol, do), then one note of the scale is asked
+    const lead = [root, root + 4, root + 7, root + 12];
+    return { kind, notes: [root + semitones], together: false, lead, choices, answer };
+  }
   const chord = CHORDS.find((c) => c.name === answer)!;
   return { kind, notes: chord.steps.map((s) => root + s), together: true, choices, answer };
 }
@@ -121,7 +151,7 @@ export const earId = (kind: EarKind, level: EarLevel): string => `ear-${kind}-${
 
 /** The title of a round from its id, or null if it is not one. */
 export function earTitle(id: string): string | null {
-  const m = /^ear-(intervals|chords)-(easy|medium|hard)$/.exec(id);
+  const m = /^ear-(intervals|chords|degrees)-(easy|medium|hard)$/.exec(id);
   if (!m) return null;
   const level = m[2]!;
   return `Ear training: ${m[1]}, ${level}`;

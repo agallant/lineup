@@ -148,6 +148,8 @@ export const homeScreen: Screen = (root) => {
     <ul class="menu">
       <li><a class="card" href="#/make" data-id="make-link"><strong>My songs</strong>
         <span>Write your own melody, chord song or rhythm as text; it appears in the song menus.</span></a></li>
+      <li><a class="card" href="#/free" data-id="free-link"><strong>Free play</strong>
+        <span>A metronome and a take recorded and played back on this device. No song, no score.</span></a></li>
     </ul>
 
     <h2>Set up <small>once per device or instrument</small></h2>

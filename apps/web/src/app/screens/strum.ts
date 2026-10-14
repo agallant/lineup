@@ -1,4 +1,4 @@
-import { ukuleleStrumPerformer } from '@lineup/sim';
+import { ukuleleNotePerformer, ukuleleStrumPerformer } from '@lineup/sim';
 import { createHitScreen } from './hit';
 
 export const strumScreen = createHitScreen({
@@ -17,5 +17,8 @@ export const strumScreen = createHitScreen({
   micPrompt:
     'Tap “Start mic”, then strum near the device. Every strum appears below (with its chord when chord checking is on).',
   bleedWarning: 'if the click is on. The mic hears the speaker as strums.',
-  demo: () => ({ performer: ukuleleStrumPerformer, model: null }),
+  demo: (_profile, options) => ({
+    performer: options?.pitched ? ukuleleNotePerformer() : ukuleleStrumPerformer,
+    model: null,
+  }),
 });

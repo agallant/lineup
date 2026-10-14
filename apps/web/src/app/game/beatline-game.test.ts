@@ -4,6 +4,8 @@ import {
   chordShapesFor,
   getProfile,
   getSong,
+  pickedMelodyChart,
+  withPluckPitches,
   type Chart,
   type TimeSource,
   type TimbreModel,
@@ -14,6 +16,7 @@ import {
   enrollSynthetic,
   percussionPerformer,
   renderPerformance,
+  ukuleleNotePerformer,
   ukuleleStrumPerformer,
   type HitSound,
 } from '@lineup/sim';
@@ -241,5 +244,91 @@ describe('strums (Strumline uses the same game)', () => {
     expect(formatHits(on.game.monitor, on.time.currentTime)).toMatch(/strum {2}chord C \(\d+%\)/);
     const off = playStrums(false);
     expect(formatHits(off.game.monitor, off.time.currentTime)).toMatch(/strum {2}chord –/);
+  });
+});
+
+describe('BeatlineGame judging plucked notes by pitch', () => {
+  const strum = getProfile('ukulele-strum');
+  const noteProfile = getProfile('ukulele-note');
+  const tune = withPluckPitches(
+    pickedMelodyChart(
+      { title: 'p', bpm: 90, instruments: ['ukulele-strum'] },
+      'C4 E4 G4 E4 C4 G4 A4 G4 E4 C4',
+    ),
+  );
+
+  /** Plays the chart on a simulated ukulele through the analyzer into the game, pitch judged. */
+  function play(wrong: number[] = []) {
+    const perf = renderPerformance(tune, ukuleleNotePerformer(), {
+      latency: OFFSET,
+      ctxStart: 3.25,
+      override: (n, i) => (wrong.includes(i) ? { ...n, pitch: n.pitch! + 2 } : n),
+    });
+    const time = new Time();
+    const clock = new SongClock(time);
+    time.currentTime = perf.ctxStart;
+    clock.start(perf.songStart);
+    const game = new BeatlineGame({
+      chart: tune,
+      profile: strum,
+      clock,
+      latencyOffset: OFFSET,
+      model: null,
+      pitched: noteProfile,
+    });
+    const analyzer = new InputAnalyzer(SR, analyzerOptionsFromProfile(strum));
+    const startFrame = Math.round(perf.ctxStart * SR);
+    let nextFrame = perf.ctxStart + 1 / 60;
+    for (let n = 0; n < perf.signal.length; n += 128) {
+      const block = perf.signal.subarray(n, Math.min(n + 128, perf.signal.length));
+      for (const msg of analyzer.process(block, startFrame + n)) game.handleMessage(msg);
+      time.currentTime = perf.ctxStart + (n + block.length) / SR;
+      while (time.currentTime >= nextFrame) {
+        game.update();
+        nextFrame += 1 / 60;
+      }
+    }
+    game.update();
+    game.finish();
+    return game;
+  }
+
+  it('scores the right notes perfect', () => {
+    const game = play();
+    expect(game.session.score.counts).toEqual({ perfect: tune.notes.length, good: 0, miss: 0 });
+    expect(game.strays).toBe(0);
+  });
+
+  it('does not accept a tap with no pitch as a note', () => {
+    const time = new Time();
+    const clock = new SongClock(time);
+    time.currentTime = 1;
+    clock.start(0);
+    const game = new BeatlineGame({
+      chart: tune,
+      profile: strum,
+      clock,
+      latencyOffset: 0,
+      model: null,
+      pitched: noteProfile,
+    });
+    // a noisy onset at the first note's time, and no pitch frames at all
+    game.handleMessage({
+      type: 'input',
+      event: { time: 1 + tune.notes[0]!.t, velocity: 0.8 },
+    } as never);
+    time.currentTime = 1 + tune.notes.at(-1)!.t + 2;
+    game.update();
+    game.finish();
+    expect(game.session.score.counts.perfect).toBe(0);
+    expect(game.session.score.counts.miss).toBe(tune.notes.length);
+  });
+
+  it('misses the wrong notes, and only those, as wrong pitch', () => {
+    const game = play([3, 6]);
+    const missed = game.judge.judgments.filter((j) => j.grade === 'miss');
+    expect(missed.map((j) => j.noteIndex).sort((a, b) => a - b)).toEqual([3, 6]);
+    expect(missed.every((j) => j.reason === 'wrong-pitch')).toBe(true);
+    expect(game.session.score.counts.perfect).toBe(tune.notes.length - 2);
   });
 });

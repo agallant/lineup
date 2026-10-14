@@ -35,18 +35,20 @@ waits on the ones before it.
 2. **More to play** (done). A larger public-domain and original repertoire in every mode (easy first, then
    harder and chromatic), harder grooves, more flute repertoire, more chord songs, each checked for
    range, fit and rating.
-3. **Practice tools.** Tempo ladders (finish a song at 80%, 90%, 100% in a row); interval singing
+3. **Practice tools** (partly done: tempo ladders for winds and _name that note_ are in; interval
+   singing and the chord-change drills were already exercises; the rest below is kept for later).
+   Tempo ladders (finish a song at 65%, 80%, 100% in a row); interval singing
    (hear a note, sing the note a fourth above it); a "name that note" quiz and a staff view with the
    note names hidden; a chord-change trainer scored on the change; call and response in Beatline; a
    voice range setting (the guide tone in your octave, a "fits your voice" mark). _The voice range is
    small because Singline already counts a note in any octave and folds your pitch for display._
-4. **Make and share (still private).** Transpose in My songs, paste ABC notation, copy a song as text
+4. **Make and share (still private)** (done). Transpose in My songs, paste ABC notation, copy a song as text
    (through the backup file or a message), lyrics under a melody for sing-along.
-5. **Plucked notes judged by pitch** (Strumline). Today a picked note is judged on timing only; judge
+5. **Plucked notes judged by pitch** (done, experimental; Strumline). Today a picked note is judged on timing only; judge
    the string and fret by pitch with the same detector Windline uses, in simulation first.
-6. **Duet and free play.** Two players alternate phrases of one song on one device with separate
+6. **Duet and free play** (done). Two players alternate phrases of one song on one device with separate
    scores; free play with a metronome and a take recorded and played back on the device.
-7. **Quality.** An automated accessibility audit of every screen in CI; performance and offline
+7. **Quality** (done for what can be automated: an axe-core audit of every screen in three colour schemes in the end-to-end job, and a size budget on the build). An automated accessibility audit of every screen in CI; performance and offline
    checks; docstring and test coverage kept up; whatever the real-device list turns up.
 
 Ideas kept for later, none blocking: left-handed layouts, a per-game first-run tour, themed song

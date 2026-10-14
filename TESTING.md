@@ -116,6 +116,39 @@ Items for features still to come are added here as they ship, under the mileston
       Conversation: are they too hard for their star rating?
 - [ ] **Flute songs**: Cedar Wind, Night Fire, Geese Overhead, Thunder Drum: tempo and breath marks feel right.
 
+### Practice tools
+
+- [ ] **Ear training > Name that note**: you hear a short do-mi-sol-do, a pause, then one note; the
+      choices (Do, Mi, Sol at easy) feel answerable and the pause is long enough.
+- [ ] **Windline tempo ladder**: play a song at 65%, 80% and 100% with a clean run each; the results line
+      reads "Tempo ladder: 65% ✓ · 80% ✓ · 100%" and fills in; the third rung shows "climbed!" and a trophy.
+      Say if 90% accuracy is too strict or lenient for a rung.
+
+### Make and share
+
+- [ ] **My songs > Paste a song**: paste a tune from an ABC site (try one with a key signature and a
+      repeat); the notes, key and tempo look right and it plays the way you know it. Say which tunes fail.
+- [ ] **Move to another key** keeps the tune recognisable; **Words to sing** show under the notes in
+      Singline, one syllable per note, and keep up with the singing.
+- [ ] **Copy as text** on a song, then paste it into a message and back into **Paste a song** (on the
+      same or another device): the same song comes back.
+
+### Plucked notes by pitch
+
+- [ ] **Strumline > a picked song (Picking: Ode to Joy)**: tick _Also check the pitch of each plucked
+      note_ and pluck the melody: right notes score, a wrong string or fret is a miss ("Wrong note").
+- [ ] Notes that ring into the next (a wide leap) can be judged wrong when they were right: say which
+      passages (a known limit in simulation).
+- [ ] Does it work with your tuning (re-entrant GCEA, or low-G)? Low-G plays an octave low on the G string.
+
+### Duet and free play
+
+- [ ] **Singline or Windline > Duet**: with a friend, take turns by phrase; "Player 1's turn / Player 2's
+      turn" changes at the right moment, and each player's count matches what you sang.
+- [ ] **Free play**: the metronome keeps a steady beat (check against another metronome at 60 and 120);
+      a recorded take plays back, with the count-in left out; **Save to this device** gives a file you can open.
+- [ ] Free play with the metronome on and no headphones: do the clicks come out in the take?
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

@@ -10,7 +10,7 @@ import {
   type SongClock,
   type TimbreModel,
 } from '@lineup/core';
-import type { AnalyzerMessage } from '@lineup/input';
+import { OnsetPitchAttacher, type AnalyzerMessage } from '@lineup/input';
 import { ANY_LANE, type HitFlash, type RenderView } from '@lineup/render';
 
 /** One detected hit, as the debug overlay shows it. */
@@ -101,6 +101,11 @@ export interface BeatlineGameOptions {
   /** Calibrated latency offset, seconds. */
   latencyOffset: number;
   model: TimbreModel | null;
+  /**
+   * Judge by pitch as well as timing (plucked ukulele notes): a profile whose judgment matches
+   * pitch, such as `ukulele-note`. Each hit then waits a moment for its pitch to be heard.
+   */
+  pitched?: InstrumentProfile;
 }
 
 /** Everything the Beatline screen needs without the DOM. */
@@ -113,26 +118,56 @@ export class BeatlineGame {
   private readonly profile: InstrumentProfile;
   private readonly offset: number;
   private hits: HitFlash[] = [];
+  private readonly attacher: OnsetPitchAttacher | null;
 
-  constructor({ chart, profile, clock, latencyOffset, model }: BeatlineGameOptions) {
+  constructor({ chart, profile, clock, latencyOffset, model, pitched }: BeatlineGameOptions) {
     this.chart = chart;
     this.profile = profile;
     this.clock = clock;
     this.offset = latencyOffset;
     this.monitor = new HitMonitor(profile, model);
-    this.judge = new DiscreteJudge(chart.notes, discreteConfigFromProfile(profile, latencyOffset));
+    this.attacher = pitched ? new OnsetPitchAttacher() : null;
+    this.judge = new DiscreteJudge(
+      chart.notes,
+      discreteConfigFromProfile(pitched ?? profile, latencyOffset),
+    );
     this.session = new GameSession(chart, this.judge, clock);
   }
 
   handleMessage(message: AnalyzerMessage): void {
     const hit = this.monitor.push(message);
+    if (this.attacher) {
+      // the judge gets each onset once its pitch is known; the flash shows at once
+      for (const e of this.attacher.push(message)) this.feedPitched(e);
+      if (hit) this.flash(this.clock.toSongTime(hit.event.time), hit.record);
+      return;
+    }
     if (!hit) return;
     const songTime = this.clock.toSongTime(hit.event.time);
     this.session.feed({ ...hit.event, time: songTime });
+    this.flash(songTime, hit.record);
+  }
+
+  /** Ends the song: onsets still waiting for their pitch are judged first. */
+  finish(): void {
+    for (const e of this.attacher?.flush() ?? []) this.feedPitched(e);
+    this.session.finish();
+  }
+
+  /**
+   * Gives the judge an onset of a pitched game. One whose pitch was never heard (a tap on the body,
+   * a noise) is left out: the judge cannot compare it, and would otherwise accept it as any note.
+   */
+  private feedPitched(e: InputEvent): void {
+    if (!(e.pitch !== undefined && e.pitch > 0)) return;
+    this.session.feed({ ...e, time: this.clock.toSongTime(e.time) });
+  }
+
+  private flash(songTime: number, record: HitRecord): void {
     this.hits.push({
       time: songTime - this.offset,
-      lane: hit.record.lane,
-      velocity: hit.record.velocity,
+      lane: record.lane,
+      velocity: record.velocity,
     });
   }
 

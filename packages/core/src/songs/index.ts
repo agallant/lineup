@@ -103,3 +103,4 @@ export function songsFor(
 
 export { FLUTE_SONGS, LIBRARY } from './library';
 export * from './notation';
+export * from './interchange';

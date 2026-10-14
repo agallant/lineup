@@ -6,10 +6,11 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
 async function loadPlaywright() {
@@ -618,6 +619,26 @@ const scenarios = {
         perfect === 32 && miss === 0,
         `demo ukulele plucks all 32 notes on time (${perfect} perfect, ${miss} missed, grade ${await text(page, 'grade')})`,
       );
+
+      // the same song judged by pitch too: the pitch option shows for a picked song, and the demo
+      // plucker plays every note right
+      await page.click('[data-id=back]');
+      check(await page.isVisible('[data-id=pitch-opt]'), 'the pitch option is offered for picking');
+      await page.check('[data-id=opt-pitch]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 90000 });
+      const pitchedPerfect = Number(await text(page, 'r-perfect'));
+      const wrong = Number(await text(page, 'r-wrongpitch'));
+      check(
+        pitchedPerfect >= 30 && wrong === 0,
+        `demo plucks judged by pitch: ${pitchedPerfect} perfect, ${wrong} wrong notes, ${await text(page, 'r-miss')} missed`,
+      );
+      await page.click('[data-id=back]');
+      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      check(
+        !(await page.isVisible('[data-id=pitch-opt]')),
+        'the pitch option is hidden for a strummed song',
+      );
     });
   },
 
@@ -950,6 +971,163 @@ const scenarios = {
         /Ear training: chords, easy/.test(await text(page, 'rows')),
         'ear: the round is on the scoreboard',
       );
+      // name that note: the choices are solfège names
+      await page.goto(URL_BASE + '#/ear');
+      await page.selectOption('[data-id=kind]', 'degrees');
+      await page.selectOption('[data-id=level]', 'easy');
+      await page.click('[data-id=start]');
+      await page.waitForSelector('[data-id=choices] button');
+      const names = await page.$$eval('[data-id=choices] button', (bs) =>
+        bs.map((b) => b.textContent),
+      );
+      check(
+        names.join(',') === 'Do,Mi,Sol',
+        `ear: name that note offers do, mi and sol (${names.join(',')})`,
+      );
+    });
+  },
+
+  async free() {
+    console.log('\n# Free play: a metronome, a recorded take, and playback on the device');
+    await session(fixtures.sung, async (page) => {
+      await page.goto(URL_BASE + '#/free');
+      await page.fill('[data-id=bpm]', '500');
+      await page.dispatchEvent('[data-id=bpm]', 'change');
+      check(
+        (await page.inputValue('[data-id=bpm]')) === '240',
+        'free: the tempo is kept within range',
+      );
+      await page.click('[data-id=click-toggle]');
+      check(/Stop metronome/.test(await text(page, 'click-toggle')), 'free: the metronome starts');
+      await page.click('[data-id=click-toggle]');
+      check(/Start metronome/.test(await text(page, 'click-toggle')), 'free: and stops');
+      await page.uncheck('[data-id=with-click]');
+      await page.click('[data-id=record]');
+      await page.waitForFunction(
+        () => /Recording/.test(document.querySelector('[data-id=status]')?.textContent ?? ''),
+        null,
+        { timeout: 15000 },
+      );
+      await page.waitForTimeout(1500);
+      await page.click('[data-id=stop]');
+      await page.waitForSelector('[data-id=take]:not([hidden])', { timeout: 15000 });
+      check(
+        (await page.getAttribute('[data-id=player]', 'src'))?.startsWith('blob:') === true,
+        'free: the take is ready to play back',
+      );
+      check(
+        /^take\.(webm|m4a|ogg)$/.test(
+          (await page.getAttribute('[data-id=save]', 'download')) ?? '',
+        ),
+        'free: and can be saved to the device',
+      );
+      await page.click('[data-id=discard]');
+      check(await page.isHidden('[data-id=take]'), 'free: a take can be discarded');
+      await page.goto(URL_BASE + '#/');
+      check((await page.$('[data-id=free-link]')) !== null, 'home: free play is listed');
+    });
+  },
+
+  async duet() {
+    console.log('\n# Duet: two players share the phrases of a song, each with a score');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/sing');
+      await page.selectOption('[data-id=song]', 'sing-ode-to-joy');
+      check(await page.isVisible('[data-id=duet-label]'), 'duet: offered for a song with phrases');
+      await page.check('[data-id=opt-duet]');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=turn]:not([hidden])', { timeout: 20000 });
+      check(
+        /Player [12]'s turn/.test(await text(page, 'turn')),
+        `duet: says whose turn it is (${await text(page, 'turn')})`,
+      );
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const p1 = await text(page, 'r-p1');
+      const p2 = await text(page, 'r-p2');
+      const total = [p1, p2].reduce((n, t) => n + Number(/of (\d+) notes/.exec(t)?.[1] ?? 0), 0);
+      check(total === 30, `duet: each player has a score (${p1} / ${p2})`);
+      check(
+        /wins|tie/.test(await text(page, 'r-duet')),
+        `duet: the result names a winner or a tie (${await text(page, 'r-duet')})`,
+      );
+    });
+  },
+
+  async a11y() {
+    console.log(
+      '\n# Accessibility: every screen audited with axe-core in the dark, light and high-contrast colours',
+    );
+    const axeSource = readFileSync(
+      createRequire(import.meta.url).resolve('axe-core/axe.min.js'),
+      'utf8',
+    );
+    const routes = [
+      '',
+      'learn',
+      'collection',
+      'scores',
+      'options',
+      'help',
+      'make',
+      'free',
+      'tuner',
+      'ear',
+      'mic',
+      'calibrate',
+      'sing',
+      'wind',
+      'beat',
+      'strum',
+    ];
+    await session(null, async (page) => {
+      for (const scheme of ['dark', 'light', 'contrast']) {
+        for (const route of routes) {
+          await page.goto(URL_BASE + '#/' + route);
+          await page.waitForSelector('h1');
+          await page.evaluate((t) => (document.documentElement.dataset.theme = t), scheme);
+          await page.waitForTimeout(300);
+          await page.addScriptTag({ content: axeSource });
+          const result = await page.evaluate(() =>
+            // eslint-disable-next-line no-undef
+            axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'best-practice'] }),
+          );
+          const found = result.violations.filter((v) => v.impact !== 'minor');
+          check(
+            found.length === 0,
+            `a11y ${scheme} #/${route}: ${
+              found.length === 0
+                ? 'no violations'
+                : found
+                    .map((v) => `${v.id} (${v.impact}, ${v.nodes.length}): ${v.nodes[0].target}`)
+                    .join('; ')
+            }`,
+          );
+        }
+      }
+      // the results screen of a played song
+      await page.goto(URL_BASE + '#/sing');
+      await page.selectOption('[data-id=song]', 'sing-hot-cross-buns');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      for (const scheme of ['dark', 'light', 'contrast']) {
+        await page.evaluate((t) => (document.documentElement.dataset.theme = t), scheme);
+        await page.addScriptTag({ content: axeSource });
+        const result = await page.evaluate(() =>
+          // eslint-disable-next-line no-undef
+          axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'best-practice'] }),
+        );
+        const found = result.violations.filter((v) => v.impact !== 'minor');
+        check(
+          found.length === 0,
+          `a11y ${scheme} results screen: ${
+            found.length === 0
+              ? 'no violations'
+              : found.map((v) => `${v.id} (${v.impact}): ${v.nodes[0].target}`).join('; ')
+          }`,
+        );
+      }
     });
   },
 
@@ -1012,6 +1190,47 @@ const scenarios = {
         Number(await text(page, 'r-miss')) === 0,
         'maker: the demo plays the player’s own melody without a miss',
       );
+
+      // paste a tune in ABC notation, move it up a tone, save it, and see its words while singing
+      await page.goto(URL_BASE + '#/make');
+      await page.fill(
+        '[data-id=paste]',
+        'X:1\nT:E2E abc\nL:1/4\nQ:1/4=120\nK:C\nC D E F | G2 E2\nw:one two three four five six',
+      );
+      await page.click('[data-id=read-paste]');
+      check(
+        (await page.inputValue('[data-id=notes]')).startsWith('C4:1 D4:1 E4:1'),
+        'maker: an ABC tune is read into the notes',
+      );
+      check(
+        (await page.inputValue('[data-id=lyrics]')) === 'one two three four five six',
+        'maker: its words come with it',
+      );
+      await page.click('[data-move="1"]');
+      await page.click('[data-move="-1"]');
+      await page.click('[data-move="12"]');
+      check(
+        (await page.inputValue('[data-id=notes]')).startsWith('C5:1 D5:1'),
+        'maker: the melody moves up an octave',
+      );
+      await page.click('[data-move="-12"]');
+      await page.click('[data-id=save]');
+      await page.goto(URL_BASE + '#/sing');
+      const abcValue = await page.evaluate(
+        () =>
+          [...document.querySelectorAll('[data-id=song] option')].find((o) =>
+            o.textContent.startsWith('E2E abc'),
+          ).value,
+      );
+      await page.selectOption('[data-id=song]', abcValue);
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=lyrics]:not([hidden])', { timeout: 20000 });
+      check(
+        /one/.test(await text(page, 'lyrics')),
+        `maker: the words show while singing (${await text(page, 'lyrics')})`,
+      );
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
     });
   },
 
