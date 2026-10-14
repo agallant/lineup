@@ -1,5 +1,5 @@
 import { micSupported, openMic, type MicSession } from '@lineup/input/mic';
-import { escapeHtml } from '../audio';
+import { escapeHtml, closeAudio } from '../audio';
 import { describeError } from '../mic-error';
 import type { Screen } from '../router';
 import { safeLocalStorage } from '../settings';
@@ -352,7 +352,7 @@ export const tunerScreen: Screen = (root) => {
     disposed = true;
     cancelAnimationFrame(raf);
     stopTone();
-    if (own) void own.close();
+    if (own) closeAudio(own);
     void stop();
   };
 };

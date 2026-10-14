@@ -55,3 +55,8 @@ export function playTone(
 export function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
+
+/** Closes an audio context unless it is already closed (closing twice is an error). */
+export function closeAudio(ctx: BaseAudioContext & { close(): Promise<void> }): void {
+  if (ctx.state !== 'closed') void ctx.close().catch(() => undefined);
+}

@@ -313,7 +313,9 @@ button.primary {
   min-height: 44px;
 }
 
-input[type='number'] {
+input[type='number'],
+input[type='search'],
+input[type='text'] {
   font: inherit;
   min-height: 44px;
   padding: 8px;
@@ -322,6 +324,12 @@ input[type='number'] {
   color: var(--text);
   border: 1px solid var(--line);
   width: 7em;
+}
+
+input[type='search'],
+input[type='text'] {
+  width: 12em;
+  max-width: 100%;
 }
 
 /* anyone who asks their device for less motion gets none from the page itself */
@@ -1160,4 +1168,33 @@ main {
 h2.step::before {
   counter-increment: step;
   content: counter(step) '. ';
+}
+
+/* touch targets: folded sections, sliders and file pickers are at least a finger tall */
+summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+input[type='range'] {
+  height: 36px;
+  touch-action: pan-y;
+}
+
+input[type='file'] {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 10px 0;
+}
+
+input[type='file']::file-selector-button {
+  font: inherit;
+  min-height: 36px;
+  padding: 6px 12px;
+  margin-right: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
 }

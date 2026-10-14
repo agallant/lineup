@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|responsive|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|responsive|picker|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1680,6 +1680,80 @@ const scenarios = {
           await page.click('[data-id=stop]');
         }
       }
+    });
+  },
+
+  async picker() {
+    console.log(
+      '\n# Song picker: search, sort, difficulty, random apart from the library, a first song for a new player',
+    );
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/sing');
+      await page.waitForSelector('[data-id=song]');
+      check(
+        (await page.inputValue('[data-id=song]')) === 'sing-hot-cross-buns',
+        `picker: a new singer starts on the first Learn step (${await page.inputValue('[data-id=song]')})`,
+      );
+      const options = () => page.$$eval('[data-id=song] option', (o) => o.map((x) => x.value));
+      const all = await options();
+      check(
+        !all.some((v) => v.startsWith('random-')),
+        'picker: the library list holds no random songs',
+      );
+      await page.click('[data-id=picker-filters] summary');
+      await page.fill('[data-id=picker-query]', 'buns');
+      const found = await options();
+      check(
+        found.length === 1 && found[0] === 'sing-hot-cross-buns',
+        `picker: search finds one song (${found})`,
+      );
+      await page.fill('[data-id=picker-query]', 'zzzz');
+      check(
+        (await page.$$eval('[data-id=song] option:not([disabled])', (o) => o.length)) === 0,
+        'picker: no match says so',
+      );
+      await page.fill('[data-id=picker-query]', '');
+      await page.selectOption('[data-id=picker-sort]', 'az');
+      const az = await page.$$eval('[data-id=song] optgroup:first-of-type option', (o) =>
+        o.map((x) => x.textContent.split(' · ')[0]),
+      );
+      check(
+        JSON.stringify(az) === JSON.stringify([...az].sort((a, b) => a.localeCompare(b))),
+        `picker: A to Z orders the songs (${az.slice(0, 3)}...)`,
+      );
+      await page.selectOption('[data-id=picker-sort]', 'easy');
+      await page.selectOption('[data-id=picker-band]', 'hard');
+      const hard = await options();
+      check(
+        hard.length > 0 && hard.length < all.length,
+        `picker: Hard shows only the harder songs (${hard.length} of ${all.length})`,
+      );
+      await page.selectOption('[data-id=picker-band]', 'all');
+      // random is a different list
+      await page.click('[data-id=src-random]');
+      const random = await options();
+      check(
+        random.length >= 1 && random.every((v) => v.startsWith('random-')),
+        `picker: Random song lists only random songs (${random})`,
+      );
+      check(
+        await page.isHidden('[data-id=picker-filters]'),
+        'picker: the filters hide while random is chosen',
+      );
+      check(
+        await page.isVisible('[data-id=challenge-new]'),
+        'picker: the random song controls appear',
+      );
+      await page.click('[data-id=src-library]');
+      check((await options()).includes('sing-hot-cross-buns'), 'picker: back to the library');
+      // the choices are remembered
+      await page.selectOption('[data-id=picker-sort]', 'hard');
+      await page.reload();
+      await page.waitForSelector('[data-id=song]');
+      check(
+        (await page.inputValue('[data-id=picker-sort]')) === 'hard',
+        'picker: the sort order is remembered',
+      );
     });
   },
 

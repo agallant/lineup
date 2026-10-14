@@ -1,5 +1,5 @@
 import { audioConstraints } from '@lineup/input';
-import { scheduleClicks } from '../audio';
+import { scheduleClicks, closeAudio } from '../audio';
 import {
   BPM_RANGE,
   clampBpm,
@@ -300,6 +300,6 @@ export const freeScreen: Screen = (root) => {
     recorder = null;
     for (const t of stream?.getTracks() ?? []) t.stop();
     clearTake();
-    if (ctx) void ctx.close();
+    if (ctx) closeAudio(ctx);
   };
 };

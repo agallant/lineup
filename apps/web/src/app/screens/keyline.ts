@@ -29,6 +29,7 @@ import {
   type MidiSession,
 } from '../midi-input';
 import { ProgressStore } from '../progress';
+import { closeAudio } from '../audio';
 import type { Screen } from '../router';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { starsBySong } from '../scoreboard';
@@ -160,6 +161,8 @@ export const keylineScreen: Screen = (root) => {
   const stages = { setup: $('stage-setup'), play: $('stage-play'), results: $('stage-results') };
   const show = (name: keyof typeof stages) => {
     for (const [k, el] of Object.entries(stages)) el.hidden = k !== name;
+    // the first-time tip is for the set-up page: while playing the stage gets the whole screen
+    root.querySelector('[data-id=tour]')?.toggleAttribute('hidden', name !== 'setup');
   };
 
   const store = safeLocalStorage();
@@ -483,7 +486,7 @@ export const keylineScreen: Screen = (root) => {
       cleanup = () => {
         finished = true;
         teardown();
-        void ctx.close();
+        closeAudio(ctx);
       };
 
       const finish = () => {
@@ -496,7 +499,7 @@ export const keylineScreen: Screen = (root) => {
       P('stop').addEventListener('click', () => {
         finished = true;
         teardown();
-        void ctx.close();
+        closeAudio(ctx);
         show('setup');
       });
 
@@ -623,11 +626,11 @@ export const keylineScreen: Screen = (root) => {
       const kind = jingleFor(outcome, best.isNewBest);
       try {
         if (kind) playJingle(ctx, kind);
-        else void ctx.close();
+        else closeAudio(ctx);
       } catch {
         // the jingle is a nicety
       }
-    } else void ctx.close();
+    } else closeAudio(ctx);
     const R = (id: string) => stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
     R('again').addEventListener('click', () => run(false));
     R('timed').addEventListener('click', () => {
@@ -693,11 +696,11 @@ export const keylineScreen: Screen = (root) => {
       const kind = jingleFor(outcome, best?.isNewBest ?? false);
       try {
         if (kind) playJingle(ctx, kind);
-        else void ctx.close();
+        else closeAudio(ctx);
       } catch {
         // the jingle is a nicety
       }
-    } else void ctx.close();
+    } else closeAudio(ctx);
     const R = (id: string) => stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
     R('again').addEventListener('click', () => run(demo));
     R('back').addEventListener('click', () => show('setup'));
