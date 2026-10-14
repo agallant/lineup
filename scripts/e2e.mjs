@@ -1254,6 +1254,62 @@ const scenarios = {
         'maker: the demo plays the player’s own melody without a miss',
       );
 
+      // open a MIDI file (C D E F G in G major's neighbour: plain C major), save it, export it again
+      const events = [];
+      for (const [i, pitch] of [60, 62, 64, 65, 67].entries()) {
+        events.push(i === 0 ? 0 : 0, 0x90, pitch, 90, 0x83, 0x60, 0x80, pitch, 0); // note on; off after 480 ticks
+      }
+      const track = [
+        0,
+        0xff,
+        0x51,
+        3,
+        0x07,
+        0xa1,
+        0x20,
+        0,
+        0xff,
+        0x03,
+        4,
+        77,
+        73,
+        68,
+        73,
+        ...events,
+        0,
+        0xff,
+        0x2f,
+        0,
+      ];
+      const midiBytes = Buffer.from([
+        ...[0x4d, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, 0x01, 0xe0],
+        ...[0x4d, 0x54, 0x72, 0x6b, 0, 0, (track.length >> 8) & 255, track.length & 255],
+        ...track,
+      ]);
+      await page.goto(URL_BASE + '#/make');
+      await page.setInputFiles('[data-id=midi-file]', {
+        name: 'tune.mid',
+        mimeType: 'audio/midi',
+        buffer: midiBytes,
+      });
+      await page.waitForSelector('[data-id=midi-use]:not([hidden])');
+      await page.click('[data-id=midi-use]');
+      check(
+        (await page.inputValue('[data-id=notes]')).startsWith('C4:1 D4:1 E4:1 F4:1 G4:1'),
+        `maker: a MIDI file becomes a melody (${await page.inputValue('[data-id=notes]')})`,
+      );
+      check((await page.inputValue('[data-id=title]')) === 'MIDI', 'maker: with the file title');
+      check(Number(await page.inputValue('[data-id=bpm]')) === 120, 'maker: and its tempo');
+      await page.click('[data-id=save]');
+      const [download] = await Promise.all([
+        page.waitForEvent('download'),
+        page.click('li[data-song]:has-text("MIDI") button[data-act=midi]'),
+      ]);
+      check(
+        /\.mid$/.test(download.suggestedFilename()),
+        'maker: a song can be saved as a MIDI file',
+      );
+
       // paste a tune in ABC notation, move it up a tone, save it, and see its words while singing
       await page.goto(URL_BASE + '#/make');
       await page.fill(

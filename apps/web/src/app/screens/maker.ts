@@ -1,4 +1,14 @@
-import { SongClock, getProfile, transposeNotation, type Chart } from '@lineup/core';
+import {
+  SongClock,
+  chartToMidi,
+  getProfile,
+  midiToMelody,
+  midiToRhythm,
+  parseMidi,
+  transposeNotation,
+  type Chart,
+  type MidiFile,
+} from '@lineup/core';
 import { copyText } from '../clipboard';
 import { escapeHtml } from '../audio';
 import { planAllBacking, playBacking, rhythmTones, type BackingHandle } from '../game/backing';
@@ -112,6 +122,14 @@ export const makerScreen: Screen = (root) => {
       <label class="block">Song text <textarea data-id="paste" rows="5" spellcheck="false"></textarea></label>
       <div class="row"><button data-id="read-paste">Read it</button></div>
       <p class="status" data-id="paste-status" role="status"></p>
+      <h3>Or open a MIDI file</h3>
+      <p class="muted">A .mid file from a music program or the web: pick the track with the tune (or the drums) and it becomes a melody or a drum-kit rhythm to check and save. Long files are cut to the first part.</p>
+      <div class="row">
+        <label class="file">Open a MIDI file <input type="file" accept=".mid,.midi,audio/midi,audio/x-midi" data-id="midi-file" /></label>
+        <label data-id="midi-track-label" hidden>Track <select data-id="midi-track"></select></label>
+        <button data-id="midi-use" hidden>Use this track</button>
+      </div>
+      <p class="status" data-id="midi-status" role="status"></p>
     </section>
 
     <section class="panel">
@@ -206,7 +224,7 @@ export const makerScreen: Screen = (root) => {
             <span class="muted">${
               s.kind === 'melody' ? 'Melody' : s.kind === 'chords' ? 'Chord song' : 'Rhythm'
             } · ${s.bpm} bpm</span></span>
-          <span class="row"><button data-act="edit">Edit</button><button data-act="copy">Copy as text</button><button data-act="delete" class="danger">Delete</button></span>
+          <span class="row"><button data-act="edit">Edit</button><button data-act="copy">Copy as text</button><button data-act="midi">Save as MIDI</button><button data-act="delete" class="danger">Delete</button></span>
         </li>`,
       )
       .join('');
@@ -282,6 +300,78 @@ export const makerScreen: Screen = (root) => {
     status.textContent = `Read “${imported.song.title}”. Check it above, then save.`;
     window.scrollTo({ top: 0 });
   });
+  // open a MIDI file: choose a track, and it becomes a melody or a drum-kit rhythm
+  let midi: { file: MidiFile; name: string } | null = null;
+  const midiStatus = $('midi-status');
+  const trackSel = $<HTMLSelectElement>('midi-track');
+  const showTracks = (): void => {
+    if (!midi) return;
+    trackSel.replaceChildren(
+      ...midi.file.tracks.map(
+        (t, i) =>
+          new Option(
+            `${t.name} · ${t.drum ? 'drums' : `channel ${t.channel + 1}`} · ${t.notes.length} notes`,
+            String(i),
+          ),
+      ),
+    );
+    $('midi-track-label').hidden = midi.file.tracks.length < 2;
+    $('midi-use').hidden = false;
+  };
+  $<HTMLInputElement>('midi-file').addEventListener('change', async (e) => {
+    const input = e.target as HTMLInputElement;
+    const picked = input.files?.[0];
+    input.value = '';
+    if (!picked) return;
+    midiStatus.classList.remove('error');
+    try {
+      midi = {
+        file: parseMidi(new Uint8Array(await picked.arrayBuffer())),
+        name: picked.name.replace(/\.midi?$/i, ''),
+      };
+      showTracks();
+      midiStatus.textContent = `Read ${midi.file.tracks.length} ${midi.file.tracks.length === 1 ? 'track' : 'tracks'}. Choose one and tap Use this track.`;
+    } catch (err) {
+      midi = null;
+      $('midi-use').hidden = true;
+      $('midi-track-label').hidden = true;
+      midiStatus.classList.add('error');
+      midiStatus.textContent = err instanceof Error ? err.message : String(err);
+    }
+  });
+  $('midi-use').addEventListener('click', () => {
+    const track = midi?.file.tracks[Number(trackSel.value)];
+    if (!midi || !track) return;
+    const title = (midi.file.title || midi.name || 'MIDI tune').slice(0, 80);
+    const bpm = Math.min(240, Math.max(30, Math.round(midi.file.bpm)));
+    try {
+      stop();
+      if (track.drum) {
+        const r = midiToRhythm(track, midi.file.ppq, midi.file.beatsPerBar);
+        fill({
+          kind: 'rhythm',
+          title,
+          bpm,
+          profile: 'drum-kit',
+          lanes: r.lanes,
+          stepsPerBeat: r.stepsPerBeat,
+        });
+        midiStatus.textContent = `Read ${r.bars} ${r.bars === 1 ? 'bar' : 'bars'} of drums. Check it above, then save.`;
+      } else {
+        const m = midiToMelody(track, midi.file.ppq);
+        fill({ kind: 'melody', title, bpm, key: m.key, notes: m.notes });
+        midiStatus.textContent =
+          m.kept < m.found
+            ? `Used the first ${m.kept} of ${m.found} notes. Check it above, then save.`
+            : `Read ${m.kept} notes. Check it above, then save.`;
+      }
+      midiStatus.classList.remove('error');
+      window.scrollTo({ top: 0 });
+    } catch (err) {
+      midiStatus.classList.add('error');
+      midiStatus.textContent = err instanceof Error ? err.message : String(err);
+    }
+  });
   $('hear').addEventListener('click', hear);
   $('new').addEventListener('click', () => {
     stop();
@@ -314,6 +404,20 @@ export const makerScreen: Screen = (root) => {
       const song = store.get(id);
       if (song) fill(song);
       window.scrollTo({ top: 0 });
+    } else if (button.dataset['act'] === 'midi') {
+      const song = store.get(id);
+      const compiled = song ? compileSong(song) : null;
+      if (!song || !compiled?.ok) return;
+      const bytes = chartToMidi(compiled.charts[0]!.chart);
+      const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'audio/midi' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${song.title.replace(/[^\w -]+/g, '').trim() || 'song'}.mid`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      $('preview').textContent = `Saved “${song.title}” as a MIDI file.`;
     } else if (button.dataset['act'] === 'copy') {
       const song = store.get(id);
       if (!song) return;
