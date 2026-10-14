@@ -1244,6 +1244,23 @@ const scenarios = {
         strays + wrong >= 1 && (await text(page, 'r-miss')) !== '0',
         `keys: stray presses and missed notes are counted (${strays} extra, ${wrong} wrong)`,
       );
+
+      // beginner mode: it asks one step at a time; pressing the asked key moves on
+      await page.click('[data-id=back]');
+      await page.check('[data-id=opt-step]');
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=prompt]:visible', { timeout: 15000 });
+      const codeOf = { C4: 'KeyA', D4: 'KeyS', E4: 'KeyD', F4: 'KeyF', G4: 'KeyG' };
+      for (let i = 0; i < 150; i++) {
+        if (await page.isVisible('[data-id=r-passed]')) break;
+        const prompt = await text(page, 'prompt');
+        const code = codeOf[(/Press (\w+)/.exec(prompt) ?? [])[1]];
+        if (code) await page.keyboard.press(code);
+        await page.waitForTimeout(250);
+      }
+      await page.waitForSelector('[data-id=r-passed]', { timeout: 20000 });
+      const [got, of] = (await text(page, 'r-passed')).split(' of ').map(Number);
+      check(got === of && of >= 5, `keys: beginner mode passes every step (${got} of ${of})`);
     });
   },
 

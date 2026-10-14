@@ -9,11 +9,12 @@ import {
   songsFor,
   type Chart,
 } from '@lineup/core';
-import { createRenderer, fitCanvas, pianoKeyAt, pianoLayout } from '@lineup/render';
+import { createRenderer, fitCanvas, midiName, pianoKeyAt, pianoLayout } from '@lineup/render';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
 import { planAllBacking, playBacking, type BackingHandle } from '../game/backing';
 import { jingleFor, playJingle } from '../game/jingle';
+import { KeyStepGame } from '../game/key-step-game';
 import { KeylineGame } from '../game/keyline-game';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { formatSessionLog } from '../game/session-log';
@@ -74,6 +75,7 @@ const TEMPLATE = `
     <section class="panel">
       <h2>3. Options</h2>
       <label class="check"><input type="checkbox" data-id="opt-sound" /> Make a piano sound when I press a key (turn off if your keyboard makes its own)</label>
+      <label class="check"><input type="checkbox" data-id="opt-step" /> Beginner: one step at a time, no timing (it plays the notes, you press them)</label>
       <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks</label>
       <p data-id="cal-status"></p>
     </section>
@@ -85,6 +87,22 @@ const TEMPLATE = `
   </div>
   <div data-id="stage-play" hidden></div>
   <div data-id="stage-results" hidden></div>
+`;
+
+const STEP_PLAY = `
+  <div class="hud">
+    <div><strong data-id="count"></strong></div>
+    <button data-id="stop">Stop</button>
+  </div>
+  <div class="stage-wrap">
+    <canvas class="stage" data-id="stage" role="img" aria-label="The keys to press, on a piano keyboard"></canvas>
+  </div>
+  <p class="big" data-id="prompt" role="status"></p>
+  <div class="row">
+    <button data-id="hear">Hear it again</button>
+    <button data-id="skip">Skip this one</button>
+  </div>
+  <p class="muted" data-id="keys-hint"></p>
 `;
 
 const PLAY = `
@@ -180,8 +198,15 @@ export const keylineScreen: Screen = (root) => {
     const all = songs();
     return all.find((s) => s.id === songSel.value) ?? all[0]!;
   };
+  const stepBox = $<HTMLInputElement>('opt-step');
+  stepBox.checked = settings.get().stepMode;
+  stepBox.addEventListener('change', () => {
+    settings.update({ stepMode: stepBox.checked });
+    refreshSong();
+  });
   const speed = () => settings.get().speed;
-  const bestKey = () => scoreKey(PROFILE_ID, entry().id, `x${speed()}`);
+  const bestKey = () =>
+    scoreKey(PROFILE_ID, entry().id, `x${speed()}${settings.get().stepMode ? '|step' : ''}`);
   const chartToPlay = (): Chart => rescaleChart(entry().chart, speed());
 
   const stars = starsBySong(scores.entries(), PROFILE_ID);
@@ -261,12 +286,13 @@ export const keylineScreen: Screen = (root) => {
       const ctx = new AudioContext();
       void ctx.resume();
       sessionStart = new Date();
-      stages.play.innerHTML = PLAY;
+      const step = !demo && settings.get().stepMode;
+      stages.play.innerHTML = step ? STEP_PLAY : PLAY;
       show('play');
       const P = <T extends HTMLElement = HTMLElement>(id: string): T =>
         stages.play.querySelector<T>(`[data-id="${id}"]`)!;
       const stage = P<HTMLCanvasElement>('stage');
-      const overlay = P('overlay');
+      const overlay = step ? null : P('overlay');
       const spb = 60 / chart.meta.bpm;
       const countIn = chart.meta.countInBeats * spb;
       const offset = demo
@@ -278,36 +304,45 @@ export const keylineScreen: Screen = (root) => {
       const clock = new SongClock(ctx);
       clock.start(-countIn, ctx.currentTime + 0.6);
       const game = new KeylineGame({ chart, profile, clock, latencyOffset: offset });
+      const stepGame = step ? new KeyStepGame(chart, profile) : null;
       const opts = settings.get();
+      // the step mode always sounds the notes it asks; the player's own presses sound as the option says
       const withSound = soundBox.checked || demo;
-      backing = playBacking(
-        ctx,
-        clock,
-        planAllBacking(chart, {
-          metronome: opts.metronome,
-          guideTone: false,
-          accompaniment: 'off',
-          drums: opts.drums,
-        }),
-      );
+      let passedAt = 0;
+      backing = step
+        ? null
+        : playBacking(
+            ctx,
+            clock,
+            planAllBacking(chart, {
+              metronome: opts.metronome,
+              guideTone: false,
+              accompaniment: 'off',
+              drums: opts.drums,
+            }),
+          );
       const renderer = createRenderer(profile.renderer);
 
       // keys sounding now, so a release can fade the tone
       const voices = new Map<number, () => void>();
       const down = (midiNote: number, ctxTime: number, velocity: number) => {
         if (voices.has(midiNote)) return;
-        game.press(midiNote, ctxTime, velocity);
+        if (stepGame) {
+          if (stepGame.press(midiNote)) passedAt = ctx.currentTime;
+        } else game.press(midiNote, ctxTime, velocity);
         if (withSound) voices.set(midiNote, sound(ctx, midiNote, velocity));
         else voices.set(midiNote, () => undefined);
       };
       const up = (midiNote: number) => {
         game.release(midiNote);
+        stepGame?.release(midiNote);
         voices.get(midiNote)?.();
         voices.delete(midiNote);
       };
       const upAll = () => {
         for (const n of [...voices.keys()]) up(n);
         game.releaseAll();
+        stepGame?.releaseAll();
       };
       const nowCtx = (e: { timeStamp: number }) =>
         toAudioTime(e.timeStamp, performance.now(), ctx.currentTime);
@@ -437,8 +472,49 @@ export const keylineScreen: Screen = (root) => {
         show('setup');
       });
 
+      // beginner mode: the asked keys are played, then waited for
+      let shownFor = -1;
+      const say = () => {
+        if (!stepGame) return;
+        void ctx.resume();
+        for (const m of stepGame.target) {
+          const stop = sound(ctx, m, 0.7);
+          setTimeout(stop, 900);
+        }
+      };
+      if (stepGame) {
+        P('hear').addEventListener('click', () => {
+          stepGame.hearAgain();
+          say();
+        });
+        P('skip').addEventListener('click', () => stepGame.skip());
+      }
+      const stepTick = (sg: KeyStepGame) => {
+        if (sg.done) {
+          if (finished) return;
+          finished = true;
+          teardown();
+          showStepResults(sg, chart, ctx);
+          return;
+        }
+        const { g, width, height } = fitCanvas(stage);
+        renderer.draw(g, { width, height }, sg.view());
+        P('count').textContent = `Step ${sg.index + 1} of ${sg.steps.length}`;
+        P('prompt').textContent =
+          ctx.currentTime - passedAt < 0.8 && passedAt > 0
+            ? 'Got it!'
+            : `Press ${sg.remaining.map((m) => midiName(m)).join(' + ')}`;
+        if (shownFor !== sg.index) {
+          shownFor = sg.index;
+          setTimeout(() => {
+            if (!finished && shownFor === sg.index) say();
+          }, 500);
+        }
+      };
+
       const tick = () => {
         playRaf = requestAnimationFrame(tick);
+        if (stepGame) return stepTick(stepGame);
         const now = clock.now();
         while (queue.length && queue[0]!.at <= now) {
           const p = queue.shift()!;
@@ -457,9 +533,9 @@ export const keylineScreen: Screen = (root) => {
         P('mult').textContent = s.multiplier > 1 ? `×${s.multiplier.toFixed(1)}` : '';
         P('acc').textContent = s.judged ? `${Math.round(s.accuracy * 100)}%` : '–';
         if (now < 0) {
-          overlay.textContent = String(Math.max(1, Math.ceil(-now / spb - 1e-6)));
-          overlay.classList.add('on');
-        } else overlay.classList.remove('on');
+          overlay!.textContent = String(Math.max(1, Math.ceil(-now / spb - 1e-6)));
+          overlay!.classList.add('on');
+        } else overlay!.classList.remove('on');
         if (now > endAt) finish();
       };
       playRaf = requestAnimationFrame(tick);
@@ -470,6 +546,64 @@ export const keylineScreen: Screen = (root) => {
     } finally {
       beginInFlight = false;
     }
+  };
+
+  const showStepResults = (game: KeyStepGame, chart: Chart, ctx: AudioContext) => {
+    const grade = letterGrade(game.accuracy);
+    const best = scores.record(bestKey(), {
+      score: game.passed * 100,
+      accuracy: game.accuracy,
+      grade,
+    });
+    refreshSong();
+    // beginner steps count toward progress, but are rated no higher than the easiest pieces
+    const played = playResultFor(
+      PROFILE_ID,
+      entry().id,
+      chart,
+      { accuracy: game.accuracy, counts: { perfect: game.passed, good: 0, miss: game.skipped } },
+      undefined,
+      speed(),
+    );
+    const outcome = progress.recordPlay({ ...played, rating: Math.min(played.rating, 2) });
+    outcome.newAchievements.push(...grantMilestones(progress, scores.entries()));
+    stages.results.innerHTML = `
+      <section class="panel results">
+        <div class="grade" data-id="grade">${grade}</div>
+        <p class="status" data-id="best-line" role="status">${best.isNewBest ? 'New best!' : describeBest(best.best)}</p>
+        ${rewardHtml(game.accuracy, outcome)}
+        <dl>
+          <dt>Steps passed</dt><dd data-id="r-passed">${game.passed} of ${game.steps.length}</dd>
+          <dt>Skipped</dt><dd data-id="r-skipped">${game.skipped}</dd>
+          <dt>Wrong keys</dt><dd data-id="r-wrong">${game.wrong}</dd>
+          <dt>Heard again</dt><dd data-id="r-hears">${game.hears}</dd>
+        </dl>
+        <p>Ready for more? Turn off “Beginner” to play it in time.</p>
+        <div class="row">
+          <button data-id="again" class="primary">Again</button>
+          <button data-id="timed">Play it in time</button>
+          <button data-id="back">Back to setup</button>
+        </div>
+      </section>`;
+    show('results');
+    if (settings.get().effects) {
+      const kind = jingleFor(outcome, best.isNewBest);
+      try {
+        if (kind) playJingle(ctx, kind);
+        else void ctx.close();
+      } catch {
+        // the jingle is a nicety
+      }
+    } else void ctx.close();
+    const R = (id: string) => stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
+    R('again').addEventListener('click', () => run(false));
+    R('timed').addEventListener('click', () => {
+      settings.update({ stepMode: false });
+      stepBox.checked = false;
+      refreshSong();
+      run(false);
+    });
+    R('back').addEventListener('click', () => show('setup'));
   };
 
   const showResults = (game: KeylineGame, chart: Chart, ctx: AudioContext, demo: boolean) => {
