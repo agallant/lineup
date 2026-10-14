@@ -201,6 +201,15 @@ Items for features still to come are added here as they ship, under the mileston
       Which pieces are too hard or too easy for a beginner?
 - [ ] Learn > **Keyline: first steps** opens the right pieces in order.
 
+### Beginner step mode (Singline, Windline)
+
+- [ ] **Singline > Beginner: one note at a time**: tap Play. It plays the first note; sing it and hold it
+      for a moment: it says "Got it!" and plays the next. Does it hear you reliably? Is the hold time (0.4 s)
+      and the tolerance right for a beginner, or too strict or too loose?
+- [ ] Does the **tone sound in your octave** (voice range in Options)? Is "Hear it again" enough, and does
+      the app stop listening while the tone plays (it should not pass a note from its own speaker)?
+- [ ] Try it in **Windline** with your instrument: does it ask the notes in the instrument's own key?
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:
