@@ -1278,10 +1278,10 @@ const scenarios = {
       );
       await page.click('[data-id=play]');
       await page.waitForSelector('[data-id=count]:visible', { timeout: 15000 });
-      check(/Note 1 of/.test(await text(page, 'count')), 'step: starts on the first note');
+      check(/Step 1 of/.test(await text(page, 'count')), 'step: starts on the first note');
       // the fake singer holds C4: the first note passes by itself
       await page.waitForFunction(
-        () => /Note 2 of/.test(document.querySelector('[data-id=count]')?.textContent ?? ''),
+        () => /Step 2 of/.test(document.querySelector('[data-id=count]')?.textContent ?? ''),
         null,
         { timeout: 20000 },
       );
@@ -1297,6 +1297,62 @@ const scenarios = {
       const passed = Number((await text(page, 'r-passed')).split(' ')[0]);
       check(passed >= 1, `step: results count the passed notes (${await text(page, 'r-passed')})`);
       check(Number(await text(page, 'r-skipped')) >= 1, 'step: skipped notes are counted');
+    });
+    // Strumline: a step is a chord; any strum passes when chords are not checked
+    await session(fixtures.strums, async (page) => {
+      await page.goto(URL_BASE + '#/strum');
+      await page.waitForSelector('[data-id=song]');
+      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await page.check('[data-id=opt-step]');
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () => document.querySelector('[data-id=mic-start]')?.textContent === 'Mic on',
+        null,
+        { timeout: 15000 },
+      );
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=prompt]:visible', { timeout: 15000 });
+      check(
+        /^Strum C \d+ times$/.test(await text(page, 'prompt')),
+        `step: strum asks for a chord (${await text(page, 'prompt')})`,
+      );
+      await page.waitForFunction(
+        () => /Step [2-9] of/.test(document.querySelector('[data-id=count]')?.textContent ?? ''),
+        null,
+        { timeout: 40000 },
+      );
+      check(true, 'step: strumming moves on to the next chord');
+      for (let i = 0; i < 40; i++) {
+        if (await page.isVisible('[data-id=r-passed]')) break;
+        if (await page.isVisible('[data-id=skip]')) await page.click('[data-id=skip]');
+        await page.waitForTimeout(150);
+      }
+      await page.waitForSelector('[data-id=r-passed]', { timeout: 20000 });
+      check(
+        Number((await text(page, 'r-passed')).split(' ')[0]) >= 1,
+        `step: strum results (${await text(page, 'r-passed')})`,
+      );
+    });
+    // Beatline: claps, one step for a run
+    await session(fixtures.claps, async (page) => {
+      await page.goto(URL_BASE + '#/beat');
+      await page.waitForSelector('[data-id=song]');
+      await page.selectOption('[data-id=mode]', 'clap');
+      await page.check('[data-id=opt-step]');
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () => document.querySelector('[data-id=mic-start]')?.textContent === 'Mic on',
+        null,
+        { timeout: 15000 },
+      );
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=prompt]:visible', { timeout: 15000 });
+      await page.waitForFunction(
+        () => /Step [2-9] of/.test(document.querySelector('[data-id=count]')?.textContent ?? ''),
+        null,
+        { timeout: 40000 },
+      );
+      check(true, 'step: clapping moves on to the next step');
     });
     // Bassline: the same, with notes the fake singer cannot play (all skipped)
     await session(fixtures.sung, async (page) => {

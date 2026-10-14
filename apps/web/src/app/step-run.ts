@@ -1,9 +1,11 @@
-import { letterGrade, type Chart, type InstrumentProfile } from '@lineup/core';
+import { chordMidis, letterGrade, type Chart, type InstrumentProfile } from '@lineup/core';
 import { toPitchFrame, type AnalyzerMessage } from '@lineup/input';
 import type { MicSession } from '@lineup/input/mic';
-import { fitCanvas, midiName, type Renderer } from '@lineup/render';
+import { fitCanvas, midiName, type Renderer, type RenderView } from '@lineup/render';
 import { escapeHtml, playTone } from './audio';
-import { midiToHz } from './game/backing';
+import { LANE_PITCH, midiToHz, playTonesNow } from './game/backing';
+import { HitMonitor } from './game/beatline-game';
+import { HitStepGame } from './game/hit-step-game';
 import { jingleFor, playJingle } from './game/jingle';
 import { playResultFor, rewardHtml } from './game/reward';
 import { StepGame } from './game/step-game';
@@ -19,51 +21,143 @@ const STEP_PLAY = `
     <button data-id="stop">Stop</button>
   </div>
   <div class="stage-wrap">
-    <canvas class="stage" data-id="stage" role="img" aria-label="The note to sing or play, on the line, with your pitch beside it"></canvas>
+    <canvas class="stage" data-id="stage" role="img" aria-label="The step to play, shown on the line"></canvas>
   </div>
   <p class="big" data-id="prompt" role="status"></p>
   <div class="row">
     <button data-id="hear">Hear it again</button>
-    <button data-id="skip">Skip this note</button>
+    <button data-id="skip">Skip this one</button>
   </div>
 `;
 
 /** How long each asked note sounds, seconds. */
 const TONE_S = 1;
 
+/** What a step run needs from a game: the asked step, how to sound it, and how to take input. */
+export interface StepEngine {
+  readonly done: boolean;
+  readonly index: number;
+  readonly position: { at: number; of: number };
+  /** What the player has to do now, in words. */
+  readonly prompt: string;
+  view(): RenderView;
+  skip(): void;
+  hearAgain(): void;
+  muteUntil(ctxTime: number): void;
+  /** Takes one analyzer message; true when it completed the step. */
+  handle(message: AnalyzerMessage): boolean;
+  /** Plays the asked step aloud; returns when it ends, on the audio clock. */
+  sound(ctx: AudioContext): number;
+}
+
+/** Pitch games (voice, winds, bass): the asked note is played, and a held pitch passes it. */
+export function pitchEngine(game: StepGame, octave: number, verb: string): StepEngine {
+  return {
+    get done() {
+      return game.done;
+    },
+    get index() {
+      return game.index;
+    },
+    get position() {
+      return game.position;
+    },
+    get prompt() {
+      return `${verb} ${midiName(game.target ?? 0)} and hold it`;
+    },
+    view: () => game.view(),
+    skip: () => game.skip(),
+    hearAgain: () => game.hearAgain(),
+    muteUntil: (t) => game.muteUntil(t),
+    handle: (m) => m.type === 'frame' && game.feed(toPitchFrame(m.frame)),
+    sound(ctx) {
+      const target = game.target;
+      if (target === null) return ctx.currentTime;
+      void playTone(ctx, midiToHz(target + octave), TONE_S, 0.22);
+      return ctx.currentTime + TONE_S;
+    },
+  };
+}
+
+/** Hit games (strumming, drums, claps): the asked chord or drum is played, and played back to pass. */
+export function hitEngine(
+  game: HitStepGame,
+  monitor: HitMonitor,
+  profile: InstrumentProfile,
+): StepEngine {
+  return {
+    get done() {
+      return game.done;
+    },
+    get index() {
+      return game.index;
+    },
+    get position() {
+      return game.position;
+    },
+    get prompt() {
+      return game.prompt;
+    },
+    view: () => game.view(),
+    skip: () => game.skip(),
+    hearAgain: () => game.hearAgain(),
+    muteUntil: (t) => game.muteUntil(t),
+    handle(m) {
+      const hit = monitor.push(m);
+      if (!hit) return false;
+      return game.feed({
+        time: hit.event.time,
+        lane: hit.record.lane || undefined,
+        chord: hit.event.chord,
+      });
+    },
+    sound(ctx) {
+      const s = game.step;
+      if (!s) return ctx.currentTime;
+      if (s.chord) {
+        const midis = chordMidis(profile, s.chord) ?? [];
+        // the strings in turn, quickly, as a strum, and the chord left ringing
+        const tones = midis.map((midi) => ({ midi: midi + 12, duration: 0.9, level: 0.5 }));
+        return playTonesNow(ctx, tones, 0.025);
+      }
+      const midi = LANE_PITCH[s.lane ?? 'hit'] ?? 66;
+      const tones = Array.from({ length: s.count }, () => ({
+        midi,
+        duration: 0.12,
+        level: 1.6,
+        wave: 'triangle' as OscillatorType,
+      }));
+      return playTonesNow(ctx, tones, 0.4);
+    },
+  };
+}
+
 export interface StepRunOptions {
   /** Where the page goes; its content is replaced. */
   container: HTMLElement;
   mic: MicSession;
-  chart: Chart;
-  /** The profile notes are judged by (its pitch tolerance and octave rule). */
-  profile: InstrumentProfile;
+  engine: StepEngine;
   renderer: Renderer;
-  /** Semitones added to the asked note when it is played to the player. */
-  octave: number;
-  /** "Sing or play", "Play": the start of the prompt. */
-  verb: string;
   /** The screen's own handler for analyzer messages (its level meter), called first. */
   forward: (m: AnalyzerMessage) => void;
-  /** All notes are done. */
-  onFinish: (game: StepGame) => void;
+  /** All steps are done. */
+  onFinish: () => void;
   /** Stop was pressed. */
   onStop: () => void;
 }
 
 /**
- * Runs beginner step mode on an open microphone: each note is played aloud and shown, and the player
- * reproduces it (held for a moment) to move on, or skips or hears it again. Returns a function that
- * stops it (the screen's own cleanup).
+ * Runs beginner step mode on an open microphone: each step is played aloud and shown, and the player
+ * reproduces it to move on, or skips it or hears it again. Returns a function that stops it (the
+ * screen's own cleanup).
  */
 export function startStepRun(o: StepRunOptions): () => void {
-  const { container, mic, chart, renderer } = o;
+  const { container, mic, engine, renderer } = o;
   const ctx = mic.ctx;
   container.innerHTML = STEP_PLAY;
   const P = <T extends HTMLElement = HTMLElement>(id: string): T =>
     container.querySelector<T>(`[data-id="${id}"]`)!;
   const stage = P<HTMLCanvasElement>('stage');
-  const game = new StepGame(chart, o.profile);
   let raf = 0;
   let finished = false;
   let shownFor = -1;
@@ -71,12 +165,10 @@ export function startStepRun(o: StepRunOptions): () => void {
   const timers = new Set<ReturnType<typeof setTimeout>>();
 
   const say = () => {
-    const target = game.target;
-    if (target === null) return;
+    if (engine.done) return;
     void ctx.resume();
-    // the microphone must not hear the note from the speaker and pass it
-    game.muteUntil(ctx.currentTime + TONE_S + 0.3);
-    void playTone(ctx, midiToHz(target + o.octave), TONE_S, 0.22);
+    // the microphone must not hear the sound from the speaker and pass it
+    engine.muteUntil(engine.sound(ctx) + 0.3);
   };
   const stop = () => {
     finished = true;
@@ -87,14 +179,14 @@ export function startStepRun(o: StepRunOptions): () => void {
 
   mic.onMessage = (msg) => {
     o.forward(msg);
-    if (msg.type !== 'frame' || finished) return;
-    if (game.feed(toPitchFrame(msg.frame))) passedAt = ctx.currentTime;
+    if (finished) return;
+    if (engine.handle(msg)) passedAt = ctx.currentTime;
   };
   P('hear').addEventListener('click', () => {
-    game.hearAgain();
+    engine.hearAgain();
     say();
   });
-  P('skip').addEventListener('click', () => game.skip());
+  P('skip').addEventListener('click', () => engine.skip());
   P('stop').addEventListener('click', () => {
     stop();
     o.onStop();
@@ -102,24 +194,22 @@ export function startStepRun(o: StepRunOptions): () => void {
 
   const tick = () => {
     raf = requestAnimationFrame(tick);
-    if (game.done) {
+    if (engine.done) {
       if (finished) return;
       stop();
-      o.onFinish(game);
+      o.onFinish();
       return;
     }
     const { g, width, height } = fitCanvas(stage);
-    renderer.draw(g, { width, height }, game.view());
-    const pos = game.position;
-    P('count').textContent = `Note ${pos.at} of ${pos.of}`;
+    renderer.draw(g, { width, height }, engine.view());
+    const pos = engine.position;
+    P('count').textContent = `Step ${pos.at} of ${pos.of}`;
     P('prompt').textContent =
-      ctx.currentTime - passedAt < 0.8 && passedAt > 0
-        ? 'Got it!'
-        : `${o.verb} ${midiName(game.target!)} and hold it`;
-    if (shownFor !== game.index) {
-      shownFor = game.index;
-      // a moment after a pass, so "Got it!" is seen before the next tone
-      const at = game.index;
+      ctx.currentTime - passedAt < 0.8 && passedAt > 0 ? 'Got it!' : engine.prompt;
+    if (shownFor !== engine.index) {
+      shownFor = engine.index;
+      // a moment after a pass, so "Got it!" is seen before the next sound
+      const at = engine.index;
       const t = setTimeout(() => {
         timers.delete(t);
         if (!finished && shownFor === at) say();
@@ -131,9 +221,21 @@ export function startStepRun(o: StepRunOptions): () => void {
   return stop;
 }
 
+/** What the results of a step run read from a finished game. */
+export interface StepResultSource {
+  passed: number;
+  skipped: number;
+  hears: number;
+  accuracy: number;
+  statuses: readonly string[];
+  /** What each step is called (note names, chords, drum sounds). */
+  labels: readonly string[];
+  notes: { length: number };
+}
+
 export interface StepResultsOptions {
   container: HTMLElement;
-  game: StepGame;
+  game: StepResultSource;
   chart: Chart;
   ctx: AudioContext;
   scores: ScoreStore;
@@ -179,14 +281,13 @@ export function showStepResults(o: StepResultsOptions): void {
       <p class="status" data-id="best-line" role="status">${best.isNewBest ? 'New best!' : describeBest(best.best)}</p>
       ${rewardHtml(game.accuracy, outcome)}
       <dl>
-        <dt>Notes passed</dt><dd data-id="r-passed">${game.passed} of ${game.notes.length}</dd>
+        <dt>Steps passed</dt><dd data-id="r-passed">${game.passed} of ${game.notes.length}</dd>
         <dt>Skipped</dt><dd data-id="r-skipped">${game.skipped}</dd>
         <dt>Heard again</dt><dd data-id="r-hears">${game.hears}</dd>
       </dl>
       <div class="strip" data-id="strip">${game.statuses
         .map(
-          (st, i) =>
-            `<span class="cell ${st}" title="${escapeHtml(midiName(game.notes[i]?.pitch ?? 0))}"></span>`,
+          (st, i) => `<span class="cell ${st}" title="${escapeHtml(game.labels[i] ?? '')}"></span>`,
         )
         .join('')}</div>
       <p>Ready for more? Turn off “Beginner” to play it in time.</p>

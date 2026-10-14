@@ -88,8 +88,8 @@ import {
 import { fingeringChartHtml, fingeringStripHtml } from '../game/fingering-view';
 import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
-import type { StepGame } from '../game/step-game';
-import { showStepResults as stepResults, startStepRun } from '../step-run';
+import { StepGame } from '../game/step-game';
+import { pitchEngine, showStepResults as stepResults, startStepRun } from '../step-run';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
@@ -1103,19 +1103,17 @@ export const createPitchScreen =
       // the tone is played in the octave of the player's voice, like the guide tone elsewhere
       const span = chartPitchRange(chart);
       const fit = !c.instruments && span ? voiceFit(span, opts.voiceRange) : null;
+      const game = new StepGame(chart, judgedProfile());
       stepStop = startStepRun({
         container: stages.play,
         mic: m,
-        chart,
-        profile: judgedProfile(),
+        engine: pitchEngine(game, fit ? fit.octave : 0, 'Sing or play'),
         renderer:
           opts.notation === 'staff'
             ? new StaffRenderer({ names: opts.staffNames, flats: preferFlats(chart.meta.tonic) })
             : createRenderer(profile.renderer),
-        octave: fit ? fit.octave : 0,
-        verb: 'Sing or play',
         forward: onSetupMessage,
-        onFinish: (game) => {
+        onFinish: () => {
           m.onMessage = onSetupMessage;
           showStepResults(game, chart, m.ctx);
         },

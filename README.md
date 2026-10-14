@@ -155,9 +155,11 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   guitar in standard tuning plays the ukulele's songs with guitar chords and picks melodies on its own
   strings, shown on six string lines. The tuner has standard, drop D, DADGAD and open G. Drop D, DADGAD and open G
   are modes of their own, with the same chords fingered to sound the same notes.
-- **Beginner mode** (Singline, Windline, Bassline and Keyline, an option on the setup page): no timing at all. Each note of the
-  song is shown on the line and played; sing or play it back and hold it to move on, or skip it. Stars come
-  from the notes passed.
+- **Beginner mode** (every game, an option on the setup page): no timing at all. Each step of the song is
+  shown on the line and played for you, and you play it back to move on (or skip it, or hear it again):
+  a note to sing or play and hold (Singline, Windline, Bassline), the keys to press (Keyline), a chord to
+  strum (Strumline; a run of the same chord is one step) or a drum sound to hit (Beatline). Stars come from
+  the steps passed, rated as the easiest songs.
 - **Keyline** (`#/keys`): learn the keyboard. Notes fall onto a piano keyboard and you press the key as each
   reaches it; chords are several notes at once, judged note by note. Play on a **MIDI keyboard** (Web MIDI:
   Chrome and Edge; Safari on iPad has none), on the on-screen keys (touch, several fingers at once) or on the

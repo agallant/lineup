@@ -55,13 +55,10 @@ Done after the first seven (and Bassline, the bass guitar game, and Keyline, the
 song packs, MIDI in and out, short per-game tips, and Start over in Options. Ideas kept for later, none
 blocking: left-handed layouts (lower priority), more song packs, MIDI folders as packs. (Haptics were considered and dropped: iPad Safari has no vibration API.)
 
-Next up, in this order (asked for by the user):
+Done most recently (asked for by the user):
 
 1. **Guitar in Strumline** (done: standard, drop D, DADGAD and open G).
-2. **Beginner step mode** (done for Singline, Windline, Bassline and Keyline; still to do for Strumline picked
-   notes and chords, and Beatline) in every game: not timed. Each note is shown on the line and played for the
-   player, who plays or sings it back; getting it right moves on to the next, one note at a time. Singline
-   first, then the instrument games, and Beatline once its sounds are taught.
+2. **Beginner step mode** in every game (done).
 
 ## Not buildable without a real instrument or sounds you teach it
 

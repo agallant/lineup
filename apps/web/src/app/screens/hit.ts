@@ -69,7 +69,15 @@ import { BeatlineGame, HitMonitor, formatHits } from '../game/beatline-game';
 import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
-import { showStepResults, startStepRun } from '../step-run';
+import { HitStepGame } from '../game/hit-step-game';
+import { StepGame } from '../game/step-game';
+import {
+  hitEngine,
+  pitchEngine,
+  showStepResults,
+  startStepRun,
+  type StepEngine,
+} from '../step-run';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { UserSongStore, userSongsFor } from '../user-songs';
 import { starsBySong } from '../scoreboard';
@@ -199,7 +207,7 @@ const setup = (c: HitScreenConfig) => `
     </div>
     <label class="check" data-id="chords-opt" ${c.strum ? '' : 'hidden'}><input type="checkbox" data-id="opt-chords" /> Also check the chords (experimental; otherwise only the timing counts)</label>
     <label class="check" data-id="pitch-opt" hidden><input type="checkbox" data-id="opt-pitch" /> Also check the pitch of each plucked note (experimental; otherwise only the timing counts)</label>
-    <label class="check" data-id="step-label" ${c.plucked ? '' : 'hidden'}><input type="checkbox" data-id="opt-step" /> Beginner: one note at a time, no timing (the auto-play demo still plays the normal game)</label>
+    <label class="check" data-id="step-label"><input type="checkbox" data-id="opt-step" /> Beginner: one step at a time, no timing (the auto-play demo still plays the normal game)</label>
     <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks (needs headphones)</label>
     <label class="check"><input type="checkbox" data-id="opt-debug" /> Debug overlay while playing</label>
     <p data-id="cal-status"></p>
@@ -433,7 +441,7 @@ export const createHitScreen =
         randomEntry()?.id ?? songSel.value,
         `${c.strum || c.plucked ? `x${settings.get().speed}${c.strum && settings.get().checkChords ? '+chords' : ''}${c.strum && pitchMode() ? '+pitch' : ''}` : ''}${
           settings.get().variation === 'original' ? '' : `|${settings.get().variation}`
-        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${c.plucked && settings.get().stepMode ? '|step' : ''}${listening() ? `|echo${blind() ? '|blind' : ''}` : ''}${calling() ? '|call' : ''}`,
+        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${settings.get().stepMode ? '|step' : ''}${listening() ? `|echo${blind() ? '|blind' : ''}` : ''}${calling() ? '|call' : ''}`,
       );
     const refreshSong = () => {
       syncParts();
@@ -1215,25 +1223,39 @@ export const createHitScreen =
     const selectedChart = (): Chart =>
       rescaleChart(songChart(), c.strum || c.plucked ? settings.get().speed : 1);
 
-    /** Beginner mode (bass): each note is played and shown, and waited for. No clock, no timing. */
+    /**
+     * Beginner mode: each step (a note, a chord, a drum sound) is played and shown, and waited for.
+     * No clock, no timing. Pitched games (bass) listen for the note; the others for the hit.
+     */
     const runStep = (m: MicSession, chart: Chart) => {
       sessionStart = new Date();
       show('play');
-      // a bass note sounds far below what a small speaker can play: the asked note is played higher
-      const lowest = Math.min(
-        ...chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch])),
-      );
-      const octave = lowest < 48 ? Math.ceil((48 - lowest) / 12) * 12 : 0;
+      const pitched = c.plucked === true;
+      let game: StepGame | HitStepGame;
+      let engine: StepEngine;
+      if (pitched) {
+        // a bass note sounds far below what a small speaker can play: the asked note is played higher
+        const lowest = Math.min(
+          ...chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch])),
+        );
+        const octave = lowest < 48 ? Math.ceil((48 - lowest) / 12) * 12 : 0;
+        const g = new StepGame(chart, profile);
+        game = g;
+        engine = pitchEngine(g, octave, 'Play');
+      } else {
+        const g = new HitStepGame(chart, profile, {
+          needChord: c.strum === true && settings.get().checkChords,
+        });
+        game = g;
+        engine = hitEngine(g, new HitMonitor(profile, model), profile);
+      }
       stepStop = startStepRun({
         container: stages.play,
         mic: m,
-        chart,
-        profile,
+        engine,
         renderer: createRenderer(profile.renderer),
-        octave,
-        verb: 'Play',
         forward: onSetupMessage,
-        onFinish: (game) => {
+        onFinish: () => {
           m.onMessage = onSetupMessage;
           refreshSong();
           showStepResults({
@@ -1247,7 +1269,7 @@ export const createHitScreen =
             bestKey: bestKey(),
             profileId: profile.id,
             songId: songEntry().id,
-            speed: settings.get().speed,
+            speed: c.strum || c.plucked ? settings.get().speed : undefined,
             onAgain: () => void begin(false),
             onTimed: () => {
               settings.update({ stepMode: false });
@@ -1289,16 +1311,16 @@ export const createHitScreen =
             : undefined;
         setupStatus.classList.remove('error');
         demoClaimed = demo;
-        if (!demo && c.plucked && settings.get().stepMode) {
-          const m = await startMic();
-          if (!m) return;
-          runStep(m, heard);
-          return;
-        }
         if (!demo) {
           if (classCount() > 1 && !model) {
             setupStatus.textContent = 'Teach it your sounds first (section 3).';
             setupStatus.classList.add('error');
+            return;
+          }
+          if (settings.get().stepMode) {
+            const m = await startMic();
+            if (!m) return;
+            runStep(m, heard);
             return;
           }
           const m = await startMic();

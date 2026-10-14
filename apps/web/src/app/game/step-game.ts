@@ -5,7 +5,7 @@ import {
   type NoteStatus,
   type PitchFrame,
 } from '@lineup/core';
-import { foldMidiNear, type RenderView, type TrailPoint } from '@lineup/render';
+import { foldMidiNear, midiName, type RenderView, type TrailPoint } from '@lineup/render';
 
 /** How long the right pitch must be held to pass a note, seconds. */
 export const HOLD_S = 0.4;
@@ -30,6 +30,8 @@ export interface StepGameOptions {
  */
 export class StepGame {
   readonly notes: Chart['notes'];
+  /** What each step is called, for the results strip. */
+  readonly labels: string[];
   /** How each note ended, by index. */
   readonly statuses: NoteStatus[];
   /** Hears-again requests so far, over the whole song. */
@@ -54,6 +56,7 @@ export class StepGame {
   ) {
     this.notes = chart.notes.filter((n) => n.pitch !== undefined);
     this.statuses = this.notes.map(() => 'pending' as NoteStatus);
+    this.labels = this.notes.map((n) => midiName(n.pitch!));
     this.hold = hold;
     const p = profile.judgment.pitch;
     this.tolerance = (p?.toleranceCents ?? 50) + EXTRA_CENTS;

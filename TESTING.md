@@ -212,6 +212,8 @@ Items for features still to come are added here as they ship, under the mileston
       the app stop listening while the tone plays (it should not pass a note from its own speaker)?
 - [ ] **Bassline > Beginner**: the asked bass note is played two octaves up so an iPad speaker can play it
       (the screen shows the real note). Does it hear your open E, A, D, G and move on?
+- [ ] **Strumline > Beginner**: it plays the chord, you strum it back (a run of the same chord is one step).
+      Does that feel like a gentle start? **Beatline > Beginner**: it plays the drum sound, you hit it.
 - [ ] Try it in **Windline** with your instrument: does it ask the notes in the instrument's own key?
 
 ### Guitar (Strumline)
