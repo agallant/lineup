@@ -202,6 +202,7 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] **Keyline > Beginner**: it plays the asked note or chord and waits; press the keys to move on. Is that
       a gentle way in? Does the sound of the asked keys come out loud enough, and is "Hear it again" enough?
 - [ ] Learn > **Keyline: first steps** opens the right pieces in order.
+- [ ] **Keyline > Options > Key timing** starts at 0 ms (no audio-latency correction, since keys and MIDI have almost none). Play a steady piece: do hits land on the beat? If presses count early or late, nudge the slider (below 0 = counted later) and note the value that feels right, so the default can be tuned per device.
 
 ### Beginner step mode (Singline, Windline)
 

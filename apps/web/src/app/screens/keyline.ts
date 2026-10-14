@@ -1,7 +1,6 @@
 import {
   SongClock,
   chartEnd,
-  defaultOffsetFromLatencies,
   getProfile,
   letterGrade,
   midiToFrequency,
@@ -50,6 +49,9 @@ const PROFILE_ID = 'keyboard';
 /** Settings keys (in the `songs` map) this screen keeps. */
 const SONG_KEY = 'keyline:keyboard';
 const SOUND_KEY = 'keyline-sound';
+/** Key timing, milliseconds as text: a press is judged this much earlier (+) or later (-). */
+const TIMING_KEY = 'keyline-timing-ms';
+const MAX_TIMING_MS = 150;
 const MIDI_KEY = 'keyline-midi';
 
 const TEMPLATE = `
@@ -87,7 +89,11 @@ const TEMPLATE = `
       <div data-id="backing-box"></div>
       <label class="check"><input type="checkbox" data-id="opt-step" /> Beginner: one step at a time, no timing (it plays the notes, you press them)</label>
       <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks</label>
-      <p data-id="cal-status"></p>
+      <label>Key timing
+        <input type="range" data-id="opt-timing" min="-150" max="150" step="5" value="0" />
+        <output data-id="timing-out">0 ms</output>
+      </label>
+      <p>Keys and MIDI have almost no delay of their own, so this starts at 0. If your presses count too early, move it below 0; too late, above 0. Bluetooth speakers may need a little.</p>
     </section>
     <div class="row">
       <button data-id="play" class="primary">Play</button>
@@ -205,6 +211,18 @@ export const keylineScreen: Screen = (root) => {
   speedSel.value = String(settings.get().speed);
   metroBox.checked = settings.get().metronome;
   soundBox.checked = settings.get().songs[SOUND_KEY] !== 'off';
+  const timingBox = $<HTMLInputElement>('opt-timing');
+  const timingOut = $('timing-out');
+  const savedTiming = Number(settings.get().songs[TIMING_KEY]);
+  timingBox.value = String(
+    Number.isFinite(savedTiming)
+      ? Math.max(-MAX_TIMING_MS, Math.min(MAX_TIMING_MS, savedTiming))
+      : 0,
+  );
+  const showTiming = () => {
+    timingOut.textContent = `${Number(timingBox.value) > 0 ? '+' : ''}${timingBox.value} ms`;
+  };
+  showTiming();
 
   const songs = () => [...songsFor(PROFILE_ID), ...userSongsFor(PROFILE_ID, mine)];
   const entry = () => {
@@ -259,6 +277,10 @@ export const keylineScreen: Screen = (root) => {
     refreshSong();
   });
   metroBox.addEventListener('change', () => settings.update({ metronome: metroBox.checked }));
+  timingBox.addEventListener('input', () => {
+    showTiming();
+    settings.update({ songs: { ...settings.get().songs, [TIMING_KEY]: timingBox.value } });
+  });
   soundBox.addEventListener('change', () =>
     settings.update({
       songs: { ...settings.get().songs, [SOUND_KEY]: soundBox.checked ? 'on' : 'off' },
@@ -327,12 +349,7 @@ export const keylineScreen: Screen = (root) => {
       const overlay = step ? null : P('overlay');
       const spb = 60 / chart.meta.bpm;
       const countIn = chart.meta.countInBeats * spb;
-      const offset = demo
-        ? 0
-        : defaultOffsetFromLatencies({
-            baseLatency: ctx.baseLatency,
-            outputLatency: ctx.outputLatency,
-          });
+      const offset = demo ? 0 : Number(timingBox.value) / 1000;
       const clock = new SongClock(ctx);
       clock.start(-countIn, ctx.currentTime + 0.6);
       const game = new KeylineGame({ chart, profile, clock, latencyOffset: offset });
