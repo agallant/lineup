@@ -68,10 +68,10 @@ export const optionsScreen: Screen = (root) => {
       <div class="row"><label>Drum loop <select data-id="drums">${DRUM_STYLES.map(
         (d) => `<option value="${d}">${DRUM_TEXT[d]}</option>`,
       ).join('')}</select></label></div>
-      <div class="row"><label>Windline drone <select data-id="drone">${DRONES.map(
+      <div class="row"><label>Drone (Singline and Windline) <select data-id="drone">${DRONES.map(
         (d) => `<option value="${d}">${DRONE_TEXT[d]}</option>`,
       ).join('')}</select></label></div>
-      <p class="muted">Backing is quiet music under the song. Use headphones, or the microphone will hear it.</p>
+      <p class="muted">Backing is quiet music under the song; the drone holds the key note low (and its fifth) so you can hear where home is. Use headphones, or the microphone will hear it.</p>
     </section>
 
     <section class="panel">

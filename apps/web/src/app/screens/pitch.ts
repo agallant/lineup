@@ -954,8 +954,11 @@ export const createPitchScreen =
             accompaniment: settings.get().accompaniment,
             drums: settings.get().drums,
             drone: {
-              type: c.instruments ? settings.get().drone : 'off',
-              root: instrumentRoot(instrument()) + extraShift(),
+              type: settings.get().drone,
+              // a wind instrument holds its own key note; Singline holds the key note of the song as sung
+              root: c.instruments
+                ? instrumentRoot(instrument()) + extraShift()
+                : (chart.meta.tonic ?? 60) + keyShiftFor(settings.get(), c.profileId),
             },
           }),
           ...listen.tones,

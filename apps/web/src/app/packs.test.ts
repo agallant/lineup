@@ -13,6 +13,8 @@ describe('song packs', () => {
       'pentatonic',
       'rhythm',
       'gentle',
+      'minor',
+      'originals',
       'chromatic',
       'challenge',
     ]);
