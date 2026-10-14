@@ -1,6 +1,6 @@
 import { chartFromBeats, getProfile } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
-import { PianoRollRenderer, isBlackKey, pianoKeys } from './piano-roll';
+import { PianoRollRenderer, isBlackKey, pianoKeyAt, pianoKeys, pianoLayout } from './piano-roll';
 import { COLORS, createRenderer } from './index';
 import type { Canvas2D, RenderView } from './renderer';
 
@@ -118,5 +118,25 @@ describe('PianoRollRenderer', () => {
         view({ notes: [], statuses: [] }),
       ),
     ).not.toThrow();
+  });
+});
+
+describe('pianoLayout / pianoKeyAt', () => {
+  const size = { width: 700, height: 500 };
+  const notes = [{ pitch: 60 }, { pitch: 72 }];
+  it('finds the key under a point, black keys first', () => {
+    const { keys, keyboardHeight } = pianoLayout(notes, size);
+    const c = keys.find((k) => k.midi === 60)!;
+    const cs = keys.find((k) => k.midi === 61)!;
+    const low = size.height - 5;
+    const high = size.height - keyboardHeight + 5;
+    expect(pianoKeyAt(keys, keyboardHeight, size, c.x + 2, low)).toBe(60);
+    expect(pianoKeyAt(keys, keyboardHeight, size, cs.x + cs.w / 2, high)).toBe(61);
+    // the same x lower down is the white key beneath the black one
+    expect(pianoKeyAt(keys, keyboardHeight, size, cs.x + cs.w / 2, low)).not.toBe(61);
+  });
+  it('is null above the keyboard', () => {
+    const { keys, keyboardHeight } = pianoLayout(notes, size);
+    expect(pianoKeyAt(keys, keyboardHeight, size, 100, 10)).toBeNull();
   });
 });

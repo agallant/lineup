@@ -40,6 +40,14 @@ export const TIPS: Readonly<Record<string, Tip>> = {
       'Start slow with Speed, and try the drum loop in Options for a band feel.',
     ],
   },
+  keyline: {
+    title: 'Playing keys',
+    steps: [
+      'Plug in a MIDI keyboard and tap “Connect”, or use the on-screen keys or A S D F G H J K.',
+      'Notes fall onto the keyboard; press the key as a note reaches it. Chords are several notes at once.',
+      'Start slow with Speed. Turn off the piano sound if your keyboard makes its own.',
+    ],
+  },
   beatline: {
     title: 'Clapping and drumming',
     steps: [

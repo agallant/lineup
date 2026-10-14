@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1194,6 +1194,59 @@ const scenarios = {
     });
   },
 
+  async keys() {
+    console.log(
+      '\n# Keyline: pressed keys judged by pitch and timing (demo player, fake MIDI keyboard)',
+    );
+    await session(null, async (page) => {
+      // a stand-in for a MIDI keyboard: the page can send it note messages
+      await page.addInitScript(() => {
+        const input = { name: 'Test Piano', onmidimessage: null };
+        const access = { inputs: new Map([['a', input]]), onstatechange: null };
+        window.__midiSend = (data) =>
+          input.onmidimessage?.({ data: new Uint8Array(data), timeStamp: performance.now() });
+        navigator.requestMIDIAccess = () => Promise.resolve(access);
+      });
+      await page.goto(URL_BASE + '#/keys');
+      await page.waitForSelector('[data-id=song]');
+      const songs = await page.$$eval('[data-id=song] option', (o) => o.length);
+      check(songs >= 15, `keys: ${songs} pieces and exercises in the menu`);
+      await page.click('[data-id=midi-connect]');
+      await page.waitForFunction(() =>
+        document.querySelector('[data-id=midi-status]').textContent.includes('Test Piano'),
+      );
+      check(true, 'keys: a connected MIDI keyboard is named');
+      await page.selectOption('[data-id=song]', 'keys-ex-five-finger');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForTimeout(3000);
+      await shot(page, 'keys-play');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        perfect >= 5 && miss === 0,
+        `keys: the demo pianist plays the five-finger exercise (${perfect} perfect, ${miss} missed)`,
+      );
+      // now a player of our own: wrong keys from the MIDI keyboard and the computer keyboard
+      await page.click('[data-id=back]');
+      await page.check('[data-id=opt-sound]');
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForTimeout(1500);
+      await page.evaluate(() => window.__midiSend([0x90, 31, 100]));
+      await page.keyboard.press('KeyA');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const strays = Number(await text(page, 'r-strays'));
+      const wrong = Number(await text(page, 'r-wrong'));
+      check(
+        strays + wrong >= 1 && (await text(page, 'r-miss')) !== '0',
+        `keys: stray presses and missed notes are counted (${strays} extra, ${wrong} wrong)`,
+      );
+    });
+  },
+
   async duet() {
     console.log('\n# Duet: two players share the phrases of a song, each with a score');
     await session(null, async (page) => {
@@ -1247,6 +1300,7 @@ const scenarios = {
       'beat',
       'strum',
       'bass',
+      'keys',
     ];
     await session(null, async (page) => {
       for (const scheme of ['dark', 'light', 'contrast']) {

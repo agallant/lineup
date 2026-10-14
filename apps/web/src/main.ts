@@ -6,6 +6,7 @@ import { earScreen } from './app/screens/ear';
 import { startRouter } from './app/router';
 import { SettingsStore, safeLocalStorage } from './app/settings';
 import { bassScreen } from './app/screens/bass';
+import { keylineScreen } from './app/screens/keyline';
 import { beatScreen } from './app/screens/beat';
 import { calibrateScreen } from './app/screens/calibrate';
 import { collectionScreen } from './app/screens/collection';
@@ -46,6 +47,7 @@ startRouter(
     beat: beatScreen,
     strum: strumScreen,
     bass: bassScreen,
+    keys: keylineScreen,
     scores: scoreboardScreen,
     tuner: tunerScreen,
     free: freeScreen,

@@ -11,6 +11,7 @@ const GAME: Record<string, string> = {
   wind: 'Windline',
   'ukulele-strum': 'Strumline',
   bass: 'Bassline',
+  keyboard: 'Keyline',
   clap: 'Beatline',
   'hand-percussion': 'Beatline',
   'drum-kit': 'Beatline',
