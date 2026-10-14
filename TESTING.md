@@ -163,6 +163,15 @@ Items for features still to come are added here as they ship, under the mileston
       wrongly (wrong key, rhythm, wrong track)? **Save as MIDI** opens in GarageBand or a notation app.
 - [ ] **Options > Start over** erases everything and reloads; the first-time tips come back.
 
+### More songs, packs and the Singline drone
+
+- [ ] **Singline > Options > Drone**: with headphones, the key note holds low under a song (and its fifth if
+      chosen) and does not confuse the mic; it matches the key you sang in after a key shift.
+- [ ] New tunes sound like the tunes: Itsy Bitsy Spider, Baa Baa Black Sheep (I wrote these from memory;
+      say if a note is off) and the originals Scale Sprint, Three Steps Up, Dusk in A minor, Leap Frog.
+- [ ] New chord songs (Fiddle tune, Hymn in C, Rainy day) are strummable; the **Minor moods** and **Made for
+      Lineup** packs list sensible songs.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:
