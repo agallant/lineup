@@ -6,3 +6,4 @@ export * from './scope';
 export * from './string-lanes';
 export * from './trail';
 export * from './staff';
+export * from './piano-roll';

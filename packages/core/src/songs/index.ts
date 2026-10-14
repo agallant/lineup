@@ -6,7 +6,8 @@ import { generateGroove, parseGrooveId } from '../generate/groove';
 import { generateMelody, parseMelodyId } from '../generate/melody';
 import { rhythmExercises } from '../generate/rudiments';
 import { BASS_EXERCISES, BASS_SONGS } from './bass';
-import { FLUTE_SONGS, LIBRARY } from './library';
+import { KEY_EXERCISES, KEY_PIECES } from './keys';
+import { FLUTE_SONGS, KEY_TUNES, LIBRARY } from './library';
 import clapBasic from './clap-basic.json';
 import clapTapGroove from './clap-tap-groove.json';
 import drumRock from './drum-rock.json';
@@ -49,6 +50,7 @@ const EXERCISES: Record<string, Chart> = {
   ...exerciseCharts('ukulele-strum'),
   ...chordChangeDrills(),
   ...BASS_EXERCISES,
+  ...KEY_EXERCISES,
   ...rhythmExercises('hand-percussion'),
   ...rhythmExercises('drum-kit'),
   ...rhythmExercises('clap'),
@@ -66,6 +68,8 @@ export const builtinSongs: Readonly<Record<string, Chart>> = {
   ...LIBRARY,
   ...FLUTE_SONGS,
   ...BASS_SONGS,
+  ...KEY_TUNES,
+  ...KEY_PIECES,
   ...EXERCISES,
 };
 
@@ -108,4 +112,5 @@ export { FLUTE_SONGS, LIBRARY } from './library';
 export * from './notation';
 export * from './interchange';
 export * from './bass';
+export * from './keys';
 export * from './midi';

@@ -1,5 +1,6 @@
 import { loadProfile, type InstrumentProfile } from '../profile';
 import bass from './bass.json';
+import keyboard from './keyboard.json';
 import ukuleleNote from './ukulele-note.json';
 import clap from './clap.json';
 import drumKit from './drum-kit.json';
@@ -12,6 +13,7 @@ const RAW: readonly unknown[] = [
   ukuleleStrum,
   ukuleleNote,
   bass,
+  keyboard,
   voice,
   wind,
   clap,

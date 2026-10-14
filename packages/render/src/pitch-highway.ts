@@ -8,6 +8,7 @@ import {
   type Renderer,
 } from './renderer';
 import { PercussionLanesRenderer } from './percussion-lanes';
+import { PianoRollRenderer } from './piano-roll';
 import { StringLanesRenderer } from './string-lanes';
 
 /** Pixel geometry of the pitch highway: now line, time scale, visible MIDI range and plot area. */
@@ -329,5 +330,6 @@ export function describePitch(hz: number | null): { name: string; cents: number 
 export function createRenderer(kind: Renderer['kind']): Renderer {
   if (kind === 'pitch-highway') return new PitchHighwayRenderer();
   if (kind === 'percussion-lanes') return new PercussionLanesRenderer();
+  if (kind === 'piano-roll') return new PianoRollRenderer();
   return new StringLanesRenderer();
 }

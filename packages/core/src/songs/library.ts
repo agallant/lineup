@@ -316,6 +316,9 @@ function tunesFor(
 /** Songs to sing: written as above, from about G3 to F5. */
 export const VOICE_SONGS: Readonly<Record<string, Chart>> = tunesFor('voice', 'sing', 0);
 
+/** Songs for the keyboard: the same tunes as written, in the right hand (the voice-only ones included). */
+export const KEY_TUNES: Readonly<Record<string, Chart>> = tunesFor('keyboard', 'keys', 0);
+
 /** Songs for whistles and recorders: an octave up, so the lowest note is never below the tonic. */
 export const WIND_SONGS: Readonly<Record<string, Chart>> = tunesFor('wind', 'wind', 12, true);
 

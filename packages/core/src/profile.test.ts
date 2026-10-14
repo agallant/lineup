@@ -55,6 +55,7 @@ describe('built-in profiles', () => {
       'clap',
       'drum-kit',
       'hand-percussion',
+      'keyboard',
       'ukulele-note',
       'ukulele-strum',
       'voice',
@@ -95,7 +96,7 @@ describe('built-in profiles', () => {
 
   it('getProfile explains an unknown id', () => {
     expect(() => getProfile('kazoo')).toThrow(
-      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, bass, voice, wind, clap, hand-percussion, drum-kit\)/,
+      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, bass, keyboard, voice, wind, clap, hand-percussion, drum-kit\)/,
     );
   });
 
@@ -123,12 +124,12 @@ describe('loadProfile: readable errors', () => {
     [
       'unknown mode',
       (p) => (p['mode'] = 'kazooline'),
-      'mode: expected one of strumline, singline, windline, beatline (got "kazooline")',
+      'mode: expected one of strumline, singline, windline, beatline, keyline (got "kazooline")',
     ],
     [
       'unknown renderer',
       (p) => (p['renderer'] = 'hologram'),
-      'renderer: expected one of lane-highway, pitch-highway, percussion-lanes (got "hologram")',
+      'renderer: expected one of lane-highway, pitch-highway, percussion-lanes, piano-roll (got "hologram")',
     ],
     [
       'window not a power of two',
