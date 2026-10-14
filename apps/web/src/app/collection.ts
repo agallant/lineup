@@ -208,6 +208,8 @@ export function songHref(profileId: string, songId: string): string {
       return `#/wind?song=${id}`;
     case 'ukulele-strum':
       return `#/strum?song=${id}`;
+    case 'guitar-strum':
+      return `#/strum?mode=guitar-strum&song=${id}`;
     case 'bass':
       return `#/bass?song=${id}`;
     case 'keyboard':

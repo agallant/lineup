@@ -54,6 +54,8 @@ describe('built-in profiles', () => {
       'bass',
       'clap',
       'drum-kit',
+      'guitar-note',
+      'guitar-strum',
       'hand-percussion',
       'keyboard',
       'ukulele-note',
@@ -87,6 +89,14 @@ describe('built-in profiles', () => {
     }
   });
 
+  it('guitar profiles use standard EADGBE tuning', () => {
+    for (const id of ['guitar-strum', 'guitar-note']) {
+      const t = getProfile(id).tuning!;
+      expect(t.reentrant).toBe(false);
+      expect(t.strings.map((s) => s.midi)).toEqual([40, 45, 50, 55, 59, 64]);
+    }
+  });
+
   it.each(['constructor', 'toString', '__proto__', 'hasOwnProperty'])(
     'getProfile treats inherited Object.prototype names like "%s" as unknown ids',
     (id) => {
@@ -96,7 +106,7 @@ describe('built-in profiles', () => {
 
   it('getProfile explains an unknown id', () => {
     expect(() => getProfile('kazoo')).toThrow(
-      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, bass, keyboard, voice, wind, clap, hand-percussion, drum-kit\)/,
+      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, guitar-strum, guitar-note, bass, keyboard, voice, wind, clap, hand-percussion, drum-kit\)/,
     );
   });
 

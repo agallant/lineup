@@ -9,7 +9,7 @@ export const HEADER_PX = 24;
 const OPEN_RADIUS = 0.5;
 
 /** String colours, indexed like the profile's tuning (ukulele: G C E A). */
-const STRING_COLORS = ['#4cc9f0', '#ff9f43', '#c77dff', '#8fb0ff'] as const;
+const STRING_COLORS = ['#4cc9f0', '#ff9f43', '#c77dff', '#8fb0ff', '#ffd166', '#06d6a0'] as const;
 
 /**
  * Colour for a string, by its index in the profile's tuning (cycles if there are more strings
@@ -124,7 +124,19 @@ export class StringLanesRenderer implements Renderer {
       if (x < l.left - radius * 3 || x > l.right + radius * 3) return;
       const status = view.statuses[i] ?? 'pending';
       const alpha = status === 'pending' ? 1 : status === 'miss' ? 0.4 : 0.55;
-      this.drawNote(g, n, x, status, alpha, rowOfString, rowY, rows.length, radius, l.laneHeight);
+      this.drawNote(
+        g,
+        n,
+        view.profile.id,
+        x,
+        status,
+        alpha,
+        rowOfString,
+        rowY,
+        rows.length,
+        radius,
+        l.laneHeight,
+      );
     });
     g.restore();
 
@@ -154,6 +166,7 @@ export class StringLanesRenderer implements Renderer {
   private drawNote(
     g: Canvas2D,
     n: ChartNote,
+    profileId: string,
     x: number,
     status: string,
     alpha: number,
@@ -174,7 +187,7 @@ export class StringLanesRenderer implements Renderer {
       g.fillText(label, x, HEADER_PX / 2);
     }
 
-    const frets = noteFrets(n);
+    const frets = noteFrets(n, profileId);
     const marks: { row: number; color: string; fret: number }[] = [];
     frets?.forEach((fret, tuningIndex) => {
       const row = rowOfString.get(tuningIndex);

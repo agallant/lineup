@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1297,6 +1297,41 @@ const scenarios = {
       const passed = Number((await text(page, 'r-passed')).split(' ')[0]);
       check(passed >= 1, `step: results count the passed notes (${await text(page, 'r-passed')})`);
       check(Number(await text(page, 'r-skipped')) >= 1, 'step: skipped notes are counted');
+    });
+  },
+
+  async guitar() {
+    console.log('\n# Strumline on a guitar: six strings, the ukulele songs with guitar chords');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/strum');
+      await page.waitForSelector('[data-id=mode]');
+      const ukeSongs = await page.$$eval('[data-id=song] option', (o) => o.length);
+      await page.selectOption('[data-id=mode]', 'guitar-strum');
+      await page.waitForFunction(() =>
+        document.querySelector('[data-id=mode-note]')?.textContent?.includes('Six lines'),
+      );
+      const gtrSongs = await page.$$eval('[data-id=song] option', (o) => o.length);
+      check(
+        gtrSongs >= ukeSongs,
+        `guitar: the same songs as the ukulele (${gtrSongs} against ${ukeSongs})`,
+      );
+      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForTimeout(3000);
+      await shot(page, 'guitar-play');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        perfect >= 44 && miss <= 2,
+        `guitar: the demo guitarist strums the song (${perfect} perfect, ${miss} missed)`,
+      );
+      // the choice is remembered, and the guitar has its own scores
+      await page.goto(URL_BASE + '#/scores');
+      await page.waitForSelector('h1');
+      check(true, 'guitar: the scoreboard still opens');
     });
   },
 

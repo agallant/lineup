@@ -142,6 +142,10 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   major scales, string crossing). Speed, the drum loop and the first-time tips work as in Strumline. The
   tuner has a bass tuning (E A D G) that listens lower than for other instruments. A Learn path walks
   from open strings to a funk groove.
+- **Guitar** (Strumline, a choice at the top of the setup page, like Windline's instrument): the six-string
+  guitar in standard tuning plays the ukulele's songs with guitar chords and picks melodies on its own
+  strings, shown on six string lines. The tuner has standard, drop D, DADGAD and open G. Other tunings in
+  the game itself come later.
 - **Beginner mode** (Singline, Windline and Keyline, an option on the setup page): no timing at all. Each note of the
   song is shown on the line and played; sing or play it back and hold it to move on, or skip it. Stars come
   from the notes passed.

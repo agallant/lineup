@@ -57,9 +57,10 @@ blocking: left-handed layouts (lower priority), more song packs, MIDI folders as
 
 Next up, in this order (asked for by the user):
 
-1. **Guitar in Strumline**: choose ukulele or six-string guitar the way Windline chooses its instrument.
-   Standard tuning (E A D G B E) first, alternate tunings (drop D, DADGAD, open G) afterwards.
-2. **Beginner step mode** in every game: not timed. Each note is shown on the line and played for the
+1. **Guitar in Strumline** (standard tuning done; alternate tunings in the game itself, such as drop D,
+   DADGAD and open G, still to do). The tuner already has them.
+2. **Beginner step mode** (done for Singline, Windline and Keyline; still to do for Strumline and Bassline
+   single notes, and Beatline) in every game: not timed. Each note is shown on the line and played for the
    player, who plays or sings it back; getting it right moves on to the next, one note at a time. Singline
    first, then the instrument games, and Beatline once its sounds are taught.
 

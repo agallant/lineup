@@ -30,7 +30,7 @@ const CARDS = [
     id: 'strumline',
     href: '#/strum',
     name: 'Strumline',
-    who: 'Ukulele',
+    who: 'Ukulele and guitar',
     blurb: 'Strum chord songs or pick melodies, with the fret to hold on each string.',
   },
   {
@@ -171,7 +171,7 @@ export const homeScreen: Screen = (root) => {
     <h2>Set up <small>once per device or instrument</small></h2>
     <ul class="menu">
       <li><a class="card" href="#/tuner" data-id="tuner-link"><strong>Tuner</strong>
-        <span>Tune your ukulele (or check any note) before you play. Not a game.</span></a></li>
+        <span>Tune your ukulele, guitar or bass (or check any note) before you play. Not a game.</span></a></li>
       <li><a class="card" href="#/calibrate" data-id="calibrate-link"><strong>Calibrate timing</strong>
         <span>Tap along to a beat so the game knows how late your speaker and microphone are.</span></a></li>
       <li><a class="card" href="#/mic" data-id="mic-link"><strong>Mic &amp; latency test</strong>

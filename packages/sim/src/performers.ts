@@ -1,8 +1,11 @@
 import {
+  GUITAR_CHORDS,
+  GUITAR_OPEN_MIDI,
   UKE_CHORDS,
   UKE_OPEN_MIDI,
   midiToHz,
   ukeNote,
+  guitarStrum,
   ukeStrum,
   voiceNote,
   windNote,
@@ -28,6 +31,26 @@ export const ukuleleStrumPerformer: Performer = (note, index, sampleRate) => {
   const frets = UKE_CHORDS[chord] ?? UKE_CHORDS['C']!;
   const direction = note.expected?.direction ?? (note.lane === 'up' ? 'up' : 'down');
   return ukeStrum(frets, sampleRate, { direction, seed: 100 + index });
+};
+
+/** Strums the chord named in `note.expected.chord` on a guitar (default C), or plucks the one string a note names. */
+export const guitarStrumPerformer: Performer = (note, index, sampleRate) => {
+  const played = (note.expected?.frets ?? []).flatMap((fret, string) =>
+    fret === null || fret === undefined || GUITAR_OPEN_MIDI[string] === undefined
+      ? []
+      : [{ string, fret }],
+  );
+  if (played.length === 1) {
+    const { string, fret } = played[0]!;
+    return ukeNote(GUITAR_OPEN_MIDI[string]! + fret, sampleRate, {
+      seed: 100 + index,
+      duration: 0.6,
+    });
+  }
+  const chord = note.expected?.chord ?? 'C';
+  const frets = GUITAR_CHORDS[chord] ?? GUITAR_CHORDS['C']!;
+  const direction = note.expected?.direction ?? (note.lane === 'up' ? 'up' : 'down');
+  return guitarStrum(frets, sampleRate, { direction, seed: 100 + index });
 };
 
 /**

@@ -25,25 +25,60 @@ export const UKULELE_CHORD_FRETS: Readonly<Record<string, readonly number[]>> = 
   B7: [2, 3, 2, 2],
 };
 
+/** Guitar chord fingerings (open position) as frets on strings 6 -> 1 (E A D G B E); null is a muted string. */
+export const GUITAR_CHORD_FRETS: Readonly<Record<string, readonly (number | null)[]>> = {
+  C: [null, 3, 2, 0, 1, 0],
+  G: [3, 2, 0, 0, 0, 3],
+  Am: [null, 0, 2, 2, 1, 0],
+  F: [1, 3, 3, 2, 1, 1],
+  D: [null, null, 0, 2, 3, 2],
+  Em: [0, 2, 2, 0, 0, 0],
+  Dm: [null, null, 0, 2, 3, 1],
+  A: [null, 0, 2, 2, 2, 0],
+  G7: [3, 2, 0, 0, 0, 1],
+  C7: [null, 3, 2, 3, 1, 0],
+  A7: [null, 0, 2, 0, 2, 0],
+  D7: [null, null, 0, 2, 1, 2],
+  Bm: [null, 2, 4, 4, 3, 2],
+  Bb: [null, 1, 3, 3, 3, 1],
+  Gm: [3, 5, 5, 3, 3, 3],
+  Cm: [null, 3, 5, 5, 4, 3],
+  'F#m': [2, 4, 4, 2, 2, 2],
+  E: [0, 2, 2, 1, 0, 0],
+  E7: [0, 2, 0, 1, 0, 0],
+  B7: [null, 2, 1, 2, 0, 2],
+};
+
+/** The chord fingerings for an instrument profile (a guitar's, else the ukulele's). */
+export function chordFretsFor(
+  profileId: string | undefined,
+): Readonly<Record<string, readonly (number | null)[]>> {
+  return profileId === 'guitar-strum' || profileId === 'guitar-note'
+    ? GUITAR_CHORD_FRETS
+    : UKULELE_CHORD_FRETS;
+}
+
 /**
  * The fret to hold on each string for a note, in tuning order: the chart's own `frets` when it
- * gives them, else the fingering of its chord, else null (nothing to show).
+ * gives them, else the fingering of its chord on the instrument (the ukulele unless `profileId`
+ * names a guitar), else null (nothing to show).
  */
-export function noteFrets(note: ChartNote): readonly (number | null)[] | null {
+export function noteFrets(note: ChartNote, profileId?: string): readonly (number | null)[] | null {
   const explicit = note.expected?.frets;
   if (explicit) return explicit;
   const chord = note.expected?.chord;
-  return chord !== undefined && Object.hasOwn(UKULELE_CHORD_FRETS, chord)
-    ? UKULELE_CHORD_FRETS[chord]!
-    : null;
+  const table = chordFretsFor(profileId);
+  return chord !== undefined && Object.hasOwn(table, chord) ? table[chord]! : null;
 }
 
 /** The MIDI notes a chord sounds on an instrument with a tuning, or null when the chord is unknown. */
 export function chordMidis(profile: InstrumentProfile, chord: string): number[] | null {
   const strings = profile.tuning?.strings;
-  const frets = Object.hasOwn(UKULELE_CHORD_FRETS, chord) ? UKULELE_CHORD_FRETS[chord] : undefined;
+  const table = chordFretsFor(profile.id);
+  const frets = Object.hasOwn(table, chord) ? table[chord] : undefined;
   if (!strings || !frets || frets.length !== strings.length) return null;
-  return strings.map((s, i) => s.midi + frets[i]!);
+  // a muted string sounds nothing
+  return strings.flatMap((s, i) => (frets[i] === null ? [] : [s.midi + frets[i]!]));
 }
 
 /** The distinct chords a chart expects, in order of first appearance. */

@@ -212,6 +212,19 @@ Items for features still to come are added here as they ship, under the mileston
       the app stop listening while the tone plays (it should not pass a note from its own speaker)?
 - [ ] Try it in **Windline** with your instrument: does it ask the notes in the instrument's own key?
 
+### Guitar (Strumline)
+
+- [ ] **Strumline > Mode > Guitar strumming**: six string lines (e B G D A E from the top); a string with no
+      mark (the low strings in a C or D chord) is not played. Do the chord fingerings shown match how you
+      play them? Which chords would you finger differently (e.g. a different F)?
+- [ ] With a real guitar near the iPad, does the **timing** register every strum? Try fast and slow songs.
+- [ ] Turn on **Also check the chords**: how often does it name your chords right? (The simulation confuses
+      Am with C now and then, because the ringing chord before leaks into the next.)
+- [ ] **Tuner > Guitar** (standard, drop D, DADGAD, open G): the low E (82 Hz) reads, and agrees with
+      another tuner.
+- [ ] Picked songs (Hot Cross Buns, Ode to Joy, Mary had a little lamb): shown on guitar strings at low
+      frets? Try **Also check the pitch** with a real guitar.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:
