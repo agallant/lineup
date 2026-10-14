@@ -1119,6 +1119,9 @@ export const createHitScreen =
       return pitchMode() ? withPluckPitches(part) : part;
     };
     // percussion rhythms can be heard first as ticks; a chord song cannot
+    const callBox = S<HTMLInputElement>('call');
+    S('call-label').hidden = !!c.strum;
+    callBox.checked = settings.get().callResponse;
     const listenBox = S<HTMLInputElement>('listen');
     S('listen-label').hidden = !!c.strum;
     listenBox.checked = settings.get().listenFirst;
@@ -1131,9 +1134,6 @@ export const createHitScreen =
       syncBlind();
       refreshSong();
     });
-    const callBox = S<HTMLInputElement>('call');
-    S('call-label').hidden = !!c.strum;
-    callBox.checked = settings.get().callResponse;
     callBox.addEventListener('change', () => {
       // call and response and listen first are two ways of hearing a rhythm first: one at a time
       settings.update({

@@ -132,10 +132,10 @@ describe('erasing everything', () => {
     m.setItem('lineup.songs.v1', '[]');
     m.setItem('lineup.probe', '1');
     m.setItem('other.site.key', 'keep');
-    expect(eraseAll(m)).toBe(2);
+    expect(eraseAll(m)).toEqual({ removed: 2, failed: false });
     expect(lineupKeys(m)).toEqual([]);
     expect(m.getItem('other.site.key')).toBe('keep');
-    expect(eraseAll(m)).toBe(0);
+    expect(eraseAll(m)).toEqual({ removed: 0, failed: false });
   });
 
   it('copes with storage that refuses', () => {
@@ -148,6 +148,25 @@ describe('erasing everything', () => {
         throw new Error('blocked');
       },
     };
-    expect(eraseAll(broken)).toBe(0);
+    expect(eraseAll(broken)).toEqual({ removed: 0, failed: true });
+  });
+
+  it('says so when storage refuses part way, with how many went', () => {
+    const m = new Mem();
+    for (const k of ['lineup.a', 'lineup.b', 'lineup.c']) m.setItem(k, '1');
+    let calls = 0;
+    const flaky: EnumerableStore = {
+      get length() {
+        return m.length;
+      },
+      key: (i) => m.key(i),
+      getItem: (k) => m.getItem(k),
+      setItem: (k, v) => m.setItem(k, v),
+      removeItem: (k) => {
+        if (++calls > 1) throw new Error('blocked');
+        m.removeItem(k);
+      },
+    };
+    expect(eraseAll(flaky)).toEqual({ removed: 1, failed: true });
   });
 });

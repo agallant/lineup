@@ -64,7 +64,14 @@ import {
   type InputAdapter,
 } from '@lineup/input';
 import { micSupported, openMic, openSyntheticInput, type MicSession } from '@lineup/input/mic';
-import { StaffRenderer, createRenderer, drawMeter, fitCanvas, midiName } from '@lineup/render';
+import {
+  StaffRenderer,
+  createRenderer,
+  preferFlats,
+  drawMeter,
+  fitCanvas,
+  midiName,
+} from '@lineup/render';
 import { renderPerformanceAsync, type Performer } from '@lineup/sim';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
@@ -956,7 +963,7 @@ export const createPitchScreen =
       );
       const renderer =
         opts.notation === 'staff'
-          ? new StaffRenderer({ names: opts.staffNames })
+          ? new StaffRenderer({ names: opts.staffNames, flats: preferFlats(chart.meta.tonic) })
           : createRenderer(profile.renderer);
       const endAt = chartEnd(chart) + 0.9;
       // Windline: the fingering of the note being played and the next one, redrawn when they change

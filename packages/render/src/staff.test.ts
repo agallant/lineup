@@ -1,7 +1,15 @@
 import { chartFromBeats, getProfile } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
 import { COLORS, type Canvas2D, type RenderView } from './renderer';
-import { StaffRenderer, clefFor, letterIndex, staffName, staffStep, staffStepFor } from './staff';
+import {
+  StaffRenderer,
+  clefFor,
+  letterIndex,
+  preferFlats,
+  staffName,
+  staffStep,
+  staffStepFor,
+} from './staff';
 
 class Recorder {
   calls: { op: string; args: unknown[]; fill: string }[] = [];
@@ -53,6 +61,20 @@ describe('staff positions', () => {
     expect(staffName(61)).toBe('C♯4');
     expect(staffName(60)).toBe('C4');
     expect(staffName(70)).toBe('A♯4');
+  });
+
+  it('writes a flat key with flats: B♭ is on the B line, not the A line', () => {
+    expect(staffName(70, true)).toBe('B♭4');
+    expect(staffStep(70, 'treble', true)).toBe(staffStep(71, 'treble', true) + 0); // B♭ and B share a place
+    expect(staffStep(70, 'treble', true)).toBe(4);
+    expect(staffStep(70, 'treble', false)).toBe(3); // as A♯ it would sit a step lower
+    expect(staffName(63, true)).toBe('E♭4');
+    expect(staffStepFor(70, 'treble', true)).toBe(4);
+    expect(preferFlats(65)).toBe(true); // F major
+    expect(preferFlats(70)).toBe(true); // B♭ major
+    expect(preferFlats(67)).toBe(false); // G major
+    expect(preferFlats(60)).toBe(false);
+    expect(preferFlats(undefined)).toBe(false);
   });
 
   it('chooses the bass clef for low melodies', () => {
@@ -109,6 +131,19 @@ describe('StaffRenderer', () => {
     expect(hidden.texts()).not.toContain('C');
     expect(hidden.texts()).not.toContain('F♯');
     expect(hidden.texts()).toContain('♯'); // the sharp sign is part of the music, not a label
+  });
+
+  it('marks flats in a flat key and still hides the names on request', () => {
+    const flat = chartFromBeats({ title: 'f', bpm: 60 }, [{ beat: 1, beats: 1, pitch: 70 }]);
+    const g = new Recorder();
+    new StaffRenderer({ names: false, flats: true }).draw(g as unknown as Canvas2D, size, {
+      time: 0,
+      notes: flat.notes,
+      statuses: ['pending'],
+      profile: getProfile('voice'),
+    });
+    expect(g.texts()).toContain('♭');
+    expect(g.texts()).not.toContain('B♭');
   });
 
   it('colours judged notes and draws the trail', () => {

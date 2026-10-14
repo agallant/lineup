@@ -62,7 +62,7 @@ it, so you can skip what you have already seen.
 - [ ] **Teach it your sounds** (clap, tap): it then tells them apart.
 - [ ] Hand drum and kit modes: your real sounds are classified sensibly.
 - [ ] _Since the random-song fixes:_ **Random groove** differs on every **New song** for kit, hands and clap, at every level.
-- [ ] **Listen first** + **Unseen**: the notes fade after the listening part and the lanes and timing line stay visible; clapping from memory is judged.
+- [ ] **Listen first** + **Unseen** (Beatline; turning on Call and response turns Listen first off): the notes fade after the listening part and the lanes and timing line stay visible; clapping from memory is judged.
 - [ ] Backing does not play (by design) while you clap, so the mic cannot hear it.
 
 ## Backing, sounds and feel

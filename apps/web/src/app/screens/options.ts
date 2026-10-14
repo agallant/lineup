@@ -273,9 +273,17 @@ export const optionsScreen: Screen = (root) => {
     $<HTMLButtonElement>('reset-all'),
     'everything: options, scores, progress, songs and sounds',
     () => {
-      const n = storage ? eraseAll(storage as unknown as Storage) : 0;
-      msg(n > 0 ? 'Everything erased. Starting over…' : 'There was nothing to erase.');
-      if (n > 0) setTimeout(() => location.reload(), 600);
+      const { removed, failed } = storage
+        ? eraseAll(storage as unknown as Storage)
+        : { removed: 0, failed: false };
+      msg(
+        failed
+          ? `Could not erase everything (${removed} items went; this browser refused the rest). Reloading with what is left.`
+          : removed > 0
+            ? 'Everything erased. Starting over…'
+            : 'There was nothing to erase.',
+      );
+      if (removed > 0) setTimeout(() => location.reload(), failed ? 2500 : 600);
       $('reset-all').textContent = 'Reset the whole profile';
     },
   );

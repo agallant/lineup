@@ -6,26 +6,38 @@ export type Clef = 'treble' | 'bass';
 
 /** Letter of each pitch class and whether it is a sharp (a sharp sits on the letter below). */
 const LETTER_OF_PC = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6] as const;
-const SHARP_PC = new Set([1, 3, 6, 8, 10]);
+/** The same with each black key written as a flat: it sits on the letter above (B♭ is a B). */
+const LETTER_OF_PC_FLAT = [0, 1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 6] as const;
+const BLACK_PC = new Set([1, 3, 6, 8, 10]);
+/** Major keys with flats in their signature: F, B♭, E♭, A♭, D♭ (by the pitch class of the tonic). */
+const FLAT_KEYS = new Set([5, 10, 3, 8, 1]);
+
+/** Whether a song in the major key on this MIDI tonic is written with flats rather than sharps. */
+export const preferFlats = (tonic: number | undefined): boolean =>
+  tonic !== undefined && FLAT_KEYS.has(((tonic % 12) + 12) % 12);
 const LETTER_NAMES = ['C', 'D', 'E', 'F', 'G', 'A', 'B'] as const;
 
-/** Diatonic steps (letters) up from C-1 for a MIDI pitch, a sharp counted on the letter below. */
-export function letterIndex(midi: number): number {
+/**
+ * Diatonic steps (letters) up from C-1 for a MIDI pitch. A black key is a sharp on the letter below,
+ * or with `flats` a flat on the letter above.
+ */
+export function letterIndex(midi: number, flats = false): number {
   const pc = ((midi % 12) + 12) % 12;
-  return Math.floor(midi / 12) * 7 + LETTER_OF_PC[pc]!;
+  return Math.floor(midi / 12) * 7 + (flats ? LETTER_OF_PC_FLAT : LETTER_OF_PC)[pc]!;
 }
 
-/** The note's letter name with its octave and a sharp sign, e.g. "F♯4". */
-export function staffName(midi: number): string {
+/** The note's letter name with its octave and a sharp or flat sign, e.g. "F♯4" or "B♭4". */
+export function staffName(midi: number, flats = false): string {
   const pc = ((midi % 12) + 12) % 12;
   const octave = Math.floor(midi / 12) - 1;
-  return `${LETTER_NAMES[LETTER_OF_PC[pc]!]}${SHARP_PC.has(pc) ? '♯' : ''}${octave}`;
+  const letter = LETTER_NAMES[(flats ? LETTER_OF_PC_FLAT : LETTER_OF_PC)[pc]!];
+  return `${letter}${BLACK_PC.has(pc) ? (flats ? '♭' : '♯') : ''}${octave}`;
 }
 
 /** Steps from the bottom line of the staff: the bottom line is 0, each line or space above is one more. */
-export function staffStep(midi: number, clef: Clef): number {
+export function staffStep(midi: number, clef: Clef, flats = false): number {
   // E4 sits on the bottom line of the treble staff, G2 on the bottom line of the bass staff
-  return letterIndex(midi) - letterIndex(clef === 'treble' ? 64 : 43);
+  return letterIndex(midi, flats) - letterIndex(clef === 'treble' ? 64 : 43);
 }
 
 /** The clef that suits a melody: bass when most of its notes lie below the treble staff. */
@@ -37,10 +49,10 @@ export function clefFor(notes: readonly ChartNote[]): Clef {
 }
 
 /** The vertical position of a fractional pitch, in staff steps, interpolating between semitones. */
-export function staffStepFor(midi: number, clef: Clef): number {
+export function staffStepFor(midi: number, clef: Clef, flats = false): number {
   const lo = Math.floor(midi);
-  const a = staffStep(lo, clef);
-  const b = staffStep(lo + 1, clef);
+  const a = staffStep(lo, clef, flats);
+  const b = staffStep(lo + 1, clef, flats);
   // a semitone that stays on the same letter (C to C♯) has no height of its own; spread the climb evenly
   return a + (b - a) * (midi - lo);
 }
@@ -62,6 +74,8 @@ function statusColor(status: RenderView['statuses'][number], active: boolean): s
 export interface StaffOptions {
   /** Write each note's letter name beside its notehead. Off, the player reads the staff. */
   names?: boolean;
+  /** Write black keys as flats (for a song in a flat key) rather than sharps. */
+  flats?: boolean;
   /** Seconds of the future visible to the right of the now line. */
   lookAhead?: number;
   nowFraction?: number;
@@ -78,7 +92,7 @@ export class StaffRenderer implements Renderer {
   constructor(private readonly options: StaffOptions = {}) {}
 
   draw(g: Canvas2D, size: RenderSize, view: RenderView): void {
-    const { names = true, lookAhead = 5, nowFraction = 0.28 } = this.options;
+    const { names = true, flats = false, lookAhead = 5, nowFraction = 0.28 } = this.options;
     const clef = clefFor(view.notes);
     const left = 54;
     const nowX = left + (size.width - left) * nowFraction;
@@ -124,7 +138,7 @@ export class StaffRenderer implements Renderer {
       const x0 = xOf(n.t);
       const x1 = xOf(n.t + d);
       if (x1 < left || x0 > size.width) return;
-      const step = staffStep(n.pitch, clef);
+      const step = staffStep(n.pitch, clef, flats);
       const y = yOf(step);
       const status = view.statuses[i] ?? 'pending';
       const active = view.time >= n.t && view.time < n.t + d;
@@ -169,14 +183,16 @@ export class StaffRenderer implements Renderer {
       g.fillStyle = COLORS.text;
       g.font = `600 ${Math.max(10, Math.round(gap * 0.95))}px system-ui, sans-serif`;
       g.textBaseline = 'middle';
-      if (staffName(n.pitch).includes('♯')) {
+      const spelled = staffName(n.pitch, flats);
+      const sign = spelled.includes('♯') ? '♯' : spelled.includes('♭') ? '♭' : '';
+      if (sign) {
         g.textAlign = 'right';
-        g.fillText('♯', x0 - head - 2, y);
+        g.fillText(sign, x0 - head - 2, y);
       }
       if (names) {
         g.textAlign = 'center';
         g.fillStyle = COLORS.muted;
-        g.fillText(staffName(n.pitch).replace(/\d/, ''), x0, y + head + gap * 0.9);
+        g.fillText(spelled.replace(/\d/, ''), x0, y + head + gap * 0.9);
       }
       g.globalAlpha = 1;
     });
@@ -196,8 +212,8 @@ export class StaffRenderer implements Renderer {
           g.strokeStyle = p.onPitch ? COLORS.trailOn : COLORS.trailOff;
           g.lineWidth = 4;
           g.beginPath();
-          g.moveTo(xOf(prev.time), yOf(staffStepFor(prev.midi, clef)));
-          g.lineTo(xOf(p.time), yOf(staffStepFor(p.midi, clef)));
+          g.moveTo(xOf(prev.time), yOf(staffStepFor(prev.midi, clef, flats)));
+          g.lineTo(xOf(p.time), yOf(staffStepFor(p.midi, clef, flats)));
           g.stroke();
         }
         prev = p;

@@ -403,14 +403,18 @@ export const makerScreen: Screen = (root) => {
   $('pack-save').addEventListener('click', () => {
     if (!pending?.ok) return;
     let saved = 0;
+    const total = pending.songs.length;
     for (const song of pending.songs) if (store.save({ ...song, id: undefined })) saved++;
     pending = null;
     $('pack-row').hidden = true;
     renderList();
+    const left = total - saved;
     $('paste-status').textContent =
       saved === 0
         ? 'Could not save: there is no room for more songs. Delete some first.'
-        : `Saved ${saved} ${saved === 1 ? 'song' : 'songs'}. They are in the song menus now.`;
+        : `Saved ${saved} ${saved === 1 ? 'song' : 'songs'}.${
+            left > 0 ? ` ${left} did not fit: delete some songs and paste the pack again.` : ''
+          } They are in the song menus now.`;
   });
   $('copy-pack').addEventListener('click', () => {
     const songs = store.list();
