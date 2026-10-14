@@ -167,6 +167,7 @@ export const keylineScreen: Screen = (root) => {
   if (wanted) {
     settings.update({
       speed: 1,
+      stepMode: false,
       songs: { ...settings.get().songs, [SONG_KEY]: wanted },
     });
   }

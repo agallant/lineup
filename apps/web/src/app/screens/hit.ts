@@ -68,6 +68,7 @@ import { BeatlineGame, HitMonitor, formatHits } from '../game/beatline-game';
 import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
+import { showStepResults, startStepRun } from '../step-run';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { UserSongStore, userSongsFor } from '../user-songs';
 import { starsBySong } from '../scoreboard';
@@ -197,6 +198,7 @@ const setup = (c: HitScreenConfig) => `
     </div>
     <label class="check" data-id="chords-opt" ${c.strum ? '' : 'hidden'}><input type="checkbox" data-id="opt-chords" /> Also check the chords (experimental; otherwise only the timing counts)</label>
     <label class="check" data-id="pitch-opt" hidden><input type="checkbox" data-id="opt-pitch" /> Also check the pitch of each plucked note (experimental; otherwise only the timing counts)</label>
+    <label class="check" data-id="step-label" ${c.plucked ? '' : 'hidden'}><input type="checkbox" data-id="opt-step" /> Beginner: one note at a time, no timing (the auto-play demo still plays the normal game)</label>
     <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks (needs headphones)</label>
     <label class="check"><input type="checkbox" data-id="opt-debug" /> Debug overlay while playing</label>
     <p data-id="cal-status"></p>
@@ -280,6 +282,7 @@ export const createHitScreen =
         if (wantedSong) {
           settings.update({
             variation: 'original',
+            stepMode: false,
             ...(c.strum
               ? { speed: 1, checkChords: false, checkPitch: false }
               : { listenFirst: false }),
@@ -355,6 +358,8 @@ export const createHitScreen =
     const pitchBox = S<HTMLInputElement>('opt-pitch');
     pitchBox.checked = current.checkPitch;
     speedSel.value = String(current.speed);
+    const stepBox = S<HTMLInputElement>('opt-step');
+    stepBox.checked = current.stepMode;
     for (const m of c.modes) modeSel.add(new Option(m.label, m.id));
     modeSel.value = profile.id;
 
@@ -426,7 +431,7 @@ export const createHitScreen =
         randomEntry()?.id ?? songSel.value,
         `${c.strum || c.plucked ? `x${settings.get().speed}${c.strum && settings.get().checkChords ? '+chords' : ''}${c.strum && pitchMode() ? '+pitch' : ''}` : ''}${
           settings.get().variation === 'original' ? '' : `|${settings.get().variation}`
-        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${listening() ? `|echo${blind() ? '|blind' : ''}` : ''}${calling() ? '|call' : ''}`,
+        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${c.plucked && settings.get().stepMode ? '|step' : ''}${listening() ? `|echo${blind() ? '|blind' : ''}` : ''}${calling() ? '|call' : ''}`,
       );
     const refreshSong = () => {
       syncParts();
@@ -674,6 +679,10 @@ export const createHitScreen =
       settings.update({ checkPitch: pitchBox.checked });
       refreshSong();
     });
+    stepBox.addEventListener('change', () => {
+      settings.update({ stepMode: stepBox.checked });
+      refreshSong();
+    });
     chordsBox.addEventListener('change', () => {
       settings.update({ checkChords: chordsBox.checked });
       refreshSong();
@@ -835,7 +844,10 @@ export const createHitScreen =
           });
     };
 
+    let stepStop: (() => void) | null = null;
     const stopPlay = () => {
+      stepStop?.();
+      stepStop = null;
       cancelAnimationFrame(playRaf);
       backing?.stop();
       backing = null;
@@ -1193,6 +1205,57 @@ export const createHitScreen =
     const selectedChart = (): Chart =>
       rescaleChart(songChart(), c.strum || c.plucked ? settings.get().speed : 1);
 
+    /** Beginner mode (bass): each note is played and shown, and waited for. No clock, no timing. */
+    const runStep = (m: MicSession, chart: Chart) => {
+      sessionStart = new Date();
+      show('play');
+      // a bass note sounds far below what a small speaker can play: the asked note is played higher
+      const lowest = Math.min(
+        ...chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch])),
+      );
+      const octave = lowest < 48 ? Math.ceil((48 - lowest) / 12) * 12 : 0;
+      stepStop = startStepRun({
+        container: stages.play,
+        mic: m,
+        chart,
+        profile,
+        renderer: createRenderer(profile.renderer),
+        octave,
+        verb: 'Play',
+        forward: onSetupMessage,
+        onFinish: (game) => {
+          m.onMessage = onSetupMessage;
+          refreshSong();
+          showStepResults({
+            container: stages.results,
+            game,
+            chart,
+            ctx: m.ctx,
+            scores,
+            progress,
+            settings,
+            bestKey: bestKey(),
+            profileId: profile.id,
+            songId: songEntry().id,
+            speed: settings.get().speed,
+            onAgain: () => void begin(false),
+            onTimed: () => {
+              settings.update({ stepMode: false });
+              stepBox.checked = false;
+              refreshSong();
+              void begin(false);
+            },
+            onBack: () => show('setup'),
+          });
+          show('results');
+        },
+        onStop: () => {
+          m.onMessage = onSetupMessage;
+          show('setup');
+        },
+      });
+    };
+
     /** Starts a play-through with the live mic, or the auto-play demo. */
     const begin = async (demo: boolean) => {
       if (beginInFlight) return;
@@ -1216,6 +1279,12 @@ export const createHitScreen =
             : undefined;
         setupStatus.classList.remove('error');
         demoClaimed = demo;
+        if (!demo && c.plucked && settings.get().stepMode) {
+          const m = await startMic();
+          if (!m) return;
+          runStep(m, heard);
+          return;
+        }
         if (!demo) {
           if (classCount() > 1 && !model) {
             setupStatus.textContent = 'Teach it your sounds first (section 3).';
@@ -1292,6 +1361,7 @@ export const createHitScreen =
     return () => {
       disposed = true;
       cancelAnimationFrame(setupRaf);
+      stepStop?.();
       cancelAnimationFrame(playRaf);
       backing?.stop();
       void mic?.close();
