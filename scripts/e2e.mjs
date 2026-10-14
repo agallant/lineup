@@ -32,7 +32,7 @@ const shotsIdx = args.indexOf('--shots');
 const shotsDir = shotsIdx >= 0 ? args[shotsIdx + 1] : null;
 if (shotsDir) mkdirSync(shotsDir, { recursive: true });
 const which = args.find((a) => !a.startsWith('--') && a !== shotsDir) ?? 'all';
-const PORT = 4179;
+const PORT = Number(process.env.E2E_PORT) || 4179;
 const URL_BASE = `http://localhost:${PORT}/`;
 const tmp = mkdtempSync(join(tmpdir(), 'lineup-e2e-'));
 const failures = [];
