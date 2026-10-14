@@ -24,18 +24,35 @@ export const helpScreen: Screen = (root) => {
         <dt>Singline</dt><dd>Sing each note and hold it. Any octave of the right note counts, so sing where it is comfortable.</dd>
         <dt>Windline</dt><dd>Whistles, recorders, Native American flutes, shakuhachi and other winds. Pick your instrument and the song moves into its key, with a fingering chart. The pentatonic flutes have songs of their own, a random flute song, and an optional drone (Options).</dd>
         <dt>Strumline</dt><dd>Strum chords or pluck melodies on a ukulele or a six-string guitar. The four lanes show the fret to hold on each string; a ring is an open string.</dd>
+        <dt>Bassline</dt><dd>Learn bass lines: four string lanes (G on top) with the fret to hold on each note. The note and the timing both count.</dd>
+        <dt>Keyline</dt><dd>Notes fall onto a piano keyboard. Play a MIDI keyboard (Chrome or Edge), the on-screen keys, or the computer keyboard (A S D F G H J K). No microphone is needed.</dd>
         <dt>Beatline</dt><dd>Clap, tap or drum in time. With two or more lanes you first teach it the sounds.</dd>
         <dt>Ear training</dt><dd>No instrument needed: name the interval between two notes, or the kind of chord.</dd>
       </dl>
     </section>
 
     <section class="panel">
+      <h2>New to it? Beginner mode</h2>
+      <p>Every game has a <strong>Beginner</strong> option on its set-up page: no timing at all. Each step is shown and
+        played for you (a note, some keys, a chord, a drum sound) and you play it back to move on. You can hear it
+        again or skip it.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Tuner and metronome</h2>
+      <p>The <strong>Tuner</strong> works for any single note (voice, flute, strings) and plays reference tones to tune to;
+        it has ukulele, guitar and bass modes too. The <strong>Metronome</strong> has tap tempo, accents, subdivisions, a
+        speed trainer and saved presets. Both are under <strong>Tools</strong> on the home screen.</p>
+    </section>
+
+    <section class="panel">
       <h2>Songs, versions and parts</h2>
       <ul>
+        <li><strong>Finding a song</strong>: search by title, sort (easiest first, A to Z, best stars) and filter by difficulty above the song menu; <em>Random song</em> is a separate list.</li>
         <li><strong>Difficulty</strong> is worked out from the song and shown in the menu (1 to 10, Beginner to Expert). A melody is also <em>diatonic</em> (every note in its key) or <em>chromatic</em> (sharps and flats, which need half-holes or a chromatic instrument).</li>
         <li><strong>Version</strong>: as written, easier, harder, or mixed phrase by phrase.</li>
         <li><strong>Part</strong>: practise one phrase on its own. <strong>Listen first</strong> plays the song once, then asks you to play it back.</li>
-        <li><strong>Random songs</strong>: pick a level, then <em>New song</em>, or <em>Aim for</em> a difficulty. A seed number replays the same song.</li>
+        <li><strong>Random songs</strong>: choose <em>Random song</em> above the menu, pick a level, then <em>New song</em>, or <em>Aim for</em> a difficulty. A seed number replays the same song.</li>
         <li><strong>My songs</strong> lets you write your own as text.</li>
       </ul>
     </section>
