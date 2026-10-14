@@ -306,11 +306,16 @@ export function parseAbc(text: string): AbcTune {
       return `${n.pitch === null ? 'r' : midiLabel(n.pitch)}:${beats}`;
     })
     .join(' ');
+  // one token for each note: `*` skips a note and `_` holds the last word over one, both kept as a
+  // dot; `~` joins two words under one note; only `-` and `|` are plain separators
   const lyrics = words
     .join(' ')
-    .replace(/[-_*~|]/g, ' ')
+    .replace(/~/g, '\u203f')
+    .replace(/([*_])/g, ' $1 ')
+    .replace(/[-|]/g, ' ')
     .split(/\s+/)
     .filter((w) => w !== '')
+    .map((w) => (w === '*' || w === '_' ? '·' : w))
     .join(' ');
   return {
     title: title || 'Imported tune',

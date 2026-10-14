@@ -30,8 +30,19 @@ const GAP_S = 0.15;
 /** Pause after an answer before the next question. */
 const NEXT_MS = 1100;
 
-/** Plays a question's notes softly on the audio output. */
+/** The oscillators of the question last played, so a new one can cut them off instead of overlapping. */
+let sounding: OscillatorNode[] = [];
+
+/** Plays a question's notes softly on the audio output, cutting off any still sounding or waiting. */
 function playQuestion(ctx: AudioContext, q: EarQuestion): void {
+  for (const old of sounding) {
+    try {
+      old.stop();
+    } catch {
+      // already stopped
+    }
+  }
+  sounding = [];
   let t0 = ctx.currentTime + 0.05;
   // a key-setting arpeggio first, quick and quiet, then a pause before the note asked about
   q.lead?.forEach((midi, i) => {
@@ -46,6 +57,7 @@ function playQuestion(ctx: AudioContext, q: EarQuestion): void {
     gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.4);
     osc.start(start);
     osc.stop(start + 0.42);
+    sounding.push(osc);
   });
   if (q.lead) t0 += q.lead.length * 0.32 + 0.5;
   q.notes.forEach((midi, i) => {
@@ -61,6 +73,7 @@ function playQuestion(ctx: AudioContext, q: EarQuestion): void {
     gain.gain.exponentialRampToValueAtTime(0.0001, start + length);
     osc.start(start);
     osc.stop(start + length + 0.02);
+    sounding.push(osc);
   });
 }
 

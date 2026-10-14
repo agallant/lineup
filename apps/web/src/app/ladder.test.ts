@@ -33,6 +33,7 @@ describe('tempo ladder', () => {
     expect(l.record(k, 0.8, 0.5).newRung).toBe(false);
     // speeds off the ladder do not count
     expect(l.record(k, 0.5, 1).newRung).toBe(false);
+    expect(l.record(k, 1, 1).newRung).toBe(false); // the top before the middle: not yet
     expect(l.record(k, 0.8, 0.9).cleared).toEqual([0.65, 0.8]);
     const top = l.record(k, 1, 1);
     expect(top).toMatchObject({ next: null, complete: true, justCompleted: true });
@@ -42,8 +43,8 @@ describe('tempo ladder', () => {
 
   it('keeps each song separately, survives a reload and ignores junk', () => {
     const mem = new Mem();
-    new LadderStore(mem).record('a', 1, 1);
-    expect(new LadderStore(mem).cleared('a')).toEqual([1]);
+    new LadderStore(mem).record('a', 0.65, 1);
+    expect(new LadderStore(mem).cleared('a')).toEqual([0.65]);
     expect(new LadderStore(mem).cleared('b')).toEqual([]);
     mem.setItem('lineup.ladder.v1', JSON.stringify({ a: [0.3, 'x', 0.8], b: 'no', c: [] }));
     const l = new LadderStore(mem);
@@ -51,7 +52,10 @@ describe('tempo ladder', () => {
     expect(l.cleared('b')).toEqual([]);
     mem.setItem('lineup.ladder.v1', '{not json');
     expect(new LadderStore(mem).cleared('a')).toEqual([]);
-    expect(new LadderStore(null).record('a', 1, 1).newRung).toBe(true);
+    // without storage the climb still works, in memory
+    const memory = new LadderStore(null);
+    expect(memory.record('a', 0.65, 1).newRung).toBe(true);
+    expect(memory.record('a', 0.8, 1).cleared).toEqual([0.65, 0.8]);
   });
 
   it('writes the ladder as text', () => {

@@ -137,6 +137,10 @@ export const freeScreen: Screen = (root) => {
   });
 
   const clearTake = (): void => {
+    const player = $<HTMLAudioElement>('player');
+    player.pause();
+    player.removeAttribute('src');
+    player.load();
     if (takeUrl) URL.revokeObjectURL(takeUrl);
     takeUrl = null;
     $('take').hidden = true;
@@ -183,15 +187,35 @@ export const freeScreen: Screen = (root) => {
     status.textContent = 'Recorded. Play it back below.';
   };
 
-  const endTake = (): void => {
+  /** Puts the screen back to idle: timers, meter, metronome and controls. Safe to call twice. */
+  const settle = (): void => {
     clearTimeout(countTimer);
     clearInterval(lengthTimer);
     stopMeter();
     stopMetronome();
-    if (recorder && recorder.state !== 'inactive') recorder.stop();
-    else for (const t of stream?.getTracks() ?? []) t.stop();
-    recordBtn.disabled = false;
     stopBtn.disabled = true;
+    recordBtn.disabled = false;
+  };
+
+  /** Stop was tapped: the recorder's own stop event finishes the take and settles the screen. */
+  const endTake = (): void => {
+    clearTimeout(countTimer);
+    if (recorder && recorder.state !== 'inactive') {
+      stopBtn.disabled = true;
+      recordBtn.disabled = true; // until the take is made, so a new one cannot start over it
+      recorder.stop();
+    } else {
+      for (const t of stream?.getTracks() ?? []) t.stop();
+      settle();
+    }
+  };
+
+  /** Ends a take that could not start or carry on: release the mic and say why. */
+  const abandon = (message: string, tracks: MediaStream | null): void => {
+    for (const t of tracks?.getTracks() ?? []) t.stop();
+    recorder = null;
+    settle();
+    status.textContent = message;
   };
 
   recordBtn.addEventListener('click', async () => {
@@ -201,34 +225,52 @@ export const freeScreen: Screen = (root) => {
     }
     recordBtn.disabled = true;
     status.textContent = 'Opening microphone…';
+    let mic: MediaStream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints() });
+      mic = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints() });
     } catch (err) {
       status.textContent = describeError(err);
       recordBtn.disabled = false;
       return;
     }
     if (disposed) {
-      for (const t of stream.getTracks()) t.stop();
+      for (const t of mic.getTracks()) t.stop();
       return;
     }
+    stream = mic;
     clearTake();
-    watchLevel(stream);
     const type = pickRecordingType((t) => MediaRecorder.isTypeSupported(t));
-    recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
-    chunks = [];
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunks.push(e.data);
+    // this take's own recorder and pieces, so an earlier take cannot touch it
+    const pieces: Blob[] = [];
+    let rec: MediaRecorder;
+    try {
+      watchLevel(mic);
+      rec = new MediaRecorder(mic, type ? { mimeType: type } : undefined);
+    } catch (err) {
+      abandon(`Could not start recording: ${describeError(err)}`, mic);
+      return;
+    }
+    recorder = rec;
+    rec.ondataavailable = (e) => {
+      if (e.data.size > 0) pieces.push(e.data);
     };
-    const mine = recorder;
-    recorder.onstop = () => {
-      for (const t of stream?.getTracks() ?? []) t.stop();
-      if (!disposed && recorder === mine) finishRecording(mine.mimeType || type);
+    rec.onstop = () => {
+      for (const t of mic.getTracks()) t.stop();
+      // also reached when the mic disappears without Stop being tapped
+      settle();
+      if (disposed || recorder !== rec) return;
+      chunks = pieces;
+      finishRecording(rec.mimeType || type);
     };
     stopBtn.disabled = false;
     const begin = () => {
       recordStartedAt = Date.now();
-      recorder?.start();
+      try {
+        rec.start();
+      } catch (err) {
+        abandon(`Could not start recording: ${describeError(err)}`, mic);
+        return;
+      }
       status.textContent = 'Recording… tap Stop when you are done.';
       lengthTimer = setInterval(() => {
         status.textContent = `Recording… ${clock((Date.now() - recordStartedAt) / 1000)}`;

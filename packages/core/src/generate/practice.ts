@@ -81,13 +81,21 @@ export function phraseSeconds(chart: Chart): number {
 }
 
 /**
- * For a duet: which of two players (0 or 1) sings each note. Phrases alternate, the first phrase
- * going to player 0. Null for a song too short to have two phrases to share.
+ * For a duet: which of two players (0 or 1) sings each note. The song's phrases alternate, the
+ * first going to player 0. Null for a song too short to have two phrases to share.
  */
 export function duetPlayers(chart: Chart): number[] | null {
-  if (songParts(chart).length < 2) return null;
-  const len = phraseSeconds(chart);
-  return chart.notes.map((n) => Math.floor((n.t + 1e-6) / len) % 2);
+  const parts = songParts(chart);
+  if (parts.length < 2) return null;
+  // the phrases that have notes take turns; a note in a skipped (nearly empty) phrase goes with the
+  // phrase before it
+  return chart.notes.map((n) => {
+    let index = 0;
+    parts.forEach((p, i) => {
+      if (n.t >= p.from - 1e-6) index = i;
+    });
+    return index % 2;
+  });
 }
 
 /** How one duet player did: notes hit (perfect or good), notes that were perfect, and all their notes. */

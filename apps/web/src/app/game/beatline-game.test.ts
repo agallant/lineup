@@ -299,6 +299,31 @@ describe('BeatlineGame judging plucked notes by pitch', () => {
     expect(game.strays).toBe(0);
   });
 
+  it('does not accept a tap with no pitch as a note', () => {
+    const time = new Time();
+    const clock = new SongClock(time);
+    time.currentTime = 1;
+    clock.start(0);
+    const game = new BeatlineGame({
+      chart: tune,
+      profile: strum,
+      clock,
+      latencyOffset: 0,
+      model: null,
+      pitched: noteProfile,
+    });
+    // a noisy onset at the first note's time, and no pitch frames at all
+    game.handleMessage({
+      type: 'input',
+      event: { time: 1 + tune.notes[0]!.t, velocity: 0.8 },
+    } as never);
+    time.currentTime = 1 + tune.notes.at(-1)!.t + 2;
+    game.update();
+    game.finish();
+    expect(game.session.score.counts.perfect).toBe(0);
+    expect(game.session.score.counts.miss).toBe(tune.notes.length);
+  });
+
   it('misses the wrong notes, and only those, as wrong pitch', () => {
     const game = play([3, 6]);
     const missed = game.judge.judgments.filter((j) => j.grade === 'miss');

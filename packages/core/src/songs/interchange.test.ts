@@ -41,6 +41,12 @@ describe('parseAbc', () => {
     expect(melodyNotes(t.notes)).toHaveLength(14);
   });
 
+  it('keeps a word for every note: skips and holds stay as empty slots', () => {
+    const t = parseAbc('L:1/4\nK:C\nC D E F G\nw:one two three_ *');
+    expect(t.lyrics).toBe('one two three · ·');
+    expect(parseAbc('K:C\nC D E\nw:a~b c d').lyrics).toBe('a\u203fb c d');
+  });
+
   it('applies the key signature, bar accidentals, octaves, rests and lengths', () => {
     const t = parseAbc("T:x\nL:1/8\nK:G\nG,A,B,C D/2E/2 f2 | F ^F=F F z2 g' ||");
     // G major: F is sharp; the natural lasts the rest of the bar

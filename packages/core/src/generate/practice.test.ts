@@ -108,6 +108,17 @@ describe('duets', () => {
     expect(players[0]).toBe(0);
   });
 
+  it('shares the phrases that have notes even when one in between is empty', () => {
+    // bpm 120, 4/4: a phrase is 2 bars of 2 s = 4 s (short song) or 8 s; notes in phrases 0 and 2 only
+    const gap = chartFromBeats(
+      { title: 'g', bpm: 120, instruments: ['voice'] },
+      [...[0, 1, 2, 3], ...[16, 17, 18, 19]].map((beat) => ({ beat, beats: 0.8, pitch: 60 })),
+    );
+    const parts = songParts(gap);
+    expect(parts).toHaveLength(2);
+    expect(duetPlayers(gap)).toEqual([0, 0, 0, 0, 1, 1, 1, 1]);
+  });
+
   it('is not offered for a song with fewer than two phrases', () => {
     const tiny = chartFromBeats({ title: 't', bpm: 120, instruments: ['voice'] }, [
       { beat: 0, beats: 1, pitch: 60 },

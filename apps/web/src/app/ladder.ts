@@ -34,8 +34,9 @@ export function rungFor(speed: number): number | null {
 const isRung = (v: unknown): v is number => typeof v === 'number' && LADDER_RUNGS.includes(v);
 
 /**
- * Tempo ladders: a song is learnt slow first, then faster, to the real tempo. A clean run at a rung
- * (the speed or above, never below it) clears that rung; clearing them all climbs the ladder.
+ * Tempo ladders: a song is learnt slow first, then faster, to the real tempo. A clean run at the
+ * next rung up (that speed or a little above, never below it) clears it; clearing them all climbs
+ * the ladder.
  * Kept per song and profile in local storage.
  */
 export class LadderStore {
@@ -57,12 +58,15 @@ export class LadderStore {
 
   /** Files a finished run at a play speed. */
   record(songKey: string, speed: number, accuracy: number): LadderStep {
-    this.value = this.read();
+    // pick up what another tab saved; without storage the progress lives in memory
+    if (this.store) this.value = this.read();
     const rung = accuracy >= LADDER_ACCURACY ? rungFor(speed) : null;
     const before = this.value[songKey] ?? [];
-    if (rung === null || before.includes(rung)) return this.step(songKey, false, false);
+    // a ladder is climbed in order: a run only counts at the next rung up
+    const next = LADDER_RUNGS.find((r) => !before.includes(r));
+    if (rung === null || rung !== next) return this.step(songKey, false, false);
     const was = before.length === LADDER_RUNGS.length;
-    const after = LADDER_RUNGS.filter((r) => r === rung || before.includes(r));
+    const after = [...before, rung];
     // move the song to the end so the ones played least recently are the ones dropped
     const others = Object.entries(this.value).filter(([k]) => k !== songKey);
     this.value = Object.fromEntries([...others, [songKey, after]].slice(-MAX_SONGS));

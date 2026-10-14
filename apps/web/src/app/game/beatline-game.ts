@@ -138,9 +138,7 @@ export class BeatlineGame {
     const hit = this.monitor.push(message);
     if (this.attacher) {
       // the judge gets each onset once its pitch is known; the flash shows at once
-      for (const e of this.attacher.push(message)) {
-        this.session.feed({ ...e, time: this.clock.toSongTime(e.time) });
-      }
+      for (const e of this.attacher.push(message)) this.feedPitched(e);
       if (hit) this.flash(this.clock.toSongTime(hit.event.time), hit.record);
       return;
     }
@@ -152,10 +150,17 @@ export class BeatlineGame {
 
   /** Ends the song: onsets still waiting for their pitch are judged first. */
   finish(): void {
-    for (const e of this.attacher?.flush() ?? []) {
-      this.session.feed({ ...e, time: this.clock.toSongTime(e.time) });
-    }
+    for (const e of this.attacher?.flush() ?? []) this.feedPitched(e);
     this.session.finish();
+  }
+
+  /**
+   * Gives the judge an onset of a pitched game. One whose pitch was never heard (a tap on the body,
+   * a noise) is left out: the judge cannot compare it, and would otherwise accept it as any note.
+   */
+  private feedPitched(e: InputEvent): void {
+    if (!(e.pitch !== undefined && e.pitch > 0)) return;
+    this.session.feed({ ...e, time: this.clock.toSongTime(e.time) });
   }
 
   private flash(songTime: number, record: HitRecord): void {
