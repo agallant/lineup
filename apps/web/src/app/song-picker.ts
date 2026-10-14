@@ -157,16 +157,19 @@ export function mountPickerControls(
       <button data-id="src-library" aria-pressed="true">Songs</button>
       <button data-id="src-random" aria-pressed="false">🎲 Random song</button>
     </div>
-    <div class="row" data-id="picker-filters">
-      <label>Search <input data-id="picker-query" type="search" placeholder="Title" autocomplete="off" /></label>
-      <label>Sort <select data-id="picker-sort">${SORTS.map(
-        (s) => `<option value="${s.id}">${escapeHtml(s.label)}</option>`,
-      ).join('')}</select></label>
-      <label>Show <select data-id="picker-band">${BANDS.map(
-        (b) => `<option value="${b.id}">${escapeHtml(b.label)}</option>`,
-      ).join('')}</select></label>
-      <label class="check"><input type="checkbox" data-id="picker-cleared" /> Hide songs I have cleared</label>
-    </div>`;
+    <details data-id="picker-filters">
+      <summary>Search, sort and filter</summary>
+      <div class="row">
+        <label>Search <input data-id="picker-query" type="search" placeholder="Title" autocomplete="off" /></label>
+        <label>Sort <select data-id="picker-sort">${SORTS.map(
+          (s) => `<option value="${s.id}">${escapeHtml(s.label)}</option>`,
+        ).join('')}</select></label>
+        <label>Show <select data-id="picker-band">${BANDS.map(
+          (b) => `<option value="${b.id}">${escapeHtml(b.label)}</option>`,
+        ).join('')}</select></label>
+        <label class="check"><input type="checkbox" data-id="picker-cleared" /> Hide songs I have cleared</label>
+      </div>
+    </details>`;
   const $ = <T extends HTMLElement>(id: string): T => box.querySelector<T>(`[data-id="${id}"]`)!;
   const sync = () => {
     $<HTMLInputElement>('picker-query').value = state.query;
@@ -176,6 +179,9 @@ export function mountPickerControls(
     $('src-library').setAttribute('aria-pressed', String(!state.random));
     $('src-random').setAttribute('aria-pressed', String(state.random));
     $('picker-filters').hidden = state.random;
+    // filters in use stay in view, so a short menu is never a mystery
+    if (state.query || state.band !== 'all' || state.hideCleared || state.sort !== 'easy')
+      $<HTMLDetailsElement>('picker-filters').open = true;
   };
   const changed = () => {
     sync();

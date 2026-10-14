@@ -10,7 +10,7 @@ import {
   type EarLevel,
   type EarQuestion,
 } from '@lineup/core';
-import { escapeHtml } from '../audio';
+import { escapeHtml, closeAudio } from '../audio';
 import { jingleFor, playJingle } from '../game/jingle';
 import { rewardHtml } from '../game/reward';
 import { ProgressStore } from '../progress';
@@ -238,6 +238,6 @@ export const earScreen: Screen = (root) => {
 
   return () => {
     clearTimeout(timer);
-    if (ctx) void ctx.close();
+    if (ctx) closeAudio(ctx);
   };
 };

@@ -10,7 +10,7 @@ import {
   type MidiFile,
 } from '@lineup/core';
 import { copyText } from '../clipboard';
-import { escapeHtml } from '../audio';
+import { escapeHtml, closeAudio } from '../audio';
 import { planAllBacking, playBacking, rhythmTones, type BackingHandle } from '../game/backing';
 import type { Screen } from '../router';
 import { safeLocalStorage } from '../settings';
@@ -495,6 +495,6 @@ export const makerScreen: Screen = (root) => {
   renderList();
   return () => {
     stop();
-    if (ctx) void ctx.close();
+    if (ctx) closeAudio(ctx);
   };
 };

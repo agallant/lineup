@@ -288,6 +288,8 @@ export const createPitchScreen =
     const stages = { setup: $('stage-setup'), play: $('stage-play'), results: $('stage-results') };
     const show = (name: keyof typeof stages) => {
       for (const [k, el] of Object.entries(stages)) el.hidden = k !== name;
+      // the first-time tip is for the set-up page: while playing the stage gets the whole screen
+      root.querySelector('[data-id=tour]')?.toggleAttribute('hidden', name !== 'setup');
     };
 
     const profile = getProfile(c.profileId);
