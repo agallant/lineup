@@ -64,7 +64,7 @@ import {
   type InputAdapter,
 } from '@lineup/input';
 import { micSupported, openMic, openSyntheticInput, type MicSession } from '@lineup/input/mic';
-import { createRenderer, drawMeter, fitCanvas, midiName } from '@lineup/render';
+import { StaffRenderer, createRenderer, drawMeter, fitCanvas, midiName } from '@lineup/render';
 import { renderPerformanceAsync, type Performer } from '@lineup/sim';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
@@ -173,6 +173,8 @@ const setup = (c: PitchScreenConfig) => `
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
       <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
+      <label>View <select data-id="notation"><option value="bars">Bars</option><option value="staff">Staff (written music)</option></select></label>
+      <label class="check" data-id="names-label" hidden><input type="checkbox" data-id="opt-names" /> Show note names on the staff</label>
       <label class="check" data-id="duet-label" hidden><input type="checkbox" data-id="opt-duet" /> Duet: two players take turns, phrase by phrase</label>
       <label class="check"><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
       <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
@@ -547,6 +549,19 @@ export const createPitchScreen =
       partIdx = Number(partSel.value);
       refreshRange();
     });
+    const notationSel = S<HTMLSelectElement>('notation');
+    const namesBox = S<HTMLInputElement>('opt-names');
+    notationSel.value = settings.get().notation;
+    namesBox.checked = settings.get().staffNames;
+    const syncNotation = () => {
+      S('names-label').hidden = settings.get().notation !== 'staff';
+    };
+    syncNotation();
+    notationSel.addEventListener('change', () => {
+      settings.update({ notation: notationSel.value === 'staff' ? 'staff' : 'bars' });
+      syncNotation();
+    });
+    namesBox.addEventListener('change', () => settings.update({ staffNames: namesBox.checked }));
     const duetBox = S<HTMLInputElement>('opt-duet');
     duetBox.checked = settings.get().duet;
     duetBox.addEventListener('change', () => {
@@ -939,7 +954,10 @@ export const createPitchScreen =
           ...listen.tones,
         ].sort((a, b) => a.songTime - b.songTime),
       );
-      const renderer = createRenderer(profile.renderer);
+      const renderer =
+        opts.notation === 'staff'
+          ? new StaffRenderer({ names: opts.staffNames })
+          : createRenderer(profile.renderer);
       const endAt = chartEnd(chart) + 0.9;
       // Windline: the fingering of the note being played and the next one, redrawn when they change
       const inst = instrument();

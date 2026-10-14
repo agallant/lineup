@@ -259,3 +259,14 @@ describe('voice range setting', () => {
     expect(s.update({ voiceRange: 'castrato' }).voiceRange).toBe('any');
   });
 });
+
+describe('notation setting', () => {
+  it('keeps staff or bars and falls back to bars', () => {
+    const s = new SettingsStore(null);
+    expect(s.update({ notation: 'staff', staffNames: false })).toMatchObject({
+      notation: 'staff',
+      staffNames: false,
+    });
+    expect(s.update({ notation: 'tablature' as never }).notation).toBe('bars');
+  });
+});

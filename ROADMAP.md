@@ -51,8 +51,9 @@ waits on the ones before it.
 7. **Quality** (done for what can be automated: an axe-core audit of every screen in three colour schemes in the end-to-end job, and a size budget on the build). An automated accessibility audit of every screen in CI; performance and offline
    checks; docstring and test coverage kept up; whatever the real-device list turns up.
 
-Ideas kept for later, none blocking: left-handed layouts, a per-game first-run tour, themed song
-packs, MIDI import. (Haptics were considered and dropped: iPad Safari has no vibration API.)
+Done after the first seven: voice range, staff view with hidden note names, call and response,
+song packs, MIDI in and out, short per-game tips, and Start over in Options. Ideas kept for later, none
+blocking: left-handed layouts (lower priority), more song packs, MIDI folders as packs. (Haptics were considered and dropped: iPad Safari has no vibration API.)
 
 ## Not buildable without a real instrument or sounds you teach it
 

@@ -134,6 +134,22 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   notation** can be pasted in and read (key, tempo, lengths, accidentals, ties, triplets, words;
   chords, decorations and repeat marks are skipped). **Copy as text** turns any song into a block
   you can send in a message and paste into _Paste a song_ on another device.
+- **Voice range** (Options, Singline): say your voice type and each song gets a line about how it sits
+  in it ("sits well", "an octave lower is easier"), and the guide tone plays in your octave; any
+  octave of the right note still counts.
+- **Staff view** (Singline, Windline): _View_ switches the scrolling bars to written music on a
+  treble or bass staff, with the notes coloured as you play them. _Show note names_ can be turned off
+  to practise reading the staff.
+- **Call and response** (Beatline): each bar of a rhythm is ticked out and then asked of you, bar by
+  bar, instead of the whole rhythm at once. It replaces _Listen first_ (one at a time).
+- **Song packs** (`#/packs`): themed sets across all the games (campfire, lullabies, waltz time,
+  pentatonic calm, rhythm kitchen, a gentle start, beyond the white notes, challenge), each song opening
+  in its game; your own songs can be shared as a pack from My songs.
+- **MIDI** (My songs): open a `.mid` file and pick a track to turn it into a melody or a drum-kit
+  rhythm (the highest note of each chord is kept, timing is moved to a sixteenth or triplet grid, long
+  files are cut), and save any song as a `.mid` file for a music program.
+- **Tips**: each game shows three short lines of help the first time, until dismissed. Options >
+  _Start over_ erases everything the app keeps on the device, for testing from scratch.
 - **Duet** (Singline, Windline): on a song with at least two phrases, _Duet_ lets two players take
   turns, phrase by phrase, on one device; the screen says whose turn it is and the results give each
   player their notes hit and a winner (or a tie). It is filed as its own score.

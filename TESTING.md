@@ -149,6 +149,20 @@ Items for features still to come are added here as they ship, under the mileston
       a recorded take plays back, with the count-in left out; **Save to this device** gives a file you can open.
 - [ ] Free play with the metronome on and no headphones: do the clicks come out in the take?
 
+### Voice range, staff, call and response, packs, MIDI
+
+- [ ] **Options > Singline voice**: pick yours; songs say how they sit in it, and the guide tone is in an
+      octave you can sing (headphones).
+- [ ] **Staff view** (Singline or Windline, _View_): the notes are on the right lines and spaces for the
+      clef shown; with **Show note names** off you can still read it. Is the staff big enough and is the
+      scroll speed readable on the iPad? (A plain "G"/"F" stands in for the clef sign.)
+- [ ] **Beatline > Call and response** on a clap or kit rhythm: "Listen…" then "Your turn!" bar by bar, and
+      you are judged only on your answers.
+- [ ] **Song packs**: tap a few songs; each opens in the right game with the song chosen.
+- [ ] **My songs > Open a MIDI file**: try a few files from the web or your own music program. Which are read
+      wrongly (wrong key, rhythm, wrong track)? **Save as MIDI** opens in GarageBand or a notation app.
+- [ ] **Options > Start over** erases everything and reloads; the first-time tips come back.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

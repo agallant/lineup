@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1116,7 +1116,7 @@ const scenarios = {
       }
       const pack = await page.evaluate(async () => {
         const songs = JSON.parse(localStorage.getItem('lineup.songs.v1') ?? '[]');
-        return `LINEUP-PACK-1 ${JSON.stringify(songs.map(({ id, ...rest }) => rest))}`;
+        return `LINEUP-PACK-1 ${JSON.stringify(songs.map((song) => Object.fromEntries(Object.entries(song).filter(([k]) => k !== 'id'))))}`;
       });
       await page.evaluate(() => localStorage.removeItem('lineup.songs.v1'));
       await page.goto(URL_BASE + '#/make');
@@ -1131,6 +1131,34 @@ const scenarios = {
       check(
         (await page.$$eval('li[data-song]', (a) => a.length)) === 2,
         'packs: and its songs are saved',
+      );
+    });
+  },
+
+  async staff() {
+    console.log('\n# Staff view: the song as written music, with or without note names');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/sing');
+      await page.selectOption('[data-id=song]', 'sing-hot-cross-buns');
+      check(
+        !(await page.isVisible('[data-id=names-label]')),
+        'staff: names option hidden for bars',
+      );
+      await page.selectOption('[data-id=notation]', 'staff');
+      check(
+        await page.isVisible('[data-id=names-label]'),
+        'staff: names option shown for the staff',
+      );
+      await page.uncheck('[data-id=opt-names]');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForTimeout(3000);
+      await shot(page, 'staff-play');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      check(
+        Number(await text(page, 'r-miss')) === 0,
+        'staff: the demo plays a song shown as a staff without a miss',
       );
     });
   },

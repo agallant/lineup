@@ -88,6 +88,10 @@ export interface Settings {
   checkPitch: boolean;
   /** Singline: the voice type that songs are checked against ('any' for no preference). */
   voiceRange: string;
+  /** Singline and Windline: the song as scrolling bars or as written music on a staff. */
+  notation: 'bars' | 'staff';
+  /** On the staff: write the name of each note beside it (off to practise reading). */
+  staffNames: boolean;
   /** Singline and Windline: two players take turns, phrase by phrase, with a score each. */
   duet: boolean;
   /** Strumline: tempo multiplier for practice (1 = the song's own tempo). */
@@ -126,6 +130,8 @@ export const DEFAULT_SETTINGS: Settings = {
   checkChords: false,
   checkPitch: false,
   voiceRange: 'any',
+  notation: 'bars',
+  staffNames: true,
   duet: false,
   speed: 1,
   songs: {},
@@ -258,6 +264,9 @@ function sanitize(raw: unknown): Settings {
     checkPitch:
       typeof r['checkPitch'] === 'boolean' ? r['checkPitch'] : DEFAULT_SETTINGS.checkPitch,
     voiceRange: isVoiceChoice(r['voiceRange']) ? r['voiceRange'] : DEFAULT_SETTINGS.voiceRange,
+    notation: r['notation'] === 'staff' ? 'staff' : 'bars',
+    staffNames:
+      typeof r['staffNames'] === 'boolean' ? r['staffNames'] : DEFAULT_SETTINGS.staffNames,
     duet: typeof r['duet'] === 'boolean' ? r['duet'] : DEFAULT_SETTINGS.duet,
     speed:
       typeof r['speed'] === 'number' && r['speed'] >= 0.5 && r['speed'] <= 1.25
