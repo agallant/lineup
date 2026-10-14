@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { exportBackup, importBackup, lineupKeys, type EnumerableStore } from './backup';
+import { eraseAll, exportBackup, importBackup, lineupKeys, type EnumerableStore } from './backup';
 
 class Mem implements EnumerableStore {
   data = new Map<string, string>();
@@ -122,5 +122,32 @@ describe('backup', () => {
     });
     expect(importBackup(m, sneaky)).toBe(1);
     expect(m.getItem('evil.key')).toBeNull();
+  });
+});
+
+describe('erasing everything', () => {
+  it('removes every app key and nothing else', () => {
+    const m = new Mem();
+    m.setItem('lineup.scores.v1', '{}');
+    m.setItem('lineup.songs.v1', '[]');
+    m.setItem('lineup.probe', '1');
+    m.setItem('other.site.key', 'keep');
+    expect(eraseAll(m)).toBe(2);
+    expect(lineupKeys(m)).toEqual([]);
+    expect(m.getItem('other.site.key')).toBe('keep');
+    expect(eraseAll(m)).toBe(0);
+  });
+
+  it('copes with storage that refuses', () => {
+    const broken: EnumerableStore = {
+      length: 1,
+      key: () => 'lineup.scores.v1',
+      getItem: () => '{}',
+      setItem: () => undefined,
+      removeItem: () => {
+        throw new Error('blocked');
+      },
+    };
+    expect(eraseAll(broken)).toBe(0);
   });
 });

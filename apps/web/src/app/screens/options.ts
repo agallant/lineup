@@ -1,4 +1,4 @@
-import { exportBackup, importBackup, lineupKeys } from '../backup';
+import { eraseAll, exportBackup, importBackup, lineupKeys } from '../backup';
 import { ProgressStore } from '../progress';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
@@ -126,6 +126,13 @@ export const optionsScreen: Screen = (root) => {
         <button data-id="clear-scores" class="danger">Erase scores</button>
         <button data-id="clear-progress" class="danger">Erase progress and trophies</button>
       </div>
+      <details class="reset-all">
+        <summary>Start over</summary>
+        <p class="muted">Erases everything this app keeps on this device in one go: options, scores,
+          progress and trophies, your own songs, timing calibration and trained sounds, as if the app
+          had just been installed. Save a backup file first if you may want any of it back.</p>
+        <div class="row"><button data-id="reset-all" class="danger">Reset the whole profile</button></div>
+      </details>
       <p class="status" data-id="msg" role="status"></p>
     </section>
   `;
@@ -251,6 +258,17 @@ export const optionsScreen: Screen = (root) => {
     msg('Progress erased.');
     $('clear-progress').textContent = 'Erase progress and trophies';
   });
+
+  confirmed(
+    $<HTMLButtonElement>('reset-all'),
+    'everything: options, scores, progress, songs and sounds',
+    () => {
+      const n = storage ? eraseAll(storage as unknown as Storage) : 0;
+      msg(n > 0 ? 'Everything erased. Starting over…' : 'There was nothing to erase.');
+      if (n > 0) setTimeout(() => location.reload(), 600);
+      $('reset-all').textContent = 'Reset the whole profile';
+    },
+  );
 
   $('export').addEventListener('click', () => {
     if (!storage || lineupKeys(storage as unknown as Storage).length === 0) {
