@@ -6,10 +6,11 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|duet|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
 async function loadPlaywright() {
@@ -1050,6 +1051,83 @@ const scenarios = {
         /wins|tie/.test(await text(page, 'r-duet')),
         `duet: the result names a winner or a tie (${await text(page, 'r-duet')})`,
       );
+    });
+  },
+
+  async a11y() {
+    console.log(
+      '\n# Accessibility: every screen audited with axe-core in the dark, light and high-contrast colours',
+    );
+    const axeSource = readFileSync(
+      createRequire(import.meta.url).resolve('axe-core/axe.min.js'),
+      'utf8',
+    );
+    const routes = [
+      '',
+      'learn',
+      'collection',
+      'scores',
+      'options',
+      'help',
+      'make',
+      'free',
+      'tuner',
+      'ear',
+      'mic',
+      'calibrate',
+      'sing',
+      'wind',
+      'beat',
+      'strum',
+    ];
+    await session(null, async (page) => {
+      for (const scheme of ['dark', 'light', 'contrast']) {
+        for (const route of routes) {
+          await page.goto(URL_BASE + '#/' + route);
+          await page.waitForSelector('h1');
+          await page.evaluate((t) => (document.documentElement.dataset.theme = t), scheme);
+          await page.waitForTimeout(300);
+          await page.addScriptTag({ content: axeSource });
+          const result = await page.evaluate(() =>
+            // eslint-disable-next-line no-undef
+            axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'best-practice'] }),
+          );
+          const found = result.violations.filter((v) => v.impact !== 'minor');
+          check(
+            found.length === 0,
+            `a11y ${scheme} #/${route}: ${
+              found.length === 0
+                ? 'no violations'
+                : found
+                    .map((v) => `${v.id} (${v.impact}, ${v.nodes.length}): ${v.nodes[0].target}`)
+                    .join('; ')
+            }`,
+          );
+        }
+      }
+      // the results screen of a played song
+      await page.goto(URL_BASE + '#/sing');
+      await page.selectOption('[data-id=song]', 'sing-hot-cross-buns');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      for (const scheme of ['dark', 'light', 'contrast']) {
+        await page.evaluate((t) => (document.documentElement.dataset.theme = t), scheme);
+        await page.addScriptTag({ content: axeSource });
+        const result = await page.evaluate(() =>
+          // eslint-disable-next-line no-undef
+          axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'best-practice'] }),
+        );
+        const found = result.violations.filter((v) => v.impact !== 'minor');
+        check(
+          found.length === 0,
+          `a11y ${scheme} results screen: ${
+            found.length === 0
+              ? 'no violations'
+              : found.map((v) => `${v.id} (${v.impact}): ${v.nodes[0].target}`).join('; ')
+          }`,
+        );
+      }
     });
   },
 

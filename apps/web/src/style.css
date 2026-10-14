@@ -794,6 +794,10 @@ code {
   color-scheme: light;
 }
 
+:root[data-theme='light'] button.primary {
+  color: #ffffff;
+}
+
 :root[data-theme='contrast'] {
   --bg: #000000;
   --panel: #0a0a0a;
@@ -878,7 +882,6 @@ ol.steps li a {
 
 ol.steps li.locked {
   color: var(--muted);
-  opacity: 0.7;
 }
 
 ol.steps li.mastered {

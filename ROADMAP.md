@@ -48,7 +48,7 @@ waits on the ones before it.
    the string and fret by pitch with the same detector Windline uses, in simulation first.
 6. **Duet and free play** (done). Two players alternate phrases of one song on one device with separate
    scores; free play with a metronome and a take recorded and played back on the device.
-7. **Quality.** An automated accessibility audit of every screen in CI; performance and offline
+7. **Quality** (done for what can be automated: an axe-core audit of every screen in three colour schemes in the end-to-end job, and a size budget on the build). An automated accessibility audit of every screen in CI; performance and offline
    checks; docstring and test coverage kept up; whatever the real-device list turns up.
 
 Ideas kept for later, none blocking: left-handed layouts, a per-game first-run tour, themed song

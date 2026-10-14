@@ -233,6 +233,13 @@ the results-screen reward from a finished song. `game/accompaniment.ts` plans ba
 as data (`BackingEvent`s in song time, harmonising a melody a bar at a time), merged with the click
 and guide tone by `planAllBacking` and scheduled by `playBacking`.
 
+Smaller pieces added since: `ladder.ts` (tempo ladders, cleared rungs per song), `lyrics.ts` (words
+under the notes), `free-play.ts` (metronome clicks and recording helpers for the free play screen),
+and in core `songs/interchange.ts` (move a melody to another key, read ABC notation), the pluck
+helpers in `songs/notation.ts` (`isPluckChart`, `withPluckPitches`, which let `BeatlineGame` judge
+plucked ukulele notes by pitch with the same onset-then-pitch attacher the simulation uses) and the
+duet helpers in `generate/practice.ts` (`duetPlayers`, `duetTally`, `duetWinner`).
+
 ## Adding things
 
 - **An instrument profile:** add `profiles/<id>.json`, register it in
