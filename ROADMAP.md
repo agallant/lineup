@@ -42,7 +42,7 @@ waits on the ones before it.
    note names hidden; a chord-change trainer scored on the change; call and response in Beatline; a
    voice range setting (the guide tone in your octave, a "fits your voice" mark). _The voice range is
    small because Singline already counts a note in any octave and folds your pitch for display._
-4. **Make and share (still private).** Transpose in My songs, paste ABC notation, copy a song as text
+4. **Make and share (still private)** (done). Transpose in My songs, paste ABC notation, copy a song as text
    (through the backup file or a message), lyrics under a melody for sing-along.
 5. **Plucked notes judged by pitch** (Strumline). Today a picked note is judged on timing only; judge
    the string and fret by pitch with the same detector Windline uses, in simulation first.

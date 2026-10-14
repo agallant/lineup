@@ -1025,6 +1025,47 @@ const scenarios = {
         Number(await text(page, 'r-miss')) === 0,
         'maker: the demo plays the player’s own melody without a miss',
       );
+
+      // paste a tune in ABC notation, move it up a tone, save it, and see its words while singing
+      await page.goto(URL_BASE + '#/make');
+      await page.fill(
+        '[data-id=paste]',
+        'X:1\nT:E2E abc\nL:1/4\nQ:1/4=120\nK:C\nC D E F | G2 E2\nw:one two three four five six',
+      );
+      await page.click('[data-id=read-paste]');
+      check(
+        (await page.inputValue('[data-id=notes]')).startsWith('C4:1 D4:1 E4:1'),
+        'maker: an ABC tune is read into the notes',
+      );
+      check(
+        (await page.inputValue('[data-id=lyrics]')) === 'one two three four five six',
+        'maker: its words come with it',
+      );
+      await page.click('[data-move="1"]');
+      await page.click('[data-move="-1"]');
+      await page.click('[data-move="12"]');
+      check(
+        (await page.inputValue('[data-id=notes]')).startsWith('C5:1 D5:1'),
+        'maker: the melody moves up an octave',
+      );
+      await page.click('[data-move="-12"]');
+      await page.click('[data-id=save]');
+      await page.goto(URL_BASE + '#/sing');
+      const abcValue = await page.evaluate(
+        () =>
+          [...document.querySelectorAll('[data-id=song] option')].find((o) =>
+            o.textContent.startsWith('E2E abc'),
+          ).value,
+      );
+      await page.selectOption('[data-id=song]', abcValue);
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=lyrics]:not([hidden])', { timeout: 20000 });
+      check(
+        /one/.test(await text(page, 'lyrics')),
+        `maker: the words show while singing (${await text(page, 'lyrics')})`,
+      );
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
     });
   },
 

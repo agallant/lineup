@@ -89,6 +89,7 @@ import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
 import { LadderStore, ladderText } from '../ladder';
+import { lyricIndexAt, lyricWindow, syllables } from '../lyrics';
 import { SettingsStore, nextSpeed, keyShiftFor, safeLocalStorage } from '../settings';
 import {
   RANDOM_FLUTE,
@@ -246,6 +247,7 @@ const PLAY = `
     <div class="overlay" data-id="overlay" aria-live="assertive"></div>
   </div>
   <div class="fingering" data-id="fingering" hidden></div>
+  <p class="lyrics" data-id="lyrics" hidden></p>
   <pre class="debug" data-id="debug" hidden></pre>
 `;
 
@@ -914,6 +916,18 @@ export const createPitchScreen =
         // the note counts as "now" once it has started, so the key changes then too
         return `${i}:${i >= 0 && t >= chart.notes[i]!.t}`;
       };
+      // a song of the player's own with words shows them under the notes, as it was written
+      const words =
+        settings.get().variation === 'original' && partIdx < 0
+          ? syllables(
+              ((song) => (song?.kind === 'melody' ? song.lyrics : undefined))(
+                mine.get(songEntry().id),
+              ) ?? '',
+            )
+          : [];
+      const lyricsEl = P<HTMLElement>('lyrics');
+      lyricsEl.hidden = words.length === 0;
+      let lyricAt = -2;
       let lastDebug = 0;
       let finished = false;
 
@@ -959,6 +973,19 @@ export const createPitchScreen =
           overlay.classList.add('on');
         } else {
           overlay.classList.remove('on');
+        }
+
+        if (words.length > 0) {
+          const at = lyricIndexAt(chart, now - offset);
+          if (at !== lyricAt) {
+            lyricAt = at;
+            const w = lyricWindow(words, at);
+            lyricsEl.replaceChildren(
+              document.createTextNode(w.before ? `${w.before} ` : ''),
+              Object.assign(document.createElement('strong'), { textContent: w.current }),
+              document.createTextNode(w.after ? ` ${w.after}` : ''),
+            );
+          }
         }
 
         if (fingerEl && fingeringKey !== fingerKeyNow(now)) {

@@ -5,6 +5,8 @@ import {
   UserSongStore,
   compileSong,
   describeCompiled,
+  songFromText,
+  songToText,
   userSongsFor,
   type UserSong,
 } from './user-songs';
@@ -203,5 +205,77 @@ describe('userSongsFor', () => {
     expect(userSongsFor('wind', store).map((s) => s.chart.meta.title)).toEqual(['My tune']);
     expect(userSongsFor('ukulele-strum', store).map((s) => s.chart.meta.title)).toEqual(['Strum']);
     expect(userSongsFor('clap', store)).toEqual([]);
+  });
+});
+
+describe('sharing songs as text', () => {
+  const melody = {
+    id: 'my-abc',
+    kind: 'melody' as const,
+    title: 'Shared',
+    bpm: 90,
+    key: 7,
+    notes: 'G4 A4 B4:2',
+    lyrics: 'la la laa',
+  };
+
+  it('round-trips every kind of song through text', () => {
+    const songs: UserSong[] = [
+      melody,
+      {
+        id: 'my-b',
+        kind: 'chords',
+        title: 'C',
+        bpm: 80,
+        bars: 'C | G',
+        pattern: 'D . D U . U D U',
+        beatsPerBar: 4,
+      },
+      {
+        id: 'my-c',
+        kind: 'rhythm',
+        title: 'R',
+        bpm: 80,
+        profile: 'drum-kit',
+        lanes: 'kick: x...x...\nsnare: ..x...x.',
+        stepsPerBeat: 2,
+      },
+    ];
+    for (const s of songs) {
+      const back = songFromText(songToText(s));
+      expect(back.ok).toBe(true);
+      const rest: Record<string, unknown> = { ...s };
+      delete rest['id'];
+      if (back.ok) expect(back.song).toEqual(rest);
+    }
+    expect(songToText(melody)).not.toContain('my-abc');
+  });
+
+  it('reads ABC, and says what is wrong with anything else', () => {
+    const abc = songFromText('T:Tune\nL:1/4\nK:G\nG A B2\nw:la la laa');
+    expect(abc).toMatchObject({ ok: true, song: { kind: 'melody', title: 'Tune', key: 7 } });
+    expect(songFromText('').ok).toBe(false);
+    expect(songFromText('hello there')).toMatchObject({ ok: false });
+    expect(songFromText('LINEUP-SONG-1 {oops')).toMatchObject({ ok: false });
+    expect(songFromText('LINEUP-SONG-1 {"kind":"melody"}')).toMatchObject({ ok: false });
+    expect(
+      songFromText('LINEUP-SONG-1 {"kind":"melody","title":"x","bpm":90,"key":0,"notes":"H9"}'),
+    ).toMatchObject({ ok: false });
+  });
+
+  it('keeps lyrics through storage and drops junk ones', () => {
+    const mem = new Map<string, string>();
+    const store = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, v),
+      removeItem: (k: string) => void mem.delete(k),
+    };
+    const songs = new UserSongStore(store);
+    const saved = songs.save({ ...melody, id: undefined })!;
+    expect(new UserSongStore(store).get(saved.id)).toMatchObject({ lyrics: 'la la laa' });
+    mem.set('lineup.songs.v1', JSON.stringify([{ ...saved, lyrics: 42 }]));
+    // junk lyrics are dropped, the song stays
+    expect(new UserSongStore(store).list()[0]!.kind === 'melody').toBe(true);
+    expect('lyrics' in new UserSongStore(store).list()[0]!).toBe(false);
   });
 });

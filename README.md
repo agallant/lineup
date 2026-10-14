@@ -127,7 +127,11 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   like `E4:2`, chords like `C | Am | F | G`, lanes like `kick: x...x...`); it is checked as you type,
   rated like any other song, and joins the song menus of the games that suit it (a melody goes to
   Singline, and to Windline when no note is below the key note). Songs are kept on the device and
-  included in the backup file.
+  included in the backup file. A melody can be moved to another key (semitone or octave buttons),
+  given words (one syllable per note, shown under the notes while you sing), and a tune in **ABC
+  notation** can be pasted in and read (key, tempo, lengths, accidentals, ties, triplets, words;
+  chords, decorations and repeat marks are skipped). **Copy as text** turns any song into a block
+  you can send in a message and paste into _Paste a song_ on another device.
 - **Ear training** (`#/ear`): ten questions, no instrument or microphone: name the interval between
   two notes, the kind of chord (major, minor, dominant 7th...), or _name that note_ (hear the key, then
   which note of it is this: do, re, mi...), at three levels; stars, XP and the scoreboard work as in

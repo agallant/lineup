@@ -956,3 +956,14 @@ ol.timeline .when {
 .theme-card .bar {
   margin-top: 6px;
 }
+
+/* Words under the notes while singing a song of your own */
+.lyrics {
+  text-align: center;
+  font-size: 1.4rem;
+  margin: 0.5rem 0;
+}
+.lyrics strong {
+  color: var(--accent, currentColor);
+  text-decoration: underline;
+}

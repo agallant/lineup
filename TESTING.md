@@ -124,6 +124,15 @@ Items for features still to come are added here as they ship, under the mileston
       reads "Tempo ladder: 65% ✓ · 80% ✓ · 100%" and fills in; the third rung shows "climbed!" and a trophy.
       Say if 90% accuracy is too strict or lenient for a rung.
 
+### Make and share
+
+- [ ] **My songs > Paste a song**: paste a tune from an ABC site (try one with a key signature and a
+      repeat); the notes, key and tempo look right and it plays the way you know it. Say which tunes fail.
+- [ ] **Move to another key** keeps the tune recognisable; **Words to sing** show under the notes in
+      Singline, one syllable per note, and keep up with the singing.
+- [ ] **Copy as text** on a song, then paste it into a message and back into **Paste a song** (on the
+      same or another device): the same song comes back.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:
