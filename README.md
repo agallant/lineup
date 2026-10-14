@@ -132,6 +132,12 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   notation** can be pasted in and read (key, tempo, lengths, accidentals, ties, triplets, words;
   chords, decorations and repeat marks are skipped). **Copy as text** turns any song into a block
   you can send in a message and paste into _Paste a song_ on another device.
+- **Duet** (Singline, Windline): on a song with at least two phrases, _Duet_ lets two players take
+  turns, phrase by phrase, on one device; the screen says whose turn it is and the results give each
+  player their notes hit and a winner (or a tie). It is filed as its own score.
+- **Free play** (`#/free`, under Make): a metronome (30 to 240 beats a minute, accented first beat,
+  2, 3, 4 or 6 to the bar) and a recorded take with a one-bar count-in, played back on the device and
+  optionally saved as a file. Nothing is uploaded; a take is gone when you leave unless saved.
 - **Plucked notes by pitch** (Strumline, experimental): on a picked melody or ukulele exercise, _Also
   check the pitch of each plucked note_ judges the string you play as well as the timing; a wrong note
   is a miss ("Wrong note" in the results). It uses the same pitch detector as Windline.

@@ -17,6 +17,7 @@ import { optionsScreen } from './app/screens/options';
 import { scoreboardScreen } from './app/screens/scoreboard';
 import { singScreen } from './app/screens/sing';
 import { strumScreen } from './app/screens/strum';
+import { freeScreen } from './app/screens/free';
 import { tunerScreen } from './app/screens/tuner';
 import { windScreen } from './app/screens/wind';
 
@@ -44,6 +45,7 @@ startRouter(
     strum: strumScreen,
     scores: scoreboardScreen,
     tuner: tunerScreen,
+    free: freeScreen,
     ear: earScreen,
     make: makerScreen,
     learn: learnScreen,

@@ -46,7 +46,7 @@ waits on the ones before it.
    (through the backup file or a message), lyrics under a melody for sing-along.
 5. **Plucked notes judged by pitch** (done, experimental; Strumline). Today a picked note is judged on timing only; judge
    the string and fret by pitch with the same detector Windline uses, in simulation first.
-6. **Duet and free play.** Two players alternate phrases of one song on one device with separate
+6. **Duet and free play** (done). Two players alternate phrases of one song on one device with separate
    scores; free play with a metronome and a take recorded and played back on the device.
 7. **Quality.** An automated accessibility audit of every screen in CI; performance and offline
    checks; docstring and test coverage kept up; whatever the real-device list turns up.

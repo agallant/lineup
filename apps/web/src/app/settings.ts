@@ -83,6 +83,8 @@ export interface Settings {
   checkChords: boolean;
   /** Strumline: also check the pitch of each plucked note (experimental), not just the timing. */
   checkPitch: boolean;
+  /** Singline and Windline: two players take turns, phrase by phrase, with a score each. */
+  duet: boolean;
   /** Strumline: tempo multiplier for practice (1 = the song's own tempo). */
   speed: number;
   /** Last chosen song id per profile. */
@@ -117,6 +119,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showFingerings: true,
   checkChords: false,
   checkPitch: false,
+  duet: false,
   speed: 1,
   songs: {},
   challenge: { seed: 1, scale: 'major', level: 'easy' },
@@ -245,6 +248,7 @@ function sanitize(raw: unknown): Settings {
       typeof r['checkChords'] === 'boolean' ? r['checkChords'] : DEFAULT_SETTINGS.checkChords,
     checkPitch:
       typeof r['checkPitch'] === 'boolean' ? r['checkPitch'] : DEFAULT_SETTINGS.checkPitch,
+    duet: typeof r['duet'] === 'boolean' ? r['duet'] : DEFAULT_SETTINGS.duet,
     speed:
       typeof r['speed'] === 'number' && r['speed'] >= 0.5 && r['speed'] <= 1.25
         ? r['speed']

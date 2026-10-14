@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { chartFromBeats } from '../chart';
 import { builtinSongs, getSong } from '../songs';
 import { melodyChart } from '../songs/notation';
-import { applyPart, echoChart, phraseBars, slicePart, songParts } from './practice';
+import {
+  applyPart,
+  duetPlayers,
+  duetTally,
+  duetWinner,
+  echoChart,
+  phraseBars,
+  phraseSeconds,
+  slicePart,
+  songParts,
+} from './practice';
 
 describe('songParts', () => {
   it('cuts a song into phrases at bar lines, and leaves very short ones whole', () => {
@@ -78,5 +89,47 @@ describe('echoChart', () => {
       expect(n.pitch).toBe(song.notes[i]!.pitch);
     });
     expect(chart.meta).toEqual(song.meta);
+  });
+});
+
+describe('duets', () => {
+  const long = chartFromBeats(
+    { title: 'd', bpm: 120, instruments: ['voice'] },
+    Array.from({ length: 32 }, (_, i) => ({ beat: i, beats: 0.8, pitch: 60 + (i % 5) })),
+  );
+
+  it('hands the phrases to the two players in turn', () => {
+    const players = duetPlayers(long)!;
+    expect(players).toHaveLength(long.notes.length);
+    const len = phraseSeconds(long);
+    long.notes.forEach((n, i) => expect(players[i]).toBe(Math.floor((n.t + 1e-6) / len) % 2));
+    expect(new Set(players)).toEqual(new Set([0, 1]));
+    // the first phrase is player 0's
+    expect(players[0]).toBe(0);
+  });
+
+  it('is not offered for a song with fewer than two phrases', () => {
+    const tiny = chartFromBeats({ title: 't', bpm: 120, instruments: ['voice'] }, [
+      { beat: 0, beats: 1, pitch: 60 },
+      { beat: 1, beats: 1, pitch: 62 },
+    ]);
+    expect(duetPlayers(tiny)).toBeNull();
+  });
+
+  it('tallies each player and names the winner', () => {
+    const players = [0, 0, 0, 1, 1, 1];
+    const t = duetTally(players, ['perfect', 'good', 'miss', 'perfect', 'pending', 'good']);
+    expect(t[0]).toEqual({ hit: 2, perfect: 1, total: 3 });
+    expect(t[1]).toEqual({ hit: 2, perfect: 1, total: 3 });
+    expect(duetWinner(t[0], t[1])).toBeNull();
+    const better = duetTally(players, ['perfect', 'perfect', 'good', 'good', 'miss', 'miss']);
+    expect(duetWinner(better[0], better[1])).toBe(0);
+    expect(duetWinner(better[1], better[0])).toBe(1);
+    // equal hits, more perfects wins
+    const close = duetTally(players, ['perfect', 'perfect', 'miss', 'good', 'good', 'miss']);
+    expect(duetWinner(close[0], close[1])).toBe(0);
+    expect(
+      duetWinner({ hit: 0, perfect: 0, total: 0 }, { hit: 0, perfect: 0, total: 0 }),
+    ).toBeNull();
   });
 });

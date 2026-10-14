@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|duet|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -982,6 +982,73 @@ const scenarios = {
       check(
         names.join(',') === 'Do,Mi,Sol',
         `ear: name that note offers do, mi and sol (${names.join(',')})`,
+      );
+    });
+  },
+
+  async free() {
+    console.log('\n# Free play: a metronome, a recorded take, and playback on the device');
+    await session(fixtures.sung, async (page) => {
+      await page.goto(URL_BASE + '#/free');
+      await page.fill('[data-id=bpm]', '500');
+      await page.dispatchEvent('[data-id=bpm]', 'change');
+      check(
+        (await page.inputValue('[data-id=bpm]')) === '240',
+        'free: the tempo is kept within range',
+      );
+      await page.click('[data-id=click-toggle]');
+      check(/Stop metronome/.test(await text(page, 'click-toggle')), 'free: the metronome starts');
+      await page.click('[data-id=click-toggle]');
+      check(/Start metronome/.test(await text(page, 'click-toggle')), 'free: and stops');
+      await page.uncheck('[data-id=with-click]');
+      await page.click('[data-id=record]');
+      await page.waitForFunction(
+        () => /Recording/.test(document.querySelector('[data-id=status]')?.textContent ?? ''),
+        null,
+        { timeout: 15000 },
+      );
+      await page.waitForTimeout(1500);
+      await page.click('[data-id=stop]');
+      await page.waitForSelector('[data-id=take]:not([hidden])', { timeout: 15000 });
+      check(
+        (await page.getAttribute('[data-id=player]', 'src'))?.startsWith('blob:') === true,
+        'free: the take is ready to play back',
+      );
+      check(
+        /^take\.(webm|m4a|ogg)$/.test(
+          (await page.getAttribute('[data-id=save]', 'download')) ?? '',
+        ),
+        'free: and can be saved to the device',
+      );
+      await page.click('[data-id=discard]');
+      check(await page.isHidden('[data-id=take]'), 'free: a take can be discarded');
+      await page.goto(URL_BASE + '#/');
+      check((await page.$('[data-id=free-link]')) !== null, 'home: free play is listed');
+    });
+  },
+
+  async duet() {
+    console.log('\n# Duet: two players share the phrases of a song, each with a score');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/sing');
+      await page.selectOption('[data-id=song]', 'sing-ode-to-joy');
+      check(await page.isVisible('[data-id=duet-label]'), 'duet: offered for a song with phrases');
+      await page.check('[data-id=opt-duet]');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=turn]:not([hidden])', { timeout: 20000 });
+      check(
+        /Player [12]'s turn/.test(await text(page, 'turn')),
+        `duet: says whose turn it is (${await text(page, 'turn')})`,
+      );
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const p1 = await text(page, 'r-p1');
+      const p2 = await text(page, 'r-p2');
+      const total = [p1, p2].reduce((n, t) => n + Number(/of (\d+) notes/.exec(t)?.[1] ?? 0), 0);
+      check(total === 30, `duet: each player has a score (${p1} / ${p2})`);
+      check(
+        /wins|tie/.test(await text(page, 'r-duet')),
+        `duet: the result names a winner or a tie (${await text(page, 'r-duet')})`,
       );
     });
   },

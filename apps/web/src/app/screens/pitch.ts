@@ -48,6 +48,9 @@ import {
   applyPart,
   echoChart,
   songParts,
+  duetPlayers,
+  duetTally,
+  duetWinner,
   varyChart,
   type Variation,
   type WindInstrument,
@@ -168,6 +171,7 @@ const setup = (c: PitchScreenConfig) => `
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
       <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
+      <label class="check" data-id="duet-label" hidden><input type="checkbox" data-id="opt-duet" /> Duet: two players take turns, phrase by phrase</label>
       <label class="check"><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
       <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
@@ -248,6 +252,7 @@ const PLAY = `
   </div>
   <div class="fingering" data-id="fingering" hidden></div>
   <p class="lyrics" data-id="lyrics" hidden></p>
+  <p class="turn" data-id="turn" role="status" hidden></p>
   <pre class="debug" data-id="debug" hidden></pre>
 `;
 
@@ -533,11 +538,21 @@ export const createPitchScreen =
       }
       partSel.value = String(partIdx);
       S('part-label').hidden = parts.length < 2;
+      S('duet-label').hidden = parts.length < 2 || partIdx >= 0;
     };
     partSel.addEventListener('change', () => {
       partIdx = Number(partSel.value);
       refreshRange();
     });
+    const duetBox = S<HTMLInputElement>('opt-duet');
+    duetBox.checked = settings.get().duet;
+    duetBox.addEventListener('change', () => {
+      settings.update({ duet: duetBox.checked });
+      refreshRange();
+    });
+    /** A duet is on: asked for, the whole song, and a song long enough to share between two. */
+    const duetOn = (): boolean =>
+      settings.get().duet && partIdx < 0 && duetPlayers(selectedChart()) !== null;
     const listenBox = S<HTMLInputElement>('listen');
     listenBox.checked = settings.get().listenFirst;
     listenBox.addEventListener('change', () => {
@@ -577,7 +592,7 @@ export const createPitchScreen =
             : settings.get().difficulty
         }${settings.get().variation === 'original' ? '' : `|${settings.get().variation}`}${
           partIdx >= 0 ? `|part${partIdx + 1}` : ''
-        }${settings.get().listenFirst ? '|echo' : ''}`,
+        }${settings.get().listenFirst ? '|echo' : ''}${duetOn() ? '|duet' : ''}`,
       );
 
     const refreshRange = () => {
@@ -927,6 +942,11 @@ export const createPitchScreen =
           : [];
       const lyricsEl = P<HTMLElement>('lyrics');
       lyricsEl.hidden = words.length === 0;
+      // a duet: the phrases alternate between two players, who each get a score
+      const players = duetOn() ? duetPlayers(chart) : null;
+      const turnEl = P<HTMLElement>('turn');
+      turnEl.hidden = players === null;
+      let turnFor = -2;
       let lyricAt = -2;
       let lastDebug = 0;
       let finished = false;
@@ -975,6 +995,16 @@ export const createPitchScreen =
           overlay.classList.remove('on');
         }
 
+        if (players) {
+          // the player of the note being sung, or of the first note before it starts
+          const at = Math.max(0, lyricIndexAt(chart, now - offset));
+          if (at !== turnFor) {
+            turnFor = at;
+            const who = players[at] ?? 0;
+            turnEl.textContent = `Player ${who + 1}'s turn`;
+            turnEl.dataset['player'] = String(who + 1);
+          }
+        }
         if (words.length > 0) {
           const at = lyricIndexAt(chart, now - offset);
           if (at !== lyricAt) {
@@ -1047,6 +1077,17 @@ export const createPitchScreen =
         : best!.isNewBest
           ? 'New best!'
           : describeBest(best!.best);
+      const duetPlayersNow = duetOn() ? duetPlayers(chart) : null;
+      const duet = duetPlayersNow ? duetTally(duetPlayersNow, game.session.statuses) : null;
+      const duetHtml = duet
+        ? `<dt>Player 1</dt><dd data-id="r-p1">${duet[0].hit} of ${duet[0].total} notes (${duet[0].perfect} perfect)</dd>
+          <dt>Player 2</dt><dd data-id="r-p2">${duet[1].hit} of ${duet[1].total} notes (${duet[1].perfect} perfect)</dd>
+          <dt>Duet</dt><dd data-id="r-duet">${
+            duetWinner(duet[0], duet[1]) === null
+              ? 'A tie'
+              : `Player ${(duetWinner(duet[0], duet[1]) ?? 0) + 1} wins`
+          }</dd>`
+        : '';
       // a clean run at a practice speed offers the next speed up
       const faster =
         !audio.demo && c.instruments && s.accuracy >= 0.9 ? nextSpeed(settings.get().speed) : null;
@@ -1069,6 +1110,7 @@ export const createPitchScreen =
           <dt>Good</dt><dd data-id="r-good">${s.counts.good}</dd>
           <dt>Missed</dt><dd data-id="r-miss">${s.counts.miss}</dd>
           <dt>Best combo</dt><dd data-id="r-combo">${s.maxCombo}</dd>
+          ${duetHtml}
         </dl>
         <div class="strip" data-id="strip">${game.session.statuses
           .map(

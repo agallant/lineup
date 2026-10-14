@@ -967,3 +967,38 @@ ol.timeline .when {
   color: var(--accent, currentColor);
   text-decoration: underline;
 }
+
+/* Free play: a level bar for the microphone and a link that looks like a button */
+.meter-bar {
+  height: 0.5rem;
+  background: var(--panel-border, #3334);
+  border-radius: 0.25rem;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+.meter-bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent, #2a9d8f);
+}
+a.button {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid currentColor;
+  border-radius: 0.4rem;
+  text-decoration: none;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+}
+
+/* Duet: whose turn it is */
+.turn {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+.turn[data-player='2'] {
+  color: var(--accent2, #e76f51);
+}

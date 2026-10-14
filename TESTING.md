@@ -141,6 +141,14 @@ Items for features still to come are added here as they ship, under the mileston
       passages (a known limit in simulation).
 - [ ] Does it work with your tuning (re-entrant GCEA, or low-G)? Low-G plays an octave low on the G string.
 
+### Duet and free play
+
+- [ ] **Singline or Windline > Duet**: with a friend, take turns by phrase; "Player 1's turn / Player 2's
+      turn" changes at the right moment, and each player's count matches what you sang.
+- [ ] **Free play**: the metronome keeps a steady beat (check against another metronome at 60 and 120);
+      a recorded take plays back, with the count-in left out; **Save to this device** gives a file you can open.
+- [ ] Free play with the metronome on and no headphones: do the clicks come out in the take?
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

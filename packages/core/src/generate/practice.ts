@@ -74,3 +74,56 @@ export function echoChart(chart: Chart, gapBeats = 2): { chart: Chart; listenEnd
   if (!result.ok) throw new Error(`an echo chart is invalid:\n${result.errors.join('\n')}`);
   return { chart: result.value, listenEnd };
 }
+
+/** The length of a phrase in seconds of song time. */
+export function phraseSeconds(chart: Chart): number {
+  return (60 / chart.meta.bpm) * (chart.meta.beatsPerBar ?? 4) * phraseBars(chart);
+}
+
+/**
+ * For a duet: which of two players (0 or 1) sings each note. Phrases alternate, the first phrase
+ * going to player 0. Null for a song too short to have two phrases to share.
+ */
+export function duetPlayers(chart: Chart): number[] | null {
+  if (songParts(chart).length < 2) return null;
+  const len = phraseSeconds(chart);
+  return chart.notes.map((n) => Math.floor((n.t + 1e-6) / len) % 2);
+}
+
+/** How one duet player did: notes hit (perfect or good), notes that were perfect, and all their notes. */
+export interface DuetTally {
+  hit: number;
+  perfect: number;
+  total: number;
+}
+
+/** Each player's tally from the status of every note (anything not yet judged counts as a miss). */
+export function duetTally(
+  players: readonly number[],
+  statuses: readonly string[],
+): [DuetTally, DuetTally] {
+  const out: [DuetTally, DuetTally] = [
+    { hit: 0, perfect: 0, total: 0 },
+    { hit: 0, perfect: 0, total: 0 },
+  ];
+  players.forEach((p, i) => {
+    const t = out[p === 1 ? 1 : 0];
+    t.total++;
+    const status = statuses[i];
+    if (status === 'perfect') {
+      t.hit++;
+      t.perfect++;
+    } else if (status === 'good') t.hit++;
+  });
+  return out;
+}
+
+/** The player who did better (more of their notes hit, then more perfect), or null for a tie. */
+export function duetWinner(a: DuetTally, b: DuetTally): 0 | 1 | null {
+  const rate = (t: DuetTally, of: 'hit' | 'perfect') => (t.total ? t[of] / t.total : 0);
+  for (const of of ['hit', 'perfect'] as const) {
+    const d = rate(a, of) - rate(b, of);
+    if (Math.abs(d) > 1e-9) return d > 0 ? 0 : 1;
+  }
+  return null;
+}
