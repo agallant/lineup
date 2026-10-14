@@ -1944,8 +1944,8 @@ const scenarios = {
         'home: the most recently played path suggests its open step',
       );
       check(
-        (await page.$$('[data-id=games] a')).length === 5,
-        'home: four instrument games and ear training under Play',
+        (await page.$$('[data-id=games] a')).length === 7,
+        'home: six instrument games and ear training under Play',
       );
       check(
         (await page.$$('[data-id=games] a[href="#/mic"], [data-id=games] a[href="#/calibrate"]'))
