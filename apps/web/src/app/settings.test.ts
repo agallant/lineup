@@ -59,9 +59,10 @@ describe('SettingsStore', () => {
 
   it('keeps the Strumline options (chord checking off, normal speed) and rejects bad values', () => {
     const s = new SettingsStore(new Mem());
-    expect(s.get()).toMatchObject({ checkChords: false, speed: 1 });
-    expect(s.update({ checkChords: true, speed: 0.75 })).toMatchObject({
+    expect(s.get()).toMatchObject({ checkChords: false, checkPitch: false, speed: 1 });
+    expect(s.update({ checkChords: true, checkPitch: true, speed: 0.75 })).toMatchObject({
       checkChords: true,
+      checkPitch: true,
       speed: 0.75,
     });
     expect(s.update({ speed: 3 }).speed).toBe(1);

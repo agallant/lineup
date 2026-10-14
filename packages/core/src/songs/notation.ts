@@ -1,4 +1,10 @@
-import { chartFromBeats, type BeatNote, type Chart, type ChartMeta } from '../chart';
+import {
+  chartFromBeats,
+  type BeatNote,
+  type Chart,
+  type ChartMeta,
+  type ChartNote,
+} from '../chart';
 import { UKULELE_CHORD_FRETS } from '../chords';
 
 /**
@@ -96,6 +102,33 @@ export const ukulelePlayable = (pitch: number): boolean =>
  */
 export const pluckNotes = (notes: readonly BeatNote[]): BeatNote[] =>
   notes.map((n) => ({ beat: n.beat, expected: { frets: ukulelePluck(n.pitch!) } }));
+
+/** The pitch a plucked note sounds, from the one string and fret it names, or null if it is not a pluck. */
+function pluckedPitch(note: ChartNote): number | null {
+  const frets = note.expected?.frets;
+  if (!frets || frets.length !== UKULELE_OPEN.length) return null;
+  const held = frets.flatMap((f, i) => (f === null ? [] : [{ f, i }]));
+  return held.length === 1 ? UKULELE_OPEN[held[0]!.i]! + held[0]!.f : null;
+}
+
+/** True when every note of the chart is a single plucked note (a picked melody or ukulele exercise). */
+export const isPluckChart = (chart: Chart): boolean =>
+  chart.notes.length > 0 && chart.notes.every((n) => pluckedPitch(n) !== null);
+
+/**
+ * A plucked chart with the pitch each note sounds written in, so it can be judged by pitch as well as
+ * timing. Notes that are not single plucks (strums) and notes that already have a pitch are kept.
+ */
+export function withPluckPitches(chart: Chart): Chart {
+  return {
+    ...chart,
+    notes: chart.notes.map((n) => {
+      if (n.pitch !== undefined) return n;
+      const pitch = pluckedPitch(n);
+      return pitch === null ? n : { ...n, pitch };
+    }),
+  };
+}
 
 /** A melody for the ukulele: each note is plucked on one string at the fret that sounds it. */
 export function pickedMelodyChart(meta: Meta, text: string): Chart {

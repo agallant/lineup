@@ -26,6 +26,8 @@ import {
   seedForDifficulty,
   rescaleChart,
   songsFor,
+  isPluckChart,
+  withPluckPitches,
   type Chart,
   type GrooveProfile,
   type InstrumentProfile,
@@ -100,7 +102,10 @@ export interface HitScreenConfig {
   /** What to say about the metronome and the mic hearing the speaker. */
   bleedWarning: string;
   /** The synthetic player for the auto-play demo, and the timbre model it implies (null if none). */
-  demo: (profile: InstrumentProfile) => { performer: Performer; model: TimbreModel | null };
+  demo: (
+    profile: InstrumentProfile,
+    options?: { pitched: boolean },
+  ) => { performer: Performer; model: TimbreModel | null };
   /** Strumline: offer chord checking and a practice speed. */
   strum?: boolean;
 }
@@ -181,6 +186,7 @@ const setup = (c: HitScreenConfig) => `
       </label>
     </div>
     <label class="check" data-id="chords-opt" ${c.strum ? '' : 'hidden'}><input type="checkbox" data-id="opt-chords" /> Also check the chords (experimental; otherwise only the timing counts)</label>
+    <label class="check" data-id="pitch-opt" hidden><input type="checkbox" data-id="opt-pitch" /> Also check the pitch of each plucked note (experimental; otherwise only the timing counts)</label>
     <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks (needs headphones)</label>
     <label class="check"><input type="checkbox" data-id="opt-debug" /> Debug overlay while playing</label>
     <p data-id="cal-status"></p>
@@ -263,7 +269,9 @@ export const createHitScreen =
         if (wantedSong) {
           settings.update({
             variation: 'original',
-            ...(c.strum ? { speed: 1, checkChords: false } : { listenFirst: false }),
+            ...(c.strum
+              ? { speed: 1, checkChords: false, checkPitch: false }
+              : { listenFirst: false }),
           });
         }
         settings.update({
@@ -320,6 +328,8 @@ export const createHitScreen =
     const chordsBox = S<HTMLInputElement>('opt-chords');
     const speedSel = S<HTMLSelectElement>('speed');
     chordsBox.checked = current.checkChords;
+    const pitchBox = S<HTMLInputElement>('opt-pitch');
+    pitchBox.checked = current.checkPitch;
     speedSel.value = String(current.speed);
     for (const m of c.modes) modeSel.add(new Option(m.label, m.id));
     modeSel.value = profile.id;
@@ -385,7 +395,7 @@ export const createHitScreen =
       scoreKey(
         profile.id,
         randomEntry()?.id ?? songSel.value,
-        `${c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}` : ''}${
+        `${c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}${pitchMode() ? '+pitch' : ''}` : ''}${
           settings.get().variation === 'original' ? '' : `|${settings.get().variation}`
         }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${listening() ? `|echo${blind() ? '|blind' : ''}` : ''}`,
       );
@@ -393,6 +403,7 @@ export const createHitScreen =
       syncParts();
       // a random song has no fixed title to find in the menu: say which one this is
       const chart = songChart();
+      S('pitch-opt').hidden = !(c.strum && isPluckChart(wholeSong()));
       S('song-info').textContent = randomEntry()
         ? `${chart.meta.title} · ${songSummary(chart)}`
         : songSummary(chart);
@@ -628,6 +639,10 @@ export const createHitScreen =
     };
     modeSel.addEventListener('change', () => void reopenMicIfNeeded());
     songSel.addEventListener('change', () => void reopenMicIfNeeded());
+    pitchBox.addEventListener('change', () => {
+      settings.update({ checkPitch: pitchBox.checked });
+      refreshSong();
+    });
     chordsBox.addEventListener('change', () => {
       settings.update({ checkChords: chordsBox.checked });
       refreshSong();
@@ -827,6 +842,7 @@ export const createHitScreen =
         clock,
         latencyOffset: offset,
         model: audio.model,
+        ...(pitchMode() ? { pitched: getProfile('ukulele-note') } : {}),
       });
       adapter.onMessage = (m) => game.handleMessage(m);
       backing = playBacking(
@@ -851,7 +867,7 @@ export const createHitScreen =
         if (finished) return;
         finished = true;
         stopPlay();
-        game.session.finish();
+        game.finish();
         if (!demo) adapter.onMessage = onSetupMessage;
         showResults(game, chart, audio);
       };
@@ -960,6 +976,11 @@ export const createHitScreen =
           <dt>Good</dt><dd data-id="r-good">${s.counts.good}</dd>
           <dt>Missed</dt><dd data-id="r-miss">${s.counts.miss}</dd>
           <dt>Extra hits</dt><dd data-id="r-strays">${game.strays}</dd>
+          ${
+            pitchMode()
+              ? `<dt>Wrong note</dt><dd data-id="r-wrongpitch">${game.judge.judgments.filter((j) => j.reason === 'wrong-pitch').length}</dd>`
+              : ''
+          }
           ${
             c.strum && settings.get().checkChords
               ? `<dt>Wrong chord</dt><dd data-id="r-wrongchord">${game.judge.judgments.filter((j) => j.reason === 'wrong-chord').length}</dd>`
@@ -1076,7 +1097,13 @@ export const createHitScreen =
       partIdx = Number(partSel.value);
       refreshSong();
     });
-    const songChart = (): Chart => applyPart(wholeSong(), partIdx);
+    /** Strumline: a picked melody is judged by pitch as well as timing when the player asked for it. */
+    const pitchMode = (): boolean =>
+      c.strum === true && settings.get().checkPitch && isPluckChart(wholeSong());
+    const songChart = (): Chart => {
+      const part = applyPart(wholeSong(), partIdx);
+      return pitchMode() ? withPluckPitches(part) : part;
+    };
     // percussion rhythms can be heard first as ticks; a chord song cannot
     const listenBox = S<HTMLInputElement>('listen');
     S('listen-label').hidden = !!c.strum;
@@ -1138,7 +1165,7 @@ export const createHitScreen =
           enrollBtn.disabled = true;
         }
         setupStatus.textContent = 'Preparing the demo player… 0%';
-        const { performer, model: demoModel } = c.demo(profile);
+        const { performer, model: demoModel } = c.demo(profile, { pitched: pitchMode() });
         const perf = await renderPerformanceAsync(
           chart,
           performer,

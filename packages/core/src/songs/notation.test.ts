@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { LIBRARY } from './library';
 import {
   grooveChart,
+  isPluckChart,
   melodyChart,
   melodyNotes,
   parseNoteName,
   pickedMelodyChart,
   strumChart,
   ukulelePluck,
+  withPluckPitches,
 } from './notation';
 
 const meta = { title: 't', bpm: 60 };
@@ -138,5 +140,30 @@ describe('the library', () => {
       expect(Math.min(...pitches), id).toBeGreaterThanOrEqual(55); // G3
       expect(Math.max(...pitches), id).toBeLessThanOrEqual(79); // G5
     }
+  });
+});
+
+describe('plucked charts and their pitches', () => {
+  it('knows a plucked chart and gives each note the pitch of its string and fret', () => {
+    const chart = pickedMelodyChart(
+      { title: 'p', bpm: 100, instruments: ['ukulele-strum'] },
+      'C4 E4 G4 A4 C5',
+    );
+    expect(isPluckChart(chart)).toBe(true);
+    expect(chart.notes.every((n) => n.pitch === undefined)).toBe(true);
+    expect(withPluckPitches(chart).notes.map((n) => n.pitch)).toEqual([60, 64, 67, 69, 72]);
+    // timing and the frets are untouched
+    expect(withPluckPitches(chart).notes.map((n) => n.t)).toEqual(chart.notes.map((n) => n.t));
+    expect(withPluckPitches(chart).notes[0]!.expected).toEqual(chart.notes[0]!.expected);
+  });
+
+  it('leaves strummed charts alone', () => {
+    const strum = strumChart(
+      { title: 's', bpm: 90, instruments: ['ukulele-strum'] },
+      'C | G',
+      'D . D U . U D U',
+    );
+    expect(isPluckChart(strum)).toBe(false);
+    expect(withPluckPitches(strum).notes.every((n) => n.pitch === undefined)).toBe(true);
   });
 });

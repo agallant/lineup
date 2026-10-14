@@ -44,7 +44,7 @@ waits on the ones before it.
    small because Singline already counts a note in any octave and folds your pitch for display._
 4. **Make and share (still private)** (done). Transpose in My songs, paste ABC notation, copy a song as text
    (through the backup file or a message), lyrics under a melody for sing-along.
-5. **Plucked notes judged by pitch** (Strumline). Today a picked note is judged on timing only; judge
+5. **Plucked notes judged by pitch** (done, experimental; Strumline). Today a picked note is judged on timing only; judge
    the string and fret by pitch with the same detector Windline uses, in simulation first.
 6. **Duet and free play.** Two players alternate phrases of one song on one device with separate
    scores; free play with a metronome and a take recorded and played back on the device.

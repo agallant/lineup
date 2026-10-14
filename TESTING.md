@@ -133,6 +133,14 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] **Copy as text** on a song, then paste it into a message and back into **Paste a song** (on the
       same or another device): the same song comes back.
 
+### Plucked notes by pitch
+
+- [ ] **Strumline > a picked song (Picking: Ode to Joy)**: tick _Also check the pitch of each plucked
+      note_ and pluck the melody: right notes score, a wrong string or fret is a miss ("Wrong note").
+- [ ] Notes that ring into the next (a wide leap) can be judged wrong when they were right: say which
+      passages (a known limit in simulation).
+- [ ] Does it work with your tuning (re-entrant GCEA, or low-G)? Low-G plays an octave low on the G string.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

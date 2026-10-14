@@ -618,6 +618,26 @@ const scenarios = {
         perfect === 32 && miss === 0,
         `demo ukulele plucks all 32 notes on time (${perfect} perfect, ${miss} missed, grade ${await text(page, 'grade')})`,
       );
+
+      // the same song judged by pitch too: the pitch option shows for a picked song, and the demo
+      // plucker plays every note right
+      await page.click('[data-id=back]');
+      check(await page.isVisible('[data-id=pitch-opt]'), 'the pitch option is offered for picking');
+      await page.check('[data-id=opt-pitch]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 90000 });
+      const pitchedPerfect = Number(await text(page, 'r-perfect'));
+      const wrong = Number(await text(page, 'r-wrongpitch'));
+      check(
+        pitchedPerfect >= 30 && wrong === 0,
+        `demo plucks judged by pitch: ${pitchedPerfect} perfect, ${wrong} wrong notes, ${await text(page, 'r-miss')} missed`,
+      );
+      await page.click('[data-id=back]');
+      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      check(
+        !(await page.isVisible('[data-id=pitch-opt]')),
+        'the pitch option is hidden for a strummed song',
+      );
     });
   },
 

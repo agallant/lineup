@@ -132,6 +132,9 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   notation** can be pasted in and read (key, tempo, lengths, accidentals, ties, triplets, words;
   chords, decorations and repeat marks are skipped). **Copy as text** turns any song into a block
   you can send in a message and paste into _Paste a song_ on another device.
+- **Plucked notes by pitch** (Strumline, experimental): on a picked melody or ukulele exercise, _Also
+  check the pitch of each plucked note_ judges the string you play as well as the timing; a wrong note
+  is a miss ("Wrong note" in the results). It uses the same pitch detector as Windline.
 - **Ear training** (`#/ear`): ten questions, no instrument or microphone: name the interval between
   two notes, the kind of chord (major, minor, dominant 7th...), or _name that note_ (hear the key, then
   which note of it is this: do, re, mi...), at three levels; stars, XP and the scoreboard work as in
