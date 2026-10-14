@@ -29,6 +29,9 @@ export function onsetOptionsFromProfile(profile: InstrumentProfile): OnsetDetect
   };
 }
 
+/** Lowest frequency a guitar's chords are read from, Hz. */
+const GUITAR_LOW_HZ = 130;
+
 /** Song-specific analyzer inputs that the profile cannot supply. */
 export interface AnalyzerExtras {
   /** For a strum profile: the chords the song uses (name -> sounding MIDI notes). Turns on chord recognition. */
@@ -45,7 +48,15 @@ export function analyzerOptionsFromProfile(
   { chords }: AnalyzerExtras = {},
 ): InputAnalyzerOptions {
   if (profile.input === 'strum' && chords && Object.keys(chords).length > 0) {
-    return { strum: { onset: onsetOptionsFromProfile(profile), chords } };
+    // a guitar's low strings sit below where a ukulele's chords are read from
+    const lowest = Math.min(...(profile.tuning?.strings.map((s) => s.midi) ?? [60]));
+    return {
+      strum: {
+        onset: onsetOptionsFromProfile(profile),
+        chords,
+        ...(lowest < 52 ? { chord: { lowHz: GUITAR_LOW_HZ } } : {}),
+      },
+    };
   }
   if (profile.input === 'percussion') {
     // the percussion detector names its options differently: lookbackMs is its referenceDelay

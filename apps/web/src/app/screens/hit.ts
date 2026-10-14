@@ -15,6 +15,7 @@ import {
   generateChordSong,
   generateGroove,
   generateMelody,
+  guitarChart,
   hashSeed,
   getProfile,
   grooveId,
@@ -294,6 +295,19 @@ export const createHitScreen =
       }
     }
 
+    /** The guitar plays the ukulele's songs and generators, moved onto its own strings. */
+    const guitar = (): boolean => profile.id === 'guitar-strum';
+    const generatorProfile = (): string => (guitar() ? 'ukulele-strum' : profile.id);
+    const forInstrument = (chart: Chart): Chart => (guitar() ? guitarChart(chart) : chart);
+    /** Every song in the menu: the built-in ones and the player's own. */
+    const menuSongs = () => [
+      ...songsFor(profile.id),
+      ...userSongsFor(generatorProfile(), mine).map((s) => ({
+        ...s,
+        chart: forInstrument(s.chart),
+      })),
+    ];
+
     let profile: InstrumentProfile = getProfile(
       c.modes.some((m) => m.id === settings.get().songs[`${c.keyPrefix}-mode`])
         ? settings.get().songs[`${c.keyPrefix}-mode`]!
@@ -374,7 +388,10 @@ export const createHitScreen =
         };
       }
       if (songSel.value === RANDOM_MELODY) {
-        return { id: melodyId(profile.id, spec), build: (s) => generateMelody(profile.id, s) };
+        return {
+          id: melodyId(generatorProfile(), spec),
+          build: (s) => generateMelody(generatorProfile(), s),
+        };
       }
       return null;
     };
@@ -382,15 +399,17 @@ export const createHitScreen =
       const spec = settings.get().challenge;
       const kind = randomKind(spec);
       if (!kind) return null;
-      if (randomCache?.id !== kind.id) randomCache = { id: kind.id, chart: kind.build(spec) };
+      if (randomCache?.id !== kind.id)
+        randomCache = { id: kind.id, chart: forInstrument(kind.build(spec)) };
       return randomCache;
     };
     const showChallenge = () => {
       const spec = settings.get().challenge;
       scaleSel.replaceChildren();
-      for (const id of melodyScalesFor(profile.id)) scaleSel.add(new Option(SCALES[id].label, id));
-      if (!melodyScalesFor(profile.id).includes(spec.scale)) {
-        settings.update({ challenge: { ...spec, scale: melodyScalesFor(profile.id)[0]! } });
+      for (const id of melodyScalesFor(generatorProfile()))
+        scaleSel.add(new Option(SCALES[id].label, id));
+      if (!melodyScalesFor(generatorProfile()).includes(spec.scale)) {
+        settings.update({ challenge: { ...spec, scale: melodyScalesFor(generatorProfile())[0]! } });
       }
       const now = settings.get().challenge;
       scaleSel.value = now.scale;
@@ -423,14 +442,14 @@ export const createHitScreen =
     /** Re-reads everything that depends on the chosen mode. */
     const applyMode = () => {
       songSel.replaceChildren(); // also removes group headings
-      const songs = [...songsFor(profile.id), ...userSongsFor(profile.id, mine)];
+      const songs = menuSongs();
       const stars = starsBySong(scores.entries(), profile.id);
       fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
       addRandomOptions(
         songSel,
         c.plucked
           ? []
-          : profile.id === 'ukulele-strum'
+          : generatorProfile() === 'ukulele-strum'
             ? [
                 { value: RANDOM_CHORDS, label: '🎲 Random chord song' },
                 { value: RANDOM_WALTZ, label: '🎲 Random waltz (3/4)' },
@@ -860,7 +879,9 @@ export const createHitScreen =
         clock,
         latencyOffset: offset,
         model: audio.model,
-        ...(pitchMode() ? { pitched: c.plucked ? profile : getProfile('ukulele-note') } : {}),
+        ...(pitchMode()
+          ? { pitched: c.plucked ? profile : getProfile(guitar() ? 'guitar-note' : 'ukulele-note') }
+          : {}),
       });
       adapter.onMessage = (m) => game.handleMessage(m);
       backing = playBacking(
@@ -1096,7 +1117,7 @@ export const createHitScreen =
     };
     const songEntry = () => {
       const random = randomEntry();
-      const songs = [...songsFor(profile.id), ...userSongsFor(profile.id, mine)];
+      const songs = menuSongs();
       return random ?? songs.find((s) => s.id === songSel.value) ?? songs[0]!;
     };
     /** The part of the song to practise (an index into its phrases), or -1 for all of it. */

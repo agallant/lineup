@@ -27,7 +27,7 @@ export const TIPS: Readonly<Record<string, Tip>> = {
   strumline: {
     title: 'Strumming along',
     steps: [
-      'Tap “Start mic”, hold your ukulele near the device, and pick a song.',
+      'Choose ukulele or guitar, tap “Start mic”, hold it near the device, and pick a song.',
       'Strum when a bar reaches the line; a single number is a pluck on that string and fret.',
       'Start slow with Speed, then try “Also check the chords”.',
     ],

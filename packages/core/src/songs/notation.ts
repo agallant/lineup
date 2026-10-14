@@ -74,6 +74,27 @@ export function melodyChart(meta: Meta, text: string, transpose = 0): Chart {
 /** The ukulele's strings as tuned (G4 C4 E4 A4, the order of a note's `frets`), as MIDI numbers. */
 const UKULELE_OPEN = [67, 60, 64, 69] as const;
 
+/** The guitar's strings as tuned (E2 A2 D3 G3 B3 E4, the order of a note's `frets`), as MIDI numbers. */
+export const GUITAR_OPEN = [40, 45, 50, 55, 59, 64] as const;
+
+/** The highest fret a picked guitar melody is moved to. */
+const GUITAR_MAX_FRET = 12;
+
+/** The fret to hold on each of a guitar's strings to pluck `pitch`: the lowest fret that reaches it. */
+export function guitarPluck(pitch: number): (number | null)[] {
+  let best = -1;
+  let bestFret = Infinity;
+  GUITAR_OPEN.forEach((open, i) => {
+    const fret = pitch - open;
+    if (fret >= 0 && fret <= GUITAR_MAX_FRET && fret < bestFret) {
+      best = i;
+      bestFret = fret;
+    }
+  });
+  if (best < 0) throw new Error(`MIDI ${pitch} is not on the guitar below fret ${GUITAR_MAX_FRET}`);
+  return GUITAR_OPEN.map((_, i) => (i === best ? bestFret : null));
+}
+
 /** The highest fret a picked melody asks for. */
 const MAX_FRET = 7;
 
@@ -103,12 +124,13 @@ export const ukulelePlayable = (pitch: number): boolean =>
 export const pluckNotes = (notes: readonly BeatNote[]): BeatNote[] =>
   notes.map((n) => ({ beat: n.beat, expected: { frets: ukulelePluck(n.pitch!) } }));
 
-/** The pitch a plucked note sounds, from the one string and fret it names, or null if it is not a pluck. */
+/** The pitch a plucked note sounds, from the one string and fret it names (a ukulele's or a guitar's), or null if it is not a pluck. */
 function pluckedPitch(note: ChartNote): number | null {
   const frets = note.expected?.frets;
-  if (!frets || frets.length !== UKULELE_OPEN.length) return null;
+  const open = frets?.length === GUITAR_OPEN.length ? GUITAR_OPEN : UKULELE_OPEN;
+  if (!frets || frets.length !== open.length) return null;
   const held = frets.flatMap((f, i) => (f === null ? [] : [{ f, i }]));
-  return held.length === 1 ? UKULELE_OPEN[held[0]!.i]! + held[0]!.f : null;
+  return held.length === 1 ? open[held[0]!.i]! + held[0]!.f : null;
 }
 
 /** True when every note of the chart is a single plucked note (a picked melody or ukulele exercise). */
@@ -201,4 +223,26 @@ export function grooveChart(
     }
   }
   return chartFromBeats(meta, notes);
+}
+
+/**
+ * A ukulele chart as the same song for the guitar: strummed chords keep their names (the guitar's
+ * fingerings show on its six strings), and each plucked note moves to the string and fret of a
+ * guitar that sounds it. Charts of other instruments are returned unchanged.
+ */
+export function guitarChart(chart: Chart): Chart {
+  if (!chart.meta.instruments?.includes('ukulele-strum')) return chart;
+  const notes = chart.notes.map((n) => {
+    const pitch = pluckedPitch(n);
+    if (pitch === null) return n;
+    return { ...n, pitch, expected: { ...n.expected, frets: guitarPluck(pitch) } };
+  });
+  return {
+    ...chart,
+    meta: {
+      ...chart.meta,
+      instruments: chart.meta.instruments.map((i) => (i === 'ukulele-strum' ? 'guitar-strum' : i)),
+    },
+    notes,
+  };
 }

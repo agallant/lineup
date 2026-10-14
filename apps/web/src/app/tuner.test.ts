@@ -33,6 +33,19 @@ describe('readTuner', () => {
     expect(readTuner(hz(59, -10), bari)).toMatchObject({ name: 'B3', state: 'flat' });
   });
 
+  it('has the guitar, standard and alternate tunings', () => {
+    const std = TUNINGS.find((t) => t.id === 'guitar')!;
+    expect(std.strings.map((s) => s.name)).toEqual(['E2', 'A2', 'D3', 'G3', 'B3', 'E4']);
+    expect(readTuner(hz(40, -8), std)).toMatchObject({ name: 'E2', state: 'flat' });
+    const dropD = TUNINGS.find((t) => t.id === 'guitar-drop-d')!;
+    expect(dropD.strings[0]).toEqual({ name: 'D2', midi: 38 });
+    // the low strings need the low listening range
+    expect(tunerPitchOptions(std).minHz).toBeLessThan(60);
+    for (const id of ['guitar-dadgad', 'guitar-open-g']) {
+      expect(TUNINGS.find((t) => t.id === id)!.strings).toHaveLength(6);
+    }
+  });
+
   it('names any note in chromatic mode', () => {
     expect(readTuner(440, chromatic)).toMatchObject({ name: 'A4', state: 'in-tune' });
     expect(readTuner(hz(61, 10), chromatic)).toMatchObject({ name: 'C♯4', state: 'sharp' });
