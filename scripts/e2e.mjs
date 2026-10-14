@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|responsive|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1556,6 +1556,130 @@ const scenarios = {
         await shot(page, `ux-${route || 'home'}`);
       }
       check(true, 'ux: screenshots taken');
+    });
+  },
+
+  async responsive() {
+    console.log(
+      '\n# Responsive: phones and tablets, portrait and landscape (no sideways scroll, big enough touch targets)',
+    );
+    const sizes = [
+      ['phone-small', 360, 740],
+      ['phone', 390, 844],
+      ['phone-landscape', 844, 390],
+      ['tablet', 820, 1180],
+      ['tablet-landscape', 1180, 820],
+    ];
+    const routes = [
+      '',
+      'sing',
+      'wind',
+      'strum',
+      'bass',
+      'keys',
+      'beat',
+      'learn',
+      'packs',
+      'scores',
+      'collection',
+      'make',
+      'free',
+      'tuner',
+      'metronome',
+      'ear',
+      'calibrate',
+      'mic',
+      'options',
+      'help',
+    ];
+    const measure = () => {
+      const visible = (el) => {
+        const r = el.getBoundingClientRect();
+        const st = getComputedStyle(el);
+        return r.width > 0 && r.height > 0 && st.visibility !== 'hidden' && st.display !== 'none';
+      };
+      const small = [];
+      for (const el of document.querySelectorAll(
+        'button, select, input:not([type=hidden]):not([type=checkbox]):not([type=radio]), summary, a.card',
+      )) {
+        if (!visible(el)) continue;
+        const r = el.getBoundingClientRect();
+        if (r.height < 36 || r.width < 36) {
+          small.push(
+            `${el.tagName.toLowerCase()}${el.dataset.id ? '[' + el.dataset.id + ']' : ''} ${Math.round(r.width)}x${Math.round(r.height)} "${(el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 18)}"`,
+          );
+        }
+      }
+      // anything sticking out past the right edge
+      const wide = [];
+      for (const el of document.querySelectorAll('main *')) {
+        if (!visible(el)) continue;
+        const r = el.getBoundingClientRect();
+        if (r.right > innerWidth + 1 && !el.closest('pre, canvas, .strip, .debug')) {
+          wide.push(
+            `${el.tagName.toLowerCase()}${el.dataset.id ? '[' + el.dataset.id + ']' : ''} to ${Math.round(r.right)}`,
+          );
+        }
+      }
+      return {
+        overflow: document.documentElement.scrollWidth - innerWidth,
+        small: small.slice(0, 6),
+        smallCount: small.length,
+        wide: wide.slice(0, 4),
+      };
+    };
+    await session(null, async (page) => {
+      for (const [name, w, h] of sizes) {
+        await page.setViewportSize({ width: w, height: h });
+        for (const route of routes) {
+          await page.goto(URL_BASE + '#/' + route);
+          await page.waitForSelector('h1');
+          await page.waitForTimeout(150);
+          const m = await page.evaluate(measure);
+          check(
+            m.overflow <= 1 && m.wide.length === 0,
+            `${name} #/${route || 'home'}: fits the width (${m.overflow} px over${m.wide.length ? '; ' + m.wide.join(', ') : ''})`,
+          );
+          if (m.smallCount)
+            console.log(
+              `  note  ${name} #/${route || 'home'}: ${m.smallCount} small targets: ${m.small.join(' | ')}`,
+            );
+          if (name === 'phone') await shot(page, `resp-${route || 'home'}`);
+        }
+        // a game being played: the stage and the HUD fit
+        for (const [route, pick] of [
+          ['sing', 'sing-hot-cross-buns'],
+          ['strum', null],
+          ['keys', null],
+          ['beat', null],
+        ]) {
+          await page.goto(URL_BASE + '#/' + route);
+          await page.waitForSelector('[data-id=demo]');
+          if (pick) await pickSong(page, pick);
+          const metro = await page.$('[data-id=opt-metronome]');
+          if (metro) await page.uncheck('[data-id=opt-metronome]');
+          await page.click('[data-id=demo]');
+          await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+          await page.waitForTimeout(1500);
+          const m = await page.evaluate(measure);
+          const box = await page.$eval('[data-id=stage]', (c) => {
+            const r = c.getBoundingClientRect();
+            return {
+              w: Math.round(r.width),
+              h: Math.round(r.height),
+              top: Math.round(r.top),
+              bottom: Math.round(r.bottom),
+            };
+          });
+          check(
+            m.overflow <= 1 && box.w <= w && box.w >= Math.min(w - 40, 300),
+            `${name} ${route} play: the stage fits (${box.w}x${box.h}, ${m.overflow} px over)`,
+          );
+          if (name === 'phone' || name === 'phone-landscape')
+            await shot(page, `resp-${name}-${route}-play`);
+          await page.click('[data-id=stop]');
+        }
+      }
     });
   },
 
