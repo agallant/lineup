@@ -88,6 +88,7 @@ import {
 import { fingeringChartHtml, fingeringStripHtml } from '../game/fingering-view';
 import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
+import { mountBackingControls } from '../backing-controls';
 import { StepGame } from '../game/step-game';
 import { pitchEngine, showStepResults as stepResults, startStepRun } from '../step-run';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
@@ -242,6 +243,7 @@ const setup = (c: PitchScreenConfig) => `
     <label class="check"><input type="checkbox" data-id="opt-fingerings" /> Show the fingering of the current and next note while playing</label>`
         : ''
     }
+    <div data-id="backing-box"></div>
     <label class="check"><input type="checkbox" data-id="opt-guide" /> Guide tone (needs headphones)</label>
     <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks</label>
     <label class="check"><input type="checkbox" data-id="opt-debug" /> Debug overlay while playing</label>
@@ -489,6 +491,7 @@ export const createPitchScreen =
     const difficultySel = S<HTMLSelectElement>('difficulty');
     difficultySel.value = current.difficulty;
     S<HTMLInputElement>('opt-guide').checked = current.guideTone;
+    mountBackingControls(S('backing-box'), settings, { drone: true });
     S<HTMLInputElement>('opt-metronome').checked = current.metronome;
     S<HTMLInputElement>('opt-debug').checked = current.debug;
 

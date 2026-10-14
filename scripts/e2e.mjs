@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|responsive|picker|install|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|responsive|picker|install|backing|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1802,6 +1802,63 @@ const scenarios = {
         /iPhone or iPad \(Safari\)/.test(first),
         `install: an iPad is shown the Safari steps first (${first})`,
       );
+    });
+  },
+
+  async backing() {
+    console.log('\n# Backing: feels of play-along music and drums, chosen on the set-up page');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/sing');
+      await page.waitForSelector('[data-id=backing-music]');
+      const feels = await page.$$eval('[data-id=backing-music] option', (o) =>
+        o.map((x) => x.value),
+      );
+      const drums = await page.$$eval('[data-id=backing-drums] option', (o) =>
+        o.map((x) => x.value),
+      );
+      check(
+        feels.length >= 12 && feels.includes('auto') && feels.includes('walking'),
+        `backing: many feels of music (${feels.length})`,
+      );
+      check(
+        drums.length >= 10 && drums.includes('shuffle') && drums.includes('reggae'),
+        `backing: many drum feels (${drums.length})`,
+      );
+      await page.selectOption('[data-id=backing-music]', 'auto');
+      await page.selectOption('[data-id=backing-drums]', 'auto');
+      // the same choices on the Options page
+      await page.goto(URL_BASE + '#/options');
+      await page.waitForSelector('[data-id=accompaniment]');
+      check(
+        (await page.inputValue('[data-id=accompaniment]')) === 'auto' &&
+          (await page.inputValue('[data-id=drums]')) === 'auto',
+        'backing: the choice is shared with Options',
+      );
+      // a song plays through with them on
+      await page.goto(URL_BASE + '#/sing');
+      await pickSong(page, 'sing-ode-to-joy');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      check(
+        Number(await text(page, 'r-miss')) === 0,
+        'backing: a demo run with auto music and drums is still clean',
+      );
+      // the games that have chords or drums offer them
+      for (const [route, music, drum] of [
+        ['strum', true, true],
+        ['bass', false, true],
+        ['keys', false, true],
+        ['beat', false, false],
+      ]) {
+        await page.goto(URL_BASE + '#/' + route);
+        await page.waitForSelector('[data-id=song]');
+        check(
+          ((await page.$('[data-id=backing-music]:visible')) !== null) === music &&
+            ((await page.$('[data-id=backing-drums]:visible')) !== null) === drum,
+          `backing: ${route} offers ${music ? 'music, ' : ''}${drum ? 'drums' : 'neither'}`,
+        );
+      }
     });
   },
 

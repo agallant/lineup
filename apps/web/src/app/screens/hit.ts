@@ -69,6 +69,7 @@ import { BeatlineGame, HitMonitor, formatHits } from '../game/beatline-game';
 import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
+import { mountBackingControls } from '../backing-controls';
 import { HitStepGame } from '../game/hit-step-game';
 import { StepGame } from '../game/step-game';
 import {
@@ -218,6 +219,7 @@ const setup = (c: HitScreenConfig) => `
     </div>
     <label class="check" data-id="chords-opt" ${c.strum ? '' : 'hidden'}><input type="checkbox" data-id="opt-chords" /> Also check the chords (experimental; otherwise only the timing counts)</label>
     <label class="check" data-id="pitch-opt" hidden><input type="checkbox" data-id="opt-pitch" /> Also check the pitch of each plucked note (experimental; otherwise only the timing counts)</label>
+    <div data-id="backing-box" ${c.strum || c.plucked ? '' : 'hidden'}></div>
     <label class="check" data-id="step-label"><input type="checkbox" data-id="opt-step" /> Beginner: one step at a time, no timing (the auto-play demo still plays the normal game)</label>
     <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks (needs headphones)</label>
     <label class="check"><input type="checkbox" data-id="opt-debug" /> Debug overlay while playing</label>
@@ -381,6 +383,7 @@ export const createHitScreen =
     const pitchBox = S<HTMLInputElement>('opt-pitch');
     pitchBox.checked = current.checkPitch;
     speedSel.value = String(current.speed);
+    mountBackingControls(S('backing-box'), settings, { music: c.strum === true });
     const stepBox = S<HTMLInputElement>('opt-step');
     stepBox.checked = current.stepMode;
     for (const m of c.modes) modeSel.add(new Option(m.label, m.id));

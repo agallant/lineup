@@ -208,6 +208,19 @@ describe('planDrone', () => {
     }
   });
 
+  it('can hold the octave too, or pluck a tanpura pattern', () => {
+    const oct = planDrone(chart, 62, 'octave');
+    expect(oct.map((e) => (e.kind === 'tone' ? e.midi : 0))).toEqual([50, 62]);
+    const tan = planDrone(chart, 62, 'tanpura');
+    expect(tan.length).toBeGreaterThanOrEqual(4);
+    const notes = tan.slice(0, 4).map((e) => (e.kind === 'tone' ? e.midi : 0));
+    expect(notes).toEqual([57, 62, 62, 50]); // the fifth, the key note twice, the low key note
+    expect(tan.map((e) => e.songTime)).toEqual(
+      [...tan.map((e) => e.songTime)].sort((a, b) => a - b),
+    );
+    expect(tan[0]!.songTime).toBe(-2); // starts with the count-in
+  });
+
   it('is part of the backing when asked for', () => {
     const all = planAllBacking(chart, {
       metronome: false,

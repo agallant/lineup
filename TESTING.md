@@ -260,6 +260,19 @@ Items for features still to come are added here as they ship, under the mileston
       We Wish You a Merry Christmas. Please say which, if any, have a wrong note or rhythm; they were written
       from memory and are marked "opening" or "theme" where they stop early.
 
+### Backing music and drums
+
+- [ ] **Listen to the feels** (headphones; set Play-along music and Drums on a game's set-up page): do
+      _Match the song_, the waltz, boom-chick, walking bass, bossa and reggae sound musical and in time? Any
+      that jar, or are too loud, too thin or too busy? Is the **fill** at the end of a phrase welcome?
+- [ ] Does **Match the song** pick sensibly for a slow ballad, a march, a waltz? Does the change of feel every
+      eight bars sound deliberate?
+- [ ] The **tanpura** drone under a Singline or Windline song: pleasant, and the right pitch for the key?
+- [ ] Do the quiet backing tones still leak into the microphone with headphones **off** (the warning is
+      still needed)?
+- [ ] **Install**: from the home page, "install it on this device" shows the right steps for your iPad, and
+      adding it to the Home Screen works as described.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

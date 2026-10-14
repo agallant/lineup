@@ -15,7 +15,8 @@ import {
 } from '../settings';
 import { DIFFICULTIES } from '@lineup/core';
 import { DRONES } from '../game/backing';
-import { DRUM_STYLES } from '../game/drums';
+import { ACCOMPANIMENT_FEELS } from '../game/accompaniment';
+import { DRUM_LABELS, DRUM_STYLES } from '../game/drums';
 
 const DIFFICULTY_TEXT: Record<string, string> = {
   easy: 'Easy: forgiving of wobble',
@@ -26,15 +27,15 @@ const DRONE_TEXT: Record<string, string> = {
   off: 'Off',
   root: 'The key note',
   fifth: 'The key note and its fifth',
+  octave: 'The key note and its octave',
+  tanpura: 'Tanpura (plucked, ringing)',
 };
-
-const DRUM_TEXT: Record<string, string> = { off: 'Off', rock: 'Rock beat', bossa: 'Bossa nova' };
 
 const ACCOMPANIMENT_TEXT: Record<string, string> = {
   off: 'Off',
-  bass: 'Bass line',
-  full: 'Bass and chords',
+  ...Object.fromEntries(ACCOMPANIMENT_FEELS.map((f) => [f.id, f.label])),
 };
+const DRUM_TEXT: Record<string, string> = DRUM_LABELS;
 
 /** A file named like "lineup-backup-2026-10-11.json" offered for download. */
 function download(name: string, text: string): void {

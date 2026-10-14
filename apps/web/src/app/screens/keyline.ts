@@ -14,6 +14,7 @@ import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
 import { planAllBacking, playBacking, type BackingHandle } from '../game/backing';
 import { jingleFor, playJingle } from '../game/jingle';
+import { mountBackingControls } from '../backing-controls';
 import { KeyStepGame } from '../game/key-step-game';
 import { KeylineGame } from '../game/keyline-game';
 import { playResultFor, rewardHtml } from '../game/reward';
@@ -83,6 +84,7 @@ const TEMPLATE = `
     <section class="panel">
       <h2 class="step">Options</h2>
       <label class="check"><input type="checkbox" data-id="opt-sound" /> Make a piano sound when I press a key (turn off if your keyboard makes its own)</label>
+      <div data-id="backing-box"></div>
       <label class="check"><input type="checkbox" data-id="opt-step" /> Beginner: one step at a time, no timing (it plays the notes, you press them)</label>
       <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks</label>
       <p data-id="cal-status"></p>
@@ -209,6 +211,7 @@ export const keylineScreen: Screen = (root) => {
     const all = songs();
     return all.find((s) => s.id === songSel.value) ?? all[0]!;
   };
+  mountBackingControls($('backing-box'), settings, { music: false });
   const stepBox = $<HTMLInputElement>('opt-step');
   stepBox.checked = settings.get().stepMode;
   stepBox.addEventListener('change', () => {
