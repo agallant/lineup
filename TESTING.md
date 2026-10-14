@@ -246,6 +246,20 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] On iPhone: does the sound play with the ringer switch off? Does it keep the screen awake?
 - [ ] What would you want from a metronome that this one lacks (rhythm patterns, count-in, a flash)?
 
+### Song picker, first song and the home screen
+
+- [ ] On a **fresh start** (Options > Start over) each game opens on a gentle first song (Hot Cross Buns, Five
+      fingers on C, Open strings...) rather than a demo. Is that the right first song for you?
+- [ ] The **song picker**: search, sort, difficulty and "hide songs I have cleared" behave as you expect, and
+      **Random song** (a separate button) feels clearer than the old menu heading.
+- [ ] Home: **Play again** takes you straight back to the last song. Learn paths: collapsed until you start.
+
+### New songs
+
+- [ ] **Do the new tunes sound right?** Twinkle, La Cucaracha, Sakura (opening), Canon (theme), Deck the Halls,
+      We Wish You a Merry Christmas. Please say which, if any, have a wrong note or rhythm; they were written
+      from memory and are marked "opening" or "theme" where they stop early.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:
