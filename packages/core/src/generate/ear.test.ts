@@ -22,6 +22,7 @@ describe('earQuestion', () => {
           expect(choices, `${kind} ${level}`).toContain(question.answer);
           expect(question.choices).toEqual(choices);
           expect(question.together).toBe(kind === 'chords');
+          expect(question.lead !== undefined).toBe(kind === 'degrees');
           expect(Math.min(...question.notes)).toBeGreaterThanOrEqual(55);
           expect(Math.max(...question.notes)).toBeLessThanOrEqual(55 + 11 + 12);
         }
@@ -45,6 +46,18 @@ describe('earQuestion', () => {
     }
     const hard = earRound('chords', 'hard', 3, 80);
     expect(new Set(hard.map((q) => q.answer)).size).toBe(6);
+  });
+
+  it('asks a note of the key after playing the key, at the right distance from it', () => {
+    const steps: Record<string, number> = { Do: 0, Re: 2, Mi: 4, Fa: 5, Sol: 7, La: 9, Ti: 11 };
+    for (const level of EAR_LEVELS) {
+      for (const q of earRound('degrees', level, 21, 60)) {
+        expect(q.lead).toEqual([q.lead![0]!, q.lead![0]! + 4, q.lead![0]! + 7, q.lead![0]! + 12]);
+        expect(q.notes).toEqual([q.lead![0]! + steps[q.answer]!]);
+      }
+    }
+    expect(new Set(earRound('degrees', 'hard', 3, 80).map((q) => q.answer)).size).toBe(7);
+    expect(earTitle('ear-degrees-easy')).toBe('Ear training: degrees, easy');
   });
 
   it('never repeats an answer straight away, and is the same for the same seed', () => {

@@ -32,7 +32,22 @@ const NEXT_MS = 1100;
 
 /** Plays a question's notes softly on the audio output. */
 function playQuestion(ctx: AudioContext, q: EarQuestion): void {
-  const t0 = ctx.currentTime + 0.05;
+  let t0 = ctx.currentTime + 0.05;
+  // a key-setting arpeggio first, quick and quiet, then a pause before the note asked about
+  q.lead?.forEach((midi, i) => {
+    const start = t0 + i * 0.32;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = midiToFrequency(midi);
+    osc.connect(gain).connect(ctx.destination);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(0.14, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.4);
+    osc.start(start);
+    osc.stop(start + 0.42);
+  });
+  if (q.lead) t0 += q.lead.length * 0.32 + 0.5;
   q.notes.forEach((midi, i) => {
     const start = q.together ? t0 : t0 + i * (NOTE_S + GAP_S);
     const length = q.together ? 1.6 : NOTE_S;

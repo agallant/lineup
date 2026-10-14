@@ -950,6 +950,19 @@ const scenarios = {
         /Ear training: chords, easy/.test(await text(page, 'rows')),
         'ear: the round is on the scoreboard',
       );
+      // name that note: the choices are solfège names
+      await page.goto(URL_BASE + '#/ear');
+      await page.selectOption('[data-id=kind]', 'degrees');
+      await page.selectOption('[data-id=level]', 'easy');
+      await page.click('[data-id=start]');
+      await page.waitForSelector('[data-id=choices] button');
+      const names = await page.$$eval('[data-id=choices] button', (bs) =>
+        bs.map((b) => b.textContent),
+      );
+      check(
+        names.join(',') === 'Do,Mi,Sol',
+        `ear: name that note offers do, mi and sol (${names.join(',')})`,
+      );
     });
   },
 

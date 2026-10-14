@@ -116,6 +116,14 @@ Items for features still to come are added here as they ship, under the mileston
       Conversation: are they too hard for their star rating?
 - [ ] **Flute songs**: Cedar Wind, Night Fire, Geese Overhead, Thunder Drum: tempo and breath marks feel right.
 
+### Practice tools
+
+- [ ] **Ear training > Name that note**: you hear a short do-mi-sol-do, a pause, then one note; the
+      choices (Do, Mi, Sol at easy) feel answerable and the pause is long enough.
+- [ ] **Windline tempo ladder**: play a song at 65%, 80% and 100% with a clean run each; the results line
+      reads "Tempo ladder: 65% ✓ · 80% ✓ · 100%" and fills in; the third rung shows "climbed!" and a trophy.
+      Say if 90% accuracy is too strict or lenient for a rung.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

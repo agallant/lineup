@@ -35,7 +35,9 @@ waits on the ones before it.
 2. **More to play** (done). A larger public-domain and original repertoire in every mode (easy first, then
    harder and chromatic), harder grooves, more flute repertoire, more chord songs, each checked for
    range, fit and rating.
-3. **Practice tools.** Tempo ladders (finish a song at 80%, 90%, 100% in a row); interval singing
+3. **Practice tools** (partly done: tempo ladders for winds and _name that note_ are in; interval
+   singing and the chord-change drills were already exercises; the rest below is kept for later).
+   Tempo ladders (finish a song at 80%, 90%, 100% in a row); interval singing
    (hear a note, sing the note a fourth above it); a "name that note" quiz and a staff view with the
    note names hidden; a chord-change trainer scored on the change; call and response in Beatline; a
    voice range setting (the guide tone in your octave, a "fits your voice" mark). _The voice range is

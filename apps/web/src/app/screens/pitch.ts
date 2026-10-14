@@ -88,6 +88,7 @@ import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
 import { jingleFor, playJingle } from '../game/jingle';
 import { playResultFor, rewardHtml } from '../game/reward';
+import { LadderStore, ladderText } from '../ladder';
 import { SettingsStore, nextSpeed, keyShiftFor, safeLocalStorage } from '../settings';
 import {
   RANDOM_FLUTE,
@@ -1000,6 +1001,19 @@ export const createPitchScreen =
             ),
           );
       if (outcome) outcome.newAchievements.push(...grantMilestones(progress, scores.entries()));
+      // winds climb a tempo ladder: clean runs at 65%, 80% and full speed
+      const ladder =
+        !audio.demo && c.instruments
+          ? new LadderStore(safeLocalStorage()).record(
+              `${profile.id}|${songEntry().id}`,
+              settings.get().speed,
+              s.accuracy,
+            )
+          : null;
+      if (ladder?.justCompleted) {
+        const trophy = progress.grant('ladder');
+        if (trophy && outcome) outcome.newAchievements.push(trophy);
+      }
       const reward = outcome ? rewardHtml(s.accuracy, outcome) : '';
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'
@@ -1014,6 +1028,13 @@ export const createPitchScreen =
         <div class="grade" data-id="grade">${grade}</div>
         <p class="status" data-id="best-line" role="status">${bestLine}</p>
         ${reward}
+        ${
+          ladder
+            ? `<p class="status" data-id="ladder" role="status">Tempo ladder: ${ladderText(ladder.cleared)}${
+                ladder.justCompleted ? ' — climbed!' : ''
+              }</p>`
+            : ''
+        }
         <dl>
           <dt>Score</dt><dd data-id="r-score">${s.score}</dd>
           <dt>Accuracy</dt><dd data-id="r-acc">${Math.round(s.accuracy * 100)}%</dd>

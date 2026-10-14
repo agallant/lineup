@@ -307,6 +307,13 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     earned: () => false,
   },
   {
+    id: 'ladder',
+    title: 'Tempo climber',
+    description: 'Climb a whole tempo ladder: a clean run at 65%, 80% and full speed.',
+    // granted when a run clears the last rung (see LadderStore and ProgressStore.grant)
+    earned: () => false,
+  },
+  {
     id: 'level-5',
     title: 'Regular',
     description: 'Reach level 5.',

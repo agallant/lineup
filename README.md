@@ -129,8 +129,13 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   Singline, and to Windline when no note is below the key note). Songs are kept on the device and
   included in the backup file.
 - **Ear training** (`#/ear`): ten questions, no instrument or microphone: name the interval between
-  two notes, or the kind of chord (major, minor, dominant 7th...), at three levels; stars, XP and the
-  scoreboard work as in the other games.
+  two notes, the kind of chord (major, minor, dominant 7th...), or _name that note_ (hear the key, then
+  which note of it is this: do, re, mi...), at three levels; stars, XP and the scoreboard work as in
+  the other games.
+- **Tempo ladder** (Windline): a clean run (90% or better) at 65%, 80% and then full speed climbs a
+  song's ladder; the results show which rungs are cleared, and climbing a whole ladder earns a trophy.
+  Interval singing (fourths, fifths, octaves with _Listen first_) and the chord-change drills are
+  exercises in the song menus.
 - **Tuner** (`#/tuner`, under Set up): ukulele (G C E A), low-G and baritone tunings or any note, with
   a needle and reference tones. A tool, not a game.
 - **Practice goal**: pick minutes per week in Options; the home menu and scoreboard show the last
