@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1163,6 +1163,37 @@ const scenarios = {
     });
   },
 
+  async bass() {
+    console.log(
+      '\n# Bassline: pitch and timing judged on four string lanes (synthetic bass -> judge)',
+    );
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/bass');
+      await page.waitForSelector('[data-id=song]');
+      const songs = await page.$$eval('[data-id=song] option', (o) => o.length);
+      check(songs >= 30, `bass: ${songs} songs and exercises in the menu`);
+      check(await page.isHidden('[data-id=chords-opt]'), 'bass: no chord option');
+      check(await page.isVisible('[data-id=speed]'), 'bass: a practice speed is offered');
+      await page.selectOption('[data-id=song]', 'bass-ex-open-strings');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForTimeout(3000);
+      await shot(page, 'bass-play');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        perfect >= 7 && miss === 0,
+        `bass: the demo bassist plays the open strings (${perfect} perfect, ${miss} missed)`,
+      );
+      check(
+        (await page.$('[data-id=r-wrongpitch]')) !== null,
+        'bass: wrong notes are counted in the results',
+      );
+    });
+  },
+
   async duet() {
     console.log('\n# Duet: two players share the phrases of a song, each with a score');
     await session(null, async (page) => {
@@ -1215,6 +1246,7 @@ const scenarios = {
       'wind',
       'beat',
       'strum',
+      'bass',
     ];
     await session(null, async (page) => {
       for (const scheme of ['dark', 'light', 'contrast']) {

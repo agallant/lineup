@@ -5,6 +5,8 @@
  */
 import {
   FLUTE_SCALES,
+  BASS_EXERCISES,
+  BASS_SONGS,
   FLUTE_SONGS,
   GROOVE_PROFILES,
   LIBRARY,
@@ -29,6 +31,7 @@ import { enrollSynthetic } from './enroll';
 import { renderPerformance } from './performance';
 import {
   percussionPerformer,
+  ukuleleNotePerformer,
   ukuleleStrumPerformer,
   voicePerformer,
   windPerformer,
@@ -81,6 +84,21 @@ describe('library: pentatonic flute songs', () => {
     const chart = generateFluteSong({ seed, scale, level });
     perfect(play(chart).score.counts, chart.notes.length);
   });
+});
+
+describe('library: bass songs', () => {
+  it.each(Object.entries({ ...BASS_SONGS, ...BASS_EXERCISES }))(
+    '%s: a steady bassist scores nearly every note perfect, by pitch and timing',
+    (_id, chart) => {
+      const rendered = renderPerformance(chart, ukuleleNotePerformer(0.3), { latency: LATENCY });
+      const r = runDiscrete(rendered, chart, getProfile('bass'), { latencyOffset: LATENCY });
+      const { counts } = r.score;
+      expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
+      // the simulation can lose the odd note when a low string's ring runs into the next
+      expect(counts.miss / chart.notes.length).toBeLessThan(0.05);
+      expect(counts.perfect / chart.notes.length).toBeGreaterThan(0.9);
+    },
+  );
 });
 
 describe('library: ukulele songs', () => {

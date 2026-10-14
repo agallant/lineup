@@ -134,6 +134,14 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   notation** can be pasted in and read (key, tempo, lengths, accidentals, ties, triplets, words;
   chords, decorations and repeat marks are skipped). **Copy as text** turns any song into a block
   you can send in a message and paste into _Paste a song_ on another device.
+- **Bassline** (`#/bass`): learn the bass guitar. Songs and exercises are shown as four string lanes
+  (G, D, A, E from the top) with the fret to hold on each note; both the note and the timing are judged,
+  any octave of the right note counting (a phone mic often hears a bass an octave off). There are blues,
+  pop and rock lines in several keys (whole notes, quarters, eighths, root and fifth, walking, disco
+  octaves, funk), a few hand-written lines and exercises (open strings, one finger a fret, pentatonic and
+  major scales, string crossing). Speed, the drum loop and the first-time tips work as in Strumline. The
+  tuner has a bass tuning (E A D G) that listens lower than for other instruments. A Learn path walks
+  from open strings to a funk groove.
 - **Voice range** (Options, Singline): say your voice type and each song gets a line about how it sits
   in it ("sits well", "an octave lower is easier"), and the guide tone plays in your octave; any
   octave of the right note still counts.

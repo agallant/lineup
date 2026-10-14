@@ -5,6 +5,7 @@ import { generateFluteSong, parseFluteId } from '../generate/flute';
 import { generateGroove, parseGrooveId } from '../generate/groove';
 import { generateMelody, parseMelodyId } from '../generate/melody';
 import { rhythmExercises } from '../generate/rudiments';
+import { BASS_EXERCISES, BASS_SONGS } from './bass';
 import { FLUTE_SONGS, LIBRARY } from './library';
 import clapBasic from './clap-basic.json';
 import clapTapGroove from './clap-tap-groove.json';
@@ -47,6 +48,7 @@ const EXERCISES: Record<string, Chart> = {
   ...exerciseCharts('wind'),
   ...exerciseCharts('ukulele-strum'),
   ...chordChangeDrills(),
+  ...BASS_EXERCISES,
   ...rhythmExercises('hand-percussion'),
   ...rhythmExercises('drum-kit'),
   ...rhythmExercises('clap'),
@@ -63,6 +65,7 @@ export const builtinSongs: Readonly<Record<string, Chart>> = {
   ),
   ...LIBRARY,
   ...FLUTE_SONGS,
+  ...BASS_SONGS,
   ...EXERCISES,
 };
 
@@ -104,4 +107,5 @@ export function songsFor(
 export { FLUTE_SONGS, LIBRARY } from './library';
 export * from './notation';
 export * from './interchange';
+export * from './bass';
 export * from './midi';

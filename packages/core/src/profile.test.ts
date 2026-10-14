@@ -51,6 +51,7 @@ const base = () =>
 describe('built-in profiles', () => {
   it('all validate (they are checked when the module loads)', () => {
     expect(Object.keys(builtinProfiles).sort()).toEqual([
+      'bass',
       'clap',
       'drum-kit',
       'hand-percussion',
@@ -94,7 +95,7 @@ describe('built-in profiles', () => {
 
   it('getProfile explains an unknown id', () => {
     expect(() => getProfile('kazoo')).toThrow(
-      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, voice, wind, clap, hand-percussion, drum-kit\)/,
+      /unknown instrument profile "kazoo" \(have: ukulele-strum, ukulele-note, bass, voice, wind, clap, hand-percussion, drum-kit\)/,
     );
   });
 

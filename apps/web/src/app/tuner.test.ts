@@ -1,6 +1,6 @@
 import { midiToFrequency } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
-import { TUNINGS, readTuner } from './tuner';
+import { TUNINGS, readTuner, tunerPitchOptions } from './tuner';
 
 const uke = TUNINGS.find((t) => t.id === 'ukulele')!;
 const chromatic = TUNINGS.find((t) => t.id === 'chromatic')!;
@@ -49,5 +49,22 @@ describe('readTuner', () => {
   it('gives nothing for a pitch that is not a frequency', () => {
     expect(readTuner(0, uke)).toBeNull();
     expect(readTuner(Number.NaN, uke)).toBeNull();
+  });
+});
+
+describe('bass tuning', () => {
+  const bass = TUNINGS.find((t) => t.id === 'bass')!;
+
+  it('names the four bass strings and reads a low E', () => {
+    expect(bass.strings.map((s) => s.name)).toEqual(['E1', 'A1', 'D2', 'G2']);
+    const r = readTuner(41.2, bass)!;
+    expect(r.name).toBe('E1');
+    expect(r.state).toBe('in-tune');
+    expect(readTuner(55, bass)!.name).toBe('A1');
+  });
+
+  it('listens lower and over a longer window than for other instruments', () => {
+    expect(tunerPitchOptions(bass)).toEqual({ minHz: 30, windowSize: 4096 });
+    expect(tunerPitchOptions(uke)).toEqual({ minHz: 60 });
   });
 });

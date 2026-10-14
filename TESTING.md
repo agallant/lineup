@@ -172,6 +172,19 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] New chord songs (Fiddle tune, Hymn in C, Rainy day) are strummable; the **Minor moods** and **Made for
       Lineup** packs list sensible songs.
 
+### Bassline
+
+- [ ] **Tuner > Bass guitar (E A D G)**: reads your open strings, E1 included (41 Hz), and agrees with another
+      tuner. A phone microphone may struggle with the low E: say what it does.
+- [ ] **Bassline > the open-strings exercise**: with your bass near the iPad (unplugged, or through an amp),
+      every open string you play registers as the right note and on time. Try with and without headphones.
+- [ ] Does it hear the **right octave**? (Octave-forgiving is on; say if notes are missed anyway, or if a
+      note an octave off should count wrong.)
+- [ ] Plucking hard versus soft, fingers versus pick, and muted notes: which are missed?
+- [ ] The tab view (string and fret) reads naturally; are the lines in the **blues, pop and rock** sets at a
+      comfortable tempo? Try **Speed**, and the **Drum loop** in Options as a backing.
+- [ ] Learn > **Bassline: first lines** opens the right songs in order.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

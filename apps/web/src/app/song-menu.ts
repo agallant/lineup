@@ -93,6 +93,7 @@ export function addRandomOptions(
   select: HTMLSelectElement,
   entries: readonly { value: string; label: string }[],
 ): void {
+  if (entries.length === 0) return;
   const group = select.appendChild(heading('Random'));
   for (const { value, label } of entries) group.appendChild(new Option(label, value));
 }
