@@ -81,11 +81,12 @@ const DEFS: readonly PackDef[] = [
   {
     id: 'world',
     title: 'Around the world',
-    blurb: 'Tunes from Mexico, Japan, France, Germany, Wales and beyond.',
+    blurb:
+      'Tunes and strum rhythms from Mexico, Japan, Germany, Brazil, Spain, Jamaica and beyond.',
     test: (c) =>
-      /^(sing|wind|keys)-(la-cucaracha|sakura|twinkle|canon-theme|deck-the-halls|frere-jacques|au-clair)$/.test(
+      /^(sing|wind|keys)-(la-cucaracha|sakura|twinkle|canon-theme|deck-the-halls|frere-jacques|au-clair|alle-meine-entchen|haenschen-klein)$/.test(
         c.id,
-      ),
+      ) || /^strum-(reggae|bossa|flamenco|tango|polka|ranchera)$/.test(c.id),
   },
   {
     id: 'christmas',
