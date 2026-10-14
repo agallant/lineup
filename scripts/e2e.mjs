@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1091,6 +1091,50 @@ const scenarios = {
     });
   },
 
+  async packs() {
+    console.log('\n# Song packs, and sharing your own songs as a pack');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/packs');
+      await page.waitForSelector('[data-pack]');
+      const n = await page.$$eval('[data-pack]', (a) => a.length);
+      check(n >= 6, `packs: ${n} themed packs are listed`);
+      await page.click('[data-pack=campfire] a >> nth=0');
+      await page.waitForSelector('[data-id=song]');
+      check(
+        /#\/(sing|wind|strum|beat)\?/.test(page.url()),
+        `packs: a song opens in its game (${page.url().split('#')[1]})`,
+      );
+      // two songs of my own, copied as a pack and pasted back as new songs
+      await page.goto(URL_BASE + '#/make');
+      for (const [title, notes] of [
+        ['Pack one', 'C4 D4 E4 F4'],
+        ['Pack two', 'G4 A4 B4 C5'],
+      ]) {
+        await page.fill('[data-id=title]', title);
+        await page.fill('[data-id=notes]', notes);
+        await page.click('[data-id=save]');
+      }
+      const pack = await page.evaluate(async () => {
+        const songs = JSON.parse(localStorage.getItem('lineup.songs.v1') ?? '[]');
+        return `LINEUP-PACK-1 ${JSON.stringify(songs.map(({ id, ...rest }) => rest))}`;
+      });
+      await page.evaluate(() => localStorage.removeItem('lineup.songs.v1'));
+      await page.goto(URL_BASE + '#/make');
+      await page.reload();
+      await page.fill('[data-id=paste]', pack);
+      await page.click('[data-id=read-paste]');
+      check(
+        /pack of 2 songs/.test(await text(page, 'paste-status')),
+        `packs: a pasted pack is recognised (${await text(page, 'paste-status')})`,
+      );
+      await page.click('[data-id=pack-save]');
+      check(
+        (await page.$$eval('li[data-song]', (a) => a.length)) === 2,
+        'packs: and its songs are saved',
+      );
+    });
+  },
+
   async duet() {
     console.log('\n# Duet: two players share the phrases of a song, each with a score');
     await session(null, async (page) => {
@@ -1129,6 +1173,7 @@ const scenarios = {
       '',
       'learn',
       'collection',
+      'packs',
       'scores',
       'options',
       'help',

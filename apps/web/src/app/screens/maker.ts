@@ -20,6 +20,8 @@ import {
   UserSongStore,
   compileSong,
   describeCompiled,
+  packFromText,
+  packToText,
   songFromText,
   songToText,
   type NewUserSong,
@@ -122,6 +124,9 @@ export const makerScreen: Screen = (root) => {
       <label class="block">Song text <textarea data-id="paste" rows="5" spellcheck="false"></textarea></label>
       <div class="row"><button data-id="read-paste">Read it</button></div>
       <p class="status" data-id="paste-status" role="status"></p>
+      <div class="row" data-id="pack-row" hidden>
+        <button class="primary" data-id="pack-save">Save all</button>
+      </div>
       <h3>Or open a MIDI file</h3>
       <p class="muted">A .mid file from a music program or the web: pick the track with the tune (or the drums) and it becomes a melody or a drum-kit rhythm to check and save. Long files are cut to the first part.</p>
       <div class="row">
@@ -136,6 +141,7 @@ export const makerScreen: Screen = (root) => {
       <h2>Your songs</h2>
       <ul class="scores" data-id="list"></ul>
       <p class="muted" data-id="empty" hidden>Nothing yet. Write one above and save it.</p>
+      <div class="row"><button data-id="copy-pack">Copy all as a pack</button></div>
     </section>
   `;
   const $ = <T extends HTMLElement>(id: string): T =>
@@ -287,9 +293,31 @@ export const makerScreen: Screen = (root) => {
       refresh();
     });
   }
+  let pending: ReturnType<typeof packFromText> | null = null;
   $('read-paste').addEventListener('click', () => {
-    const imported = songFromText(text('paste').value);
     const status = $('paste-status');
+    pending = null;
+    $('pack-row').hidden = true;
+    // a pack of several songs is saved in one go; a single song or an ABC tune goes into the form
+    if (text('paste').value.trim().startsWith('LINEUP-PACK-1')) {
+      const pack = packFromText(text('paste').value);
+      status.classList.toggle('error', !pack.ok);
+      if (!pack.ok) {
+        status.textContent = pack.error;
+        return;
+      }
+      pending = pack;
+      $('pack-row').hidden = false;
+      $('pack-save').textContent = `Save all ${pack.songs.length}`;
+      status.textContent = `A pack of ${pack.songs.length} ${pack.songs.length === 1 ? 'song' : 'songs'}: ${pack.songs
+        .map((x) => x.title)
+        .slice(0, 6)
+        .join(
+          ', ',
+        )}${pack.songs.length > 6 ? '…' : ''}.${pack.skipped ? ` ${pack.skipped} could not be read.` : ''}`;
+      return;
+    }
+    const imported = songFromText(text('paste').value);
     status.classList.toggle('error', !imported.ok);
     if (!imported.ok) {
       status.textContent = imported.error;
@@ -371,6 +399,31 @@ export const makerScreen: Screen = (root) => {
       midiStatus.classList.add('error');
       midiStatus.textContent = err instanceof Error ? err.message : String(err);
     }
+  });
+  $('pack-save').addEventListener('click', () => {
+    if (!pending?.ok) return;
+    let saved = 0;
+    for (const song of pending.songs) if (store.save({ ...song, id: undefined })) saved++;
+    pending = null;
+    $('pack-row').hidden = true;
+    renderList();
+    $('paste-status').textContent =
+      saved === 0
+        ? 'Could not save: there is no room for more songs. Delete some first.'
+        : `Saved ${saved} ${saved === 1 ? 'song' : 'songs'}. They are in the song menus now.`;
+  });
+  $('copy-pack').addEventListener('click', () => {
+    const songs = store.list();
+    if (songs.length === 0) {
+      $('preview').textContent = 'Nothing to copy yet.';
+      return;
+    }
+    void copyText(packToText(songs)).then((ok) => {
+      $('preview').textContent = ok
+        ? `Copied ${songs.length} ${songs.length === 1 ? 'song' : 'songs'} as a pack. Paste it into a message, or into Paste a song on another device.`
+        : 'Could not copy. Select the text in Paste a song instead.';
+      if (!ok) text('paste').value = packToText(songs);
+    });
   });
   $('hear').addEventListener('click', hear);
   $('new').addEventListener('click', () => {
