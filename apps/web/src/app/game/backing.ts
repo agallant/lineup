@@ -127,6 +127,17 @@ export function playBacking(
 }
 
 /**
+ * The key note a drone should hold for a song: its major `tonic`, or the relative minor's note when the
+ * song ends there (`tonic` names the major key, so A minor carries a C tonic).
+ */
+export function droneKeyNote(chart: Chart): number {
+  const tonic = chart.meta.tonic ?? 60;
+  const last = [...chart.notes].reverse().find((n) => n.pitch !== undefined)?.pitch;
+  const minor = tonic - 3;
+  return last !== undefined && (((last - minor) % 12) + 12) % 12 === 0 ? minor : tonic;
+}
+
+/**
  * A drone for the whole song: the key note held low (in the octave from C3 to B3, below where the
  * detector listens) and, if asked, its fifth, as a pentatonic flute is traditionally played over.
  * `rootMidi` is the key note in any octave.

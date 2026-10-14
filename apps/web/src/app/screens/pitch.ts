@@ -77,6 +77,7 @@ import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
 import { escapeHtml, playTone } from '../audio';
 import {
+  droneKeyNote,
   planAllBacking,
   planBacking,
   playBacking,
@@ -958,7 +959,7 @@ export const createPitchScreen =
               // a wind instrument holds its own key note; Singline holds the key note of the song as sung
               root: c.instruments
                 ? instrumentRoot(instrument()) + extraShift()
-                : (chart.meta.tonic ?? 60) + keyShiftFor(settings.get(), c.profileId),
+                : droneKeyNote(chart) + keyShiftFor(settings.get(), c.profileId),
             },
           }),
           ...listen.tones,
