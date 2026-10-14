@@ -8,6 +8,7 @@ import { songHref } from '../collection';
 import { stepHref } from '../courses';
 import { THEMES, WEEKLY_BONUS } from '../themes';
 import { escapeHtml } from '../audio';
+import { isInstalled, showInstallDialog } from '../install';
 import { getSong } from '@lineup/core';
 
 /** What each game is, for the home menu: the route, the instrument and a line about it. */
@@ -111,7 +112,12 @@ export const homeScreen: Screen = (root) => {
   })();
   root.innerHTML = `
     <h1>Lineup</h1>
-    <p>Rhythm games you play with a real instrument. Everything stays on this device.</p>
+    <p>Rhythm games you play with a real instrument. Everything stays on this device.
+      ${
+        isInstalled()
+          ? ''
+          : 'It is also an app: <button class="linkish" data-id="install-link">install it on this device</button>, and it works offline.'
+      }</p>
 
     ${
       prefs.seenHelp
@@ -232,5 +238,6 @@ export const homeScreen: Screen = (root) => {
         <span>Sound, scoring, your data and backups.</span></a></li>
     </ul>
   `;
+  root.querySelector('[data-id=install-link]')?.addEventListener('click', showInstallDialog);
   return undefined;
 };

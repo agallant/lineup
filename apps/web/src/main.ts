@@ -2,6 +2,7 @@ import './style.css';
 import { INPUT_WORKLET_URL } from '@lineup/input/mic';
 import { buildInfoText } from './app/build-info';
 import { applyTextSize, applyTheme } from './app/appearance';
+import { listenForInstallOffer } from './app/install';
 import { earScreen } from './app/screens/ear';
 import { startRouter } from './app/router';
 import { SettingsStore, safeLocalStorage } from './app/settings';
@@ -37,6 +38,7 @@ if (!app) throw new Error('#app missing');
 const footer = document.getElementById('build-info');
 if (footer) footer.textContent = buildInfoText();
 
+listenForInstallOffer();
 startRouter(
   app,
   {

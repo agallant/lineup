@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|responsive|picker|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|responsive|picker|install|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1753,6 +1753,54 @@ const scenarios = {
       check(
         (await page.inputValue('[data-id=picker-sort]')) === 'hard',
         'picker: the sort order is remembered',
+      );
+    });
+  },
+
+  async install() {
+    console.log('\n# Install as an app: a link on the home page opens the instructions');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/');
+      await page.waitForSelector('[data-id=install-link]');
+      await page.click('[data-id=install-link]');
+      await page.waitForSelector('[data-id=install-dialog][open]');
+      const t = await text(page, 'install-dialog');
+      check(/works offline/.test(t), 'install: the dialog says it works offline');
+      check(
+        /Computer \(Chrome or Edge\)/.test(t),
+        'install: it leads with this browser (Chrome on a computer)',
+      );
+      check(/iPhone or iPad \(Safari\)/.test(t), 'install: the other devices are listed too');
+      await shot(page, 'install-dialog');
+      await page.click('[data-id=install-close]');
+      check(
+        (await page.$('[data-id=install-dialog]')) === null,
+        'install: Close removes the dialog',
+      );
+      // from the help page too
+      await page.goto(URL_BASE + '#/help');
+      await page.click('[data-id=install-link]');
+      await page.waitForSelector('[data-id=install-dialog][open]');
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !document.querySelector('[data-id=install-dialog]'));
+      check(true, 'install: Escape closes it');
+    });
+    // an iPad (it calls itself a Mac, with a touch screen) gets the Share button steps first
+    await session(null, async (page) => {
+      await page.addInitScript(() => {
+        Object.defineProperty(navigator, 'userAgent', {
+          get: () =>
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+        });
+        Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 });
+      });
+      await page.goto(URL_BASE + '#/');
+      await page.click('[data-id=install-link]');
+      await page.waitForSelector('[data-id=install-dialog][open]');
+      const first = await page.$eval('[data-id=install-dialog] h3', (h) => h.textContent);
+      check(
+        /iPhone or iPad \(Safari\)/.test(first),
+        `install: an iPad is shown the Safari steps first (${first})`,
       );
     });
   },

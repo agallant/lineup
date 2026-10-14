@@ -1,4 +1,5 @@
 import type { Screen } from '../router';
+import { showInstallDialog } from '../install';
 import { SettingsStore, safeLocalStorage } from '../settings';
 
 /** A short guide to the games, scoring, progress and privacy. */
@@ -68,11 +69,18 @@ export const helpScreen: Screen = (root) => {
     </section>
 
     <section class="panel">
+      <h2>Install it as an app</h2>
+      <p>Lineup is a web app: you can add it to your home screen or dock, where it opens full screen from its own
+        icon and works offline. <button class="linkish" data-id="install-link">How to install</button></p>
+    </section>
+
+    <section class="panel">
       <h2>Private and offline</h2>
       <p>Everything stays on this device: settings, scores, progress, your songs and your trained sounds.
         Nothing is sent anywhere. Once loaded the app works without a connection. In <strong>Options</strong> you can save
         a backup file and restore it on another device.</p>
     </section>
   `;
+  root.querySelector('[data-id=install-link]')?.addEventListener('click', showInstallDialog);
   return undefined;
 };
