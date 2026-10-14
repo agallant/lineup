@@ -467,18 +467,18 @@ export class ProgressStore {
     if (!v.days.includes(today) && v.freezes > 0) {
       const last = v.days.at(-1);
       if (last !== undefined) {
-        const missed = new Date(`${last}T12:00:00`);
-        missed.setDate(missed.getDate() + 1);
-        const todayAtNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
-        const gapDays = Math.round(
-          (todayAtNoon.getTime() - new Date(`${last}T12:00:00`).getTime()) / 86_400_000,
-        );
-        const missedKey = dayKey(missed);
+        // the days between the last one played and today that nothing covers yet
+        const uncovered: string[] = [];
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
+        d.setDate(d.getDate() - 1);
+        for (let i = 0; i < 8 && dayKey(d) > last; i++, d.setDate(d.getDate() - 1)) {
+          if (!v.frozen.includes(dayKey(d)) && d.getDay() !== v.restDay) uncovered.push(dayKey(d));
+        }
+        const missedKey = uncovered[0];
         // exactly one day missed, which a rest day or an earlier freeze does not already cover
         if (
-          gapDays === 2 &&
-          !v.frozen.includes(missedKey) &&
-          missed.getDay() !== v.restDay &&
+          uncovered.length === 1 &&
+          missedKey !== undefined &&
           streakOf(v.days, new Date(`${last}T12:00:00`), v) >= 2
         ) {
           v.freezes--;

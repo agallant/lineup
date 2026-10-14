@@ -1,7 +1,7 @@
 import { EAR_RATING, earTitle, getSong, rateChart, type EarLevel } from '@lineup/core';
 import { gameOf, starsFor } from './progress';
 import { COURSES, courseProgress, type StepProgress } from './courses';
-import type { BestScore } from './scores';
+import { MAX_HISTORY, type BestScore } from './scores';
 
 /** One line of the personal-best scoreboard. */
 export interface ScoreRow {
@@ -205,7 +205,10 @@ export function recordTimeline(
       ...(best.history ?? []),
       { score: best.score, accuracy: best.accuracy, at: best.at },
     ];
+    // a full history has dropped older bests, so its oldest entry is not known to be the first score
+    const truncated = (best.history?.length ?? 0) >= MAX_HISTORY;
     chain.forEach((c, i) => {
+      if (i === 0 && truncated) return;
       const prev = chain[i - 1];
       events.push({
         key,

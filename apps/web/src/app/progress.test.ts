@@ -376,6 +376,17 @@ describe('streak freezes', () => {
     expect(store.get().restDay).toBeNull();
   });
 
+  it('a freeze covers one missed day beside the rest day', () => {
+    const store = new ProgressStore(new Mem());
+    store.setRestDay(0); // Sundays: the 4th and the 11th
+    playDays(store, [1, 2, 3, 5, 6, 7, 8, 9, 10]);
+    expect(store.get().freezes).toBe(1);
+    const back = store.recordPlay(play({ songId: 'back' }), at(13)); // missed Monday the 12th
+    expect(back.freezeUsed).toBe(true);
+    expect(store.get().frozen).toEqual(['2026-10-12']);
+    expect(store.streak(at(13))).toBeGreaterThanOrEqual(9);
+  });
+
   it('survives a reload and ignores junk', () => {
     const mem = new Mem();
     const store = new ProgressStore(mem);

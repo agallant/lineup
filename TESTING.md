@@ -92,7 +92,7 @@ Items for features still to come are added here as they ship, under the mileston
 
 ### Game feel (streak freezes, themes, collection, records)
 
-- [ ] **Home**: the **This week** card names a theme and shows "0 of 3"; play a matching song (for
+- [ ] **Home**: the **This week** card names a theme and shows its count ("0 of 3" on a fresh profile; otherwise note the number); play a matching song (for
       example a waltz in a waltz week) and the results screen says "Waltz week: 1 of 3"; the card follows.
 - [ ] Finish the goal: the results say the week is finished (+100 XP) and the _Theme of the week_ trophy appears.
 - [ ] **Streak freeze**: play for seven days in a row; on the seventh the results say you earned a

@@ -18,7 +18,7 @@ export interface BestScore {
 
 const KEY = 'lineup.scores.v1';
 /** Earlier bests kept per key, for the records timeline. */
-const MAX_HISTORY = 6;
+export const MAX_HISTORY = 6;
 /** Entries kept; the oldest are dropped past this so storage cannot grow without bound. */
 const MAX_ENTRIES = 300;
 /** Far above anything a song can score (100 points a note times a combo multiplier). */

@@ -248,5 +248,13 @@ describe('ScoreStore across tabs and bad data', () => {
     expect(new ScoreStore(store).best(KEY)!.history).toEqual([
       { score: 3, accuracy: 0.3, at: '2026-09-01T00:00:00Z' },
     ]);
+    // a score saved before there was a history has none
+    mem.set(
+      'lineup.scores.v1',
+      JSON.stringify({
+        [KEY]: { score: 5, accuracy: 0.5, grade: 'C', at: '2026-10-01T00:00:00Z' },
+      }),
+    );
+    expect(new ScoreStore(store).best(KEY)!.history ?? []).toEqual([]);
   });
 });
