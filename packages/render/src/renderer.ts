@@ -71,6 +71,8 @@ export interface RenderView {
   live?: { noteIndex: number | null; onPitch: boolean; coverage: number };
   /** Percussion modes: recent hits. */
   hits?: readonly HitFlash[];
+  /** Keyboard mode: the keys held down now, as MIDI notes. */
+  pressed?: readonly number[];
 }
 
 /**
