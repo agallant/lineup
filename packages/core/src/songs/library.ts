@@ -278,6 +278,82 @@ const TUNES: readonly Tune[] = [
     notes: `C4 G4 C4 G4 | D4 A4 D4 A4 | E4 B4 E4 B4 | F4 C5 F4 C5 | G4 D5 G4 D5 | C5:4`,
   },
   {
+    id: 'twinkle',
+    title: 'Twinkle, Twinkle, Little Star',
+    artist: 'Traditional (France)',
+    bpm: 100,
+    tonic: 60,
+    notes: `C4 C4 G4 G4 | A4 A4 G4:2 | F4 F4 E4 E4 | D4 D4 C4:2 |
+      G4 G4 F4 F4 | E4 E4 D4:2 | G4 G4 F4 F4 | E4 E4 D4:2 |
+      C4 C4 G4 G4 | A4 A4 G4:2 | F4 F4 E4 E4 | D4 D4 C4:2`,
+  },
+  {
+    id: 'la-cucaracha',
+    title: 'La Cucaracha',
+    artist: 'Traditional (Mexico)',
+    bpm: 126,
+    tonic: 60,
+    notes: `C4:.5 C4:.5 C4:.5 F4:1.5 A4:1 | C4:.5 C4:.5 C4:.5 F4:1.5 A4:1 |
+      F4:.5 F4:.5 E4:.5 E4:.5 D4:.5 D4:.5 C4:1 | r:1`,
+  },
+  {
+    id: 'sakura',
+    title: 'Sakura (cherry blossoms, opening)',
+    artist: 'Traditional (Japan)',
+    bpm: 72,
+    tonic: 60,
+    notes: `A4 A4 B4:2 | A4 A4 B4:2 | A4 B4 C5 B4 | A4 B4 A4:2 | F4 E4:3`,
+  },
+  {
+    id: 'canon-theme',
+    title: 'Canon in D (the theme, in C)',
+    artist: 'Pachelbel (Germany)',
+    bpm: 72,
+    tonic: 60,
+    voiceOnly: true,
+    notes: `E5:2 D5:2 | C5:2 B4:2 | A4:2 G4:2 | A4:2 B4:2 |
+      C5:2 G4:2 | A4:2 E4:2 | F4:2 C4:2 | F4:2 G4:2`,
+  },
+  {
+    id: 'deck-the-halls',
+    title: 'Deck the Halls',
+    artist: 'Traditional (Wales)',
+    bpm: 112,
+    tonic: 60,
+    voiceOnly: true,
+    notes: `C5:1.5 B4:.5 A4:1 G4:1 | F4:1 G4:1 A4:1 F4:1 | G4:.5 A4:.5 B4:.5 G4:.5 A4:1.5 G4:.5 | F4:1 E4:1 D4:2 |
+      C5:1.5 B4:.5 A4:1 G4:1 | F4:1 G4:1 A4:1 F4:1 | G4:.5 A4:.5 B4:.5 G4:.5 A4:1.5 G4:.5 | F4:1 E4:1 D4:2`,
+  },
+  {
+    id: 'merry-christmas',
+    title: 'We Wish You a Merry Christmas',
+    artist: 'Traditional (England)',
+    bpm: 120,
+    tonic: 60,
+    beatsPerBar: 3,
+    voiceOnly: true,
+    notes: `G3 | C4 C4:.5 D4:.5 C4:.5 B3:.5 | A3 A3 A3 | D4 D4:.5 E4:.5 D4:.5 C4:.5 | B3 G3 G3 |
+      E4 E4:.5 F4:.5 E4:.5 D4:.5 | C4 A3 G3:.5 G3:.5 | A3 D4 B3 | C4:3`,
+  },
+  {
+    id: 'alle-meine-entchen',
+    title: 'Alle meine Entchen',
+    artist: 'Traditional (Germany)',
+    bpm: 104,
+    tonic: 60,
+    notes: `C4 D4 E4 F4 | G4:2 G4:2 | A4 A4 A4 A4 | G4:4 |
+      A4 A4 A4 A4 | G4:4 | F4 F4 F4 F4 | E4:2 E4:2 | D4 D4 D4 D4 | C4:4`,
+  },
+  {
+    id: 'haenschen-klein',
+    title: 'Hänschen klein',
+    artist: 'Traditional (Germany)',
+    bpm: 100,
+    tonic: 60,
+    notes: `G4 E4 E4:2 | F4 D4 D4:2 | C4 D4 E4 F4 | G4 G4 G4:2 |
+      G4 E4 E4:2 | F4 D4 D4:2 | C4 E4 G4 G4 | C4:4`,
+  },
+  {
     id: 'fur-elise',
     title: 'Für Elise (opening, chromatic)',
     artist: 'Beethoven',
@@ -475,6 +551,68 @@ export const STRUM_SONGS: Readonly<Record<string, Chart>> = {
     },
     'Am | F | C | G | Am | F | C | G | Am | F | G | E | Am | F | E | Am',
     'D . D U . U D U',
+  ),
+  'strum-reggae': strumChart(
+    {
+      title: 'Reggae offbeat (Jamaica style: C F G)',
+      artist: 'Lineup',
+      bpm: 76,
+      instruments: ['ukulele-strum'],
+    },
+    'C | C | F | F | C | C | G | G | C | C | F | F | C | G | C | C',
+    '. U . U . U . U',
+  ),
+  'strum-bossa': strumChart(
+    {
+      title: 'Bossa nova strum (Brazil style: Am Dm G C)',
+      artist: 'Lineup',
+      bpm: 84,
+      instruments: ['ukulele-strum'],
+    },
+    'Am | Dm | G | C | Am | Dm | G | C | F | G | C | Am | Dm | G | C | C',
+    'D . D U . U D .',
+  ),
+  'strum-flamenco': strumChart(
+    {
+      title: 'Andalusian cadence (Spain style: Am G F E)',
+      artist: 'Lineup',
+      bpm: 96,
+      instruments: ['ukulele-strum'],
+    },
+    'Am | G | F | E | Am | G | F | E | Am | G | F | E | Am | G | F | E',
+    'D D U . D U D U',
+  ),
+  'strum-tango': strumChart(
+    {
+      title: 'Tango (Argentina style: Am Dm E7 Am)',
+      artist: 'Lineup',
+      bpm: 88,
+      instruments: ['ukulele-strum'],
+    },
+    'Am | Am | Dm | Am | E7 | E7 | Am | Am | Am | Dm | Am | E7 | Am | E7 | Am | Am',
+    'D . . D . D U .',
+  ),
+  'strum-polka': strumChart(
+    {
+      title: 'Polka (central Europe style: C F G)',
+      artist: 'Lineup',
+      bpm: 92,
+      instruments: ['ukulele-strum'],
+    },
+    'C | C | G | G | C | C | G | C | C | F | G | C | C | F | G | C',
+    'D U D U',
+    { beatsPerBar: 2 },
+  ),
+  'strum-ranchera': strumChart(
+    {
+      title: 'Ranchera waltz (Mexico style: C F G)',
+      artist: 'Lineup',
+      bpm: 88,
+      instruments: ['ukulele-strum'],
+    },
+    'C | C | G | G | C | C | F | G | C | F | G | C | C | F | G | C',
+    'D . D U D U',
+    { beatsPerBar: 3 },
   ),
   'pick-hot-cross-buns': pickedMelodyChart(
     {

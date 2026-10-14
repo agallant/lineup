@@ -5,6 +5,7 @@ import {
   recordTimeline,
   suggestNext,
   isPlainVariant,
+  lastPlayedSong,
   scoreRows,
   sortRows,
   starsBySong,
@@ -252,5 +253,27 @@ describe('recordTimeline', () => {
   it('skips songs this version does not know, and tolerates scores with no history', () => {
     const entries = [entry('nobody|x|normal', 1, '2026-10-01T00:00:00Z')];
     expect(recordTimeline(entries, scoreRows(entries))).toEqual([]);
+  });
+});
+
+describe('lastPlayedSong', () => {
+  const e = (key: string, lastPlayed: string) => ({
+    key,
+    best: { score: 1, accuracy: 1, grade: 'A', at: '2026-01-01T00:00:00.000Z', lastPlayed },
+  });
+  it('is null before anything is played', () => {
+    expect(lastPlayedSong([])).toBeNull();
+  });
+  it('is the most recent play, ignoring ear training', () => {
+    const r = lastPlayedSong([
+      e('voice|sing-hot-cross-buns|normal', '2026-10-10T10:00:00.000Z'),
+      e('ear|interval-easy', '2026-10-13T10:00:00.000Z'),
+      e('ukulele-strum|strum-blues|x1', '2026-10-12T10:00:00.000Z'),
+    ]);
+    expect(r).toEqual({
+      profileId: 'ukulele-strum',
+      songId: 'strum-blues',
+      at: '2026-10-12T10:00:00.000Z',
+    });
   });
 });

@@ -3,10 +3,12 @@ import { ACHIEVEMENTS, DAILY_BONUS, ProgressStore, levelFor, weekMinutes } from 
 import { SettingsStore, safeLocalStorage } from '../settings';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
-import { suggestNext } from '../scoreboard';
+import { lastPlayedSong, suggestNext } from '../scoreboard';
+import { songHref } from '../collection';
 import { stepHref } from '../courses';
 import { THEMES, WEEKLY_BONUS } from '../themes';
 import { escapeHtml } from '../audio';
+import { isInstalled, showInstallDialog } from '../install';
 import { getSong } from '@lineup/core';
 
 /** What each game is, for the home menu: the route, the instrument and a line about it. */
@@ -63,6 +65,22 @@ const CARDS = [
   },
 ] as const;
 
+/** The game each instrument profile belongs to, for naming the song last played. */
+const GAME_NAMES: Readonly<Record<string, string>> = {
+  voice: 'Singline',
+  wind: 'Windline',
+  'ukulele-strum': 'Strumline',
+  'guitar-strum': 'Strumline',
+  'guitar-strum-dropd': 'Strumline',
+  'guitar-strum-dadgad': 'Strumline',
+  'guitar-strum-openg': 'Strumline',
+  bass: 'Bassline',
+  keyboard: 'Keyline',
+  clap: 'Beatline',
+  'hand-percussion': 'Beatline',
+  'drum-kit': 'Beatline',
+};
+
 /** The home menu: the four games, then progress, then set-up tools and options. */
 export const homeScreen: Screen = (root) => {
   const now = new Date();
@@ -76,10 +94,30 @@ export const homeScreen: Screen = (root) => {
   const trophies = Object.keys(state.achievements).length;
   const week = store.weekProgress(now);
   const theme = THEMES.find((t) => t.id === week.themeId)!;
-  const next = suggestNext(new ScoreStore(safeLocalStorage()).entries());
+  const entries = new ScoreStore(safeLocalStorage()).entries();
+  const next = suggestNext(entries);
+  /** The song played last, for "pick up where you left off" (null for a song that no longer exists). */
+  const last = ((): { title: string; href: string; game: string } | null => {
+    const l = lastPlayedSong(entries);
+    if (!l) return null;
+    try {
+      return {
+        title: getSong(l.songId).meta.title,
+        href: songHref(l.profileId, l.songId),
+        game: GAME_NAMES[l.profileId] ?? '',
+      };
+    } catch {
+      return null;
+    }
+  })();
   root.innerHTML = `
     <h1>Lineup</h1>
-    <p>Rhythm games you play with a real instrument. Everything stays on this device.</p>
+    <p>Rhythm games you play with a real instrument. Everything stays on this device.
+      ${
+        isInstalled()
+          ? ''
+          : 'It is also an app: <button class="linkish" data-id="install-link">install it on this device</button>, and it works offline.'
+      }</p>
 
     ${
       prefs.seenHelp
@@ -108,6 +146,14 @@ export const homeScreen: Screen = (root) => {
           : ''
       }
     </section>
+
+    ${
+      last
+        ? `<a class="card" href="${last.href}" data-id="resume">
+      <strong>Play again: ${escapeHtml(last.title)}</strong>
+      <span class="muted">${escapeHtml(last.game)} · where you left off</span></a>`
+        : ''
+    }
 
     ${
       next
@@ -192,5 +238,6 @@ export const homeScreen: Screen = (root) => {
         <span>Sound, scoring, your data and backups.</span></a></li>
     </ul>
   `;
+  root.querySelector('[data-id=install-link]')?.addEventListener('click', showInstallDialog);
   return undefined;
 };

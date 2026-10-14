@@ -69,6 +69,7 @@ import { BeatlineGame, HitMonitor, formatHits } from '../game/beatline-game';
 import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
+import { mountBackingControls } from '../backing-controls';
 import { HitStepGame } from '../game/hit-step-game';
 import { StepGame } from '../game/step-game';
 import {
@@ -93,11 +94,16 @@ import {
   RANDOM_GROOVE,
   RANDOM_WALTZ,
   RANDOM_MELODY,
-  addRandomOptions,
-  fillSongMenu,
   fillTargetMenu,
 } from '../song-menu';
 import { callSignal } from '../call-response';
+import {
+  defaultSongId,
+  loadPicker,
+  mountPickerControls,
+  rebuildPicker,
+  savePicker,
+} from '../song-picker';
 import { TourStore, mountTour } from '../tour';
 import type { Screen } from '../router';
 
@@ -143,9 +149,10 @@ const setup = (c: HitScreenConfig) => `
   </div>
 
   <section class="panel">
-    <h2>1. Game</h2>
+    <h2 class="step">Game</h2>
+    <div class="row"><label>Mode <select data-id="mode"></select></label></div>
+    <div data-id="song-filters"></div>
     <div class="row">
-      <label>Mode <select data-id="mode"></select></label>
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
       <label class="check" data-id="listen-label" hidden><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
@@ -166,20 +173,25 @@ const setup = (c: HitScreenConfig) => `
   </section>
 
   <section class="panel">
-    <h2>2. Microphone &amp; hit monitor</h2>
+    <h2 class="step">Microphone</h2>
     <div class="row">
       <button data-id="mic-start">Start mic</button>
-      <button data-id="leak-check" disabled>Check for click leak</button>
-      <button data-id="copy-hits" disabled>Copy hit log</button>
     </div>
     <canvas class="meter" data-id="meter" role="img" aria-label="Live microphone level"></canvas>
     <p class="status" data-id="advice" role="status">${c.micPrompt}</p>
-    <pre class="debug" data-id="monitor">–</pre>
-    <p class="status" data-id="leak-result" role="status"></p>
+    <details data-id="monitor-box">
+      <summary>Hit monitor and checks <span class="muted">(for troubleshooting)</span></summary>
+      <div class="row">
+        <button data-id="leak-check" disabled>Check for click leak</button>
+        <button data-id="copy-hits" disabled>Copy hit log</button>
+      </div>
+      <pre class="debug" data-id="monitor">–</pre>
+      <p class="status" data-id="leak-result" role="status"></p>
+    </details>
   </section>
 
   <section class="panel" data-id="enroll-panel">
-    <h2>3. Your sounds</h2>
+    <h2 class="step">Your sounds</h2>
     <p data-id="model-status"></p>
     <div class="row">
       <button data-id="enroll-start" disabled>Teach it my sounds</button>
@@ -194,7 +206,7 @@ const setup = (c: HitScreenConfig) => `
   </section>
 
   <section class="panel">
-    <h2>4. Options</h2>
+    <h2 class="step">Options</h2>
     <div class="row" data-id="strum-opts" ${c.strum || c.plucked ? '' : 'hidden'}>
       <label>Speed
         <select data-id="speed">
@@ -207,6 +219,7 @@ const setup = (c: HitScreenConfig) => `
     </div>
     <label class="check" data-id="chords-opt" ${c.strum ? '' : 'hidden'}><input type="checkbox" data-id="opt-chords" /> Also check the chords (experimental; otherwise only the timing counts)</label>
     <label class="check" data-id="pitch-opt" hidden><input type="checkbox" data-id="opt-pitch" /> Also check the pitch of each plucked note (experimental; otherwise only the timing counts)</label>
+    <div data-id="backing-box" ${c.strum || c.plucked ? '' : 'hidden'}></div>
     <label class="check" data-id="step-label"><input type="checkbox" data-id="opt-step" /> Beginner: one step at a time, no timing (the auto-play demo still plays the normal game)</label>
     <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks (needs headphones)</label>
     <label class="check"><input type="checkbox" data-id="opt-debug" /> Debug overlay while playing</label>
@@ -255,6 +268,8 @@ export const createHitScreen =
     const stages = { setup: $('stage-setup'), play: $('stage-play'), results: $('stage-results') };
     const show = (name: keyof typeof stages) => {
       for (const [k, el] of Object.entries(stages)) el.hidden = k !== name;
+      // the first-time tip is for the set-up page: while playing the stage gets the whole screen
+      root.querySelector('[data-id=tour]')?.toggleAttribute('hidden', name !== 'setup');
     };
 
     const settings = new SettingsStore(safeLocalStorage());
@@ -368,6 +383,7 @@ export const createHitScreen =
     const pitchBox = S<HTMLInputElement>('opt-pitch');
     pitchBox.checked = current.checkPitch;
     speedSel.value = String(current.speed);
+    mountBackingControls(S('backing-box'), settings, { music: c.strum === true });
     const stepBox = S<HTMLInputElement>('opt-step');
     stepBox.checked = current.stepMode;
     for (const m of c.modes) modeSel.add(new Option(m.label, m.id));
@@ -454,28 +470,41 @@ export const createHitScreen =
       S('best').textContent = describeBest(scores.best(bestKey()));
     };
 
+    const picker = loadPicker(safeLocalStorage());
     /** Re-reads everything that depends on the chosen mode. */
     const applyMode = () => {
-      songSel.replaceChildren(); // also removes group headings
       const songs = menuSongs();
       const stars = starsBySong(scores.entries(), profile.id);
-      fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
-      addRandomOptions(
-        songSel,
-        c.plucked
-          ? []
-          : generatorProfile() === 'ukulele-strum'
-            ? [
-                { value: RANDOM_CHORDS, label: '🎲 Random chord song' },
-                { value: RANDOM_WALTZ, label: '🎲 Random waltz (3/4)' },
-                { value: RANDOM_MELODY, label: '🎲 Random melody (picked)' },
-              ]
-            : [{ value: RANDOM_GROOVE, label: '🎲 Random groove' }],
-      );
-      const saved = settings.get().songs[`${c.keyPrefix}:${profile.id}`];
-      songSel.value = [...songSel.options].some((o) => o.value === saved)
-        ? saved!
-        : (songs[0]?.id ?? '');
+      const random = c.plucked
+        ? []
+        : generatorProfile() === 'ukulele-strum'
+          ? [
+              { value: RANDOM_CHORDS, label: '🎲 Random chord song' },
+              { value: RANDOM_WALTZ, label: '🎲 Random waltz (3/4)' },
+              { value: RANDOM_MELODY, label: '🎲 Random melody (picked)' },
+            ]
+          : [{ value: RANDOM_GROOVE, label: '🎲 Random groove' }];
+      const saved = settings.get().songs[`${c.keyPrefix}:${profile.id}`] ?? null;
+      picker.random = saved !== null && random.some((r) => r.value === saved);
+      /** Refills the menu from the filters, keeping the chosen song when it is still on offer. */
+      const rebuild = (wanted: string | null) => {
+        const changed = rebuildPicker(
+          songSel,
+          { songs, stars: (id) => stars.get(id) ?? null, random, state: picker },
+          wanted,
+          // a new player starts on the first step of this game's learning path
+          picker.random ? (random[0]?.value ?? null) : defaultSongId(profile.id, songs, profile.id),
+        );
+        if (changed) songSel.dispatchEvent(new Event('change'));
+      };
+      mountPickerControls(S('song-filters'), picker, {
+        hasRandom: random.length > 0,
+        onChange: () => {
+          savePicker(safeLocalStorage(), picker);
+          rebuild(songSel.value);
+        },
+      });
+      rebuild(saved);
       showChallenge();
       S('mode-note').textContent = c.modes.find((m) => m.id === profile.id)?.note ?? '';
       model =

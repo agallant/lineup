@@ -16,8 +16,8 @@ export type BackingEvent =
     };
 
 /** A held tone under the whole song: nothing, the key note, or the key note with its fifth. */
-export type Drone = 'off' | 'root' | 'fifth';
-export const DRONES: readonly Drone[] = ['off', 'root', 'fifth'];
+export type Drone = 'off' | 'root' | 'fifth' | 'octave' | 'tanpura';
+export const DRONES: readonly Drone[] = ['off', 'root', 'fifth', 'octave', 'tanpura'];
 
 export interface BackingOptions {
   /** A click on every beat (the count-in always clicks). */
@@ -158,7 +158,28 @@ export function planDrone(chart: Chart, rootMidi: number, drone: Drone): Backing
     level,
     wave: 'sine',
   });
-  return [tone(low, 0.9), ...(drone === 'fifth' ? [tone(low + 7, 0.5)] : [])];
+  if (drone === 'tanpura') {
+    // the drone of Indian classical music: the fifth, the key note twice and the low key note, plucked
+    // in turn and left to ring, over and over (about one round every five seconds)
+    const out: BackingEvent[] = [];
+    const step = 1.25;
+    const round: readonly [number, number][] = [
+      [low + 7, 0.7],
+      [low + 12, 0.8],
+      [low + 12, 0.8],
+      [low, 1],
+    ];
+    for (let t = -lead, i = 0; t < end; t += step, i++) {
+      const [midi, level] = round[i % round.length]!;
+      out.push({ kind: 'tone', songTime: t, duration: step * 2.2, midi, level, wave: 'triangle' });
+    }
+    return out;
+  }
+  return [
+    tone(low, 0.9),
+    ...(drone === 'fifth' ? [tone(low + 7, 0.5)] : []),
+    ...(drone === 'octave' ? [tone(low + 12, 0.45)] : []),
+  ];
 }
 
 /** Everything audible under a song: clicks, guide tones, and optionally accompaniment, in song-time order. */

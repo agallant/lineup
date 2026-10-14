@@ -15,7 +15,7 @@ import {
   type Click,
   type MetronomeConfig,
 } from '../metronome';
-import { escapeHtml } from '../audio';
+import { escapeHtml, closeAudio } from '../audio';
 import type { Screen } from '../router';
 import { safeLocalStorage } from '../settings';
 
@@ -414,6 +414,6 @@ export const metronomeScreen: Screen = (root) => {
     cancelAnimationFrame(raf);
     window.removeEventListener('keydown', onKey);
     document.removeEventListener('visibilitychange', onVisible);
-    if (ctx) void ctx.close();
+    if (ctx) closeAudio(ctx);
   };
 };

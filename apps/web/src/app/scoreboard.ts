@@ -225,3 +225,22 @@ export function recordTimeline(
   }
   return events.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
 }
+
+/**
+ * The song played most recently in a game (not ear training): its game's profile, the song and when,
+ * or null before anything has been played. The "pick up where you left off" card links to it.
+ */
+export function lastPlayedSong(
+  entries: readonly { key: string; best: BestScore }[],
+): { profileId: string; songId: string; at: string } | null {
+  let found: { profileId: string; songId: string; at: string } | null = null;
+  for (const e of entries) {
+    const [profileId, songId] = e.key.split('|');
+    if (!profileId || !songId || profileId === 'ear') continue;
+    const at = e.best.lastPlayed ?? e.best.at;
+    if (typeof at === 'string' && (found === null || at > found.at)) {
+      found = { profileId, songId, at };
+    }
+  }
+  return found;
+}
