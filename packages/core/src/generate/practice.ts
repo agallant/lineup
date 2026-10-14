@@ -1,4 +1,4 @@
-import { loadChart, type Chart } from '../chart';
+import { loadChart, type Chart, type ChartNote } from '../chart';
 
 /** A stretch of a song to practise on its own: a phrase between two bar lines. */
 export interface Part {
@@ -73,6 +73,66 @@ export function echoChart(chart: Chart, gapBeats = 2): { chart: Chart; listenEnd
   const result = loadChart({ ...chart, notes });
   if (!result.ok) throw new Error(`an echo chart is invalid:\n${result.errors.join('\n')}`);
   return { chart: result.value, listenEnd };
+}
+
+/** A stretch of song time. */
+export interface Span {
+  from: number;
+  to: number;
+}
+
+/** A rhythm turned into call and response: what is played to the player, then what they play back. */
+export interface CallResponse {
+  /** What the player is asked for: each bar's rhythm moved to just after it has been played. */
+  chart: Chart;
+  /** The rhythm as it is played to the player (to tick out), with its own timings. */
+  callChart: Chart;
+  /** When each bar is played to the player, and when they answer it, in song time. */
+  calls: Span[];
+  responses: Span[];
+}
+
+/**
+ * Call and response: the song bar by bar, each bar played to the player first and then asked of them
+ * straight after, so a long rhythm is learnt in small pieces. Bars with no notes are left out.
+ * Null for a song that would be a single bar.
+ */
+export function callResponseChart(chart: Chart, bars = 1): CallResponse | null {
+  const spb = 60 / chart.meta.bpm;
+  const segLen = spb * (chart.meta.beatsPerBar ?? 4) * Math.max(1, Math.floor(bars));
+  const round6 = (v: number): number => Math.round(v * 1e6) / 1e6;
+  const segments = new Map<number, ChartNote[]>();
+  for (const n of chart.notes) {
+    const k = Math.floor((n.t + 1e-6) / segLen);
+    segments.set(k, [...(segments.get(k) ?? []), n]);
+  }
+  const ordered = [...segments.entries()].sort((a, b) => a[0] - b[0]);
+  if (ordered.length < 2) return null;
+  const calls: Span[] = [];
+  const responses: Span[] = [];
+  const asked: ChartNote[] = [];
+  const played: ChartNote[] = [];
+  ordered.forEach(([k, notes], j) => {
+    const callStart = j * 2 * segLen;
+    const responseStart = callStart + segLen;
+    calls.push({ from: round6(callStart), to: round6(responseStart) });
+    responses.push({ from: round6(responseStart), to: round6(responseStart + segLen) });
+    for (const n of notes) {
+      const into = n.t - k * segLen;
+      played.push({ ...n, t: round6(callStart + into) });
+      asked.push({ ...n, t: round6(responseStart + into) });
+    }
+  });
+  const built = [asked, played].map((notes) => loadChart({ ...chart, notes }));
+  for (const r of built) {
+    if (!r.ok) throw new Error(`a call and response chart is invalid:\n${r.errors.join('\n')}`);
+  }
+  return {
+    chart: (built[0] as { ok: true; value: Chart }).value,
+    callChart: (built[1] as { ok: true; value: Chart }).value,
+    calls,
+    responses,
+  };
 }
 
 /** The length of a phrase in seconds of song time. */

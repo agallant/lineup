@@ -4,6 +4,7 @@ import { builtinSongs, getSong } from '../songs';
 import { melodyChart } from '../songs/notation';
 import {
   applyPart,
+  callResponseChart,
   duetPlayers,
   duetTally,
   duetWinner,
@@ -142,5 +143,51 @@ describe('duets', () => {
     expect(
       duetWinner({ hit: 0, perfect: 0, total: 0 }, { hit: 0, perfect: 0, total: 0 }),
     ).toBeNull();
+  });
+});
+
+describe('call and response', () => {
+  const song = getSong('clap-gallop'); // 4 bars of 4/4
+
+  it('plays each bar to the player, then asks it of them, bar by bar', () => {
+    const cr = callResponseChart(song)!;
+    const spb = 60 / song.meta.bpm;
+    const bar = spb * 4;
+    expect(cr.calls).toHaveLength(4);
+    expect(cr.responses).toHaveLength(4);
+    // the answers are the song's notes, each bar after its call
+    expect(cr.chart.notes).toHaveLength(song.notes.length);
+    expect(cr.callChart.notes).toHaveLength(song.notes.length);
+    cr.calls.forEach((c, j) => {
+      expect(c.from).toBeCloseTo(j * 2 * bar, 5);
+      expect(cr.responses[j]!.from).toBeCloseTo(c.to, 5);
+    });
+    // within a bar the rhythm is unchanged between call and answer
+    song.notes.forEach((n, i) => {
+      const k = Math.floor((n.t + 1e-6) / bar);
+      const into = n.t - k * bar;
+      expect(cr.chart.notes[i]!.t).toBeCloseTo(k * 2 * bar + bar + into, 5);
+      expect(cr.callChart.notes[i]!.t).toBeCloseTo(k * 2 * bar + into, 5);
+    });
+  });
+
+  it('leaves out empty bars, and is not offered for a single bar', () => {
+    const sparse = chartFromBeats(
+      { title: 's', bpm: 120, instruments: ['clap'] },
+      [0, 1, 8, 9].map((beat) => ({ beat, beats: 0.2, lane: 'hit' })),
+    );
+    const cr = callResponseChart(sparse)!;
+    expect(cr.calls).toHaveLength(2); // bars 1 and 3: the silent ones are skipped
+    const one = chartFromBeats({ title: 'o', bpm: 120, instruments: ['clap'] }, [
+      { beat: 0, beats: 0.2, lane: 'hit' },
+      { beat: 1, beats: 0.2, lane: 'hit' },
+    ]);
+    expect(callResponseChart(one)).toBeNull();
+  });
+
+  it('takes two bars at a time when asked', () => {
+    const cr = callResponseChart(song, 2)!;
+    expect(cr.calls).toHaveLength(2);
+    expect(cr.calls[0]!.to - cr.calls[0]!.from).toBeCloseTo((60 / song.meta.bpm) * 8, 5);
   });
 });

@@ -49,6 +49,8 @@ export interface Settings {
   listenFirst: boolean;
   /** Beatline, with listen first: hide the notes on your turn, so you clap back from memory. */
   blind: boolean;
+  /** Beatline: hear each bar, then play it back, bar by bar. */
+  callResponse: boolean;
   /** Minutes of practice to aim for each week (0 for no goal). */
   goalMinutes: number;
   /** How large the page's text is. */
@@ -107,6 +109,7 @@ export const DEFAULT_SETTINGS: Settings = {
   effects: true,
   listenFirst: false,
   blind: false,
+  callResponse: false,
   goalMinutes: 0,
   textSize: 'normal',
   theme: 'dark',
@@ -220,6 +223,8 @@ function sanitize(raw: unknown): Settings {
     listenFirst:
       typeof r['listenFirst'] === 'boolean' ? r['listenFirst'] : DEFAULT_SETTINGS.listenFirst,
     blind: typeof r['blind'] === 'boolean' ? r['blind'] : DEFAULT_SETTINGS.blind,
+    callResponse:
+      typeof r['callResponse'] === 'boolean' ? r['callResponse'] : DEFAULT_SETTINGS.callResponse,
     goalMinutes: GOAL_MINUTES.includes(r['goalMinutes'] as number)
       ? (r['goalMinutes'] as number)
       : DEFAULT_SETTINGS.goalMinutes,

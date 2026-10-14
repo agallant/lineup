@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -822,6 +822,37 @@ const scenarios = {
       });
     }
   },
+  async call() {
+    console.log('\n# Beatline call and response: each bar is played to you, then asked of you');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/beat');
+      await page.selectOption('[data-id=mode]', 'clap');
+      await page.selectOption('[data-id=song]', 'clap-gallop');
+      check(await page.isVisible('[data-id=call-label]'), 'call: offered in Beatline');
+      await page.check('[data-id=call]');
+      check(
+        !(await page.isChecked('[data-id=listen]')),
+        'call: turns listen first off (one way of hearing first at a time)',
+      );
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForFunction(
+        () =>
+          /Listen|Your turn/.test(document.querySelector('[data-id=overlay]')?.textContent ?? ''),
+        null,
+        { timeout: 30000 },
+      );
+      check(true, 'call: says when to listen and when it is your turn');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        perfect + Number(await text(page, 'r-good')) + miss === 15 && miss === 0,
+        `call: all 15 answers are judged and hit (${perfect} perfect, ${miss} missed)`,
+      );
+    });
+  },
+
   async 'beat-demo'() {
     console.log(
       '\n# Beatline auto-play demos (synthetic hands -> worklet -> classifier -> judge -> canvas)',

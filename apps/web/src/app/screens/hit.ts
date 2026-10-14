@@ -36,6 +36,7 @@ import {
   VARIATIONS,
   VARIATION_LABELS,
   applyPart,
+  callResponseChart,
   echoChart,
   songParts,
   varyChart,
@@ -85,6 +86,7 @@ import {
   fillSongMenu,
   fillTargetMenu,
 } from '../song-menu';
+import { callSignal } from '../call-response';
 import { TourStore, mountTour } from '../tour';
 import type { Screen } from '../router';
 
@@ -131,6 +133,7 @@ const setup = (c: HitScreenConfig) => `
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
       <label class="check" data-id="listen-label" hidden><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
+      <label class="check" data-id="call-label" hidden><input type="checkbox" data-id="call" /> Call and response: hear a bar, play it back, bar by bar</label>
       <label class="check" data-id="blind-label" hidden><input type="checkbox" data-id="blind" /> Unseen: hide the notes on your turn</label>
       <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
     </div>
@@ -399,7 +402,7 @@ export const createHitScreen =
         randomEntry()?.id ?? songSel.value,
         `${c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}${pitchMode() ? '+pitch' : ''}` : ''}${
           settings.get().variation === 'original' ? '' : `|${settings.get().variation}`
-        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${listening() ? `|echo${blind() ? '|blind' : ''}` : ''}`,
+        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${listening() ? `|echo${blind() ? '|blind' : ''}` : ''}${calling() ? '|call' : ''}`,
       );
     const refreshSong = () => {
       syncParts();
@@ -817,7 +820,13 @@ export const createHitScreen =
       chart: Chart,
       offset: number,
       startAt: number,
-      listen: { end: number; tones: BackingEvent[] } = { end: 0, tones: [] },
+      listen: {
+        end: number;
+        tones: BackingEvent[];
+        /** Call and response: when the player listens and when they answer, in song time. */
+        calls?: { from: number; to: number }[];
+        responses?: { from: number; to: number }[];
+      } = { end: 0, tones: [] },
     ) => {
       const { adapter, ctx, demo } = audio;
       sessionStart = new Date();
@@ -907,6 +916,9 @@ export const createHitScreen =
           overlay.classList.add('on');
         } else if (listen.end > 0 && now < listen.end) {
           overlay.textContent = 'Your turn!';
+          overlay.classList.add('on');
+        } else if (callSignal(listen, now, spb)) {
+          overlay.textContent = callSignal(listen, now, spb)!;
           overlay.classList.add('on');
         } else {
           overlay.classList.remove('on');
@@ -1111,11 +1123,29 @@ export const createHitScreen =
     S('listen-label').hidden = !!c.strum;
     listenBox.checked = settings.get().listenFirst;
     listenBox.addEventListener('change', () => {
-      settings.update({ listenFirst: listenBox.checked });
+      settings.update({
+        listenFirst: listenBox.checked,
+        ...(listenBox.checked ? { callResponse: false } : {}),
+      });
+      callBox.checked = settings.get().callResponse;
       syncBlind();
       refreshSong();
     });
-    const listening = (): boolean => !c.strum && settings.get().listenFirst;
+    const callBox = S<HTMLInputElement>('call');
+    S('call-label').hidden = !!c.strum;
+    callBox.checked = settings.get().callResponse;
+    callBox.addEventListener('change', () => {
+      // call and response and listen first are two ways of hearing a rhythm first: one at a time
+      settings.update({
+        callResponse: callBox.checked,
+        ...(callBox.checked ? { listenFirst: false } : {}),
+      });
+      listenBox.checked = settings.get().listenFirst;
+      syncBlind();
+      refreshSong();
+    });
+    const calling = (): boolean => !c.strum && settings.get().callResponse;
+    const listening = (): boolean => !c.strum && settings.get().listenFirst && !calling();
     const blind = (): boolean => listening() && settings.get().blind;
     const blindBox = S<HTMLInputElement>('blind');
     const syncBlind = () => {
@@ -1139,8 +1169,19 @@ export const createHitScreen =
         const heard = selectedChart();
         // "listen first": the rhythm is ticked out once, then asked of the player
         const echo = listening() ? echoChart(heard) : null;
-        const chart = echo ? echo.chart : heard;
-        const listen = echo ? { end: echo.listenEnd, tones: rhythmTones(heard) } : undefined;
+        // or bar by bar: each bar is ticked out and then asked of the player
+        const call = calling() ? callResponseChart(heard) : null;
+        const chart = call ? call.chart : echo ? echo.chart : heard;
+        const listen = call
+          ? {
+              end: 0,
+              tones: rhythmTones(call.callChart),
+              calls: call.calls,
+              responses: call.responses,
+            }
+          : echo
+            ? { end: echo.listenEnd, tones: rhythmTones(heard) }
+            : undefined;
         setupStatus.classList.remove('error');
         demoClaimed = demo;
         if (!demo) {
