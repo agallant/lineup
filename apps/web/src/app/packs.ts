@@ -86,7 +86,9 @@ const DEFS: readonly PackDef[] = [
     test: (c) =>
       /^(sing|wind|keys)-(la-cucaracha|sakura|twinkle|canon-theme|deck-the-halls|frere-jacques|au-clair|alle-meine-entchen|haenschen-klein)$/.test(
         c.id,
-      ) || /^strum-(reggae|bossa|flamenco|tango|polka|ranchera)$/.test(c.id),
+      ) ||
+      /^strum-(reggae|bossa|flamenco|tango|polka|ranchera)$/.test(c.id) ||
+      /^bass-latin-/.test(c.id),
   },
   {
     id: 'christmas',

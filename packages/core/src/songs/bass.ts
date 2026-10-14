@@ -95,6 +95,23 @@ const PATTERNS: Readonly<Record<string, { label: string; major: Bar; minor?: Bar
       [5, 1],
     ],
   },
+  bossa: {
+    label: 'bossa nova pattern',
+    major: [
+      [0, 1.5],
+      [7, 0.5],
+      [0, 1.5],
+      [7, 0.5],
+    ],
+  },
+  tumbao: {
+    label: 'Cuban tumbao',
+    major: [
+      [null, 1.5],
+      [0, 1.5],
+      [7, 1],
+    ],
+  },
   funk: {
     label: 'funk groove',
     major: [
@@ -217,6 +234,16 @@ const PLANS: readonly Plan[] = [
       { id: 'roots', bpm: 90 },
       { id: 'eighths', bpm: 96 },
       { id: 'root-fifth', bpm: 96 },
+    ],
+  },
+  {
+    slug: 'latin',
+    title: (k, p) => `Latin pop in ${k.name}: ${p}`,
+    chords: POP,
+    keys: ['C', 'G', 'D'],
+    patterns: [
+      { id: 'bossa', bpm: 88 },
+      { id: 'tumbao', bpm: 96 },
     ],
   },
   {
