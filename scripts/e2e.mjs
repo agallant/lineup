@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1244,6 +1244,42 @@ const scenarios = {
         strays + wrong >= 1 && (await text(page, 'r-miss')) !== '0',
         `keys: stray presses and missed notes are counted (${strays} extra, ${wrong} wrong)`,
       );
+    });
+  },
+
+  async step() {
+    console.log('\n# Beginner step mode: one note at a time, no timing (fake microphone sings C4)');
+    await session(fixtures.sung, async (page) => {
+      await page.goto(URL_BASE + '#/sing');
+      await page.selectOption('[data-id=song]', 'singline-scale');
+      await page.check('[data-id=step]');
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () => document.querySelector('[data-id=note]')?.textContent?.includes('C4'),
+        null,
+        { timeout: 15000 },
+      );
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=count]:visible', { timeout: 15000 });
+      check(/Note 1 of/.test(await text(page, 'count')), 'step: starts on the first note');
+      // the fake singer holds C4: the first note passes by itself
+      await page.waitForFunction(
+        () => /Note 2 of/.test(document.querySelector('[data-id=count]')?.textContent ?? ''),
+        null,
+        { timeout: 20000 },
+      );
+      check(true, 'step: holding the right note moves on to the next');
+      await shot(page, 'step-play');
+      // the other notes are not C4: skip them
+      for (let i = 0; i < 40; i++) {
+        if (await page.isVisible('[data-id=r-passed]')) break;
+        if (await page.isVisible('[data-id=skip]')) await page.click('[data-id=skip]');
+        await page.waitForTimeout(150);
+      }
+      await page.waitForSelector('[data-id=r-passed]', { timeout: 20000 });
+      const passed = Number((await text(page, 'r-passed')).split(' ')[0]);
+      check(passed >= 1, `step: results count the passed notes (${await text(page, 'r-passed')})`);
+      check(Number(await text(page, 'r-skipped')) >= 1, 'step: skipped notes are counted');
     });
   },
 

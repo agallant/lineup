@@ -87,6 +87,7 @@ import {
 import { fingeringChartHtml, fingeringStripHtml } from '../game/fingering-view';
 import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
+import { StepGame } from '../game/step-game';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
@@ -184,6 +185,7 @@ const setup = (c: PitchScreenConfig) => `
       <label class="check" data-id="names-label" hidden><input type="checkbox" data-id="opt-names" /> Show note names on the staff</label>
       <label class="check" data-id="duet-label" hidden><input type="checkbox" data-id="opt-duet" /> Duet: two players take turns, phrase by phrase</label>
       <label class="check"><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
+      <label class="check"><input type="checkbox" data-id="step" /> Beginner: one note at a time, no timing (the auto-play demo still plays the normal game)</label>
       <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
     </div>
@@ -265,6 +267,21 @@ const PLAY = `
   <p class="lyrics" data-id="lyrics" hidden></p>
   <p class="turn" data-id="turn" role="status" hidden></p>
   <pre class="debug" data-id="debug" hidden></pre>
+`;
+
+const STEP_PLAY = `
+  <div class="hud">
+    <div><strong data-id="count"></strong></div>
+    <button data-id="stop">Stop</button>
+  </div>
+  <div class="stage-wrap">
+    <canvas class="stage" data-id="stage" role="img" aria-label="The note to sing or play, on the line, with your pitch beside it"></canvas>
+  </div>
+  <p class="big" data-id="prompt" role="status"></p>
+  <div class="row">
+    <button data-id="hear">Hear it again</button>
+    <button data-id="skip">Skip this note</button>
+  </div>
 `;
 
 type GameAudio = { adapter: InputAdapter; ctx: AudioContext; demo: boolean };
@@ -584,6 +601,12 @@ export const createPitchScreen =
       settings.update({ listenFirst: listenBox.checked });
       refreshRange();
     });
+    const stepBox = S<HTMLInputElement>('step');
+    stepBox.checked = settings.get().stepMode;
+    stepBox.addEventListener('change', () => {
+      settings.update({ stepMode: stepBox.checked });
+      refreshRange();
+    });
     /** The chosen song, version and part. */
     const variedSong = (): Chart => applyPart(wholeSong(), partIdx);
 
@@ -617,7 +640,7 @@ export const createPitchScreen =
             : settings.get().difficulty
         }${settings.get().variation === 'original' ? '' : `|${settings.get().variation}`}${
           partIdx >= 0 ? `|part${partIdx + 1}` : ''
-        }${settings.get().listenFirst ? '|echo' : ''}${duetOn() ? '|duet' : ''}`,
+        }${settings.get().listenFirst ? '|echo' : ''}${settings.get().stepMode ? '|step' : ''}${duetOn() ? '|duet' : ''}`,
       );
 
     const refreshRange = () => {
@@ -1081,6 +1104,152 @@ export const createPitchScreen =
       playRaf = requestAnimationFrame(tick);
     };
 
+    /** Beginner mode: each note is shown and played; the player reproduces it to move on. No clock, no timing. */
+    const runStep = (m: MicSession, chart: Chart) => {
+      const ctx = m.ctx;
+      sessionStart = new Date();
+      stages.play.innerHTML = STEP_PLAY;
+      show('play');
+      const P = <T extends HTMLElement = HTMLElement>(id: string): T =>
+        stages.play.querySelector<T>(`[data-id="${id}"]`)!;
+      const stage = P<HTMLCanvasElement>('stage');
+      const game = new StepGame(chart, judgedProfile());
+      const opts = settings.get();
+      const renderer =
+        opts.notation === 'staff'
+          ? new StaffRenderer({ names: opts.staffNames, flats: preferFlats(chart.meta.tonic) })
+          : createRenderer(profile.renderer);
+      // the tone is played in the octave of the player's voice, like the guide tone elsewhere
+      const octave = ((): number => {
+        const span = chartPitchRange(chart);
+        const fit = !c.instruments && span ? voiceFit(span, opts.voiceRange) : null;
+        return fit ? fit.octave : 0;
+      })();
+      const TONE_S = 1;
+      const say = () => {
+        const target = game.target;
+        if (target === null) return;
+        void ctx.resume();
+        game.muteUntil(ctx.currentTime + TONE_S + 0.3);
+        void playTone(ctx, midiToHz(target + octave), TONE_S, 0.22);
+      };
+      let shownFor = -1;
+      let finished = false;
+      let passedAt = 0;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        stopPlay();
+        m.onMessage = onSetupMessage;
+        showStepResults(game, chart, ctx);
+      };
+      m.onMessage = (msg) => {
+        onSetupMessage(msg);
+        if (msg.type !== 'frame' || finished) return;
+        if (game.feed(toPitchFrame(msg.frame))) passedAt = ctx.currentTime;
+      };
+      P('hear').addEventListener('click', () => {
+        game.hearAgain();
+        say();
+      });
+      P('skip').addEventListener('click', () => {
+        game.skip();
+      });
+      P('stop').addEventListener('click', () => {
+        finished = true;
+        stopPlay();
+        m.onMessage = onSetupMessage;
+        show('setup');
+      });
+      const tick = () => {
+        playRaf = requestAnimationFrame(tick);
+        if (game.done) return finish();
+        const { g, width, height } = fitCanvas(stage);
+        renderer.draw(g, { width, height }, game.view());
+        const pos = game.position;
+        P('count').textContent = `Note ${pos.at} of ${pos.of}`;
+        const now = ctx.currentTime;
+        P('prompt').textContent =
+          now - passedAt < 0.8 && passedAt > 0
+            ? 'Got it!'
+            : `Sing or play ${midiName(game.target!)} and hold it`;
+        if (shownFor !== game.index) {
+          shownFor = game.index;
+          // a moment after a pass, so "Got it!" is seen before the next tone
+          setTimeout(() => {
+            if (!finished && shownFor === game.index) say();
+          }, 600);
+        }
+      };
+      playRaf = requestAnimationFrame(tick);
+    };
+
+    const showStepResults = (game: StepGame, chart: Chart, ctx: AudioContext) => {
+      const grade = letterGrade(game.accuracy);
+      const best = scores.record(bestKey(), {
+        score: game.passed * 100,
+        accuracy: game.accuracy,
+        grade,
+      });
+      refreshRange();
+      // beginner steps count toward progress, but are rated no higher than the easiest songs
+      const played = playResultFor(
+        profile.id,
+        songEntry().id,
+        chart,
+        {
+          accuracy: game.accuracy,
+          counts: { perfect: game.passed, good: 0, miss: game.skipped },
+        },
+        undefined,
+        c.instruments ? settings.get().speed : undefined,
+      );
+      const outcome = progress.recordPlay({ ...played, rating: Math.min(played.rating, 2) });
+      outcome.newAchievements.push(...grantMilestones(progress, scores.entries()));
+      stages.results.innerHTML = `
+      <section class="panel results">
+        <div class="grade" data-id="grade">${grade}</div>
+        <p class="status" data-id="best-line" role="status">${best.isNewBest ? 'New best!' : describeBest(best.best)}</p>
+        ${rewardHtml(game.accuracy, outcome)}
+        <dl>
+          <dt>Notes passed</dt><dd data-id="r-passed">${game.passed} of ${game.notes.length}</dd>
+          <dt>Skipped</dt><dd data-id="r-skipped">${game.skipped}</dd>
+          <dt>Heard again</dt><dd data-id="r-hears">${game.hears}</dd>
+        </dl>
+        <div class="strip" data-id="strip">${game.statuses
+          .map(
+            (st, i) =>
+              `<span class="cell ${st}" title="${escapeHtml(midiName(game.notes[i]?.pitch ?? 0))}"></span>`,
+          )
+          .join('')}</div>
+        <p>Ready for more? Turn off “Beginner” to play it in time.</p>
+        <div class="row">
+          <button data-id="again" class="primary">Again</button>
+          <button data-id="timed">Play it in time</button>
+          <button data-id="back">Back to setup</button>
+        </div>
+      </section>`;
+      show('results');
+      if (settings.get().effects) {
+        const kind = jingleFor(outcome, best.isNewBest);
+        try {
+          if (kind) playJingle(ctx, kind);
+        } catch {
+          // the audio context may already be closed: the jingle is a nicety
+        }
+      }
+      const R = (id: string) =>
+        stages.results.querySelector<HTMLButtonElement>(`[data-id="${id}"]`)!;
+      R('again').addEventListener('click', () => void begin(false));
+      R('timed').addEventListener('click', () => {
+        settings.update({ stepMode: false });
+        stepBox.checked = false;
+        refreshRange();
+        void begin(false);
+      });
+      R('back').addEventListener('click', adapterToSetup);
+    };
+
     /** Whether the song just played is today's challenge, played whole and as written. */
     const isDaily = (id: string): boolean =>
       id === dailyFor(dailyGame).id && settings.get().variation === 'original' && partIdx < 0;
@@ -1267,6 +1436,12 @@ export const createPitchScreen =
             }
           : undefined;
         setupStatus.classList.remove('error');
+        if (!demo && settings.get().stepMode) {
+          const m = await startMic();
+          if (!m) return;
+          runStep(m, heard);
+          return;
+        }
         if (!demo) {
           const m = await startMic();
           if (!m) return;

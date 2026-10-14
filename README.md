@@ -142,6 +142,9 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   major scales, string crossing). Speed, the drum loop and the first-time tips work as in Strumline. The
   tuner has a bass tuning (E A D G) that listens lower than for other instruments. A Learn path walks
   from open strings to a funk groove.
+- **Beginner mode** (Singline and Windline, an option on the setup page): no timing at all. Each note of the
+  song is shown on the line and played; sing or play it back and hold it to move on, or skip it. Stars come
+  from the notes passed.
 - **Keyline** (`#/keys`): learn the keyboard. Notes fall onto a piano keyboard and you press the key as each
   reaches it; chords are several notes at once, judged note by note. Play on a **MIDI keyboard** (Web MIDI:
   Chrome and Edge; Safari on iPad has none), on the on-screen keys (touch, several fingers at once) or on the
