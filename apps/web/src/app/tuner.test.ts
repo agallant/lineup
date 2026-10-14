@@ -1,6 +1,14 @@
 import { midiToFrequency } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
-import { TUNINGS, readTuner, tunerPitchOptions } from './tuner';
+import {
+  PitchSmoother,
+  TUNINGS,
+  TUNING_GROUPS,
+  clampA4,
+  noteHz,
+  readTuner,
+  tunerPitchOptions,
+} from './tuner';
 
 const uke = TUNINGS.find((t) => t.id === 'ukulele')!;
 const chromatic = TUNINGS.find((t) => t.id === 'chromatic')!;
@@ -79,5 +87,55 @@ describe('bass tuning', () => {
   it('listens lower and over a longer window than for other instruments', () => {
     expect(tunerPitchOptions(bass)).toEqual({ minHz: 30, windowSize: 4096 });
     expect(tunerPitchOptions(uke)).toEqual({ minHz: 60 });
+  });
+});
+
+describe('the universal tuner', () => {
+  it('is the first tuning, and every tuning is in a group', () => {
+    expect(TUNINGS[0]!.id).toBe('chromatic');
+    expect(TUNING_GROUPS[0]!.ids).toEqual(['chromatic']);
+    const grouped = TUNING_GROUPS.flatMap((g) => g.ids).sort();
+    expect(grouped).toEqual(TUNINGS.map((t) => t.id).sort());
+  });
+
+  it('reads against another reference pitch', () => {
+    // 442 Hz is an in-tune A on an orchestra tuned to A = 442, and sharp against 440
+    expect(readTuner(442, chromatic, undefined, 442)).toMatchObject({
+      name: 'A4',
+      state: 'in-tune',
+    });
+    expect(readTuner(442, chromatic)).toMatchObject({ name: 'A4', state: 'sharp' });
+    expect(noteHz(69, 432)).toBeCloseTo(432);
+    expect(noteHz(60, 440)).toBeCloseTo(261.626, 2);
+  });
+
+  it('keeps the reference pitch in range', () => {
+    expect(clampA4(300)).toBe(415);
+    expect(clampA4(500)).toBe(466);
+    expect(clampA4(441.6)).toBe(442);
+    expect(clampA4(NaN)).toBe(440);
+  });
+});
+
+describe('PitchSmoother', () => {
+  it('ignores one stray reading among steady ones', () => {
+    const s = new PitchSmoother();
+    let out = 0;
+    [440, 441, 880, 440, 439].forEach((hz, i) => (out = s.push(hz, i * 0.01)));
+    expect(out).toBeCloseTo(440, 0);
+  });
+
+  it('forgets readings after a pause', () => {
+    const s = new PitchSmoother();
+    s.push(440, 0);
+    s.push(440, 0.01);
+    expect(s.push(220, 2)).toBe(220);
+  });
+
+  it('can be reset', () => {
+    const s = new PitchSmoother();
+    s.push(440, 0);
+    s.reset();
+    expect(s.push(300, 0.01)).toBe(300);
   });
 });

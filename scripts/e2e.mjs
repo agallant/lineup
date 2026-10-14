@@ -1712,6 +1712,36 @@ const scenarios = {
         /In tune|tune (up|down)/.test(await text(page, 'advice')),
         `tuner: says in tune (${await text(page, 'advice')})`,
       );
+      check(
+        (await page.inputValue('[data-id=tuning]')) === 'chromatic',
+        'tuner: starts as a universal (any note) tuner',
+      );
+      check(
+        /\d+\.\d Hz/.test(await text(page, 'detail')),
+        `tuner: shows the pitch (${await text(page, 'detail')})`,
+      );
+      // a reference tone: tap a note to hold it, tap again to release
+      await page.click('[data-ref="69"]');
+      check(
+        (await page.getAttribute('[data-ref="69"]', 'aria-pressed')) === 'true',
+        'tuner: tapping A4 holds a reference tone',
+      );
+      await page.click('[data-id=tone-stop]');
+      check(
+        (await page.getAttribute('[data-ref="69"]', 'aria-pressed')) === 'false',
+        'tuner: the tone can be stopped',
+      );
+      // the reference pitch is adjustable and remembered
+      await page.click('[data-id=a4-up]');
+      await page.click('[data-id=a4-up]');
+      check((await text(page, 'a4')) === '442 Hz', 'tuner: A = 442 Hz');
+      await page.reload();
+      await page.waitForSelector('[data-id=a4]');
+      check((await text(page, 'a4')) === '442 Hz', 'tuner: the reference pitch is remembered');
+      // an instrument-centred mode lists its strings
+      await page.selectOption('[data-id=tuning]', 'guitar');
+      const strings = await page.$$eval('[data-ref]', (b) => b.length);
+      check(strings === 6, `tuner: guitar mode offers its six strings (${strings})`);
     });
   },
 

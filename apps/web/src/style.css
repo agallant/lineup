@@ -203,6 +203,12 @@ dd {
   background: var(--muted);
 }
 
+.tuner-sub {
+  text-align: center;
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
 .cents-needle {
   position: absolute;
   left: 50%;
@@ -1004,4 +1010,10 @@ a.button {
 }
 .turn[data-player='2'] {
   color: var(--accent2, #e76f51);
+}
+
+button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
 }
