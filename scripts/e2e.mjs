@@ -169,7 +169,7 @@ const stopServer = () => server.kill();
 process.on('exit', stopServer);
 
 async function waitForServer() {
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 150; i++) {
     try {
       if ((await fetch(URL_BASE)).ok) return;
     } catch {
