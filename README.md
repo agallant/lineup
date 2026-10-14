@@ -142,6 +142,12 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   major scales, string crossing). Speed, the drum loop and the first-time tips work as in Strumline. The
   tuner has a bass tuning (E A D G) that listens lower than for other instruments. A Learn path walks
   from open strings to a funk groove.
+- **Keyline** (`#/keys`): learn the keyboard. Notes fall onto a piano keyboard and you press the key as each
+  reaches it; chords are several notes at once, judged note by note. Play on a **MIDI keyboard** (Web MIDI:
+  Chrome and Edge; Safari on iPad has none), on the on-screen keys (touch, several fingers at once) or on the
+  computer keyboard (A S D F G H J K and W E T Y U O P; Z and X change octave). Pieces for both hands,
+  chord pieces and exercises (five fingers, scales, arpeggios, hands apart, black keys), with a Learn path.
+  The pitch is read from the key, so there is no microphone and no octave forgiveness: the right key counts.
 - **Voice range** (Options, Singline): say your voice type and each song gets a line about how it sits
   in it ("sits well", "an octave lower is easier"), and the guide tone plays in your octave; any
   octave of the right note still counts.

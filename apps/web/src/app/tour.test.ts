@@ -19,6 +19,7 @@ describe('tour', () => {
     expect(Object.keys(TIPS).sort()).toEqual([
       'bassline',
       'beatline',
+      'keyline',
       'singline',
       'strumline',
       'windline',

@@ -233,7 +233,7 @@ the results-screen reward from a finished song. `game/accompaniment.ts` plans ba
 as data (`BackingEvent`s in song time, harmonising a melody a bar at a time), merged with the click
 and guide tone by `planAllBacking` and scheduled by `playBacking`.
 
-Bassline is a profile (`profiles/bass.json`, four string lanes and a low-note detector) plus `songs/bass.ts` (the library and exercises, with the string and fret for each note) and the Beatline/Strumline hit screen in its `plucked` mode (pitch and timing always judged by the same attacher that serves Strumline's pitch check). Smaller pieces added since: `ladder.ts` (tempo ladders, cleared rungs per song), `lyrics.ts` (words
+Bassline is a profile (`profiles/bass.json`, four string lanes and a low-note detector) plus `songs/bass.ts` (the library and exercises, with the string and fret for each note) and the Beatline/Strumline hit screen in its `plucked` mode (pitch and timing always judged by the same attacher that serves Strumline's pitch check). Keyline has no microphone: `midi-input.ts` turns Web MIDI messages (or the on-screen and computer keys) into pitched hits for `KeylineGame` (`game/keyline-game.ts`, the same discrete judge, pitch matched exactly), drawn by the piano-roll renderer; `songs/keys.ts` holds the pieces. Smaller pieces added since: `ladder.ts` (tempo ladders, cleared rungs per song), `lyrics.ts` (words
 under the notes), `free-play.ts` (metronome clicks and recording helpers for the free play screen),
 and in core `songs/interchange.ts` (move a melody to another key, read ABC notation), the pluck
 helpers in `songs/notation.ts` (`isPluckChart`, `withPluckPitches`, which let `BeatlineGame` judge

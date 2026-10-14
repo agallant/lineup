@@ -185,6 +185,22 @@ Items for features still to come are added here as they ship, under the mileston
       comfortable tempo? Try **Speed**, and the **Drum loop** in Options as a backing.
 - [ ] Learn > **Bassline: first lines** opens the right songs in order.
 
+### Keyline
+
+- [ ] **Keyline > Connect a MIDI keyboard** with a real USB or Bluetooth MIDI keyboard on a computer (Chrome or
+      Edge): it names your keyboard, and playing a key lights it on screen. Does Safari on the iPad say it
+      cannot (expected)? Is a keyboard plugged in later picked up?
+- [ ] Is the **timing** right on a MIDI keyboard? Play along on **Five fingers on C** with the metronome:
+      the result should say "on the beat". If it says early or late by a steady amount, tell me how many ms.
+- [ ] If the keyboard makes its own sound, turn off **Make a piano sound**. Is the lag of the app's piano
+      sound (when on) noticeable?
+- [ ] **On-screen keys** on the iPad: can you press two or three at once (a chord)? Is the key size fine, and
+      does sliding a finger across keys feel right?
+- [ ] **Computer keyboard** (A S D F ...): do the notes line up with the keys drawn? Z and X change octave.
+- [ ] Both hands on **Ode to Joy, hands together** and the **chord pieces**: are they at a comfortable tempo?
+      Which pieces are too hard or too easy for a beginner?
+- [ ] Learn > **Keyline: first steps** opens the right pieces in order.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

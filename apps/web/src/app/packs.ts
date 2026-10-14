@@ -50,10 +50,13 @@ const PROFILES = [
   'wind',
   'ukulele-strum',
   'bass',
+  'keyboard',
   'clap',
   'hand-percussion',
   'drum-kit',
 ] as const;
+/** Games whose songs belong to their own pack, and stay out of the general ones. */
+const SOLO = new Set(['bass', 'keyboard']);
 const RHYTHM = new Set(['clap', 'hand-percussion', 'drum-kit']);
 
 const DEFS: readonly PackDef[] = [
@@ -96,7 +99,7 @@ const DEFS: readonly PackDef[] = [
     id: 'waltz',
     title: 'Waltz time',
     blurb: 'Every song in three beats to the bar.',
-    test: (c) => c.chart.meta.beatsPerBar === 3 && !c.flute && c.profileId !== 'bass',
+    test: (c) => c.chart.meta.beatsPerBar === 3 && !c.flute && !SOLO.has(c.profileId),
   },
   {
     id: 'pentatonic',
@@ -111,6 +114,12 @@ const DEFS: readonly PackDef[] = [
     test: (c) => c.profileId === 'bass',
   },
   {
+    id: 'key-pieces',
+    title: 'At the keyboard',
+    blurb: 'Pieces for both hands and for a MIDI keyboard, from five fingers to chords.',
+    test: (c) => c.profileId === 'keyboard',
+  },
+  {
     id: 'rhythm',
     title: 'Rhythm kitchen',
     blurb: 'Every clap, tap and drum-kit groove, from gentle to busy.',
@@ -120,7 +129,7 @@ const DEFS: readonly PackDef[] = [
     id: 'gentle',
     title: 'Gentle start',
     blurb: 'The easiest songs for voice, whistle and ukulele: a good first week.',
-    test: (c) => !RHYTHM.has(c.profileId) && !c.flute && c.profileId !== 'bass' && c.rating <= 2,
+    test: (c) => !RHYTHM.has(c.profileId) && !c.flute && !SOLO.has(c.profileId) && c.rating <= 2,
   },
   {
     id: 'minor',
@@ -139,7 +148,7 @@ const DEFS: readonly PackDef[] = [
     id: 'originals',
     title: 'Made for Lineup',
     blurb: 'Original tunes, chord songs and grooves written for this app, easiest first.',
-    test: (c) => c.chart.meta.artist === 'Lineup' && !c.flute && c.profileId !== 'bass',
+    test: (c) => c.chart.meta.artist === 'Lineup' && !c.flute && !SOLO.has(c.profileId),
   },
   {
     id: 'chromatic',

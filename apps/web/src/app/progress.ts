@@ -90,6 +90,7 @@ export const GAMES = [
   { id: 'beatline', label: 'Beatline', profiles: ['clap', 'hand-percussion', 'drum-kit'] },
   { id: 'strumline', label: 'Strumline', profiles: ['ukulele-strum'] },
   { id: 'bassline', label: 'Bassline', profiles: ['bass'] },
+  { id: 'keyline', label: 'Keyline', profiles: ['keyboard'] },
   { id: 'ear', label: 'Ear training', profiles: ['ear'] },
 ] as const;
 

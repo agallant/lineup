@@ -41,6 +41,13 @@ const CARDS = [
     blurb: 'Learn bass lines: blues, pop and rock, with the string and fret for every note.',
   },
   {
+    id: 'keyline',
+    href: '#/keys',
+    name: 'Keyline',
+    who: 'Keyboard and piano',
+    blurb: 'Play pieces on a MIDI keyboard, the on-screen keys or your computer keyboard.',
+  },
+  {
     id: 'beatline',
     href: '#/beat',
     name: 'Beatline',

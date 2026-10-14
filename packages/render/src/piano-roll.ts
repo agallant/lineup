@@ -18,6 +18,8 @@ const BLACK_OFFSET: Readonly<Record<number, number>> = {
   10: 0.74,
 };
 const BLACK_WIDTH = 0.6;
+/** Black keys' height as a share of the keyboard's. */
+const BLACK_HEIGHT = 0.62;
 const LOOK_AHEAD = 4;
 
 /** One key of the keyboard as drawn: its MIDI note, colour and horizontal place in pixels. */
@@ -64,6 +66,39 @@ export function pianoKeys(
   return { keys, from, to };
 }
 
+/** The keyboard drawn for a chart's notes in a canvas of this size: its keys and its height in pixels. */
+export function pianoLayout(
+  notes: readonly { pitch?: number | undefined }[],
+  size: RenderSize,
+): { keys: PianoKey[]; keyboardHeight: number } {
+  const pitched = notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch]));
+  const low = pitched.length ? Math.min(...pitched) : 60;
+  const high = pitched.length ? Math.max(...pitched) : 72;
+  // at least two octaves wide, so a small range does not give huge keys
+  const span = Math.max(high - low, 23);
+  const mid = (low + high) / 2;
+  const { keys } = pianoKeys(Math.round(mid - span / 2), Math.round(mid + span / 2), size.width);
+  return { keys, keyboardHeight: Math.max(60, Math.min(130, size.height * 0.24)) };
+}
+
+/** The key under a point of the canvas (black keys sit on top), or null above the keyboard. */
+export function pianoKeyAt(
+  keys: readonly PianoKey[],
+  keyboardHeight: number,
+  size: RenderSize,
+  x: number,
+  y: number,
+): number | null {
+  if (y < size.height - keyboardHeight) return null;
+  const blackBottom = size.height - keyboardHeight * (1 - BLACK_HEIGHT);
+  const hit = (k: PianoKey) => x >= k.x && x < k.x + k.w;
+  if (y < blackBottom) {
+    const b = keys.find((k) => k.black && hit(k));
+    if (b) return b.midi;
+  }
+  return keys.find((k) => !k.black && hit(k))?.midi ?? null;
+}
+
 function noteColor(status: NoteStatus, active: boolean): string {
   switch (status) {
     case 'perfect':
@@ -88,14 +123,7 @@ export class PianoRollRenderer implements Renderer {
   readonly kind = 'piano-roll' as const;
 
   draw(g: Canvas2D, size: RenderSize, view: RenderView): void {
-    const pitched = view.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch]));
-    const low = pitched.length ? Math.min(...pitched) : 60;
-    const high = pitched.length ? Math.max(...pitched) : 72;
-    // at least two octaves wide, so a small range does not give huge keys
-    const span = Math.max(high - low, 23);
-    const mid = (low + high) / 2;
-    const { keys } = pianoKeys(Math.round(mid - span / 2), Math.round(mid + span / 2), size.width);
-    const kh = Math.max(60, Math.min(130, size.height * 0.24));
+    const { keys, keyboardHeight: kh } = pianoLayout(view.notes, size);
     const top = size.height - kh;
     const pxPerSec = (top - 6) / LOOK_AHEAD;
     const byMidi = new Map(keys.map((k) => [k.midi, k] as const));
@@ -152,7 +180,7 @@ export class PianoRollRenderer implements Renderer {
     for (const pass of [false, true]) {
       for (const k of keys) {
         if (k.black !== pass) continue;
-        const h = k.black ? kh * 0.62 : kh;
+        const h = k.black ? kh * BLACK_HEIGHT : kh;
         const down = pressed.has(k.midi);
         g.fillStyle = down ? COLORS.active : k.black ? '#15131f' : '#ece9f7';
         g.fillRect(k.x, top, k.w - (k.black ? 0 : 1), h);

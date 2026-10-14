@@ -96,6 +96,20 @@ const FAMILIES: readonly FamilyDef[] = [
     category: 'exercise',
   },
   {
+    id: 'key-pieces',
+    label: 'Keyline pieces',
+    game: 'Keyline',
+    profiles: ['keyboard'],
+    category: 'song',
+  },
+  {
+    id: 'key-exercises',
+    label: 'Keyline exercises',
+    game: 'Keyline',
+    profiles: ['keyboard'],
+    category: 'exercise',
+  },
+  {
     id: 'beat-songs',
     label: 'Beatline rhythms',
     game: 'Beatline',
@@ -196,6 +210,8 @@ export function songHref(profileId: string, songId: string): string {
       return `#/strum?song=${id}`;
     case 'bass':
       return `#/bass?song=${id}`;
+    case 'keyboard':
+      return `#/keys?song=${id}`;
     default:
       return `#/beat?mode=${encodeURIComponent(profileId)}&song=${id}`;
   }
