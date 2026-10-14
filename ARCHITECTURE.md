@@ -222,8 +222,11 @@ playable through the real analyzer) rather than note by note.
 
 Everything the app remembers is in `localStorage` under `lineup.*` keys, each with its own small,
 tolerant store class (corrupt or blocked storage means "start empty", never a crash):
-`settings.ts`, `scores.ts` (best per song and way of playing), `progress.ts` (XP, levels, day
-streaks, trophies; pure rules plus a store) and the calibration store in core. `backup.ts` exports
+`settings.ts`, `scores.ts` (best per song and way of playing, with its last few earlier bests and
+when it was last played), `progress.ts` (XP, levels, day streaks with freezes and a rest day, the
+themed week, trophies; pure rules plus a store; `themes.ts` has the weekly themes as predicates over a
+finished song), `collection.ts` (the song families, three-star counts and medals) with
+`milestones.ts` (the trophies decided by everything played, granted after each result) and the calibration store in core. `backup.ts` exports
 and restores all `lineup.*` keys as one JSON file. `scoreboard.ts` turns stored score keys
 (`profile|song|variant`) back into rows by looking songs up in the library. `user-songs.ts` keeps the songs a player writes as source text and compiles them with the same notation functions as the library (so they are rated, varied and scored like any song); `game/reward.ts` builds
 the results-screen reward from a finished song. `game/accompaniment.ts` plans bass and chord backing

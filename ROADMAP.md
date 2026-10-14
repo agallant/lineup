@@ -1,141 +1,74 @@
 # Lineup roadmap
 
 Where the project is and where it is going. Updated with every milestone; the README says how to
-use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built.
+use what exists, [ARCHITECTURE.md](ARCHITECTURE.md) how it is built, and
+[TESTING.md](TESTING.md) is the running list of things only a real instrument, microphone or iPad can
+check. Development does not wait on that list: everything is built and verified in simulation first, a
+real-device finding becomes a fix, and the fix goes through the same tests.
 
-## Done
+## Where it stands
 
-- **Singline** (voice): sustained-pitch game, three scoring levels, key menu.
-- **Windline** (whistles, recorders): the same pipeline, with the right note counting in any octave by default (strict octaves are an option); an
-  instrument menu for tin whistles in seven keys, recorders, and a generic instrument whose key you set, songs moved into the
-  instrument's key, fingering chart and in-play fingering strip, practice speed.
-- **Beatline** (claps, taps, hand drums, kit): onset classification with a sound-training step.
-- **Strumline** (ukulele): strum detection and chord recognition; four string lanes showing the fret
-  to hold on each string (open strings are small rings); strums and plucked notes; chord checking;
-  practice speed.
-- **Exercises and random melodies** for Singline and Windline: scales, modes, thirds, arpeggios, long
-  tones, and a seeded melody generator (scale, level, seed) in the song menu.
-- **Chromatic fingerings** for whistles and recorders (half-holes and cross-fingerings), a chromatic
-  scale exercise, and Greensleeves as the first song with sharps.
-- **A song library** written in small text notations: six easy tunes each for Singline and Windline,
-  five ukulele chord songs and three picked melodies, and clap, hand and drum-kit rhythms.
-- **Random chord songs, picked melodies and grooves** for Strumline and Beatline, rhythm and
-  ukulele scale exercises, with the same seed, level and "New song" controls.
-- **Windline octave handling**: by default the right note counts in whatever octave you play it
-  (low whistle, alto recorder, second octave); strict octaves are an option.
-- **Difficulty ratings and diatonic/chromatic labels** on every song and exercise (menus sorted easiest
-  first).
-- **Easier and harder versions** of any song, exercise or random song.
-- **Home, scoreboard and options**: home menu in sections (games, progress, set-up tools, options);
-  scoreboard of personal bests with stars; XP, levels, day streaks and trophies; an options screen with
-  backup and restore; mixed-difficulty versions; play-along bass and chords; a daily challenge per game;
-  practising one phrase of a song at a time; a tuner; ear training (intervals and chord types); listen-first
-  (echo) play; a practice log with a weekly goal; stars on song menus; jingles; **My songs** (write
-  your own melody, chord song or rhythm as text); a speed trainer that offers the next speed after a clean run.
-- **Product**: best scores, song info, offline start, session logs you can copy, end-to-end tests in CI.
+A private, offline, installable web app (no accounts, nothing leaves the device) of rhythm and ear
+games played with a real instrument and the microphone:
 
-## Development goals
+- **Singline** (voice), **Windline** (whistles, recorders, Native American flutes, shakuhachi),
+  **Strumline** (ukulele chords and picked notes), **Beatline** (claps, taps, hand drums, kit), plus
+  **ear training**, a **tuner**, **Learn** paths, **My songs**, a daily challenge per game, and
+  **scoreboard / XP / streaks / trophies / options / backup**.
+- Every song, exercise and random song is rated 1 to 10; any can be made easier, harder or mixed;
+  random songs come from seeded generators (melody, flute, chord song, waltz, groove) that are tested
+  for variety over hundreds of seeds; listen-first and "unseen" play; practice speed, one-phrase
+  practice, play-along bass, chords, drum loop and drone.
+- The README lists every feature; ARCHITECTURE.md the modules; this file what is next.
 
-In the order I am working through them; each is one or more pull requests. Anything that needs a
-real instrument to judge is listed again under "Waiting on real-device testing".
+## The plan, milestone by milestone
 
-### 1. More to play, in every mode (ongoing)
+Each milestone is one pull request (or a short series): built and tested in simulation, reviewed by
+CodeRabbit, merged on a real approval with CI green, and its real-device checks added to TESTING.md.
+They are ordered by how much each adds to a player who has only a device and an instrument, and none
+waits on the ones before it.
 
-- **Difficulty and labels** (done): every song, exercise and random song is rated from its chart
-  (Beginner to Expert, 1 to 10); melodies are also labelled diatonic or chromatic (other kinds of song
-  have no such label), since instruments differ in what they can play.
-- **Song variations** (done): any song can be made **easier** or **harder** (generated from the song
-  and a seed): fewer or more passing notes, simpler or busier strum patterns, plainer or more
-  syncopated grooves; the difficulty score changes with it. **Aim for** a difficulty (1 to 10) next to
-  "New song" finds a random song near it. The **Mixed** version takes each phrase from the easier, original or harder version.
-- **More generators, not just more songs** (chord songs now cover waltz time and five keys): new forms
-  and levels for random melodies and grooves; play-along backing
-  for melodies.
-- **More songs**: easy tunes first, then harder and chromatic ones, in every mode. Public domain or
-  original.
-- Tests measure "pleasing" with checkable properties over many seeds, because a bad piece is a bug.
+1. **Game feel** (done). Streak freezes (one earned per week of streak) and a rest day, so a missed day
+   does not erase a long streak; a collection page of songs cleared with three stars, with a medal per
+   song family; a personal-records timeline; a themed week (waltz, pentatonic, slow and steady, fresh
+   songs, ...) alongside the daily challenge.
+2. **More to play.** A larger public-domain and original repertoire in every mode (easy first, then
+   harder and chromatic), harder grooves, more flute repertoire, more chord songs, each checked for
+   range, fit and rating.
+3. **Practice tools.** Tempo ladders (finish a song at 80%, 90%, 100% in a row); interval singing
+   (hear a note, sing the note a fourth above it); a "name that note" quiz and a staff view with the
+   note names hidden; a chord-change trainer scored on the change; call and response in Beatline; a
+   voice range setting (the guide tone in your octave, a "fits your voice" mark). _The voice range is
+   small because Singline already counts a note in any octave and folds your pitch for display._
+4. **Make and share (still private).** Transpose in My songs, paste ABC notation, copy a song as text
+   (through the backup file or a message), lyrics under a melody for sing-along.
+5. **Plucked notes judged by pitch** (Strumline). Today a picked note is judged on timing only; judge
+   the string and fret by pitch with the same detector Windline uses, in simulation first.
+6. **Duet and free play.** Two players alternate phrases of one song on one device with separate
+   scores; free play with a metronome and a take recorded and played back on the device.
+7. **Quality.** An automated accessibility audit of every screen in CI; performance and offline
+   checks; docstring and test coverage kept up; whatever the real-device list turns up.
 
-### 2. Strumline and ukulele
+Ideas kept for later, none blocking: left-handed layouts, a per-game first-run tour, themed song
+packs, MIDI import. (Haptics were considered and dropped: iPad Safari has no vibration API.)
 
-- ~~Barre bars~~, ~~waltz random songs~~, ~~more chords (Bm, B♭, Gm, Cm, F♯m, E, E7, B7) and keys (F, A)~~: done.
-- The simulated ukulele still misses the odd strum on a new chord a beat after another chord, and
-  near-identical shapes (Am/Am7, A/F♯m) are not told apart in one song; both are analyzer limits.
-- Hear **which string and fret** is played, so a plucked note can be judged on pitch, not just timing.
-- Strum **direction** (down or up) detection, which is not reliable yet.
+## Not buildable without a real instrument or sounds you teach it
 
-### 3. Windline
+- Telling a **shaker from a tambourine or a hand drum**: needs your own recordings to train on.
+- Judging a **shakuhachi's meri/kari pitch bends** and a verified hole chart per school.
+- Hearing **strum direction** reliably (not reliable in simulation at realistic strum speeds).
+- A real **VoiceOver** pass, and every layout on the iPad itself.
+- An **ocarina** (needs a verified fingering chart per type before it is offered).
 
-- ~~The C♯ below the upper D on the recorder chart~~ (done); the notes above the upper D are still left to your recorder's own chart.
-- More songs, including chromatic ones (Für Elise opening, Greensleeves), labelled so you can tell
-  what your instrument can play. Songs below a whistle's tonic are voice-only.
-- An ocarina only if a fingering chart can be shown (no ocarina offered until then).
-- ~~Pentatonic flutes~~ (done: Native American flute and shakuhachi instruments, flute songs, random flute songs, a drone, a Learn path). Next: a verified shakuhachi hole chart per school (Kinko, Tozan), meri/kari pitch bends and ornaments judged leniently, more flute keys and low flutes (needs the detector below C4), and more traditional repertoire.
-- If testing shows it: move the chart to the octave you play, instead of accepting any octave.
+These stay on the list with a clear test in [TESTING.md](TESTING.md); the software around them is
+built so a finding changes a number or a table, not a design.
 
-### 4. Singline
+## Known limits of the simulation
 
-- Added: fourths, fifths and octave-leap exercises, a range finder, Auld Lang Syne and Amazing Grace. Still to come: harder songs and exercises that adapt to the range you find.
-
-### 5. Beatline
-
-- Added: paradiddle-diddle, boom-boom-clap, disco, snare triplets, tresillo, son clave and a funk groove. Still to come: harder grooves.
-- Tell sounds apart beyond clap and tap: shaker versus tambourine or jingle, hand-drum tones. Needs
-  training the app on your own sounds.
-
-### 6. Quality and plumbing
-
-- Accessibility: audited by reading (labels on every control, 44px touch targets, visible focus,
-  contrast, reduced motion); a real VoiceOver pass on the iPad is still to do.
-- Docstring coverage is about 90% of exports (was 61%).
-
-### 7. Ideas worth considering
-
-Roughly in order of how well they fit a private, offline edutainment game.
-
-**Learn**
-
-- ~~Rhythm dictation~~ (done: Beatline "Unseen" hides the notes after you listen).
-- **Sight-reading / note names**: a staff view with an option to hide the note labels, and a
-  "name that note" quiz in the ear-training screen.
-- ~~Learning paths~~ (done: **Learn**, seven paths including scales and modes, and a Graduate trophy). Rhythm dictation is the Beatline "Unseen" option with listen first.
-- **Interval singing**: hear a note and sing the note a fourth above it (ear training with the mic).
-- **Chord-change trainer** for the ukulele: two chords alternating at a rising tempo, scored on the
-  change.
-- **Tempo ladders**: finish a song at 80%, 90%, 100% in a row (extends the speed trainer).
-
-**Play**
-
-- ~~Play-along backing styles~~ (done: bass line, chords, and a rock or bossa drum loop; more styles and bass patterns could follow).
-- **Duet mode**: two players alternate phrases of one song (the same device, passed around).
-- **Call and response** in Beatline: the app plays a pattern each bar and you answer it, random each time.
-- **Free play with a metronome and a recorder**: record a take (kept on the device), play it back.
-
-**Game feel**
-
-- **Seasonal or themed challenges** (a week of waltzes, a week of pentatonic) on top of the daily one.
-- **Badges for each song family** and a "collection" page of songs cleared with three stars.
-- **Streak freezes** and rest days so a missed day does not erase a long streak.
-- **Personal records timeline**: when each best was set, and how it improved.
-
-**Make and share (still private)**
-
-- Song maker extras: transpose, import from a MIDI file or pasted ABC notation, copy a song as text to
-  share through the backup file or a message.
-- **Lyrics** shown under a melody for sing-along.
-
-**Polish**
-
-- Theme choices (light, high contrast), left-handed layouts, and larger touch targets on the game screens.
-- A first-run tour and a "how to play" page for each game.
-- Haptic feedback (where the device supports it) on a hit or a miss.
-
-### Waiting on real-device testing
-
-- Windline: the any-octave default; the sharps and flats on the whistle and recorder charts (they
-  vary between instruments).
-- Whether the random songs sound pleasing; Strumline and Beatline random songs with real playing.
-- Whistles, recorders, ukuleles, hand drums and the iPad microphone have only been tried as simulated
-  sounds.
+- The simulated strum analyzer can miss, or be late on, the first strum after a chord change, and
+  near-identical shapes (Am/Am7, A/F♯m) are not told apart in one song.
+- Whistles, recorders, flutes, ukuleles, hand drums and the iPad microphone have only been tried as
+  synthetic sounds, so thresholds (clarity, level, timing windows) are educated defaults.
 
 ## How each milestone ships
 

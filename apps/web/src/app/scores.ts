@@ -9,12 +9,16 @@ export interface BestScore {
   bestAccuracy?: number;
   /** ISO time of the latest play of this key, whether or not it set a high score. */
   lastPlayed?: string;
+  /** The last few times the best improved, oldest first (the newest is the best itself). */
+  history?: { score: number; accuracy: number; at: string }[];
   grade: string;
   /** ISO time it was set. */
   at: string;
 }
 
 const KEY = 'lineup.scores.v1';
+/** Earlier bests kept per key, for the records timeline. */
+export const MAX_HISTORY = 6;
 /** Entries kept; the oldest are dropped past this so storage cannot grow without bound. */
 const MAX_ENTRIES = 300;
 /** Far above anything a song can score (100 points a note times a combo multiplier). */
@@ -30,6 +34,28 @@ export function scoreKey(profileId: string, songId: string, variant = ''): strin
 
 /** The later of two ISO times (either may be missing). */
 const later = (a?: string, b?: string): string | undefined => (a && b ? (a > b ? a : b) : (a ?? b));
+
+/** The earlier bests recorded, keeping only well-formed entries. */
+function readHistory(raw: unknown): { score: number; accuracy: number; at: string }[] {
+  if (!Array.isArray(raw)) return [];
+  const out: { score: number; accuracy: number; at: string }[] = [];
+  for (const h of raw) {
+    if (typeof h !== 'object' || h === null) continue;
+    const e = h as Record<string, unknown>;
+    if (
+      typeof e['score'] === 'number' &&
+      e['score'] >= 0 &&
+      e['score'] <= MAX_SCORE &&
+      typeof e['accuracy'] === 'number' &&
+      e['accuracy'] >= 0 &&
+      e['accuracy'] <= 1 &&
+      typeof e['at'] === 'string'
+    ) {
+      out.push({ score: e['score'], accuracy: e['accuracy'], at: e['at'] });
+    }
+  }
+  return out.slice(-MAX_HISTORY);
+}
 
 function sanitize(raw: unknown): Map<string, BestScore> {
   const out = new Map<string, BestScore>();
@@ -58,6 +84,7 @@ function sanitize(raw: unknown): Map<string, BestScore> {
         grade: r['grade'],
         at: r['at'],
         lastPlayed: typeof r['lastPlayed'] === 'string' ? r['lastPlayed'] : r['at'],
+        history: readHistory(r['history']),
       });
     }
   }
@@ -88,7 +115,7 @@ export class ScoreStore {
   /** Files a result. `isNewBest` is true when it beat the previous best, or when there was none. */
   record(
     key: string,
-    result: Omit<BestScore, 'at' | 'bestAccuracy' | 'lastPlayed'>,
+    result: Omit<BestScore, 'at' | 'bestAccuracy' | 'lastPlayed' | 'history'>,
     now = new Date(),
   ): { isNewBest: boolean; best: BestScore } {
     this.reconcile();
@@ -111,8 +138,16 @@ export class ScoreStore {
       this.save();
       return { isNewBest: false, best: { ...kept } };
     }
+    // the best it replaces is kept, so the timeline can show how it improved
+    const history = [
+      ...(previous?.history ?? []),
+      ...(previous
+        ? [{ score: previous.score, accuracy: previous.accuracy, at: previous.at }]
+        : []),
+    ].slice(-MAX_HISTORY);
     const best: BestScore = {
       ...result,
+      history,
       bestAccuracy,
       at: lastPlayed,
       lastPlayed: later(previous?.lastPlayed, lastPlayed) ?? lastPlayed,

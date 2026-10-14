@@ -1133,6 +1133,7 @@ const scenarios = {
             xp: 350,
             plays: 2,
             days: ['2026-10-10', '2026-10-11'],
+            freezes: 1,
             perGame: { singline: 1, strumline: 1 },
             songs: ['voice|sing-hot-cross-buns'],
             achievements: { 'first-song': '2026-10-10T10:00:00.000Z' },
@@ -1168,6 +1169,16 @@ const scenarios = {
         'home: shows the level from stored progress',
       );
       check((await page.$$('[data-id=daily] a')).length === 4, 'home: four daily challenges');
+      check(
+        /❄ 1/.test(await text(page, 'level-card')),
+        `home: a banked streak freeze is shown (${await text(page, 'level-card')})`,
+      );
+      check(
+        (await page.$('[data-id=theme]')) !== null &&
+          /This week: .+ week/.test(await text(page, 'theme')) &&
+          /0 of \d/.test(await text(page, 'theme')),
+        `home: the themed week and its progress (${(await text(page, 'theme')).replace(/\s+/g, ' ')})`,
+      );
       check((await page.$('[data-id=tuner-link]')) !== null, 'home: the tuner is under Set up');
       check(
         /10 minutes of practice/.test(await text(page, 'week')),
@@ -1202,6 +1213,15 @@ const scenarios = {
         /Hot Cross Buns/.test(await text(page, 'rows')),
         'scoreboard: titles come from the song library',
       );
+      check(
+        (await page.$$('[data-id=timeline] li')).length === 2 &&
+          /First score/.test(await text(page, 'timeline')),
+        'scoreboard: the records timeline lists when each best was set',
+      );
+      check(
+        /1 of 2 banked/.test(await text(page, 'freezes')),
+        'scoreboard: the streak freezes banked are shown',
+      );
       await page.selectOption('[data-id=game]', 'strumline');
       check((await page.$$('[data-id=rows] li')).length === 1, 'scoreboard: filters by game');
       await page.selectOption('[data-id=game]', '');
@@ -1213,6 +1233,22 @@ const scenarios = {
       check(
         (await page.$$('[data-trophy].earned')).length === 1,
         'scoreboard: one trophy earned, the rest locked',
+      );
+      // the collection: one song of the singing songs is cleared with three stars
+      await page.click('[data-id=collection-link]');
+      await page.waitForSelector('[data-family=sing-songs]');
+      check(
+        /1 of \d+ with three stars/.test(await text(page, 'badge-sing-songs').catch(() => '')) ||
+          /1 of \d+ with three stars/.test(
+            (await page.textContent('[data-family=sing-songs] h2')) ?? '',
+          ),
+        'collection: counts the song cleared with three stars',
+      );
+      check(
+        (await page.$$('[data-family]')).length >= 8 &&
+          (await page.getAttribute('[data-family=sing-songs] li.cleared a', 'href')) ===
+            '#/sing?song=sing-hot-cross-buns',
+        'collection: lists every family, and a song links to its game',
       );
       await page.goto(URL_BASE + '#/help');
       await page.goto(URL_BASE);
@@ -1241,12 +1277,17 @@ const scenarios = {
       await page.selectOption('[data-id=theme]', 'contrast');
       await page.selectOption('[data-id=accompaniment]', 'bass');
       await page.selectOption('[data-id=goal]', '30');
+      await page.selectOption('[data-id=rest-day]', '0');
       await page.selectOption('[data-id=text-size]', 'large');
       await page.reload();
       check(
         !(await page.isChecked('[data-id=metronome]')) &&
           (await page.inputValue('[data-id=accompaniment]')) === 'bass',
         'options: choices are remembered',
+      );
+      check(
+        (await page.inputValue('[data-id=rest-day]')) === '0',
+        'options: the rest day is remembered',
       );
       check(
         (await page.inputValue('[data-id=goal]')) === '30' &&

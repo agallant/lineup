@@ -66,7 +66,8 @@ import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { UserSongStore, userSongsFor } from '../user-songs';
-import { completedCourse, starsBySong } from '../scoreboard';
+import { starsBySong } from '../scoreboard';
+import { grantMilestones } from '../milestones';
 import { hashParam } from '../courses';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
@@ -930,9 +931,10 @@ export const createHitScreen =
               isDaily(randomEntry()?.id ?? songSel.value)
                 ? { key: dailyKey(dailyGame) }
                 : undefined,
+              c.strum ? settings.get().speed : undefined,
             ),
           );
-      if (outcome && completedCourse(scores.entries())) progress.grant('graduate');
+      if (outcome) outcome.newAchievements.push(...grantMilestones(progress, scores.entries()));
       const reward = outcome ? rewardHtml(s.accuracy, outcome) : '';
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'

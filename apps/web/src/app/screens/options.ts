@@ -90,6 +90,13 @@ export const optionsScreen: Screen = (root) => {
         (m) => `<option value="${m}">${m === 0 ? 'No goal' : `${m} minutes`}</option>`,
       ).join('')}</select></label></div>
       <p class="muted">The home menu shows the last seven days against your goal.</p>
+      <div class="row"><label>Rest day <select data-id="rest-day">
+        <option value="">None</option>
+        ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+          .map((d, i) => `<option value="${i}">${d}</option>`)
+          .join('')}</select></label></div>
+      <p class="muted">A rest day never breaks your streak, and you do not need to play on it. A streak
+        freeze (one earned for every week of a streak, two at most) also covers a single missed day.</p>
     </section>
 
     <section class="panel">
@@ -143,6 +150,8 @@ export const optionsScreen: Screen = (root) => {
     $<HTMLInputElement>('fingerings').checked = v.showFingerings;
     $<HTMLInputElement>('debug').checked = v.debug;
     $<HTMLSelectElement>('goal').value = String(v.goalMinutes);
+    const rest = new ProgressStore(storage).get().restDay;
+    $<HTMLSelectElement>('rest-day').value = rest === null ? '' : String(rest);
     $<HTMLSelectElement>('text-size').value = v.textSize;
     $<HTMLSelectElement>('theme').value = v.theme;
   };
@@ -161,6 +170,10 @@ export const optionsScreen: Screen = (root) => {
   checkbox('chords', 'checkChords');
   checkbox('fingerings', 'showFingerings');
   checkbox('debug', 'debug');
+  $<HTMLSelectElement>('rest-day').addEventListener('change', (e) => {
+    const v = (e.target as HTMLSelectElement).value;
+    new ProgressStore(storage).setRestDay(v === '' ? null : Number(v));
+  });
   $<HTMLSelectElement>('drone').addEventListener('change', (e) =>
     settings.update({ drone: (e.target as HTMLSelectElement).value as (typeof DRONES)[number] }),
   );

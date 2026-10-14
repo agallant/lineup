@@ -7,6 +7,7 @@ import { startRouter } from './app/router';
 import { SettingsStore, safeLocalStorage } from './app/settings';
 import { beatScreen } from './app/screens/beat';
 import { calibrateScreen } from './app/screens/calibrate';
+import { collectionScreen } from './app/screens/collection';
 import { helpScreen } from './app/screens/help';
 import { homeScreen } from './app/screens/home';
 import { learnScreen } from './app/screens/learn';
@@ -46,6 +47,7 @@ startRouter(
     ear: earScreen,
     make: makerScreen,
     learn: learnScreen,
+    collection: collectionScreen,
     help: helpScreen,
     options: optionsScreen,
   },

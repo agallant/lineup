@@ -81,7 +81,8 @@ import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { UserSongStore, userSongsFor } from '../user-songs';
-import { completedCourse, starsBySong } from '../scoreboard';
+import { starsBySong } from '../scoreboard';
+import { grantMilestones } from '../milestones';
 import { hashParam } from '../courses';
 import { dailyFor, dailyKey, wantsDaily, type DailyGame } from '../daily';
 import { ProgressStore } from '../progress';
@@ -995,9 +996,10 @@ export const createPitchScreen =
               chart,
               s,
               isDaily(songEntry().id) ? { key: dailyKey(dailyGame) } : undefined,
+              c.instruments ? settings.get().speed : undefined,
             ),
           );
-      if (outcome && completedCourse(scores.entries())) progress.grant('graduate');
+      if (outcome) outcome.newAchievements.push(...grantMilestones(progress, scores.entries()));
       const reward = outcome ? rewardHtml(s.accuracy, outcome) : '';
       const bestLine = audio.demo
         ? 'Demo run: not saved as a score.'

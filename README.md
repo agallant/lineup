@@ -145,6 +145,20 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   a clean run and for the first song of the day), which raises your level; playing on days in a row
   builds a streak; trophies (First notes, Flawless, Sharps and flats, Full band...) are earned once.
   The auto-play demo earns nothing.
+- **Streak freezes and a rest day**: for every week of an unbroken streak you earn a **streak
+  freeze** (two at most are banked, shown as ❄ on Home); if you then miss exactly one day, the next
+  time you play a freeze covers it and the streak carries on (a freeze never counts as a day played,
+  and two missed days still break it). A **rest day** chosen under Options (Practice goal) is a
+  weekday that never breaks a streak.
+- **This week's theme** (Home): a themed week the same for everyone, on top of the daily challenge:
+  waltz, pentatonic, slow and steady (practice speed 80% or less), fresh songs, surprise (random
+  songs), ear training, rhythm, challenge (songs rated 6 or more) or exercise week. Clear the goal
+  (usually three matching songs at 60% or better) for +100 XP and the _Theme of the week_ trophy.
+- **Collection** (`#/collection`): every song and exercise by group (Singline songs, Windline
+  flute songs, Strumline exercises, ...) with the ones you have cleared with three stars (playing the
+  whole song as written); a group earns a **bronze** medal at a quarter of it, **silver** at half and
+  **gold** when all are cleared, with the trophies _Collector_ and _Curator_.
+- **Records**: the scoreboard also lists when your bests were set and what each improved on.
 - **How to play** (`#/help`): what each game is, scoring, progress and privacy, in a page.
 - **Options** (`#/options`): colours (dark, light, high contrast), metronome, guide tone, jingles, play-along backing, weekly goal, text size, scoring strictness, Windline
   octaves and fingerings, chord checking, the debug overlay; reset options, erase scores or progress

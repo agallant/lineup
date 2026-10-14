@@ -5,6 +5,7 @@ import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
 import { suggestNext } from '../scoreboard';
 import { stepHref } from '../courses';
+import { THEMES, WEEKLY_BONUS } from '../themes';
 import { escapeHtml } from '../audio';
 import { getSong } from '@lineup/core';
 
@@ -59,6 +60,8 @@ export const homeScreen: Screen = (root) => {
   const goal = prefs.goalMinutes;
   const minutes = weekMinutes(state.log, now);
   const trophies = Object.keys(state.achievements).length;
+  const week = store.weekProgress(now);
+  const theme = THEMES.find((t) => t.id === week.themeId)!;
   const next = suggestNext(new ScoreStore(safeLocalStorage()).entries());
   root.innerHTML = `
     <h1>Lineup</h1>
@@ -76,7 +79,7 @@ export const homeScreen: Screen = (root) => {
       <span class="bar" role="img" aria-label="${lvl.into} of ${lvl.span} XP to the next level"><span style="width:${Math.round((lvl.into / lvl.span) * 100)}%"></span></span>
       <span class="muted">${state.xp.toLocaleString('en-US')} XP · ${
         streak > 0 ? `${streak}-day streak` : 'no streak yet: play today to start one'
-      } · ${trophies} of ${ACHIEVEMENTS.length} trophies</span>
+      }${state.freezes > 0 ? ` · ❄ ${state.freezes}` : ''} · ${trophies} of ${ACHIEVEMENTS.length} trophies</span>
     </a>
 
     <section class="week-card" data-id="week" aria-label="Practice this week">
@@ -99,6 +102,13 @@ export const homeScreen: Screen = (root) => {
       <span class="muted">${escapeHtml(next.course.title)} · ${escapeHtml(next.step.focus)}</span></a>`
         : ''
     }
+
+    <a class="card theme-card ${week.done ? 'done' : ''}" href="${theme.href}" data-id="theme" data-theme="${theme.id}">
+      <strong>${week.done ? '✓ ' : ''}This week: ${theme.title}</strong>
+      <span class="muted">${week.done ? `Finished! +${WEEKLY_BONUS} XP earned.` : theme.blurb}</span>
+      <span class="bar" role="img" aria-label="${Math.min(week.plays, theme.goal)} of ${theme.goal} songs"><span style="width:${Math.round((Math.min(week.plays, theme.goal) / theme.goal) * 100)}%"></span></span>
+      <span class="muted">${Math.min(week.plays, theme.goal)} of ${theme.goal}${week.done ? '' : ` · +${WEEKLY_BONUS} XP when done`}</span>
+    </a>
 
     <h2>Today’s challenge <small>a new song each day, the same for everyone</small></h2>
     <ul class="menu daily" data-id="daily">
@@ -128,6 +138,8 @@ export const homeScreen: Screen = (root) => {
     <ul class="menu">
       <li><a class="card" href="#/learn" data-id="learn-link"><strong>Learn</strong>
         <span>Step-by-step paths for each instrument: open the next song by earning stars.</span></a></li>
+      <li><a class="card" href="#/collection" data-id="collection-link"><strong>Collection</strong>
+        <span>Songs cleared with three stars, with a bronze, silver or gold medal for each group.</span></a></li>
       <li><a class="card" href="#/scores" data-id="scores-link"><strong>Scoreboard &amp; trophies</strong>
         <span>Your best score on every song, stars, and the trophies you have earned.</span></a></li>
     </ul>

@@ -1,4 +1,5 @@
 import type { KeyValueStore } from '@lineup/core';
+import { WEEKLY_BONUS, themeForWeek, weekStart } from './themes';
 
 /** What one finished song tells the progress tracker. */
 export interface PlayResult {
@@ -17,6 +18,10 @@ export interface PlayResult {
   seconds?: number;
   /** Today's daily challenge for the game, played as given. */
   daily?: { key: string };
+  /** The song is in three-four time. */
+  waltz?: boolean;
+  /** The practice speed it was played at (1 is as written). */
+  speed?: number;
 }
 
 /** Everything kept about a player's progress, all in this device's storage. */
@@ -35,6 +40,18 @@ export interface ProgressState {
   dailies: string[];
   /** When each achievement was earned (ISO time). */
   achievements: Record<string, string>;
+  /** Streak freezes banked (at most {@link MAX_FREEZES}); one bridges a single missed day. */
+  freezes: number;
+  /** Days a freeze was spent on (local dates): they keep a streak alive without counting as played. */
+  frozen: string[];
+  /** The streak length a freeze was last earned at, so one streak earns one per week of it. */
+  freezeAward: number;
+  /** A weekday (0 Sunday to 6 Saturday) that never breaks a streak, or null. */
+  restDay: number | null;
+  /** The current themed week: its Monday, the songs that counted and whether it is done. */
+  week: { start: string; plays: number; done: boolean } | null;
+  /** Themed weeks finished, ever. */
+  weeksDone: number;
 }
 
 const KEY = 'lineup.progress.v1';
@@ -42,6 +59,10 @@ const MAX_DAYS = 400;
 const MAX_SONGS = 2000;
 const MAX_DAILIES = 120;
 const MAX_LOG_DAYS = 90;
+/** Streak freezes that can be banked at once. */
+export const MAX_FREEZES = 2;
+/** A freeze is earned each time a streak reaches a multiple of this many days. */
+export const FREEZE_EVERY = 7;
 /** XP for clearing a daily challenge (60% accuracy or better), once per game per day. */
 export const DAILY_BONUS = 50;
 
@@ -54,6 +75,12 @@ export const emptyProgress = (): ProgressState => ({
   log: {},
   dailies: [],
   achievements: {},
+  freezes: 0,
+  frozen: [],
+  freezeAward: 0,
+  restDay: null,
+  week: null,
+  weeksDone: 0,
 });
 
 /** The games (four for an instrument, and ear training), by the profile ids that belong to each. */
@@ -123,20 +150,41 @@ export function xpFor(r: PlayResult): number {
 export const dayKey = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+/** What keeps a streak alive without a song: freezes already spent, and a weekly rest day. */
+export interface StreakRules {
+  frozen?: readonly string[];
+  restDay?: number | null;
+}
+
 /**
  * Days in a row played, up to and including `today` (or ending yesterday, which still counts so a
- * streak is not lost before you have played today).
+ * streak is not lost before you have played today). A day that was frozen, or is the rest day,
+ * does not break the streak but does not add to it either.
  */
-export function streakOf(days: readonly string[], today: Date): number {
+export function streakOf(days: readonly string[], today: Date, rules: StreakRules = {}): number {
   const played = new Set(days);
+  const bridged = new Set(rules.frozen ?? []);
+  const rest = rules.restDay ?? null;
+  const bridges = (d: Date): boolean =>
+    bridged.has(dayKey(d)) || (rest !== null && d.getDay() === rest);
   const cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  // today is not over yet: if it is not played, the streak runs to yesterday
   if (!played.has(dayKey(cursor))) cursor.setDate(cursor.getDate() - 1);
   let streak = 0;
-  while (played.has(dayKey(cursor))) {
-    streak++;
+  // a long run of bridged days can never be a streak by itself: stop after a week of them
+  let gap = 0;
+  while (gap < 7) {
+    if (played.has(dayKey(cursor))) {
+      streak++;
+      gap = 0;
+    } else if (bridges(cursor)) {
+      gap++;
+    } else {
+      break;
+    }
     cursor.setDate(cursor.getDate() - 1);
   }
-  return streak;
+  return gap >= 7 ? 0 : streak;
 }
 
 export interface Achievement {
@@ -234,6 +282,31 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     earned: () => false,
   },
   {
+    id: 'themed-week',
+    title: 'Theme of the week',
+    description: 'Finish a themed week.',
+    earned: (s) => s.weeksDone >= 1,
+  },
+  {
+    id: 'themed-four',
+    title: 'Every week a new thing',
+    description: 'Finish four themed weeks.',
+    earned: (s) => s.weeksDone >= 4,
+  },
+  {
+    id: 'collector',
+    title: 'Collector',
+    description: 'Earn a bronze badge on the collection page.',
+    // granted when a play earns it (see ProgressStore.grant and collectionBadges)
+    earned: () => false,
+  },
+  {
+    id: 'curator',
+    title: 'Curator',
+    description: 'Earn a gold badge on the collection page.',
+    earned: () => false,
+  },
+  {
     id: 'level-5',
     title: 'Regular',
     description: 'Reach level 5.',
@@ -250,6 +323,21 @@ export interface PlayOutcome {
   dailyBonus: number;
   /** Achievements earned by this play. */
   newAchievements: Achievement[];
+  /** A streak freeze was spent to keep the streak alive over a missed day. */
+  freezeUsed: boolean;
+  /** A streak freeze was earned by this play. */
+  freezeEarned: boolean;
+  /** Streak freezes banked after this play. */
+  freezes: number;
+  /** The themed week after this play: the songs that have counted, and whether this one did or finished it. */
+  week: {
+    themeId: string;
+    plays: number;
+    goal: number;
+    counted: boolean;
+    justDone: boolean;
+    bonus: number;
+  };
 }
 
 function sanitize(raw: unknown): ProgressState {
@@ -293,6 +381,32 @@ function sanitize(raw: unknown): ProgressState {
       if (n > 0) out.perGame[g.id] = n;
     }
   }
+  out.freezes = Math.min(MAX_FREEZES, Math.floor(num(r['freezes'], MAX_FREEZES)));
+  out.freezeAward = Math.floor(num(r['freezeAward'], 1e5));
+  if (Array.isArray(r['frozen'])) {
+    out.frozen = r['frozen']
+      .filter((d): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d))
+      .slice(-MAX_DAYS);
+  }
+  out.restDay =
+    typeof r['restDay'] === 'number' &&
+    Number.isInteger(r['restDay']) &&
+    r['restDay'] >= 0 &&
+    r['restDay'] <= 6
+      ? r['restDay']
+      : null;
+  const week = r['week'];
+  if (typeof week === 'object' && week !== null) {
+    const w = week as Record<string, unknown>;
+    if (typeof w['start'] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(w['start'])) {
+      out.week = {
+        start: w['start'],
+        plays: Math.floor(num(w['plays'], 1e4)),
+        done: w['done'] === true,
+      };
+    }
+  }
+  out.weeksDone = Math.floor(num(r['weeksDone'], 1e5));
   if (typeof r['achievements'] === 'object' && r['achievements'] !== null) {
     for (const a of ACHIEVEMENTS) {
       const at = (r['achievements'] as Record<string, unknown>)[a.id];
@@ -317,7 +431,23 @@ export class ProgressStore {
 
   /** Days in a row played as of `now`. */
   streak(now = new Date()): number {
-    return streakOf(this.value.days, now);
+    return streakOf(this.value.days, now, this.value);
+  }
+
+  /** Sets the weekday (0 Sunday to 6 Saturday) that never breaks a streak, or none. */
+  setRestDay(day: number | null): void {
+    if (this.store) this.value = this.read();
+    this.value.restDay = day !== null && Number.isInteger(day) && day >= 0 && day <= 6 ? day : null;
+    this.write();
+  }
+
+  /** The themed week as of `now`: the theme's progress, starting afresh in a new week. */
+  weekProgress(now = new Date()): { themeId: string; plays: number; done: boolean } {
+    const theme = themeForWeek(now);
+    const w = this.value.week;
+    return w && w.start === weekStart(now)
+      ? { themeId: theme.id, plays: w.plays, done: w.done }
+      : { themeId: theme.id, plays: 0, done: false };
   }
 
   /** Files a finished song: adds XP, the day, the song and any achievements it earns. */
@@ -330,6 +460,33 @@ export class ProgressStore {
     const today = dayKey(now);
     // a first song of the day is worth a little extra, so coming back is rewarded
     const dayBonus = v.days.includes(today) ? 0 : 20;
+    const song = `${result.profileId}|${result.songId}`;
+    const isNew = !v.songs.includes(song);
+    // a day was missed between the last day played and today: spend a freeze to bridge it
+    let freezeUsed = false;
+    if (!v.days.includes(today) && v.freezes > 0) {
+      const last = v.days.at(-1);
+      if (last !== undefined) {
+        // the days between the last one played and today that nothing covers yet
+        const uncovered: string[] = [];
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
+        d.setDate(d.getDate() - 1);
+        for (let i = 0; i < 8 && dayKey(d) > last; i++, d.setDate(d.getDate() - 1)) {
+          if (!v.frozen.includes(dayKey(d)) && d.getDay() !== v.restDay) uncovered.push(dayKey(d));
+        }
+        const missedKey = uncovered[0];
+        // exactly one day missed, which a rest day or an earlier freeze does not already cover
+        if (
+          uncovered.length === 1 &&
+          missedKey !== undefined &&
+          streakOf(v.days, new Date(`${last}T12:00:00`), v) >= 2
+        ) {
+          v.freezes--;
+          v.frozen = [...v.frozen, missedKey].slice(-MAX_DAYS);
+          freezeUsed = true;
+        }
+      }
+    }
     const cleared = result.daily && result.accuracy >= 0.6 && !v.dailies.includes(result.daily.key);
     const dailyBonus = cleared ? DAILY_BONUS : 0;
     if (cleared) v.dailies = [...v.dailies, result.daily!.key].slice(-MAX_DAILIES);
@@ -348,9 +505,35 @@ export class ProgressStore {
     if (!v.days.includes(today)) v.days = [...v.days, today].slice(-MAX_DAYS);
     const game = gameOf(result.profileId);
     if (game) v.perGame[game.id] = (v.perGame[game.id] ?? 0) + 1;
-    const song = `${result.profileId}|${result.songId}`;
-    if (!v.songs.includes(song)) v.songs = [...v.songs, song].slice(-MAX_SONGS);
-    const streak = streakOf(v.days, now);
+    if (isNew) v.songs = [...v.songs, song].slice(-MAX_SONGS);
+    const streak = streakOf(v.days, now, v);
+    // one freeze for every week of an unbroken streak, up to a couple banked
+    if (streak < v.freezeAward) v.freezeAward = 0;
+    let freezeEarned = false;
+    if (streak >= FREEZE_EVERY && streak % FREEZE_EVERY === 0 && streak > v.freezeAward) {
+      v.freezeAward = streak;
+      if (v.freezes < MAX_FREEZES) {
+        v.freezes++;
+        freezeEarned = true;
+      }
+    }
+    // the themed week: a song that matches and was cleared counts toward its goal
+    const theme = themeForWeek(now);
+    if (v.week?.start !== weekStart(now)) v.week = { start: weekStart(now), plays: 0, done: false };
+    let justDone = false;
+    let counted = false;
+    let weeklyBonus = 0;
+    if (!v.week.done && result.accuracy >= 0.6 && theme.matches(result, isNew)) {
+      counted = true;
+      v.week.plays++;
+      if (v.week.plays >= theme.goal) {
+        v.week.done = true;
+        v.weeksDone++;
+        justDone = true;
+        weeklyBonus = WEEKLY_BONUS;
+        v.xp += weeklyBonus;
+      }
+    }
     const newAchievements = ACHIEVEMENTS.filter(
       (a) => !v.achievements[a.id] && a.earned(v, result, streak),
     );
@@ -358,12 +541,23 @@ export class ProgressStore {
     this.write();
     const level = levelFor(v.xp);
     return {
-      xpGained: gained + dayBonus + dailyBonus,
+      xpGained: gained + dayBonus + dailyBonus + weeklyBonus,
       dailyBonus,
       level,
       leveledUp: level.level > before,
       streak,
       newAchievements,
+      freezeUsed,
+      freezeEarned,
+      freezes: v.freezes,
+      week: {
+        themeId: theme.id,
+        plays: v.week.plays,
+        goal: theme.goal,
+        counted,
+        justDone,
+        bonus: weeklyBonus,
+      },
     };
   }
 

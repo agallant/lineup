@@ -1,7 +1,7 @@
 import { EAR_RATING, earTitle, getSong, rateChart, type EarLevel } from '@lineup/core';
 import { gameOf, starsFor } from './progress';
 import { COURSES, courseProgress, type StepProgress } from './courses';
-import type { BestScore } from './scores';
+import { MAX_HISTORY, type BestScore } from './scores';
 
 /** One line of the personal-best scoreboard. */
 export interface ScoreRow {
@@ -171,4 +171,57 @@ export function suggestNext(
   );
   const best = candidates[0];
   return best ? { course: best.course, step: best.step } : null;
+}
+
+/** One time a personal best was set. */
+export interface RecordEvent {
+  key: string;
+  gameId: string;
+  game: string;
+  title: string;
+  how: string;
+  at: string;
+  score: number;
+  accuracy: number;
+  /** The best it replaced, or null for the first score on that song. */
+  before: { score: number; accuracy: number } | null;
+}
+
+/**
+ * The timeline of personal records, newest first: each time a best was set on a song, and what it
+ * improved on. Only the last few bests of a song are kept, so a long history shows its recent part.
+ */
+export function recordTimeline(
+  entries: readonly { key: string; best: BestScore }[],
+  rows: readonly ScoreRow[],
+  limit = 25,
+): RecordEvent[] {
+  const byKey = new Map(rows.map((r) => [r.key, r] as const));
+  const events: RecordEvent[] = [];
+  for (const { key, best } of entries) {
+    const row = byKey.get(key);
+    if (!row) continue;
+    const chain = [
+      ...(best.history ?? []),
+      { score: best.score, accuracy: best.accuracy, at: best.at },
+    ];
+    // a full history has dropped older bests, so its oldest entry is not known to be the first score
+    const truncated = (best.history?.length ?? 0) >= MAX_HISTORY;
+    chain.forEach((c, i) => {
+      if (i === 0 && truncated) return;
+      const prev = chain[i - 1];
+      events.push({
+        key,
+        gameId: row.gameId,
+        game: row.game,
+        title: row.title,
+        how: row.how,
+        at: c.at,
+        score: c.score,
+        accuracy: c.accuracy,
+        before: prev ? { score: prev.score, accuracy: prev.accuracy } : null,
+      });
+    });
+  }
+  return events.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
 }

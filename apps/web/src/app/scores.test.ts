@@ -211,4 +211,50 @@ describe('ScoreStore across tabs and bad data', () => {
     s.record(KEY, { score: 900, accuracy: 0.9, grade: 'A' }, new Date('2026-10-03T10:00:00Z'));
     expect(s.best(KEY)).toMatchObject({ score: 900, lastPlayed: '2026-10-05T10:00:00.000Z' });
   });
+
+  it('keeps the bests it replaces, newest last, a few at most', () => {
+    const s = new ScoreStore(null);
+    for (let i = 1; i <= 9; i++) {
+      s.record(KEY, { score: i * 100, accuracy: i / 10, grade: 'B' }, new Date(2026, 9, i, 12));
+    }
+    const best = s.best(KEY)!;
+    expect(best.score).toBe(900);
+    expect(best.history).toHaveLength(6);
+    expect(best.history!.map((h) => h.score)).toEqual([300, 400, 500, 600, 700, 800].slice(0, 6));
+    // a worse play changes nothing about the history
+    s.record(KEY, { score: 50, accuracy: 0.1, grade: 'F' }, new Date(2026, 9, 10, 12));
+    expect(s.best(KEY)!.history).toHaveLength(6);
+  });
+
+  it('reads old stored scores without a history, and ignores a malformed one', () => {
+    const mem = new Map<string, string>();
+    const store = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, v),
+      removeItem: (k: string) => void mem.delete(k),
+    };
+    mem.set(
+      'lineup.scores.v1',
+      JSON.stringify({
+        [KEY]: {
+          score: 5,
+          accuracy: 0.5,
+          grade: 'C',
+          at: '2026-10-01T00:00:00Z',
+          history: [{ score: 'x' }, { score: 3, accuracy: 0.3, at: '2026-09-01T00:00:00Z' }, 7],
+        },
+      }),
+    );
+    expect(new ScoreStore(store).best(KEY)!.history).toEqual([
+      { score: 3, accuracy: 0.3, at: '2026-09-01T00:00:00Z' },
+    ]);
+    // a score saved before there was a history has none
+    mem.set(
+      'lineup.scores.v1',
+      JSON.stringify({
+        [KEY]: { score: 5, accuracy: 0.5, grade: 'C', at: '2026-10-01T00:00:00Z' },
+      }),
+    );
+    expect(new ScoreStore(store).best(KEY)!.history ?? []).toEqual([]);
+  });
 });
