@@ -232,5 +232,11 @@ export function rebuildPicker(
     v !== null && [...select.options].some((o) => o.value === v && !o.disabled);
   const first = [...select.options].find((o) => !o.disabled)?.value ?? '';
   select.value = has(wanted) ? wanted : has(fallback) ? fallback : first;
+  // with no song to play, Play and the demo wait until the filters show one again
+  const none = select.value === '';
+  for (const id of ['play', 'demo']) {
+    const b = select.closest('main, #app')?.querySelector<HTMLButtonElement>(`[data-id="${id}"]`);
+    if (b) b.disabled = none;
+  }
   return select.value !== before;
 }
