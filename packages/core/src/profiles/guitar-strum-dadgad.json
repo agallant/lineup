@@ -1,0 +1,83 @@
+{
+  "id": "guitar-strum-dadgad",
+  "name": "Guitar, DADGAD (strum)",
+  "mode": "strumline",
+  "input": "strum",
+  "renderer": "lane-highway",
+  "range": {
+    "lowMidi": 38,
+    "highMidi": 88
+  },
+  "transposition": {
+    "writtenMinusSounding": 0
+  },
+  "tuning": {
+    "name": "DADGAD",
+    "reentrant": false,
+    "strings": [
+      {
+        "label": "D2",
+        "midi": 38
+      },
+      {
+        "label": "A2",
+        "midi": 45
+      },
+      {
+        "label": "D3",
+        "midi": 50
+      },
+      {
+        "label": "G3",
+        "midi": 55
+      },
+      {
+        "label": "A3",
+        "midi": 57
+      },
+      {
+        "label": "D4",
+        "midi": 62
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "down",
+      "label": "Down",
+      "color": "#ef476f"
+    },
+    {
+      "id": "up",
+      "label": "Up",
+      "color": "#06d6a0"
+    }
+  ],
+  "detector": {
+    "windowSize": 4096,
+    "hopSize": 512,
+    "clarityThreshold": 0.9,
+    "minLevelDb": -60,
+    "minHz": 70,
+    "maxHz": 1400,
+    "stabilityGateMs": 0,
+    "onset": {
+      "riseDb": 10,
+      "refractoryMs": 70,
+      "lookbackMs": 30,
+      "minLevelDb": -60
+    }
+  },
+  "judgment": {
+    "strategy": "discrete",
+    "timing": {
+      "perfectMs": 45,
+      "goodMs": 110
+    },
+    "match": {
+      "lane": false,
+      "pitch": false,
+      "chord": true
+    }
+  }
+}

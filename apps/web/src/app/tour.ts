@@ -27,9 +27,25 @@ export const TIPS: Readonly<Record<string, Tip>> = {
   strumline: {
     title: 'Strumming along',
     steps: [
-      'Tap “Start mic”, hold your ukulele near the device, and pick a song.',
+      'Choose ukulele or guitar, tap “Start mic”, hold it near the device, and pick a song.',
       'Strum when a bar reaches the line; a single number is a pluck on that string and fret.',
       'Start slow with Speed, then try “Also check the chords”.',
+    ],
+  },
+  bassline: {
+    title: 'Playing bass',
+    steps: [
+      'Tap “Start mic” and play an open string; keep the bass near the device.',
+      'Pick a song, then “Play”. Each note shows its string and fret; play it as it reaches the line.',
+      'Start slow with Speed, and try the drum loop in Options for a band feel.',
+    ],
+  },
+  keyline: {
+    title: 'Playing keys',
+    steps: [
+      'Plug in a MIDI keyboard and tap “Connect”, or use the on-screen keys or A S D F G H J K.',
+      'Notes fall onto the keyboard; press the key as a note reaches it. Chords are several notes at once.',
+      'Start slow with Speed. Turn off the piano sound if your keyboard makes its own.',
     ],
   },
   beatline: {

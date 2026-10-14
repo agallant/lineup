@@ -88,6 +88,8 @@ import {
 import { fingeringChartHtml, fingeringStripHtml } from '../game/fingering-view';
 import { micAdvice, type MicStatus } from '../game/mic-advice';
 import { formatSessionLog } from '../game/session-log';
+import { StepGame } from '../game/step-game';
+import { pitchEngine, showStepResults as stepResults, startStepRun } from '../step-run';
 import { SinglineGame, type DebugInfo } from '../game/singline-game';
 import { songSummary } from '../game/song-info';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
@@ -185,6 +187,7 @@ const setup = (c: PitchScreenConfig) => `
       <label class="check" data-id="names-label" hidden><input type="checkbox" data-id="opt-names" /> Show note names on the staff</label>
       <label class="check" data-id="duet-label" hidden><input type="checkbox" data-id="opt-duet" /> Duet: two players take turns, phrase by phrase</label>
       <label class="check"><input type="checkbox" data-id="listen" /> Listen first, then play it back</label>
+      <label class="check"><input type="checkbox" data-id="step" /> Beginner: one note at a time, no timing (the auto-play demo still plays the normal game)</label>
       <label><span data-id="key-label">Key</span> <select data-id="key"></select></label>
       <button data-id="hear">Hear first note</button>
     </div>
@@ -393,6 +396,7 @@ export const createPitchScreen =
       settings.update({
         variation: 'original',
         listenFirst: false,
+        stepMode: false,
         ...(c.instruments ? { speed: 1 } : {}),
       });
       settings.update({ songs: { ...current.songs, [c.profileId]: wantedSong } });
@@ -585,6 +589,12 @@ export const createPitchScreen =
       settings.update({ listenFirst: listenBox.checked });
       refreshRange();
     });
+    const stepBox = S<HTMLInputElement>('step');
+    stepBox.checked = settings.get().stepMode;
+    stepBox.addEventListener('change', () => {
+      settings.update({ stepMode: stepBox.checked });
+      refreshRange();
+    });
     /** The chosen song, version and part. */
     const variedSong = (): Chart => applyPart(wholeSong(), partIdx);
 
@@ -618,7 +628,7 @@ export const createPitchScreen =
             : settings.get().difficulty
         }${settings.get().variation === 'original' ? '' : `|${settings.get().variation}`}${
           partIdx >= 0 ? `|part${partIdx + 1}` : ''
-        }${settings.get().listenFirst ? '|echo' : ''}${duetOn() ? '|duet' : ''}`,
+        }${settings.get().listenFirst ? '|echo' : ''}${settings.get().stepMode ? '|step' : ''}${duetOn() ? '|duet' : ''}`,
       );
 
     const refreshRange = () => {
@@ -891,7 +901,10 @@ export const createPitchScreen =
           });
     };
 
+    let stepStop: (() => void) | null = null;
     const stopPlay = () => {
+      stepStop?.();
+      stepStop = null;
       cancelAnimationFrame(playRaf);
       backing?.stop();
       backing = null;
@@ -1082,6 +1095,61 @@ export const createPitchScreen =
       playRaf = requestAnimationFrame(tick);
     };
 
+    /** Beginner mode: each note is shown and played; the player reproduces it to move on. No clock, no timing. */
+    const runStep = (m: MicSession, chart: Chart) => {
+      sessionStart = new Date();
+      show('play');
+      const opts = settings.get();
+      // the tone is played in the octave of the player's voice, like the guide tone elsewhere
+      const span = chartPitchRange(chart);
+      const fit = !c.instruments && span ? voiceFit(span, opts.voiceRange) : null;
+      const game = new StepGame(chart, judgedProfile());
+      stepStop = startStepRun({
+        container: stages.play,
+        mic: m,
+        engine: pitchEngine(game, fit ? fit.octave : 0, 'Sing or play'),
+        renderer:
+          opts.notation === 'staff'
+            ? new StaffRenderer({ names: opts.staffNames, flats: preferFlats(chart.meta.tonic) })
+            : createRenderer(profile.renderer),
+        forward: onSetupMessage,
+        onFinish: () => {
+          m.onMessage = onSetupMessage;
+          showStepResults(game, chart, m.ctx);
+        },
+        onStop: () => {
+          m.onMessage = onSetupMessage;
+          show('setup');
+        },
+      });
+    };
+
+    const showStepResults = (game: StepGame, chart: Chart, ctx: AudioContext) => {
+      refreshRange();
+      stepResults({
+        container: stages.results,
+        game,
+        chart,
+        ctx,
+        scores,
+        progress,
+        settings,
+        bestKey: bestKey(),
+        profileId: profile.id,
+        songId: songEntry().id,
+        speed: c.instruments ? settings.get().speed : undefined,
+        onAgain: () => void begin(false),
+        onTimed: () => {
+          settings.update({ stepMode: false });
+          stepBox.checked = false;
+          refreshRange();
+          void begin(false);
+        },
+        onBack: adapterToSetup,
+      });
+      show('results');
+    };
+
     /** Whether the song just played is today's challenge, played whole and as written. */
     const isDaily = (id: string): boolean =>
       id === dailyFor(dailyGame).id && settings.get().variation === 'original' && partIdx < 0;
@@ -1268,6 +1336,12 @@ export const createPitchScreen =
             }
           : undefined;
         setupStatus.classList.remove('error');
+        if (!demo && settings.get().stepMode) {
+          const m = await startMic();
+          if (!m) return;
+          runStep(m, heard);
+          return;
+        }
         if (!demo) {
           const m = await startMic();
           if (!m) return;
@@ -1337,6 +1411,7 @@ export const createPitchScreen =
     return () => {
       disposed = true;
       cancelAnimationFrame(setupRaf);
+      stepStop?.();
       cancelAnimationFrame(playRaf);
       backing?.stop();
       void mic?.close();

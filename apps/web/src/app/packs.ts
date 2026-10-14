@@ -45,7 +45,18 @@ const ids = (...list: string[]): ((c: Candidate) => boolean) => {
   return (c) => set.has(c.id);
 };
 
-const PROFILES = ['voice', 'wind', 'ukulele-strum', 'clap', 'hand-percussion', 'drum-kit'] as const;
+const PROFILES = [
+  'voice',
+  'wind',
+  'ukulele-strum',
+  'bass',
+  'keyboard',
+  'clap',
+  'hand-percussion',
+  'drum-kit',
+] as const;
+/** Games whose songs belong to their own pack, and stay out of the general ones. */
+const SOLO = new Set(['bass', 'keyboard']);
 const RHYTHM = new Set(['clap', 'hand-percussion', 'drum-kit']);
 
 const DEFS: readonly PackDef[] = [
@@ -88,13 +99,25 @@ const DEFS: readonly PackDef[] = [
     id: 'waltz',
     title: 'Waltz time',
     blurb: 'Every song in three beats to the bar.',
-    test: (c) => c.chart.meta.beatsPerBar === 3 && !c.flute,
+    test: (c) => c.chart.meta.beatsPerBar === 3 && !c.flute && !SOLO.has(c.profileId),
   },
   {
     id: 'pentatonic',
     title: 'Pentatonic calm',
     blurb: 'Slow, breathing songs for a Native American flute, a shakuhachi or any flute.',
     test: (c) => c.flute,
+  },
+  {
+    id: 'bass-lines',
+    title: 'Bass lines',
+    blurb: 'Blues, pop and rock lines for the bass guitar, root notes first.',
+    test: (c) => c.profileId === 'bass',
+  },
+  {
+    id: 'key-pieces',
+    title: 'At the keyboard',
+    blurb: 'Pieces for both hands and for a MIDI keyboard, from five fingers to chords.',
+    test: (c) => c.profileId === 'keyboard',
   },
   {
     id: 'rhythm',
@@ -106,7 +129,7 @@ const DEFS: readonly PackDef[] = [
     id: 'gentle',
     title: 'Gentle start',
     blurb: 'The easiest songs for voice, whistle and ukulele: a good first week.',
-    test: (c) => !RHYTHM.has(c.profileId) && !c.flute && c.rating <= 2,
+    test: (c) => !RHYTHM.has(c.profileId) && !c.flute && !SOLO.has(c.profileId) && c.rating <= 2,
   },
   {
     id: 'minor',
@@ -125,7 +148,7 @@ const DEFS: readonly PackDef[] = [
     id: 'originals',
     title: 'Made for Lineup',
     blurb: 'Original tunes, chord songs and grooves written for this app, easiest first.',
-    test: (c) => c.chart.meta.artist === 'Lineup' && !c.flute,
+    test: (c) => c.chart.meta.artist === 'Lineup' && !c.flute && !SOLO.has(c.profileId),
   },
   {
     id: 'chromatic',

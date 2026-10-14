@@ -172,6 +172,80 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] New chord songs (Fiddle tune, Hymn in C, Rainy day) are strummable; the **Minor moods** and **Made for
       Lineup** packs list sensible songs.
 
+### Bassline
+
+- [ ] **Tuner > Bass guitar (E A D G)**: reads your open strings, E1 included (41 Hz), and agrees with another
+      tuner. A phone microphone may struggle with the low E: say what it does.
+- [ ] **Bassline > the open-strings exercise**: with your bass near the iPad (unplugged, or through an amp),
+      every open string you play registers as the right note and on time. Try with and without headphones.
+- [ ] Does it hear the **right octave**? (Octave-forgiving is on; say if notes are missed anyway, or if a
+      note an octave off should count wrong.)
+- [ ] Plucking hard versus soft, fingers versus pick, and muted notes: which are missed?
+- [ ] The tab view (string and fret) reads naturally; are the lines in the **blues, pop and rock** sets at a
+      comfortable tempo? Try **Speed**, and the **Drum loop** in Options as a backing.
+- [ ] Learn > **Bassline: first lines** opens the right songs in order.
+
+### Keyline
+
+- [ ] **Keyline > Connect a MIDI keyboard** with a real USB or Bluetooth MIDI keyboard on a computer (Chrome or
+      Edge): it names your keyboard, and playing a key lights it on screen. Does Safari on the iPad say it
+      cannot (expected)? Is a keyboard plugged in later picked up?
+- [ ] Is the **timing** right on a MIDI keyboard? Play along on **Five fingers on C** with the metronome:
+      the result should say "on the beat". If it says early or late by a steady amount, tell me how many ms.
+- [ ] If the keyboard makes its own sound, turn off **Make a piano sound**. Is the lag of the app's piano
+      sound (when on) noticeable?
+- [ ] **On-screen keys** on the iPad: can you press two or three at once (a chord)? Is the key size fine, and
+      does sliding a finger across keys feel right?
+- [ ] **Computer keyboard** (A S D F ...): do the notes line up with the keys drawn? Z and X change octave.
+- [ ] Both hands on **Ode to Joy, hands together** and the **chord pieces**: are they at a comfortable tempo?
+      Which pieces are too hard or too easy for a beginner?
+- [ ] **Keyline > Beginner**: it plays the asked note or chord and waits; press the keys to move on. Is that
+      a gentle way in? Does the sound of the asked keys come out loud enough, and is "Hear it again" enough?
+- [ ] Learn > **Keyline: first steps** opens the right pieces in order.
+
+### Beginner step mode (Singline, Windline)
+
+- [ ] **Singline > Beginner: one note at a time**: tap Play. It plays the first note; sing it and hold it
+      for a moment: it says "Got it!" and plays the next. Does it hear you reliably? Is the hold time (0.4 s)
+      and the tolerance right for a beginner, or too strict or too loose?
+- [ ] Does the **tone sound in your octave** (voice range in Options)? Is "Hear it again" enough, and does
+      the app stop listening while the tone plays (it should not pass a note from its own speaker)?
+- [ ] **Bassline > Beginner**: the asked bass note is played two octaves up so an iPad speaker can play it
+      (the screen shows the real note). Does it hear your open E, A, D, G and move on?
+- [ ] **Strumline > Beginner**: it plays the chord, you strum it back (a run of the same chord is one step).
+      Does that feel like a gentle start? **Beatline > Beginner**: it plays the drum sound, you hit it.
+- [ ] Try it in **Windline** with your instrument: does it ask the notes in the instrument's own key?
+
+### Guitar (Strumline)
+
+- [ ] **Strumline > Mode > Guitar strumming**: six string lines (e B G D A E from the top); a string with no
+      mark (the low strings in a C or D chord) is not played. Do the chord fingerings shown match how you
+      play them? Which chords would you finger differently (e.g. a different F)?
+- [ ] With a real guitar near the iPad, does the **timing** register every strum? Try fast and slow songs.
+- [ ] Turn on **Also check the chords**: how often does it name your chords right? (The simulation confuses
+      Am with C now and then, because the ringing chord before leaks into the next.)
+- [ ] **Tuner > Guitar** (standard, drop D, DADGAD, open G): the low E (82 Hz) reads, and agrees with
+      another tuner.
+- [ ] **Drop D, DADGAD, open G** modes: tune the guitar that way (Tuner has all three). Do the chord
+      fingerings shown (the same chords, moved to the new strings) sound right? Anything you would fix?
+- [ ] Picked songs (Hot Cross Buns, Ode to Joy, Mary had a little lamb): shown on guitar strings at low
+      frets? Try **Also check the pitch** with a real guitar.
+
+### Tuner and Metronome
+
+- [ ] **Tuner** opens as a universal tuner (any note). Sing, whistle or play a flute: does it name the note and
+      show cents steadily, without jumping an octave? Is the needle smooth enough?
+- [ ] **Reference tone**: tap a note, it holds until you tap it again. Is it loud and clear on the iPad
+      speaker, also for low notes? Does **A = 442** (the + button) change the tone and the reading?
+- [ ] Ukulele, guitar and bass modes: the string buttons play each string, and the tuner reads the one you
+      pick. Is the switch easy to find and use?
+- [ ] **Metronome**: is the click **steady** (listen on a phone and the iPad, with the screen off and
+      on)? Does the lit beat match what you hear? Try 40, 120 and 240 bpm, and eighths and triplets.
+- [ ] Does **Tap tempo** feel right, and do **− and + held down** change the tempo at a good speed?
+- [ ] Does the **speed trainer** (open Speed trainer, set 5 bpm every 4 bars up to 140) feel right?
+- [ ] On iPhone: does the sound play with the ringer switch off? Does it keep the screen awake?
+- [ ] What would you want from a metronome that this one lacks (rhythm patterns, count-in, a flash)?
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

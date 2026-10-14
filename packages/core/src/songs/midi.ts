@@ -1,5 +1,6 @@
 import type { Chart } from '../chart';
-import { UKULELE_CHORD_FRETS } from '../chords';
+import { UKULELE_CHORD_FRETS, chordFretsFor } from '../chords';
+import { guitarOpenFor } from '../guitar';
 import { midiLabel } from '../notes';
 
 /**
@@ -107,19 +108,22 @@ function untext(data: Uint8Array): string {
 }
 
 /** The notes a chart note sounds: its pitch, a ukulele chord's four strings, or one drum. */
-function soundingNotes(n: Chart['notes'][number]): { pitches: number[]; drum: boolean } | null {
+function soundingNotes(
+  n: Chart['notes'][number],
+  guitarProfile: string | undefined,
+): { pitches: number[]; drum: boolean } | null {
   if (n.pitch !== undefined) return { pitches: [n.pitch], drum: false };
+  const open: readonly number[] = guitarOpenFor(guitarProfile) ?? UKULELE_OPEN;
+  const table = guitarProfile ? chordFretsFor(guitarProfile) : UKULELE_CHORD_FRETS;
   const frets = n.expected?.frets;
-  if (frets && frets.length === 4) {
-    const held = frets.flatMap((f, i) => (f === null ? [] : [UKULELE_OPEN[i]! + f]));
+  if (frets && frets.length === open.length) {
+    const held = frets.flatMap((f, i) => (f === null ? [] : [open[i]! + f]));
     if (held.length > 0) return { pitches: held, drum: false };
   }
   const chord = n.expected?.chord;
-  if (chord !== undefined && Object.hasOwn(UKULELE_CHORD_FRETS, chord)) {
-    return {
-      pitches: UKULELE_CHORD_FRETS[chord]!.map((f, i) => UKULELE_OPEN[i]! + f),
-      drum: false,
-    };
+  if (chord !== undefined && Object.hasOwn(table, chord)) {
+    const pitches = table[chord]!.flatMap((f, i) => (f === null ? [] : [open[i]! + f]));
+    return { pitches, drum: false };
   }
   if (n.lane !== undefined && Object.hasOwn(DRUM_NOTES, n.lane)) {
     return { pitches: [DRUM_NOTES[n.lane]!], drum: true };
@@ -147,7 +151,10 @@ export function chartToMidi(chart: Chart): Uint8Array {
   const title = text(chart.meta.title).slice(0, 100);
   events.push({ tick: 0, order: 0, bytes: [0xff, 0x03, ...vlq(title.length), ...title] });
   for (const n of chart.notes) {
-    const s = soundingNotes(n);
+    const s = soundingNotes(
+      n,
+      chart.meta.instruments?.find((i) => guitarOpenFor(i) !== null),
+    );
     if (!s) continue;
     const start = tick(n.t);
     // a hit with no length is a short note; a sustained note keeps its length

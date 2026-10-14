@@ -16,7 +16,14 @@ class Mem {
 
 describe('tour', () => {
   it('has short tips for each game', () => {
-    expect(Object.keys(TIPS).sort()).toEqual(['beatline', 'singline', 'strumline', 'windline']);
+    expect(Object.keys(TIPS).sort()).toEqual([
+      'bassline',
+      'beatline',
+      'keyline',
+      'singline',
+      'strumline',
+      'windline',
+    ]);
     for (const tip of Object.values(TIPS)) {
       expect(tip.steps.length).toBeLessThanOrEqual(3);
       for (const s of tip.steps) expect(s.length).toBeLessThan(140);

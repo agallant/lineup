@@ -47,6 +47,8 @@ export interface Settings {
   metronome: boolean;
   /** Singline and Windline: hear the song played first, then play it back. */
   listenFirst: boolean;
+  /** Beginner mode: the notes are asked one at a time, with no timing (Singline and Windline). */
+  stepMode: boolean;
   /** Beatline, with listen first: hide the notes on your turn, so you clap back from memory. */
   blind: boolean;
   /** Beatline: hear each bar, then play it back, bar by bar. */
@@ -112,6 +114,7 @@ export const DEFAULT_SETTINGS: Settings = {
   metronome: true,
   effects: true,
   listenFirst: false,
+  stepMode: false,
   blind: false,
   callResponse: false,
   goalMinutes: 0,
@@ -228,6 +231,7 @@ function sanitize(raw: unknown): Settings {
     metronome: typeof r['metronome'] === 'boolean' ? r['metronome'] : DEFAULT_SETTINGS.metronome,
     listenFirst:
       typeof r['listenFirst'] === 'boolean' ? r['listenFirst'] : DEFAULT_SETTINGS.listenFirst,
+    stepMode: typeof r['stepMode'] === 'boolean' ? r['stepMode'] : DEFAULT_SETTINGS.stepMode,
     blind: typeof r['blind'] === 'boolean' ? r['blind'] : DEFAULT_SETTINGS.blind,
     callResponse:
       typeof r['callResponse'] === 'boolean' ? r['callResponse'] : DEFAULT_SETTINGS.callResponse,

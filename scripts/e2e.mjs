@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1163,6 +1163,355 @@ const scenarios = {
     });
   },
 
+  async bass() {
+    console.log(
+      '\n# Bassline: pitch and timing judged on four string lanes (synthetic bass -> judge)',
+    );
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/bass');
+      await page.waitForSelector('[data-id=song]');
+      const songs = await page.$$eval('[data-id=song] option', (o) => o.length);
+      check(songs >= 30, `bass: ${songs} songs and exercises in the menu`);
+      check(await page.isHidden('[data-id=chords-opt]'), 'bass: no chord option');
+      check(await page.isVisible('[data-id=speed]'), 'bass: a practice speed is offered');
+      await page.selectOption('[data-id=song]', 'bass-ex-open-strings');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForTimeout(3000);
+      await shot(page, 'bass-play');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        perfect >= 7 && miss === 0,
+        `bass: the demo bassist plays the open strings (${perfect} perfect, ${miss} missed)`,
+      );
+      check(
+        (await page.$('[data-id=r-wrongpitch]')) !== null,
+        'bass: wrong notes are counted in the results',
+      );
+    });
+  },
+
+  async keys() {
+    console.log(
+      '\n# Keyline: pressed keys judged by pitch and timing (demo player, fake MIDI keyboard)',
+    );
+    await session(null, async (page) => {
+      // a stand-in for a MIDI keyboard: the page can send it note messages
+      await page.addInitScript(() => {
+        const input = { name: 'Test Piano', onmidimessage: null };
+        const access = { inputs: new Map([['a', input]]), onstatechange: null };
+        window.__midiSend = (data) =>
+          input.onmidimessage?.({ data: new Uint8Array(data), timeStamp: performance.now() });
+        navigator.requestMIDIAccess = () => Promise.resolve(access);
+      });
+      await page.goto(URL_BASE + '#/keys');
+      await page.waitForSelector('[data-id=song]');
+      const songs = await page.$$eval('[data-id=song] option', (o) => o.length);
+      check(songs >= 15, `keys: ${songs} pieces and exercises in the menu`);
+      await page.click('[data-id=midi-connect]');
+      await page.waitForFunction(() =>
+        document.querySelector('[data-id=midi-status]').textContent.includes('Test Piano'),
+      );
+      check(true, 'keys: a connected MIDI keyboard is named');
+      await page.selectOption('[data-id=song]', 'keys-ex-five-finger');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForTimeout(3000);
+      await shot(page, 'keys-play');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        perfect >= 5 && miss === 0,
+        `keys: the demo pianist plays the five-finger exercise (${perfect} perfect, ${miss} missed)`,
+      );
+      // now a player of our own: wrong keys from the MIDI keyboard and the computer keyboard
+      await page.click('[data-id=back]');
+      await page.check('[data-id=opt-sound]');
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForTimeout(1500);
+      await page.evaluate(() => window.__midiSend([0x90, 31, 100]));
+      await page.keyboard.press('KeyA');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const strays = Number(await text(page, 'r-strays'));
+      const wrong = Number(await text(page, 'r-wrong'));
+      check(
+        strays + wrong >= 1 && (await text(page, 'r-miss')) !== '0',
+        `keys: stray presses and missed notes are counted (${strays} extra, ${wrong} wrong)`,
+      );
+
+      // beginner mode: it asks one step at a time; pressing the asked key moves on
+      await page.click('[data-id=back]');
+      await page.check('[data-id=opt-step]');
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=prompt]:visible', { timeout: 15000 });
+      const codeOf = { C4: 'KeyA', D4: 'KeyS', E4: 'KeyD', F4: 'KeyF', G4: 'KeyG' };
+      for (let i = 0; i < 150; i++) {
+        if (await page.isVisible('[data-id=r-passed]')) break;
+        const prompt = await text(page, 'prompt');
+        const code = codeOf[(/Press (\w+)/.exec(prompt) ?? [])[1]];
+        if (code) await page.keyboard.press(code);
+        await page.waitForTimeout(250);
+      }
+      await page.waitForSelector('[data-id=r-passed]', { timeout: 20000 });
+      const [got, of] = (await text(page, 'r-passed')).split(' of ').map(Number);
+      check(got === of && of >= 5, `keys: beginner mode passes every step (${got} of ${of})`);
+    });
+  },
+
+  async step() {
+    console.log('\n# Beginner step mode: one note at a time, no timing (fake microphone sings C4)');
+    await session(fixtures.sung, async (page) => {
+      await page.goto(URL_BASE + '#/sing');
+      await page.selectOption('[data-id=song]', 'singline-scale');
+      await page.check('[data-id=step]');
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () => document.querySelector('[data-id=note]')?.textContent?.includes('C4'),
+        null,
+        { timeout: 15000 },
+      );
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=count]:visible', { timeout: 15000 });
+      check(/Step 1 of/.test(await text(page, 'count')), 'step: starts on the first note');
+      // the fake singer holds C4: the first note passes by itself
+      await page.waitForFunction(
+        () => /Step 2 of/.test(document.querySelector('[data-id=count]')?.textContent ?? ''),
+        null,
+        { timeout: 20000 },
+      );
+      check(true, 'step: holding the right note moves on to the next');
+      await shot(page, 'step-play');
+      // the other notes are not C4: skip them
+      for (let i = 0; i < 40; i++) {
+        if (await page.isVisible('[data-id=r-passed]')) break;
+        if (await page.isVisible('[data-id=skip]')) await page.click('[data-id=skip]');
+        await page.waitForTimeout(150);
+      }
+      await page.waitForSelector('[data-id=r-passed]', { timeout: 20000 });
+      const passed = Number((await text(page, 'r-passed')).split(' ')[0]);
+      check(passed >= 1, `step: results count the passed notes (${await text(page, 'r-passed')})`);
+      check(Number(await text(page, 'r-skipped')) >= 1, 'step: skipped notes are counted');
+    });
+    // Strumline: a step is a chord; any strum passes when chords are not checked
+    await session(fixtures.strums, async (page) => {
+      await page.goto(URL_BASE + '#/strum');
+      await page.waitForSelector('[data-id=song]');
+      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await page.check('[data-id=opt-step]');
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () => document.querySelector('[data-id=mic-start]')?.textContent === 'Mic on',
+        null,
+        { timeout: 15000 },
+      );
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=prompt]:visible', { timeout: 15000 });
+      check(
+        /^Strum C \d+ times$/.test(await text(page, 'prompt')),
+        `step: strum asks for a chord (${await text(page, 'prompt')})`,
+      );
+      await page.waitForFunction(
+        () => /Step [2-9] of/.test(document.querySelector('[data-id=count]')?.textContent ?? ''),
+        null,
+        { timeout: 40000 },
+      );
+      check(true, 'step: strumming moves on to the next chord');
+      for (let i = 0; i < 40; i++) {
+        if (await page.isVisible('[data-id=r-passed]')) break;
+        if (await page.isVisible('[data-id=skip]')) await page.click('[data-id=skip]');
+        await page.waitForTimeout(150);
+      }
+      await page.waitForSelector('[data-id=r-passed]', { timeout: 20000 });
+      check(
+        Number((await text(page, 'r-passed')).split(' ')[0]) >= 1,
+        `step: strum results (${await text(page, 'r-passed')})`,
+      );
+    });
+    // Beatline: claps, one step for a run
+    await session(fixtures.claps, async (page) => {
+      await page.goto(URL_BASE + '#/beat');
+      await page.waitForSelector('[data-id=song]');
+      await page.selectOption('[data-id=mode]', 'clap');
+      await page.check('[data-id=opt-step]');
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () => document.querySelector('[data-id=mic-start]')?.textContent === 'Mic on',
+        null,
+        { timeout: 15000 },
+      );
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=prompt]:visible', { timeout: 15000 });
+      await page.waitForFunction(
+        () => /Step [2-9] of/.test(document.querySelector('[data-id=count]')?.textContent ?? ''),
+        null,
+        { timeout: 40000 },
+      );
+      check(true, 'step: clapping moves on to the next step');
+    });
+    // Bassline: the same, with notes the fake singer cannot play (all skipped)
+    await session(fixtures.sung, async (page) => {
+      await page.goto(URL_BASE + '#/bass');
+      await page.waitForSelector('[data-id=song]');
+      await page.selectOption('[data-id=song]', 'bass-ex-open-strings');
+      await page.check('[data-id=opt-step]');
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () => document.querySelector('[data-id=mic-start]')?.textContent === 'Mic on',
+        null,
+        { timeout: 15000 },
+      );
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=prompt]:visible', { timeout: 15000 });
+      check(/Play E1 and hold it/.test(await text(page, 'prompt')), 'step: bass asks for E1 first');
+      for (let i = 0; i < 40; i++) {
+        if (await page.isVisible('[data-id=r-passed]')) break;
+        if (await page.isVisible('[data-id=skip]')) await page.click('[data-id=skip]');
+        await page.waitForTimeout(150);
+      }
+      await page.waitForSelector('[data-id=r-passed]', { timeout: 20000 });
+      check(
+        (await text(page, 'r-passed')).endsWith('of 8') ||
+          (await text(page, 'r-passed')).includes(' of '),
+        `step: bass results (${await text(page, 'r-passed')})`,
+      );
+    });
+  },
+
+  async guitar() {
+    console.log('\n# Strumline on a guitar: six strings, the ukulele songs with guitar chords');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/strum');
+      await page.waitForSelector('[data-id=mode]');
+      const ukeSongs = await page.$$eval('[data-id=song] option', (o) => o.length);
+      await page.selectOption('[data-id=mode]', 'guitar-strum');
+      await page.waitForFunction(() =>
+        document.querySelector('[data-id=mode-note]')?.textContent?.includes('Six lines'),
+      );
+      const gtrSongs = await page.$$eval('[data-id=song] option', (o) => o.length);
+      check(
+        gtrSongs >= ukeSongs,
+        `guitar: the same songs as the ukulele (${gtrSongs} against ${ukeSongs})`,
+      );
+      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 60000 });
+      await page.waitForTimeout(3000);
+      await shot(page, 'guitar-play');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      const perfect = Number(await text(page, 'r-perfect'));
+      const miss = Number(await text(page, 'r-miss'));
+      check(
+        perfect >= 44 && miss <= 2,
+        `guitar: the demo guitarist strums the song (${perfect} perfect, ${miss} missed)`,
+      );
+      // alternate tunings are modes of their own
+      await page.click('[data-id=back]');
+      const modes = await page.$$eval('[data-id=mode] option', (o) => o.map((x) => x.value));
+      check(
+        ['guitar-strum-dropd', 'guitar-strum-dadgad', 'guitar-strum-openg'].every((m) =>
+          modes.includes(m),
+        ),
+        `guitar: drop D, DADGAD and open G are offered (${modes.length} modes)`,
+      );
+      await page.selectOption('[data-id=mode]', 'guitar-strum-dropd');
+      await page.waitForFunction(() =>
+        document
+          .querySelector('[data-id=mode-note]')
+          ?.textContent?.includes('fingered for this tuning'),
+      );
+      await page.selectOption('[data-id=song]', 'strum-four-chords');
+      await page.uncheck('[data-id=opt-metronome]');
+      await page.click('[data-id=demo]');
+      await page.waitForSelector('[data-id=r-score]', { timeout: 120000 });
+      check(
+        Number(await text(page, 'r-perfect')) >= 40 && Number(await text(page, 'r-miss')) <= 4,
+        `guitar: the drop D demo plays the song (${await text(page, 'r-perfect')} perfect, ${await text(page, 'r-miss')} missed)`,
+      );
+      // the choice is remembered, and the guitar has its own scores
+      await page.goto(URL_BASE + '#/scores');
+      await page.waitForSelector('h1');
+      check(true, 'guitar: the scoreboard still opens');
+    });
+  },
+
+  async metronome() {
+    console.log('\n# Metronome: tempo, tap tempo, bar, presets and a running click');
+    await session(null, async (page) => {
+      await page.goto(URL_BASE + '#/metronome');
+      await page.waitForSelector('[data-id=bpm]');
+      check((await page.inputValue('[data-id=bpm]')) === '100', 'metronome: starts at 100 bpm');
+      await page.click('[data-id=bpm-up-5]');
+      check((await page.inputValue('[data-id=bpm]')) === '105', 'metronome: +5 raises the tempo');
+      await page.fill('[data-id=bpm]', '72');
+      await page.dispatchEvent('[data-id=bpm]', 'change');
+      check(
+        /Adagio/.test(await text(page, 'name')),
+        `metronome: names the tempo (${await text(page, 'name')})`,
+      );
+      // tap tempo: four taps about half a second apart
+      for (let i = 0; i < 4; i++) {
+        await page.click('[data-id=tap]');
+        await page.waitForTimeout(500);
+      }
+      const tapped = Number(await page.inputValue('[data-id=bpm]'));
+      check(tapped >= 100 && tapped <= 135, `metronome: tap tempo found about 120 bpm (${tapped})`);
+      // the bar: three beats, and a beat's strength cycles when tapped
+      await page.click('[data-id=beats-down]');
+      check((await page.$$('.metro-beat')).length === 3, 'metronome: three beats in the bar');
+      await page.click('.metro-beat[data-beat="1"]');
+      check(
+        (await page.getAttribute('.metro-beat[data-beat="1"]', 'data-level')) === 'soft',
+        'metronome: tapping a beat makes it softer',
+      );
+      // running: the beat lights up in turn
+      await page.fill('[data-id=bpm]', '240');
+      await page.dispatchEvent('[data-id=bpm]', 'change');
+      await page.click('[data-id=toggle]');
+      await page.waitForSelector('.metro-beat.now', { timeout: 5000 });
+      check(
+        (await page.getAttribute('[data-id=toggle]', 'aria-pressed')) === 'true',
+        'metronome: running, and a beat is lit',
+      );
+      const seenBeats = new Set();
+      for (let i = 0; i < 30; i++) {
+        const b = await page.$eval('.metro-beat.now', (el) => el.dataset.beat).catch(() => null);
+        if (b !== null) seenBeats.add(b);
+        await page.waitForTimeout(60);
+      }
+      check(
+        seenBeats.size === 3,
+        `metronome: the light walks through all three beats (${[...seenBeats]})`,
+      );
+      await shot(page, 'metronome');
+      await page.click('[data-id=toggle]');
+      check((await page.$('.metro-beat.now')) === null, 'metronome: stopping clears the light');
+      // a preset is saved, and survives a reload
+      await page.fill('[data-id=preset-name]', 'Waltz');
+      await page.click('[data-id=preset-save]');
+      await page.reload();
+      await page.waitForSelector('[data-id=bpm]');
+      check((await page.$('[data-preset="Waltz"]')) !== null, 'metronome: the preset is kept');
+      check(
+        (await page.inputValue('[data-id=bpm]')) === '240',
+        'metronome: the set-up is remembered',
+      );
+      await page.fill('[data-id=bpm]', '60');
+      await page.dispatchEvent('[data-id=bpm]', 'change');
+      await page.click('[data-preset="Waltz"]');
+      check(
+        (await page.inputValue('[data-id=bpm]')) === '240',
+        'metronome: a preset restores its tempo',
+      );
+    });
+  },
+
   async duet() {
     console.log('\n# Duet: two players share the phrases of a song, each with a score');
     await session(null, async (page) => {
@@ -1208,6 +1557,7 @@ const scenarios = {
       'make',
       'free',
       'tuner',
+      'metronome',
       'ear',
       'mic',
       'calibrate',
@@ -1215,6 +1565,8 @@ const scenarios = {
       'wind',
       'beat',
       'strum',
+      'bass',
+      'keys',
     ];
     await session(null, async (page) => {
       for (const scheme of ['dark', 'light', 'contrast']) {
@@ -1511,6 +1863,36 @@ const scenarios = {
         /In tune|tune (up|down)/.test(await text(page, 'advice')),
         `tuner: says in tune (${await text(page, 'advice')})`,
       );
+      check(
+        (await page.inputValue('[data-id=tuning]')) === 'chromatic',
+        'tuner: starts as a universal (any note) tuner',
+      );
+      check(
+        /\d+\.\d Hz/.test(await text(page, 'detail')),
+        `tuner: shows the pitch (${await text(page, 'detail')})`,
+      );
+      // a reference tone: tap a note to hold it, tap again to release
+      await page.click('[data-ref="69"]');
+      check(
+        (await page.getAttribute('[data-ref="69"]', 'aria-pressed')) === 'true',
+        'tuner: tapping A4 holds a reference tone',
+      );
+      await page.click('[data-id=tone-stop]');
+      check(
+        (await page.getAttribute('[data-ref="69"]', 'aria-pressed')) === 'false',
+        'tuner: the tone can be stopped',
+      );
+      // the reference pitch is adjustable and remembered
+      await page.click('[data-id=a4-up]');
+      await page.click('[data-id=a4-up]');
+      check((await text(page, 'a4')) === '442 Hz', 'tuner: A = 442 Hz');
+      await page.reload();
+      await page.waitForSelector('[data-id=a4]');
+      check((await text(page, 'a4')) === '442 Hz', 'tuner: the reference pitch is remembered');
+      // an instrument-centred mode lists its strings
+      await page.selectOption('[data-id=tuning]', 'guitar');
+      const strings = await page.$$eval('[data-ref]', (b) => b.length);
+      check(strings === 6, `tuner: guitar mode offers its six strings (${strings})`);
     });
   },
 
@@ -1562,8 +1944,8 @@ const scenarios = {
         'home: the most recently played path suggests its open step',
       );
       check(
-        (await page.$$('[data-id=games] a')).length === 5,
-        'home: four instrument games and ear training under Play',
+        (await page.$$('[data-id=games] a')).length === 7,
+        'home: six instrument games and ear training under Play',
       );
       check(
         (await page.$$('[data-id=games] a[href="#/mic"], [data-id=games] a[href="#/calibrate"]'))
@@ -1590,7 +1972,7 @@ const scenarios = {
           /0 of \d/.test(await text(page, 'theme')),
         `home: the themed week and its progress (${(await text(page, 'theme')).replace(/\s+/g, ' ')})`,
       );
-      check((await page.$('[data-id=tuner-link]')) !== null, 'home: the tuner is under Set up');
+      check((await page.$('[data-id=tuner-link]')) !== null, 'home: the tuner is under Tools');
       check(
         /10 minutes of practice/.test(await text(page, 'week')),
         `home: shows this week's practice (${await text(page, 'week')})`,

@@ -5,7 +5,11 @@ import { generateFluteSong, parseFluteId } from '../generate/flute';
 import { generateGroove, parseGrooveId } from '../generate/groove';
 import { generateMelody, parseMelodyId } from '../generate/melody';
 import { rhythmExercises } from '../generate/rudiments';
-import { FLUTE_SONGS, LIBRARY } from './library';
+import { BASS_EXERCISES, BASS_SONGS } from './bass';
+import { KEY_EXERCISES, KEY_PIECES } from './keys';
+import { guitarFamily } from '../guitar';
+import { guitarChart } from './notation';
+import { FLUTE_SONGS, KEY_TUNES, LIBRARY } from './library';
 import clapBasic from './clap-basic.json';
 import clapTapGroove from './clap-tap-groove.json';
 import drumRock from './drum-rock.json';
@@ -47,6 +51,8 @@ const EXERCISES: Record<string, Chart> = {
   ...exerciseCharts('wind'),
   ...exerciseCharts('ukulele-strum'),
   ...chordChangeDrills(),
+  ...BASS_EXERCISES,
+  ...KEY_EXERCISES,
   ...rhythmExercises('hand-percussion'),
   ...rhythmExercises('drum-kit'),
   ...rhythmExercises('clap'),
@@ -63,6 +69,9 @@ export const builtinSongs: Readonly<Record<string, Chart>> = {
   ),
   ...LIBRARY,
   ...FLUTE_SONGS,
+  ...BASS_SONGS,
+  ...KEY_TUNES,
+  ...KEY_PIECES,
   ...EXERCISES,
 };
 
@@ -96,6 +105,13 @@ export function getSong(id: string): Chart {
 export function songsFor(
   profileId: string,
 ): { id: string; chart: Chart; category: SongCategory }[] {
+  // the guitar plays the ukulele's songs, with the guitar's fingerings
+  if (guitarFamily(profileId)?.kind === 'strum') {
+    return songsFor('ukulele-strum').map((s) => ({
+      ...s,
+      chart: guitarChart(s.chart, profileId),
+    }));
+  }
   return Object.entries(builtinSongs)
     .filter(([, chart]) => chart.meta.instruments?.includes(profileId))
     .map(([id, chart]) => ({ id, chart, category: songCategory(id) }));
@@ -104,4 +120,6 @@ export function songsFor(
 export { FLUTE_SONGS, LIBRARY } from './library';
 export * from './notation';
 export * from './interchange';
+export * from './bass';
+export * from './keys';
 export * from './midi';

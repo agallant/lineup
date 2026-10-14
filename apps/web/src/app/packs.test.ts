@@ -11,6 +11,8 @@ describe('song packs', () => {
       'lullabies',
       'waltz',
       'pentatonic',
+      'bass-lines',
+      'key-pieces',
       'rhythm',
       'gentle',
       'minor',

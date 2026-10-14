@@ -1,0 +1,48 @@
+{
+  "id": "keyboard",
+  "name": "Keyboard (MIDI or on-screen)",
+  "mode": "keyline",
+  "input": "pitch",
+  "renderer": "piano-roll",
+  "range": {
+    "lowMidi": 36,
+    "highMidi": 96
+  },
+  "transposition": {
+    "writtenMinusSounding": 0
+  },
+  "detector": {
+    "windowSize": 2048,
+    "hopSize": 512,
+    "clarityThreshold": 0.9,
+    "minLevelDb": -60,
+    "minHz": 60,
+    "maxHz": 2200,
+    "stabilityGateMs": 0,
+    "onset": {
+      "riseDb": 10,
+      "refractoryMs": 60,
+      "lookbackMs": 30,
+      "minLevelDb": -60
+    }
+  },
+  "judgment": {
+    "strategy": "discrete",
+    "timing": {
+      "perfectMs": 60,
+      "goodMs": 140
+    },
+    "match": {
+      "lane": false,
+      "pitch": true,
+      "chord": false
+    },
+    "pitch": {
+      "toleranceCents": 50,
+      "octaveForgiving": false,
+      "vibratoSmoothingMs": 0,
+      "coverageGood": 0.5,
+      "coveragePerfect": 0.8
+    }
+  }
+}

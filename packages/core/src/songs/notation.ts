@@ -6,6 +6,7 @@ import {
   type ChartNote,
 } from '../chart';
 import { UKULELE_CHORD_FRETS } from '../chords';
+import { GUITAR_STANDARD, guitarOpenFor, guitarPluck } from '../guitar';
 
 /**
  * Small text notations for writing songs by hand, compiled to the same charts as the JSON files.
@@ -103,12 +104,13 @@ export const ukulelePlayable = (pitch: number): boolean =>
 export const pluckNotes = (notes: readonly BeatNote[]): BeatNote[] =>
   notes.map((n) => ({ beat: n.beat, expected: { frets: ukulelePluck(n.pitch!) } }));
 
-/** The pitch a plucked note sounds, from the one string and fret it names, or null if it is not a pluck. */
+/** The pitch a plucked note sounds, from the one string and fret it names (a ukulele's or a guitar's), or null if it is not a pluck. */
 function pluckedPitch(note: ChartNote): number | null {
   const frets = note.expected?.frets;
-  if (!frets || frets.length !== UKULELE_OPEN.length) return null;
+  const open = frets?.length === GUITAR_STANDARD.length ? GUITAR_STANDARD : UKULELE_OPEN;
+  if (!frets || frets.length !== open.length) return null;
   const held = frets.flatMap((f, i) => (f === null ? [] : [{ f, i }]));
-  return held.length === 1 ? UKULELE_OPEN[held[0]!.i]! + held[0]!.f : null;
+  return held.length === 1 ? open[held[0]!.i]! + held[0]!.f : null;
 }
 
 /** True when every note of the chart is a single plucked note (a picked melody or ukulele exercise). */
@@ -201,4 +203,28 @@ export function grooveChart(
     }
   }
   return chartFromBeats(meta, notes);
+}
+
+/**
+ * A ukulele chart as the same song for a guitar (standard tuning unless `profileId` names another):
+ * strummed chords keep their names (the guitar's fingerings show on its six strings), and each
+ * plucked note moves to the string and fret of a guitar that sounds it. Charts of other instruments
+ * are returned unchanged.
+ */
+export function guitarChart(chart: Chart, profileId = 'guitar-strum'): Chart {
+  const open = guitarOpenFor(profileId);
+  if (!open || !chart.meta.instruments?.includes('ukulele-strum')) return chart;
+  const notes = chart.notes.map((n) => {
+    const pitch = pluckedPitch(n);
+    if (pitch === null) return n;
+    return { ...n, pitch, expected: { ...n.expected, frets: guitarPluck(pitch, open) } };
+  });
+  return {
+    ...chart,
+    meta: {
+      ...chart.meta,
+      instruments: chart.meta.instruments.map((i) => (i === 'ukulele-strum' ? profileId : i)),
+    },
+    notes,
+  };
 }

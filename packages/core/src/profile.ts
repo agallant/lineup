@@ -13,8 +13,8 @@ import {
   type Loaded,
 } from './validate';
 
-/** The four game modes, one per kind of instrument input. */
-export const MODES = ['strumline', 'singline', 'windline', 'beatline'] as const;
+/** The game modes, one per kind of instrument input. */
+export const MODES = ['strumline', 'singline', 'windline', 'beatline', 'keyline'] as const;
 /** One of the game modes in MODES. */
 export type Mode = (typeof MODES)[number];
 
@@ -24,7 +24,12 @@ export const INPUT_KINDS = ['pitch', 'onset', 'percussion', 'strum'] as const;
 export type InputKind = (typeof INPUT_KINDS)[number];
 
 /** The highway renderers a profile can ask for. */
-export const RENDERER_KINDS = ['lane-highway', 'pitch-highway', 'percussion-lanes'] as const;
+export const RENDERER_KINDS = [
+  'lane-highway',
+  'pitch-highway',
+  'percussion-lanes',
+  'piano-roll',
+] as const;
 /** One of the renderer kinds in RENDERER_KINDS. */
 export type RendererKind = (typeof RENDERER_KINDS)[number];
 

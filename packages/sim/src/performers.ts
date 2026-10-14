@@ -1,8 +1,11 @@
+import { chordFretsFor, guitarOpenFor } from '@lineup/core';
 import {
+  GUITAR_OPEN_MIDI,
   UKE_CHORDS,
   UKE_OPEN_MIDI,
   midiToHz,
   ukeNote,
+  guitarStrum,
   ukeStrum,
   voiceNote,
   windNote,
@@ -29,6 +32,31 @@ export const ukuleleStrumPerformer: Performer = (note, index, sampleRate) => {
   const direction = note.expected?.direction ?? (note.lane === 'up' ? 'up' : 'down');
   return ukeStrum(frets, sampleRate, { direction, seed: 100 + index });
 };
+
+/**
+ * Strums the chord named in `note.expected.chord` on a guitar of the given profile (default C), in
+ * its tuning, or plucks the one string a note names.
+ */
+export function guitarStrumPerformerFor(profileId = 'guitar-strum'): Performer {
+  const open = guitarOpenFor(profileId) ?? GUITAR_OPEN_MIDI;
+  const chords = chordFretsFor(profileId);
+  return (note, index, sampleRate) => {
+    const played = (note.expected?.frets ?? []).flatMap((fret, string) =>
+      fret === null || fret === undefined || open[string] === undefined ? [] : [{ string, fret }],
+    );
+    if (played.length === 1) {
+      const { string, fret } = played[0]!;
+      return ukeNote(open[string]! + fret, sampleRate, { seed: 100 + index, duration: 0.6 });
+    }
+    const chord = note.expected?.chord ?? 'C';
+    const frets = chords[chord] ?? chords['C']!;
+    const direction = note.expected?.direction ?? (note.lane === 'up' ? 'up' : 'down');
+    return guitarStrum(frets, sampleRate, { direction, seed: 100 + index }, open);
+  };
+}
+
+/** The standard-tuned guitar. */
+export const guitarStrumPerformer: Performer = guitarStrumPerformerFor('guitar-strum');
 
 /**
  * Plucks a single note at `note.pitch`. Notes ring for `ring` seconds

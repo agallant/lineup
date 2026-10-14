@@ -5,6 +5,8 @@ import { applyTextSize, applyTheme } from './app/appearance';
 import { earScreen } from './app/screens/ear';
 import { startRouter } from './app/router';
 import { SettingsStore, safeLocalStorage } from './app/settings';
+import { bassScreen } from './app/screens/bass';
+import { keylineScreen } from './app/screens/keyline';
 import { beatScreen } from './app/screens/beat';
 import { calibrateScreen } from './app/screens/calibrate';
 import { collectionScreen } from './app/screens/collection';
@@ -19,6 +21,7 @@ import { singScreen } from './app/screens/sing';
 import { strumScreen } from './app/screens/strum';
 import { freeScreen } from './app/screens/free';
 import { packsScreen } from './app/screens/packs';
+import { metronomeScreen } from './app/screens/metronome';
 import { tunerScreen } from './app/screens/tuner';
 import { windScreen } from './app/screens/wind';
 
@@ -44,8 +47,11 @@ startRouter(
     wind: windScreen,
     beat: beatScreen,
     strum: strumScreen,
+    bass: bassScreen,
+    keys: keylineScreen,
     scores: scoreboardScreen,
     tuner: tunerScreen,
+    metronome: metronomeScreen,
     free: freeScreen,
     ear: earScreen,
     make: makerScreen,

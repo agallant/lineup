@@ -30,8 +30,22 @@ const CARDS = [
     id: 'strumline',
     href: '#/strum',
     name: 'Strumline',
-    who: 'Ukulele',
+    who: 'Ukulele and guitar',
     blurb: 'Strum chord songs or pick melodies, with the fret to hold on each string.',
+  },
+  {
+    id: 'bassline',
+    href: '#/bass',
+    name: 'Bassline',
+    who: 'Bass guitar',
+    blurb: 'Learn bass lines: blues, pop and rock, with the string and fret for every note.',
+  },
+  {
+    id: 'keyline',
+    href: '#/keys',
+    name: 'Keyline',
+    who: 'Keyboard and piano',
+    blurb: 'Play pieces on a MIDI keyboard, the on-screen keys or your computer keyboard.',
   },
   {
     id: 'beatline',
@@ -154,10 +168,16 @@ export const homeScreen: Screen = (root) => {
         <span>A metronome and a take recorded and played back on this device. No song, no score.</span></a></li>
     </ul>
 
-    <h2>Set up <small>once per device or instrument</small></h2>
+    <h2>Tools</h2>
     <ul class="menu">
       <li><a class="card" href="#/tuner" data-id="tuner-link"><strong>Tuner</strong>
-        <span>Tune your ukulele (or check any note) before you play. Not a game.</span></a></li>
+        <span>Tune any instrument or voice, with reference tones; ukulele, guitar and bass modes too. Not a game.</span></a></li>
+      <li><a class="card" href="#/metronome" data-id="metronome-link"><strong>Metronome</strong>
+        <span>Tempo, tap tempo, accents, subdivisions and a speed trainer for practice. Not a game.</span></a></li>
+    </ul>
+
+    <h2>Set up <small>once per device or instrument</small></h2>
+    <ul class="menu">
       <li><a class="card" href="#/calibrate" data-id="calibrate-link"><strong>Calibrate timing</strong>
         <span>Tap along to a beat so the game knows how late your speaker and microphone are.</span></a></li>
       <li><a class="card" href="#/mic" data-id="mic-link"><strong>Mic &amp; latency test</strong>

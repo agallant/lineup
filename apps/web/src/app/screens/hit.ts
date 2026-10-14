@@ -15,6 +15,8 @@ import {
   generateChordSong,
   generateGroove,
   generateMelody,
+  guitarChart,
+  guitarFamily,
   hashSeed,
   getProfile,
   grooveId,
@@ -67,6 +69,15 @@ import { BeatlineGame, HitMonitor, formatHits } from '../game/beatline-game';
 import { enrollMessage } from '../game/enroll-messages';
 import { formatSessionLog } from '../game/session-log';
 import { songSummary } from '../game/song-info';
+import { HitStepGame } from '../game/hit-step-game';
+import { StepGame } from '../game/step-game';
+import {
+  hitEngine,
+  pitchEngine,
+  showStepResults,
+  startStepRun,
+  type StepEngine,
+} from '../step-run';
 import { ScoreStore, describeBest, scoreKey } from '../scores';
 import { UserSongStore, userSongsFor } from '../user-songs';
 import { starsBySong } from '../scoreboard';
@@ -92,7 +103,7 @@ import type { Screen } from '../router';
 
 /** What differs between the hit-based games (Beatline, Strumline); everything else is shared. */
 export interface HitScreenConfig {
-  mode: 'Beatline' | 'Strumline';
+  mode: 'Beatline' | 'Strumline' | 'Bassline';
   /** Page heading and its small subtitle. */
   title: string;
   subtitle: string;
@@ -111,6 +122,11 @@ export interface HitScreenConfig {
   ) => { performer: Performer; model: TimbreModel | null };
   /** Strumline: offer chord checking and a practice speed. */
   strum?: boolean;
+  /**
+   * Bassline: single plucked notes judged by pitch and timing at all times, with a practice speed
+   * and a drum loop, but no chords and no listening first.
+   */
+  plucked?: boolean;
 }
 
 const template = (c: HitScreenConfig) => `
@@ -179,7 +195,7 @@ const setup = (c: HitScreenConfig) => `
 
   <section class="panel">
     <h2>4. Options</h2>
-    <div class="row" data-id="strum-opts" ${c.strum ? '' : 'hidden'}>
+    <div class="row" data-id="strum-opts" ${c.strum || c.plucked ? '' : 'hidden'}>
       <label>Speed
         <select data-id="speed">
           <option value="0.5">50%</option>
@@ -191,6 +207,7 @@ const setup = (c: HitScreenConfig) => `
     </div>
     <label class="check" data-id="chords-opt" ${c.strum ? '' : 'hidden'}><input type="checkbox" data-id="opt-chords" /> Also check the chords (experimental; otherwise only the timing counts)</label>
     <label class="check" data-id="pitch-opt" hidden><input type="checkbox" data-id="opt-pitch" /> Also check the pitch of each plucked note (experimental; otherwise only the timing counts)</label>
+    <label class="check" data-id="step-label"><input type="checkbox" data-id="opt-step" /> Beginner: one step at a time, no timing (the auto-play demo still plays the normal game)</label>
     <label class="check"><input type="checkbox" data-id="opt-metronome" /> Metronome clicks (needs headphones)</label>
     <label class="check"><input type="checkbox" data-id="opt-debug" /> Debug overlay while playing</label>
     <p data-id="cal-status"></p>
@@ -274,6 +291,7 @@ export const createHitScreen =
         if (wantedSong) {
           settings.update({
             variation: 'original',
+            stepMode: false,
             ...(c.strum
               ? { speed: 1, checkChords: false, checkPitch: false }
               : { listenFirst: false }),
@@ -288,6 +306,20 @@ export const createHitScreen =
         });
       }
     }
+
+    /** The guitar plays the ukulele's songs and generators, moved onto its own strings. */
+    const guitar = (): boolean => guitarFamily(profile.id) !== null;
+    const generatorProfile = (): string => (guitar() ? 'ukulele-strum' : profile.id);
+    const forInstrument = (chart: Chart): Chart =>
+      guitar() ? guitarChart(chart, profile.id) : chart;
+    /** Every song in the menu: the built-in ones and the player's own. */
+    const menuSongs = () => [
+      ...songsFor(profile.id),
+      ...userSongsFor(generatorProfile(), mine).map((s) => ({
+        ...s,
+        chart: forInstrument(s.chart),
+      })),
+    ];
 
     let profile: InstrumentProfile = getProfile(
       c.modes.some((m) => m.id === settings.get().songs[`${c.keyPrefix}-mode`])
@@ -336,6 +368,8 @@ export const createHitScreen =
     const pitchBox = S<HTMLInputElement>('opt-pitch');
     pitchBox.checked = current.checkPitch;
     speedSel.value = String(current.speed);
+    const stepBox = S<HTMLInputElement>('opt-step');
+    stepBox.checked = current.stepMode;
     for (const m of c.modes) modeSel.add(new Option(m.label, m.id));
     modeSel.value = profile.id;
 
@@ -369,7 +403,10 @@ export const createHitScreen =
         };
       }
       if (songSel.value === RANDOM_MELODY) {
-        return { id: melodyId(profile.id, spec), build: (s) => generateMelody(profile.id, s) };
+        return {
+          id: melodyId(generatorProfile(), spec),
+          build: (s) => generateMelody(generatorProfile(), s),
+        };
       }
       return null;
     };
@@ -377,15 +414,17 @@ export const createHitScreen =
       const spec = settings.get().challenge;
       const kind = randomKind(spec);
       if (!kind) return null;
-      if (randomCache?.id !== kind.id) randomCache = { id: kind.id, chart: kind.build(spec) };
+      if (randomCache?.id !== kind.id)
+        randomCache = { id: kind.id, chart: forInstrument(kind.build(spec)) };
       return randomCache;
     };
     const showChallenge = () => {
       const spec = settings.get().challenge;
       scaleSel.replaceChildren();
-      for (const id of melodyScalesFor(profile.id)) scaleSel.add(new Option(SCALES[id].label, id));
-      if (!melodyScalesFor(profile.id).includes(spec.scale)) {
-        settings.update({ challenge: { ...spec, scale: melodyScalesFor(profile.id)[0]! } });
+      for (const id of melodyScalesFor(generatorProfile()))
+        scaleSel.add(new Option(SCALES[id].label, id));
+      if (!melodyScalesFor(generatorProfile()).includes(spec.scale)) {
+        settings.update({ challenge: { ...spec, scale: melodyScalesFor(generatorProfile())[0]! } });
       }
       const now = settings.get().challenge;
       scaleSel.value = now.scale;
@@ -400,9 +439,9 @@ export const createHitScreen =
       scoreKey(
         profile.id,
         randomEntry()?.id ?? songSel.value,
-        `${c.strum ? `x${settings.get().speed}${settings.get().checkChords ? '+chords' : ''}${pitchMode() ? '+pitch' : ''}` : ''}${
+        `${c.strum || c.plucked ? `x${settings.get().speed}${c.strum && settings.get().checkChords ? '+chords' : ''}${c.strum && pitchMode() ? '+pitch' : ''}` : ''}${
           settings.get().variation === 'original' ? '' : `|${settings.get().variation}`
-        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${listening() ? `|echo${blind() ? '|blind' : ''}` : ''}${calling() ? '|call' : ''}`,
+        }${partIdx >= 0 ? `|part${partIdx + 1}` : ''}${settings.get().stepMode ? '|step' : ''}${listening() ? `|echo${blind() ? '|blind' : ''}` : ''}${calling() ? '|call' : ''}`,
       );
     const refreshSong = () => {
       syncParts();
@@ -418,18 +457,20 @@ export const createHitScreen =
     /** Re-reads everything that depends on the chosen mode. */
     const applyMode = () => {
       songSel.replaceChildren(); // also removes group headings
-      const songs = [...songsFor(profile.id), ...userSongsFor(profile.id, mine)];
+      const songs = menuSongs();
       const stars = starsBySong(scores.entries(), profile.id);
       fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
       addRandomOptions(
         songSel,
-        profile.id === 'ukulele-strum'
-          ? [
-              { value: RANDOM_CHORDS, label: '🎲 Random chord song' },
-              { value: RANDOM_WALTZ, label: '🎲 Random waltz (3/4)' },
-              { value: RANDOM_MELODY, label: '🎲 Random melody (picked)' },
-            ]
-          : [{ value: RANDOM_GROOVE, label: '🎲 Random groove' }],
+        c.plucked
+          ? []
+          : generatorProfile() === 'ukulele-strum'
+            ? [
+                { value: RANDOM_CHORDS, label: '🎲 Random chord song' },
+                { value: RANDOM_WALTZ, label: '🎲 Random waltz (3/4)' },
+                { value: RANDOM_MELODY, label: '🎲 Random melody (picked)' },
+              ]
+            : [{ value: RANDOM_GROOVE, label: '🎲 Random groove' }],
       );
       const saved = settings.get().songs[`${c.keyPrefix}:${profile.id}`];
       songSel.value = [...songSel.options].some((o) => o.value === saved)
@@ -648,6 +689,10 @@ export const createHitScreen =
       settings.update({ checkPitch: pitchBox.checked });
       refreshSong();
     });
+    stepBox.addEventListener('change', () => {
+      settings.update({ stepMode: stepBox.checked });
+      refreshSong();
+    });
     chordsBox.addEventListener('change', () => {
       settings.update({ checkChords: chordsBox.checked });
       refreshSong();
@@ -809,7 +854,10 @@ export const createHitScreen =
           });
     };
 
+    let stepStop: (() => void) | null = null;
     const stopPlay = () => {
+      stepStop?.();
+      stepStop = null;
       cancelAnimationFrame(playRaf);
       backing?.stop();
       backing = null;
@@ -853,7 +901,17 @@ export const createHitScreen =
         clock,
         latencyOffset: offset,
         model: audio.model,
-        ...(pitchMode() ? { pitched: getProfile('ukulele-note') } : {}),
+        ...(pitchMode()
+          ? {
+              pitched: c.plucked
+                ? profile
+                : getProfile(
+                    guitar()
+                      ? `guitar-note${guitarFamily(profile.id)!.tuning.suffix}`
+                      : 'ukulele-note',
+                  ),
+            }
+          : {}),
       });
       adapter.onMessage = (m) => game.handleMessage(m);
       backing = playBacking(
@@ -863,8 +921,8 @@ export const createHitScreen =
           ...planAllBacking(chart, {
             metronome: opts.metronome,
             guideTone: false,
-            accompaniment: settings.get().accompaniment,
-            drums: c.strum ? settings.get().drums : 'off',
+            accompaniment: c.plucked ? 'off' : settings.get().accompaniment,
+            drums: c.strum || c.plucked ? settings.get().drums : 'off',
           }),
           ...listen.tones,
         ].sort((a, b) => a.songTime - b.songTime),
@@ -961,7 +1019,7 @@ export const createHitScreen =
               isDaily(randomEntry()?.id ?? songSel.value)
                 ? { key: dailyKey(dailyGame) }
                 : undefined,
-              c.strum ? settings.get().speed : undefined,
+              c.strum || c.plucked ? settings.get().speed : undefined,
             ),
           );
       if (outcome) outcome.newAchievements.push(...grantMilestones(progress, scores.entries()));
@@ -977,7 +1035,9 @@ export const createHitScreen =
       const avg = timing.length ? (timing.reduce((a, b) => a + b, 0) / timing.length) * 1000 : null;
       // a clean run at a practice speed offers the next speed up
       const faster =
-        !audio.demo && c.strum && s.accuracy >= 0.9 ? nextSpeed(settings.get().speed) : null;
+        !audio.demo && (c.strum || c.plucked) && s.accuracy >= 0.9
+          ? nextSpeed(settings.get().speed)
+          : null;
       stages.results.innerHTML = `
       <section class="panel results">
         <div class="grade" data-id="grade">${grade}</div>
@@ -1043,7 +1103,7 @@ export const createHitScreen =
           options: {
             metronome: settings.get().metronome,
             enrolled: audio.model !== null,
-            ...(c.strum
+            ...(c.strum || c.plucked
               ? { speed: settings.get().speed, checkChords: settings.get().checkChords }
               : {}),
           },
@@ -1087,7 +1147,7 @@ export const createHitScreen =
     };
     const songEntry = () => {
       const random = randomEntry();
-      const songs = [...songsFor(profile.id), ...userSongsFor(profile.id, mine)];
+      const songs = menuSongs();
       return random ?? songs.find((s) => s.id === songSel.value) ?? songs[0]!;
     };
     /** The part of the song to practise (an index into its phrases), or -1 for all of it. */
@@ -1113,17 +1173,18 @@ export const createHitScreen =
     });
     /** Strumline: a picked melody is judged by pitch as well as timing when the player asked for it. */
     const pitchMode = (): boolean =>
-      c.strum === true && settings.get().checkPitch && isPluckChart(wholeSong());
+      c.plucked === true ||
+      (c.strum === true && settings.get().checkPitch && isPluckChart(wholeSong()));
     const songChart = (): Chart => {
       const part = applyPart(wholeSong(), partIdx);
-      return pitchMode() ? withPluckPitches(part) : part;
+      return c.strum && pitchMode() ? withPluckPitches(part) : part;
     };
     // percussion rhythms can be heard first as ticks; a chord song cannot
     const callBox = S<HTMLInputElement>('call');
-    S('call-label').hidden = !!c.strum;
+    S('call-label').hidden = !!(c.strum || c.plucked);
     callBox.checked = settings.get().callResponse;
     const listenBox = S<HTMLInputElement>('listen');
-    S('listen-label').hidden = !!c.strum;
+    S('listen-label').hidden = !!(c.strum || c.plucked);
     listenBox.checked = settings.get().listenFirst;
     listenBox.addEventListener('change', () => {
       settings.update({
@@ -1144,8 +1205,9 @@ export const createHitScreen =
       syncBlind();
       refreshSong();
     });
-    const calling = (): boolean => !c.strum && settings.get().callResponse;
-    const listening = (): boolean => !c.strum && settings.get().listenFirst && !calling();
+    const calling = (): boolean => !c.strum && !c.plucked && settings.get().callResponse;
+    const listening = (): boolean =>
+      !c.strum && !c.plucked && settings.get().listenFirst && !calling();
     const blind = (): boolean => listening() && settings.get().blind;
     const blindBox = S<HTMLInputElement>('blind');
     const syncBlind = () => {
@@ -1159,7 +1221,72 @@ export const createHitScreen =
     syncBlind();
     /** The chart as played: at the chosen practice speed. */
     const selectedChart = (): Chart =>
-      rescaleChart(songChart(), c.strum ? settings.get().speed : 1);
+      rescaleChart(songChart(), c.strum || c.plucked ? settings.get().speed : 1);
+
+    /**
+     * Beginner mode: each step (a note, a chord, a drum sound) is played and shown, and waited for.
+     * No clock, no timing. Pitched games (bass) listen for the note; the others for the hit.
+     */
+    const runStep = (m: MicSession, chart: Chart) => {
+      sessionStart = new Date();
+      show('play');
+      const pitched = c.plucked === true;
+      let game: StepGame | HitStepGame;
+      let engine: StepEngine;
+      if (pitched) {
+        // a bass note sounds far below what a small speaker can play: the asked note is played higher
+        const lowest = Math.min(
+          ...chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch])),
+        );
+        const octave = lowest < 48 ? Math.ceil((48 - lowest) / 12) * 12 : 0;
+        const g = new StepGame(chart, profile);
+        game = g;
+        engine = pitchEngine(g, octave, 'Play');
+      } else {
+        const g = new HitStepGame(chart, profile, {
+          needChord: c.strum === true && settings.get().checkChords,
+        });
+        game = g;
+        engine = hitEngine(g, new HitMonitor(profile, model), profile);
+      }
+      stepStop = startStepRun({
+        container: stages.play,
+        mic: m,
+        engine,
+        renderer: createRenderer(profile.renderer),
+        forward: onSetupMessage,
+        onFinish: () => {
+          m.onMessage = onSetupMessage;
+          refreshSong();
+          showStepResults({
+            container: stages.results,
+            game,
+            chart,
+            ctx: m.ctx,
+            scores,
+            progress,
+            settings,
+            bestKey: bestKey(),
+            profileId: profile.id,
+            songId: songEntry().id,
+            speed: c.strum || c.plucked ? settings.get().speed : undefined,
+            onAgain: () => void begin(false),
+            onTimed: () => {
+              settings.update({ stepMode: false });
+              stepBox.checked = false;
+              refreshSong();
+              void begin(false);
+            },
+            onBack: () => show('setup'),
+          });
+          show('results');
+        },
+        onStop: () => {
+          m.onMessage = onSetupMessage;
+          show('setup');
+        },
+      });
+    };
 
     /** Starts a play-through with the live mic, or the auto-play demo. */
     const begin = async (demo: boolean) => {
@@ -1188,6 +1315,12 @@ export const createHitScreen =
           if (classCount() > 1 && !model) {
             setupStatus.textContent = 'Teach it your sounds first (section 3).';
             setupStatus.classList.add('error');
+            return;
+          }
+          if (settings.get().stepMode) {
+            const m = await startMic();
+            if (!m) return;
+            runStep(m, heard);
             return;
           }
           const m = await startMic();
@@ -1260,6 +1393,7 @@ export const createHitScreen =
     return () => {
       disposed = true;
       cancelAnimationFrame(setupRaf);
+      stepStop?.();
       cancelAnimationFrame(playRaf);
       backing?.stop();
       void mic?.close();

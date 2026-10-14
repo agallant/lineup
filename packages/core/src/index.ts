@@ -1,6 +1,7 @@
 export * from './calibration';
 export * from './chart';
 export * from './chords';
+export * from './guitar';
 export * from './generate';
 export * from './classify-event';
 export * from './clock';

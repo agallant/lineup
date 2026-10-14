@@ -59,11 +59,15 @@ export function chordTemplate(midis: readonly number[]): Float64Array {
  * loud string does not drown the rest) folded onto 12 pitch classes,
  * counting only bins that sit close to a semitone centre.
  */
-export function chordChroma(samples: ArrayLike<number>, sampleRate: number): Float64Array {
+export function chordChroma(
+  samples: ArrayLike<number>,
+  sampleRate: number,
+  lowHz = LOW_HZ,
+): Float64Array {
   const power = powerSpectrum(samples, CHORD_WINDOW);
   const chroma = new Float64Array(12);
   const hzPerBin = sampleRate / CHORD_WINDOW;
-  const lo = Math.ceil(LOW_HZ / hzPerBin);
+  const lo = Math.ceil(lowHz / hzPerBin);
   const hi = Math.min(power.length - 1, Math.floor(HIGH_HZ / hzPerBin));
   for (let k = lo; k <= hi; k++) {
     const mag = power[k]! ** COMPRESSION;
@@ -94,6 +98,8 @@ export interface ChordRecognizerOptions {
   minScore?: number;
   /** The best must beat the runner-up by at least this much, or nothing is reported. */
   minMargin?: number;
+  /** Lowest frequency counted, Hz (default 200: right for a ukulele; a guitar's low strings need less). */
+  lowHz?: number;
 }
 
 /**
@@ -105,11 +111,12 @@ export class ChordRecognizer {
   private readonly templates: { chord: string; template: Float64Array }[];
   private readonly minScore: number;
   private readonly minMargin: number;
+  private readonly lowHz: number;
 
   constructor(
     shapes: ChordShapes,
     private readonly sampleRate: number,
-    { minScore = 0.7, minMargin = 0.015 }: ChordRecognizerOptions = {},
+    { minScore = 0.7, minMargin = 0.015, lowHz = LOW_HZ }: ChordRecognizerOptions = {},
   ) {
     this.templates = Object.entries(shapes).map(([chord, midis]) => ({
       chord,
@@ -118,11 +125,12 @@ export class ChordRecognizer {
     if (this.templates.length === 0) throw new Error('ChordRecognizer needs at least one chord');
     this.minScore = minScore;
     this.minMargin = minMargin;
+    this.lowHz = lowHz;
   }
 
   /** Scores every candidate against the audio, without applying the acceptance thresholds. */
   rank(samples: ArrayLike<number>): { chord: string; score: number }[] {
-    const chroma = chordChroma(samples, this.sampleRate);
+    const chroma = chordChroma(samples, this.sampleRate, this.lowHz);
     return this.templates
       .map(({ chord, template }) => {
         let dot = 0;

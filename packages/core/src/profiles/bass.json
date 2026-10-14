@@ -1,0 +1,92 @@
+{
+  "id": "bass",
+  "name": "Bass guitar",
+  "mode": "strumline",
+  "input": "pitch",
+  "renderer": "lane-highway",
+  "range": {
+    "lowMidi": 28,
+    "highMidi": 67
+  },
+  "transposition": {
+    "writtenMinusSounding": 0
+  },
+  "tuning": {
+    "name": "Standard EADG",
+    "reentrant": false,
+    "strings": [
+      {
+        "label": "E1",
+        "midi": 28
+      },
+      {
+        "label": "A1",
+        "midi": 33
+      },
+      {
+        "label": "D2",
+        "midi": 38
+      },
+      {
+        "label": "G2",
+        "midi": 43
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "e",
+      "label": "E",
+      "color": "#ffd166"
+    },
+    {
+      "id": "a",
+      "label": "A",
+      "color": "#ef476f"
+    },
+    {
+      "id": "d",
+      "label": "D",
+      "color": "#06d6a0"
+    },
+    {
+      "id": "g",
+      "label": "G",
+      "color": "#118ab2"
+    }
+  ],
+  "detector": {
+    "windowSize": 4096,
+    "hopSize": 512,
+    "clarityThreshold": 0.85,
+    "minLevelDb": -60,
+    "minHz": 30,
+    "maxHz": 520,
+    "stabilityGateMs": 0,
+    "onset": {
+      "riseDb": 9,
+      "refractoryMs": 90,
+      "lookbackMs": 30,
+      "minLevelDb": -60
+    }
+  },
+  "judgment": {
+    "strategy": "discrete",
+    "timing": {
+      "perfectMs": 55,
+      "goodMs": 130
+    },
+    "match": {
+      "lane": false,
+      "pitch": true,
+      "chord": false
+    },
+    "pitch": {
+      "toleranceCents": 70,
+      "octaveForgiving": true,
+      "vibratoSmoothingMs": 0,
+      "coverageGood": 0.5,
+      "coveragePerfect": 0.8
+    }
+  }
+}

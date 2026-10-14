@@ -1,4 +1,14 @@
 import { loadProfile, type InstrumentProfile } from '../profile';
+import bass from './bass.json';
+import guitarNote from './guitar-note.json';
+import guitarStrum from './guitar-strum.json';
+import guitarStrumDropd from './guitar-strum-dropd.json';
+import guitarNoteDropd from './guitar-note-dropd.json';
+import guitarStrumDadgad from './guitar-strum-dadgad.json';
+import guitarNoteDadgad from './guitar-note-dadgad.json';
+import guitarStrumOpeng from './guitar-strum-openg.json';
+import guitarNoteOpeng from './guitar-note-openg.json';
+import keyboard from './keyboard.json';
 import ukuleleNote from './ukulele-note.json';
 import clap from './clap.json';
 import drumKit from './drum-kit.json';
@@ -10,6 +20,16 @@ import ukuleleStrum from './ukulele-strum.json';
 const RAW: readonly unknown[] = [
   ukuleleStrum,
   ukuleleNote,
+  guitarStrum,
+  guitarNote,
+  guitarStrumDropd,
+  guitarNoteDropd,
+  guitarStrumDadgad,
+  guitarNoteDadgad,
+  guitarStrumOpeng,
+  guitarNoteOpeng,
+  bass,
+  keyboard,
   voice,
   wind,
   clap,

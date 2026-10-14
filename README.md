@@ -134,6 +134,38 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   notation** can be pasted in and read (key, tempo, lengths, accidentals, ties, triplets, words;
   chords, decorations and repeat marks are skipped). **Copy as text** turns any song into a block
   you can send in a message and paste into _Paste a song_ on another device.
+- **Bassline** (`#/bass`): learn the bass guitar. Songs and exercises are shown as four string lanes
+  (G, D, A, E from the top) with the fret to hold on each note; both the note and the timing are judged,
+  any octave of the right note counting (a phone mic often hears a bass an octave off). There are blues,
+  pop and rock lines in several keys (whole notes, quarters, eighths, root and fifth, walking, disco
+  octaves, funk), a few hand-written lines and exercises (open strings, one finger a fret, pentatonic and
+  major scales, string crossing). Speed, the drum loop and the first-time tips work as in Strumline. The
+  tuner has a bass tuning (E A D G) that listens lower than for other instruments. A Learn path walks
+  from open strings to a funk groove.
+- **Tuner** (`#/tuner`): a universal tuner for any single note (voice, whistle, flute, strings), with the note,
+  Hz and cents and a smooth needle. Tap a note to hold a **reference tone** (any note in an octave, or the
+  strings of the instrument), and set the reference pitch (A = 415 to 466 Hz). Ukulele (three tunings),
+  guitar (standard, drop D, DADGAD, open G) and bass modes have their strings.
+- **Metronome** (`#/metronome`): tempo from 20 to 300 bpm (big − and +, hold to repeat, a slider, tap
+  tempo, typed), one to twelve beats a bar where each beat can be strong, normal, soft or silent,
+  subdivisions (eighths, triplets, sixteenths, swing), four sounds, volume, a **speed trainer** (change the
+  tempo every few bars toward a target) and saved presets. Clicks are scheduled ahead on the audio clock so
+  the beat stays steady, and the screen stays awake while it runs.
+- **Guitar** (Strumline, a choice at the top of the setup page, like Windline's instrument): the six-string
+  guitar in standard tuning plays the ukulele's songs with guitar chords and picks melodies on its own
+  strings, shown on six string lines. The tuner has standard, drop D, DADGAD and open G. Drop D, DADGAD and open G
+  are modes of their own, with the same chords fingered to sound the same notes.
+- **Beginner mode** (every game, an option on the setup page): no timing at all. Each step of the song is
+  shown on the line and played for you, and you play it back to move on (or skip it, or hear it again):
+  a note to sing or play and hold (Singline, Windline, Bassline), the keys to press (Keyline), a chord to
+  strum (Strumline; a run of the same chord is one step) or a drum sound to hit (Beatline). Stars come from
+  the steps passed, rated as the easiest songs.
+- **Keyline** (`#/keys`): learn the keyboard. Notes fall onto a piano keyboard and you press the key as each
+  reaches it; chords are several notes at once, judged note by note. Play on a **MIDI keyboard** (Web MIDI:
+  Chrome and Edge; Safari on iPad has none), on the on-screen keys (touch, several fingers at once) or on the
+  computer keyboard (A S D F G H J K and W E T Y U O P; Z and X change octave). Pieces for both hands,
+  chord pieces and exercises (five fingers, scales, arpeggios, hands apart, black keys), with a Learn path.
+  The pitch is read from the key, so there is no microphone and no octave forgiveness: the right key counts.
 - **Voice range** (Options, Singline): say your voice type and each song gets a line about how it sits
   in it ("sits well", "an octave lower is easier"), and the guide tone plays in your octave; any
   octave of the right note still counts.
@@ -167,8 +199,6 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   song's ladder; the results show which rungs are cleared, and climbing a whole ladder earns a trophy.
   Interval singing (fourths, fifths, octaves with _Listen first_) and the chord-change drills are
   exercises in the song menus.
-- **Tuner** (`#/tuner`, under Set up): ukulele (G C E A), low-G and baritone tunings or any note, with
-  a needle and reference tones. A tool, not a game.
 - **Practice goal**: pick minutes per week in Options; the home menu and scoreboard show the last
   seven and fourteen days.
 - **Up next** (home): a card pointing at the open step of the learning path you played most recently.

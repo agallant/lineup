@@ -51,9 +51,14 @@ waits on the ones before it.
 7. **Quality** (done for what can be automated: an axe-core audit of every screen in three colour schemes in the end-to-end job, and a size budget on the build). An automated accessibility audit of every screen in CI; performance and offline
    checks; docstring and test coverage kept up; whatever the real-device list turns up.
 
-Done after the first seven: voice range, staff view with hidden note names, call and response,
+Done after the first seven (and Bassline, the bass guitar game, and Keyline, the keyboard game): voice range, staff view with hidden note names, call and response,
 song packs, MIDI in and out, short per-game tips, and Start over in Options. Ideas kept for later, none
 blocking: left-handed layouts (lower priority), more song packs, MIDI folders as packs. (Haptics were considered and dropped: iPad Safari has no vibration API.)
+
+Done most recently (asked for by the user):
+
+1. **Guitar in Strumline** (done: standard, drop D, DADGAD and open G).
+2. **Beginner step mode** in every game (done).
 
 ## Not buildable without a real instrument or sounds you teach it
 

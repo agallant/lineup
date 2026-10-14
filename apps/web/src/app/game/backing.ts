@@ -181,7 +181,7 @@ export function planAllBacking(
 }
 
 /** A pitch for each lane of a rhythm, so it can be heard as ticks: low for a kick, high for a hat. */
-const LANE_PITCH: Readonly<Record<string, number>> = {
+export const LANE_PITCH: Readonly<Record<string, number>> = {
   kick: 43,
   snare: 57,
   hat: 80,
@@ -200,4 +200,30 @@ export function rhythmTones(chart: Chart): Extract<BackingEvent, { kind: 'tone' 
     level: 1.6,
     wave: 'triangle' as const,
   }));
+}
+
+/**
+ * Plays tones right away (a step of a beginner mode being sounded), `gap` seconds apart for a run of
+ * them or all at once when `gap` is 0. Returns when the last one ends, on the audio clock.
+ */
+export function playTonesNow(
+  ctx: AudioOut,
+  tones: readonly { midi: number; duration: number; level?: number; wave?: OscillatorType }[],
+  gap = 0,
+): number {
+  const clock = { toSourceTime: (t: number) => ctx.currentTime + 0.03 + t } as SongClock;
+  const events: BackingEvent[] = tones.map((t, i) => ({
+    kind: 'tone' as const,
+    songTime: i * gap,
+    duration: t.duration,
+    midi: t.midi,
+    ...(t.level === undefined ? {} : { level: t.level }),
+    ...(t.wave === undefined ? {} : { wave: t.wave }),
+  }));
+  playBacking(ctx, clock, events);
+  return (
+    ctx.currentTime +
+    0.03 +
+    Math.max(0, ...events.map((e) => e.songTime + (e.kind === 'tone' ? e.duration : 0)))
+  );
 }
