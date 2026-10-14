@@ -105,14 +105,15 @@ import { LadderStore, ladderText } from '../ladder';
 import { VOICE_RANGES, voiceFit, voiceFitText } from '../voice-range';
 import { lyricIndexAt, lyricWindow, syllables } from '../lyrics';
 import { SettingsStore, nextSpeed, keyShiftFor, safeLocalStorage } from '../settings';
-import {
-  RANDOM_FLUTE,
-  RANDOM_MELODY,
-  addRandomOptions,
-  fillSongMenu,
-  fillTargetMenu,
-} from '../song-menu';
+import { RANDOM_FLUTE, RANDOM_MELODY, fillTargetMenu } from '../song-menu';
 import { formatCents, formatDb } from '../format';
+import {
+  defaultSongId,
+  loadPicker,
+  mountPickerControls,
+  rebuildPicker,
+  savePicker,
+} from '../song-picker';
 import { TourStore, mountTour } from '../tour';
 import type { Screen } from '../router';
 
@@ -161,7 +162,7 @@ const setup = (c: PitchScreenConfig) => `
   </div>
 
   <section class="panel">
-    <h2>1. Microphone</h2>
+    <h2 class="step">Microphone</h2>
     <div class="row">
       <button data-id="mic-start">Start mic</button>
       <button data-id="bleed-check" disabled>Check for speaker leak</button>
@@ -177,9 +178,10 @@ const setup = (c: PitchScreenConfig) => `
   </section>
 
   <section class="panel">
-    <h2>2. ${c.instruments ? 'Instrument, song &amp; key' : 'Song &amp; key'}</h2>
+    <h2 class="step">${c.instruments ? 'Instrument, song &amp; key' : 'Song &amp; key'}</h2>
+    ${c.instruments ? '<div class="row"><label>Instrument <select data-id="instrument"></select></label></div>' : ''}
+    <div data-id="song-filters"></div>
     <div class="row">
-      ${c.instruments ? '<label>Instrument <select data-id="instrument"></select></label>' : ''}
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
       <label data-id="part-label" hidden>Part <select data-id="part"></select></label>
@@ -213,7 +215,7 @@ const setup = (c: PitchScreenConfig) => `
   }
 
   <section class="panel">
-    <h2>3. Options</h2>
+    <h2 class="step">Options</h2>
     <label>Scoring
       <select data-id="difficulty">
         <option value="easy">Easy (wide pitch window)</option>
@@ -340,23 +342,35 @@ export const createPitchScreen =
     };
     const onFlute = (): boolean =>
       c.instruments === true && isPentatonicFamily(instrument().family);
+    const picker = loadPicker(safeLocalStorage());
     /** Fills the song menu for the instrument now chosen, keeping `keep` selected when it is still there. */
     const buildSongMenu = (keep?: string) => {
       const previous = keep ?? songSel.value;
       songs = allSongs.filter((s) => s.category !== 'flute' || onFlute());
-      songSel.replaceChildren();
-      fillSongMenu(songSel, songs, (id) => stars.get(id) ?? null);
-      addRandomOptions(songSel, [
+      const random = [
         ...(onFlute() ? [{ value: RANDOM_FLUTE, label: '🎲 Random flute song' }] : []),
         { value: RANDOM_MELODY, label: '🎲 Random melody' },
-      ]);
-      const wanted = previous;
-      songSel.value =
-        wanted === RANDOM_MELODY ||
-        (wanted === RANDOM_FLUTE && onFlute()) ||
-        songs.some((s) => s.id === wanted)
-          ? wanted
-          : (songs[0]?.id ?? RANDOM_MELODY);
+      ];
+      // a random song chosen before keeps the menu on the random songs
+      picker.random = random.some((r) => r.value === previous);
+      const rebuild = (wanted: string | null) => {
+        const changed = rebuildPicker(
+          songSel,
+          { songs, stars: (id) => stars.get(id) ?? null, random, state: picker },
+          wanted,
+          // a new player starts on the first step of this game's learning path
+          picker.random ? (random[0]?.value ?? null) : defaultSongId(c.profileId, songs),
+        );
+        if (changed) songSel.dispatchEvent(new Event('change'));
+      };
+      mountPickerControls(S('song-filters'), picker, {
+        hasRandom: true,
+        onChange: () => {
+          savePicker(safeLocalStorage(), picker);
+          rebuild(songSel.value);
+        },
+      });
+      rebuild(previous);
     };
     // a link to a flute song needs a flute to play it on: choose the A minor Native American flute
     {

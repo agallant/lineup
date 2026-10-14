@@ -1150,3 +1150,14 @@ h2.inline {
 summary {
   cursor: pointer;
 }
+
+/* numbered set-up sections: panels that are hidden do not count */
+#app,
+main {
+  counter-reset: step;
+}
+
+h2.step::before {
+  counter-increment: step;
+  content: counter(step) '. ';
+}

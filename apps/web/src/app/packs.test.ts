@@ -8,6 +8,8 @@ describe('song packs', () => {
   it('has a handful of themed packs, none empty', () => {
     expect(packs.map((p) => p.id)).toEqual([
       'campfire',
+      'world',
+      'christmas',
       'lullabies',
       'waltz',
       'pentatonic',

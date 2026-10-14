@@ -278,6 +278,64 @@ const TUNES: readonly Tune[] = [
     notes: `C4 G4 C4 G4 | D4 A4 D4 A4 | E4 B4 E4 B4 | F4 C5 F4 C5 | G4 D5 G4 D5 | C5:4`,
   },
   {
+    id: 'twinkle',
+    title: 'Twinkle, Twinkle, Little Star',
+    artist: 'Traditional (France)',
+    bpm: 100,
+    tonic: 60,
+    notes: `C4 C4 G4 G4 | A4 A4 G4:2 | F4 F4 E4 E4 | D4 D4 C4:2 |
+      G4 G4 F4 F4 | E4 E4 D4:2 | G4 G4 F4 F4 | E4 E4 D4:2 |
+      C4 C4 G4 G4 | A4 A4 G4:2 | F4 F4 E4 E4 | D4 D4 C4:2`,
+  },
+  {
+    id: 'la-cucaracha',
+    title: 'La Cucaracha',
+    artist: 'Traditional (Mexico)',
+    bpm: 126,
+    tonic: 60,
+    notes: `C4:.5 C4:.5 C4:.5 F4:1.5 A4:1 | C4:.5 C4:.5 C4:.5 F4:1.5 A4:1 |
+      F4:.5 F4:.5 E4:.5 E4:.5 D4:.5 D4:.5 C4:1 | r:1`,
+  },
+  {
+    id: 'sakura',
+    title: 'Sakura (cherry blossoms, opening)',
+    artist: 'Traditional (Japan)',
+    bpm: 72,
+    tonic: 60,
+    notes: `A4 A4 B4:2 | A4 A4 B4:2 | A4 B4 C5 B4 | A4 B4 A4:2 | F4 E4:3`,
+  },
+  {
+    id: 'canon-theme',
+    title: 'Canon in D (the theme, in C)',
+    artist: 'Pachelbel (Germany)',
+    bpm: 72,
+    tonic: 60,
+    voiceOnly: true,
+    notes: `E5:2 D5:2 | C5:2 B4:2 | A4:2 G4:2 | A4:2 B4:2 |
+      C5:2 G4:2 | A4:2 E4:2 | F4:2 C4:2 | F4:2 G4:2`,
+  },
+  {
+    id: 'deck-the-halls',
+    title: 'Deck the Halls',
+    artist: 'Traditional (Wales)',
+    bpm: 112,
+    tonic: 60,
+    voiceOnly: true,
+    notes: `C5:1.5 B4:.5 A4:1 G4:1 | F4:1 G4:1 A4:1 F4:1 | G4:.5 A4:.5 B4:.5 G4:.5 A4:1.5 G4:.5 | F4:1 E4:1 D4:2 |
+      C5:1.5 B4:.5 A4:1 G4:1 | F4:1 G4:1 A4:1 F4:1 | G4:.5 A4:.5 B4:.5 G4:.5 A4:1.5 G4:.5 | F4:1 E4:1 D4:2`,
+  },
+  {
+    id: 'merry-christmas',
+    title: 'We Wish You a Merry Christmas',
+    artist: 'Traditional (England)',
+    bpm: 120,
+    tonic: 60,
+    beatsPerBar: 3,
+    voiceOnly: true,
+    notes: `G3 | C4 C4:.5 D4:.5 C4:.5 B3:.5 | A3 A3 A3 | D4 D4:.5 E4:.5 D4:.5 C4:.5 | B3 G3 G3 |
+      E4 E4:.5 F4:.5 E4:.5 D4:.5 | C4 A3 G3:.5 G3:.5 | A3 D4 B3 | C4:3`,
+  },
+  {
     id: 'fur-elise',
     title: 'Für Elise (opening, chromatic)',
     artist: 'Beethoven',
