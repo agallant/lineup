@@ -104,6 +104,18 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] **Scoreboard > Records**: after beating a best, the timeline shows "78% → 85%".
 - [ ] Do any of these feel too easy, too hard, or unclear (the goals, the freeze rule, the medal thresholds)?
 
+### More to play (repertoire)
+
+- [ ] **Singline / Windline**: the new tunes (Old MacDonald, Au clair de la lune, Lightly Row, Oh! Susanna,
+      Yankee Doodle, Arpeggio Climb, Chromatic Walk) sound like the tunes you know; say if a note is wrong.
+- [ ] **Windline**: Au clair de la lune and Yankee Doodle are lifted a little so they stay above the
+      instrument's lowest note; does the lift sound odd?
+- [ ] **Strumline**: the new chord songs (Campfire in G, Pop progression, Sunny day, Minor blues, Turnaround,
+      Slow waltz in G) are strummable at their tempos; the waltz counts in three.
+- [ ] **Beatline**: Bossa nova, Double-time rock, Clap swing, Running sixteenths, Pulse and offbeat and
+      Conversation: are they too hard for their star rating?
+- [ ] **Flute songs**: Cedar Wind, Night Fire, Geese Overhead, Thunder Drum: tempo and breath marks feel right.
+
 ## Findings
 
 Write anything you notice here, or just tell me in the chat:

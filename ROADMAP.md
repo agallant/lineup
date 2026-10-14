@@ -32,7 +32,7 @@ waits on the ones before it.
    does not erase a long streak; a collection page of songs cleared with three stars, with a medal per
    song family; a personal-records timeline; a themed week (waltz, pentatonic, slow and steady, fresh
    songs, ...) alongside the daily challenge.
-2. **More to play.** A larger public-domain and original repertoire in every mode (easy first, then
+2. **More to play** (done). A larger public-domain and original repertoire in every mode (easy first, then
    harder and chromatic), harder grooves, more flute repertoire, more chord songs, each checked for
    range, fit and rating.
 3. **Practice tools.** Tempo ladders (finish a song at 80%, 90%, 100% in a row); interval singing

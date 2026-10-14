@@ -156,6 +156,76 @@ const TUNES: readonly Tune[] = [
     notes: `D5 G4:.5 A4:.5 B4:.5 C5:.5 | D5 G4 G4 | E5 C5:.5 D5:.5 E5:.5 F#5:.5 | G5 G4 G4`,
   },
   {
+    id: 'old-macdonald',
+    title: 'Old MacDonald',
+    artist: 'Traditional',
+    bpm: 108,
+    tonic: 60,
+    notes: `C4 C4 C4 G4 | A4 A4 G4:2 | E4 E4 D4 D4 | C4:4 |
+      G4:.5 G4:.5 C4 C4 C4 | G4 A4 A4 G4:2 | E4 E4 D4 D4 | C4:4`,
+  },
+  {
+    id: 'au-clair',
+    title: 'Au clair de la lune',
+    artist: 'Traditional',
+    bpm: 96,
+    tonic: 60,
+    notes: `C4 C4 C4 D4 | E4:2 D4:2 | C4 E4 D4 D4 | C4:4 |
+      D4 D4 D4 D4 | A4:2 A4:2 | D4 C4 B3 A3 | G3:4 |
+      C4 C4 C4 D4 | E4:2 D4:2 | C4 E4 D4 D4 | C4:4`,
+    // a whistle or recorder cannot play below its tonic, so the middle is lifted
+    windNotes: `C4 C4 C4 D4 | E4:2 D4:2 | C4 E4 D4 D4 | C4:4 |
+      D4 D4 D4 D4 | A4:2 A4:2 | D4 C4 B4 A4 | G4:4 |
+      C4 C4 C4 D4 | E4:2 D4:2 | C4 E4 D4 D4 | C4:4`,
+  },
+  {
+    id: 'lightly-row',
+    title: 'Lightly Row',
+    artist: 'Traditional',
+    bpm: 104,
+    tonic: 60,
+    notes: `G4 E4 E4:2 | F4 D4 D4:2 | C4 D4 E4 F4 | G4 G4 G4:2 |
+      G4 E4 E4:2 | F4 D4 D4:2 | C4 E4 G4 G4 | C4:4`,
+  },
+  {
+    id: 'oh-susanna',
+    title: 'Oh! Susanna',
+    artist: 'Foster',
+    bpm: 112,
+    tonic: 60,
+    notes: `C4:.5 D4:.5 | E4 G4 G4:1.5 A4:.5 | G4 E4 C4:.5 D4:.5 E4:.5 E4:.5 | D4 C4 D4:2 |
+      C4:.5 D4:.5 | E4 G4 G4:1.5 A4:.5 | G4 E4 C4:.5 D4:.5 E4:.5 E4:.5 | D4 D4 C4:2`,
+  },
+  {
+    id: 'yankee-doodle',
+    title: 'Yankee Doodle',
+    artist: 'Traditional',
+    bpm: 116,
+    tonic: 60,
+    notes: `C4 C4 D4 E4 | C4 E4 D4 G3 | C4 C4 D4 E4 | C4:2 B3:2 |
+      C4 C4 D4 E4 | F4 E4 D4 C4 | B3 G3 A3 B3 | C4:2 C4:2`,
+    windNotes: `C4 C4 D4 E4 | C4 E4 D4 G4 | C4 C4 D4 E4 | C4:2 B4:2 |
+      C4 C4 D4 E4 | F4 E4 D4 C4 | B4 G4 A4 B4 | C4:2 C4:2`,
+  },
+  {
+    id: 'arpeggio-climb',
+    title: 'Arpeggio Climb',
+    artist: 'Lineup',
+    bpm: 84,
+    tonic: 60,
+    notes: `C4 E4 G4 C5 | G4 E4 C4:2 | D4 F4 A4 D5 | A4 F4 D4:2 |
+      E4 G4 B4 D5 | B4 G4 E4:2 | C4 E4 G4 C5 | C5:4`,
+  },
+  {
+    id: 'chromatic-walk',
+    title: 'Chromatic Walk',
+    artist: 'Lineup',
+    bpm: 80,
+    tonic: 60,
+    notes: `C4 C#4 D4 D#4 | E4 F4 F#4 G4 | G#4 A4 A#4 B4 | C5:4 |
+      C5 B4 A#4 A4 | G#4 G4 F#4 F4 | E4 D#4 D4 C#4 | C4:4`,
+  },
+  {
     id: 'fur-elise',
     title: 'Für Elise (opening, chromatic)',
     artist: 'Beethoven',
@@ -260,6 +330,67 @@ export const STRUM_SONGS: Readonly<Record<string, Chart>> = {
     'Am | C | D | F | Am | C | E | E | Am | C | D | F | Am | E | Am | Am',
     'D . D . D U D .',
   ),
+  'strum-three-chords-g': strumChart(
+    {
+      title: 'Campfire in G (G C D)',
+      artist: 'Lineup',
+      bpm: 100,
+      instruments: ['ukulele-strum'],
+    },
+    'G | G | C | G | G | G | D | D | G | C | G | D | G | C | D | G',
+    'D . D U . U D U',
+  ),
+  'strum-pop-axis': strumChart(
+    {
+      title: 'Pop progression (C G Am F)',
+      artist: 'Lineup',
+      bpm: 96,
+      instruments: ['ukulele-strum'],
+    },
+    'C | G | Am | F | C | G | Am | F | C | G | F | F | C | G | F | C',
+    'D . D U . U D U',
+  ),
+  'strum-sunny-day': strumChart(
+    {
+      title: 'Sunny day (D G A7)',
+      artist: 'Lineup',
+      bpm: 108,
+      instruments: ['ukulele-strum'],
+    },
+    'D | D | G | D | D | D | A7 | A7 | D | G | D | A7 | D | G | A7 | D',
+    'D . D U D U D U',
+  ),
+  'strum-minor-blues': strumChart(
+    {
+      title: 'Minor blues in A (Am Dm E7)',
+      artist: 'Lineup',
+      bpm: 84,
+      instruments: ['ukulele-strum'],
+    },
+    'Am | Am | Am | Am | Dm | Dm | Am | Am | E7 | Dm | Am | E7',
+    'D . D U . U D U',
+  ),
+  'strum-turnaround': strumChart(
+    {
+      title: 'Turnaround (C A7 D7 G7)',
+      artist: 'Lineup',
+      bpm: 92,
+      instruments: ['ukulele-strum'],
+    },
+    'C | A7 | D7 | G7 | C | A7 | D7 | G7 | C | C7 | F | Dm | C | G7 | C | C',
+    'D . D U D U D .',
+  ),
+  'strum-slow-waltz-g': strumChart(
+    {
+      title: 'Slow waltz in G (G Em C D)',
+      artist: 'Lineup',
+      bpm: 88,
+      instruments: ['ukulele-strum'],
+    },
+    'G | Em | C | D | G | Em | C | D | G | Bm | C | D | G | C | D | G',
+    'D . D U D .',
+    { beatsPerBar: 3 },
+  ),
   'pick-hot-cross-buns': pickedMelodyChart(
     {
       title: 'Picking: Hot Cross Buns',
@@ -305,6 +436,15 @@ export const CLAP_SONGS: Readonly<Record<string, Chart>> = {
     },
     { hit: 'x.x.x. | x.x.x. | x.x.xx | x.x.x.' },
   ),
+  'clap-triplet-swing': grooveChart(
+    { title: 'Clap: swing', artist: 'Lineup', bpm: 80, instruments: ['clap'] },
+    { hit: 'x..x.xx..x.x | x..x.xx..x.x | x..x.xx..x.x | x.xx.xx.....' },
+    3,
+  ),
+  'clap-sixteenths': grooveChart(
+    { title: 'Clap: running sixteenths', artist: 'Lineup', bpm: 76, instruments: ['clap'] },
+    { hit: 'xxxxx.x. | x.xxxxxx | xxxxx.x. | x.x.x.x.' },
+  ),
 };
 
 /** Rhythms for claps and taps (one sound at a time). */
@@ -326,6 +466,30 @@ export const HAND_SONGS: Readonly<Record<string, Chart>> = {
     {
       clap: 'x...x... | x...x... | x...x... | x...x...',
       tap: '..x...x. | ..x...x. | ..xx..x. | ..x...x.',
+    },
+  ),
+  'hand-pulse-and-offbeat': grooveChart(
+    {
+      title: 'Clap & tap: pulse and offbeat',
+      artist: 'Lineup',
+      bpm: 92,
+      instruments: ['hand-percussion'],
+    },
+    {
+      clap: 'x...x... | x...x... | x...x... | x...x.x.',
+      tap: '.x.x.x.x | .x.x.x.x | .x.x.x.x | .x.x.x..',
+    },
+  ),
+  'hand-conversation': grooveChart(
+    {
+      title: 'Clap & tap: conversation',
+      artist: 'Lineup',
+      bpm: 84,
+      instruments: ['hand-percussion'],
+    },
+    {
+      clap: 'x.x.x.x. | ........ | x.xxx.x. | ........',
+      tap: '........ | x.x.x.x. | ........ | x.xxxxx.',
     },
   ),
 };
@@ -371,6 +535,22 @@ export const KIT_SONGS: Readonly<Record<string, Chart>> = {
       kick: 'x..x.... | ..x.....',
       snare: '....x... | ....x..x',
       hat: '.xx..xx. | .x.x.x..',
+    },
+  ),
+  'kit-bossa': grooveChart(
+    { title: 'Bossa nova', artist: 'Lineup', bpm: 78, instruments: ['drum-kit'] },
+    {
+      kick: 'x...x... | x..x.... | x...x... | x.......',
+      snare: '...x..x. | ....x.x. | ...x..x. | ...x.x.x',
+      hat: '.xx..x.x | .xx..x.x | .xx..x.x | .xx.x.x.',
+    },
+  ),
+  'kit-double-time': grooveChart(
+    { title: 'Double-time rock', artist: 'Lineup', bpm: 72, instruments: ['drum-kit'] },
+    {
+      kick: 'x...x.x. | x...x.x. | x...x.x. | x.x.....',
+      snare: '..x....x | ..x....x | ..x....x | ...x.xxx',
+      hat: '.x.x.x.. | .x.x.x.. | .x.x.x.. | .x..x...',
     },
   ),
 };
@@ -454,6 +634,31 @@ const FLUTE_TUNES: readonly FluteTune[] = [
     bpm: 72,
     notes: `A4:1 E5:1 A5:2 | G5:1 E5:1 C5:2 | D5:.5 E5:.5 G5:1 A5:2 | C6:2 A5:1 G5:1 |
       E6:2 D6:1 C6:1 | A5:1 G5:1 E5:2 | D5:1 C5:1 A4:2 | A4:4`,
+  },
+  {
+    id: 'cedar-wind',
+    title: 'Cedar Wind',
+    bpm: 58,
+    notes: `C5:4 D5:2 E5:2 | G5:4 r:2 | E5:2 D5:2 C5:4 | A4:6 r:2 | C5:2 E5:2 G5:2 A5:2 | G5:4 E5:4 | D5:2 C5:2 A4:8`,
+  },
+  {
+    id: 'night-fire',
+    title: 'Night Fire',
+    bpm: 54,
+    notes: `A4:4 C5:2 D5:2 | E5:6 r:2 | D5:2 C5:2 A4:4 | C5:2 D5:2 E5:4 | G5:4 E5:2 D5:2 | C5:2 A4:2 A4:6`,
+  },
+  {
+    id: 'geese-overhead',
+    title: 'Geese Overhead',
+    bpm: 68,
+    notes: `E5:1 G5:1 A5:2 G5:1 E5:1 D5:2 | C5:1 D5:1 E5:2 G5:2 r:2 | A5:1 C6:1 D6:2 C6:1 A5:1 G5:2 | E5:2 D5:2 C5:4 | A4:8`,
+  },
+  {
+    id: 'thunder-drum',
+    title: 'Thunder Drum',
+    bpm: 80,
+    notes: `A4:.5 A4:.5 C5:1 E5:.5 E5:.5 G5:1 | A5:1 G5:1 E5:2 | D5:.5 E5:.5 G5:.5 E5:.5 D5:1 C5:1 | A4:4 |
+      C5:.5 D5:.5 E5:.5 G5:.5 A5:.5 G5:.5 E5:1 | D5:.5 C5:.5 D5:.5 E5:.5 C5:2 | A4:.5 C5:.5 D5:.5 E5:.5 G5:1 E5:1 | A4:4`,
   },
 ];
 
