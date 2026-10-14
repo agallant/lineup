@@ -210,6 +210,8 @@ Items for features still to come are added here as they ship, under the mileston
       and the tolerance right for a beginner, or too strict or too loose?
 - [ ] Does the **tone sound in your octave** (voice range in Options)? Is "Hear it again" enough, and does
       the app stop listening while the tone plays (it should not pass a note from its own speaker)?
+- [ ] **Bassline > Beginner**: the asked bass note is played two octaves up so an iPad speaker can play it
+      (the screen shows the real note). Does it hear your open E, A, D, G and move on?
 - [ ] Try it in **Windline** with your instrument: does it ask the notes in the instrument's own key?
 
 ### Guitar (Strumline)

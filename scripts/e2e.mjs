@@ -1298,6 +1298,33 @@ const scenarios = {
       check(passed >= 1, `step: results count the passed notes (${await text(page, 'r-passed')})`);
       check(Number(await text(page, 'r-skipped')) >= 1, 'step: skipped notes are counted');
     });
+    // Bassline: the same, with notes the fake singer cannot play (all skipped)
+    await session(fixtures.sung, async (page) => {
+      await page.goto(URL_BASE + '#/bass');
+      await page.waitForSelector('[data-id=song]');
+      await page.selectOption('[data-id=song]', 'bass-ex-open-strings');
+      await page.check('[data-id=opt-step]');
+      await page.click('[data-id=mic-start]');
+      await page.waitForFunction(
+        () => document.querySelector('[data-id=mic-start]')?.textContent === 'Mic on',
+        null,
+        { timeout: 15000 },
+      );
+      await page.click('[data-id=play]');
+      await page.waitForSelector('[data-id=prompt]:visible', { timeout: 15000 });
+      check(/Play E1 and hold it/.test(await text(page, 'prompt')), 'step: bass asks for E1 first');
+      for (let i = 0; i < 40; i++) {
+        if (await page.isVisible('[data-id=r-passed]')) break;
+        if (await page.isVisible('[data-id=skip]')) await page.click('[data-id=skip]');
+        await page.waitForTimeout(150);
+      }
+      await page.waitForSelector('[data-id=r-passed]', { timeout: 20000 });
+      check(
+        (await text(page, 'r-passed')).endsWith('of 8') ||
+          (await text(page, 'r-passed')).includes(' of '),
+        `step: bass results (${await text(page, 'r-passed')})`,
+      );
+    });
   },
 
   async guitar() {
