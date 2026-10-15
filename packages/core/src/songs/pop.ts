@@ -44,7 +44,7 @@ export function popPattern(beatsPerBar: number, steps: number, bpm: number): str
   return busy ? 'D . D U' : 'D . D .';
 }
 
-/** The identifier of a song in the library. */
+/** The identifier of a song in the library: its artist and title, shortened with a hash when long. */
 export function popId(song: Pick<PopSong, 'title' | 'artist'>): string {
   const slug = (s: string) =>
     s
@@ -52,7 +52,12 @@ export function popId(song: Pick<PopSong, 'title' | 'artist'>): string {
       .replace(/&/g, ' and ')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
-  return `pop-${slug(song.artist.replace(/^the /i, ''))}-${slug(song.title)}`.slice(0, 80);
+  const full = `pop-${slug(song.artist.replace(/^the /i, ''))}-${slug(song.title)}`;
+  if (full.length <= 72) return full;
+  // two long titles by one artist must not shorten to the same id
+  let h = 5381;
+  for (const ch of full) h = ((h * 33) ^ ch.charCodeAt(0)) >>> 0;
+  return `${full.slice(0, 64).replace(/-$/, '')}-${h.toString(36).slice(0, 6)}`;
 }
 
 /** The strum chart of a song: its chords, strummed in a pattern to suit its meter and tempo. */
@@ -97,7 +102,13 @@ export function popChart(song: PopSong): Chart {
 
 /** Every song in the table as a chart, by identifier. */
 export const POP_SONGS: Readonly<Record<string, Chart>> = Object.fromEntries(
-  POP_DATA.map((s) => [popId(s), popChart(s)]),
+  POP_DATA.map((s, i) => {
+    const id = popId(s);
+    // a clash would silently replace one song with another
+    if (POP_DATA.findIndex((o) => popId(o) === id) !== i)
+      throw new Error(`two songs share the id ${id}`);
+    return [id, popChart(s)];
+  }),
 );
 
 /** The songs that reached the top three, for a pack of the best known. */

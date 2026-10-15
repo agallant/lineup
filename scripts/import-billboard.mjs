@@ -2,20 +2,28 @@
 // into a compact table of chord progressions for Strumline: title, artist, meter, tempo and the chords of the
 // verses and choruses, one chord (or two) per bar. Only facts about each song are kept: no melody and no lyrics.
 //
-//   node scripts/import-billboard.mjs <path to the dataset checkout> [--out <file.json>]
+//   node scripts/import-billboard.mjs <path to the dataset checkout> [--out <file.json>] [--ts <file.ts>]
 //
 // Prints a summary; with --out it also writes every convertible song as JSON. With --ts <file> it writes the
 // curated set (the top ten hits and everything by the Beatles) as the TypeScript data module the app uses.
 import { readFileSync, readdirSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const dir = process.argv[2];
-const outIdx = process.argv.indexOf('--out');
-const outFile = outIdx > 0 ? process.argv[outIdx + 1] : null;
-const tsIdx = process.argv.indexOf('--ts');
-const tsFile = tsIdx > 0 ? process.argv[tsIdx + 1] : null;
+const dir = process.argv[2]?.startsWith('--') ? undefined : process.argv[2];
+/** The value after a flag, which must be there and must not itself be a flag. */
+function flagValue(name) {
+  const i = process.argv.indexOf(name);
+  if (i < 0) return null;
+  const v = process.argv[i + 1];
+  if (v === undefined || v.startsWith('--')) throw new Error(`${name} needs a file name`);
+  return v;
+}
+const outFile = flagValue('--out');
+const tsFile = flagValue('--ts');
 if (!dir)
-  throw new Error('usage: node scripts/import-billboard.mjs <dataset dir> [--out file.json]');
+  throw new Error(
+    'usage: node scripts/import-billboard.mjs <dataset dir> [--out file.json] [--ts file.ts]',
+  );
 
 const NOTE = {
   C: 0,
@@ -129,7 +137,8 @@ const index = new Map();
 for (const row of readFileSync(join(dir, 'billboard-2.0-index.csv'), 'utf8').split('\n').slice(1)) {
   const m = /^(\d+),(\d{4})-[^,]*,[^,]*,[^,]*,("[^"]*"|[^,]*),("[^"]*"|[^,]*),(\d*),/.exec(row);
   if (!m) continue;
-  const clean = (x) => x.replace(/^"|"$/g, '').trim();
+  // a quoted CSV field writes a quote inside it twice
+  const clean = (x) => x.replace(/^"|"$/g, '').replaceAll('""', '"').trim();
   index.set(String(m[1]).padStart(4, '0'), {
     year: Number(m[2]),
     title: clean(m[3]),
@@ -138,11 +147,20 @@ for (const row of readFileSync(join(dir, 'billboard-2.0-index.csv'), 'utf8').spl
   });
 }
 
+/**
+ * The index lost the apostrophes of some titles (it has "Somebody s Watching Me" and "I m Goin  Down"):
+ * a one-letter or short contraction ending after a space gets its apostrophe back, and a dropped one
+ * after "in" (Goin Down) too.
+ */
+function fixTitle(title) {
+  return title.replace(/(\w) (s|m|t|re|ve|ll|d)(?= |$)/g, "$1'$2").replace(/(\w)in {2}/g, "$1in' ");
+}
+
 const SKIP_SECTIONS =
   /^(intro|outro|coda|fade|ending|tag|spoken|talking|applause|silence|end|interlude|instrumental)/;
 
 const out = [];
-const stats = { files: 0, noMeter: 0, unparsed: 0, unplayable: 0, short: 0, ok: 0 };
+const stats = { files: 0, noIndex: 0, noMeter: 0, unparsed: 0, unplayable: 0, short: 0, ok: 0 };
 for (const id of readdirSync(join(dir, 'billboard-2.0-salami_chords'))) {
   const path = join(dir, 'billboard-2.0-salami_chords', id, 'salami_chords.txt');
   if (!existsSync(path)) continue;
@@ -248,11 +266,16 @@ for (const id of readdirSync(join(dir, 'billboard-2.0-salami_chords'))) {
     continue;
   }
   stats.ok++;
-  const info = index.get(id) ?? { year: 0, peak: 99, title: '', artist: '' };
+  const info = index.get(id);
+  // without the chart index there is no year, position, title or artist to trust
+  if (!info || !info.title || !info.artist) {
+    stats.noIndex++;
+    continue;
+  }
   out.push({
     id,
-    title: info.title || head.title,
-    artist: info.artist || head.artist,
+    title: fixTitle(info.title),
+    artist: info.artist,
     year: info.year,
     peak: info.peak,
     beatsPerBar,

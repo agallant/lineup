@@ -12,6 +12,21 @@ describe('pop songs', () => {
     for (const id of ids) expect(getSong(id).meta.instruments).toEqual(['ukulele-strum']);
   });
 
+  it('shortens a long id with a hash, so long titles by one artist stay apart', () => {
+    const a = popId({ artist: 'Some Band', title: 'A very long song title '.repeat(6) + 'one' });
+    const b = popId({ artist: 'Some Band', title: 'A very long song title '.repeat(6) + 'two' });
+    expect(a.length).toBeLessThanOrEqual(72);
+    expect(a).not.toBe(b);
+    expect(popId({ artist: 'The Beatles', title: 'Help!' })).toBe('pop-beatles-help');
+  });
+
+  it('has no doubled quotes in a title, and no lost apostrophes', () => {
+    for (const s of POP_DATA) expect(s.title, s.title).not.toContain('""');
+    const titles = POP_DATA.map((s) => s.title);
+    expect(titles).toContain("Somebody's Watching Me");
+    expect(titles.some((t) => /Kokomo \(From The "Cocktail" Soundtrack\)/.test(t))).toBe(true);
+  });
+
   it('uses only chords the ukulele and the guitar have fingerings for', () => {
     for (const s of POP_DATA) {
       for (const chord of s.bars.split(/[|\s]+/).filter(Boolean)) {
