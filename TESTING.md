@@ -266,6 +266,16 @@ Items for features still to come are added here as they ship, under the mileston
       meters (7, 9, 10, 11, 12 counts) are counted one count per beat, so set the tempo to taste. Which are wrong?
 - [ ] **Kaeru no uta** (the Japanese frog song) was written from memory: right tune?
 
+### Pentatonic flutes and the staff view
+
+- [ ] **Windline > pick a pentatonic flute** (a shakuhachi, a Native American flute): the song list should show
+      the flute songs and only other songs that use the flute's five notes, with **Random flute song** as the
+      generator. Is that a good place to start? Does **Show every song** (advanced) bring back the rest?
+- [ ] **View > Staff**: the treble clef is now a drawn clef, not a letter G. Does it look right on the iPad?
+- [ ] On a shakuhachi, notes are named **Ro Tsu Re Chi Ri** first, with the Western name after it in brackets
+      ("Ro (D4)"), on the staff, the bars view and the fingering chart alike. Is it clear, and does anything
+      overlap on the iPad (the staff puts the bracketed name on a second line)?
+
 ### Backing music and drums
 
 - [ ] **Listen to the feels** (headphones; set Play-along music and Drums on a game's set-up page): do
