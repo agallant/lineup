@@ -19,6 +19,7 @@ import {
   instrumentRoot,
   isFluteScale,
   isPentatonicFamily,
+  midiLabel,
   isPentatonicSong,
   fingeringFor,
   parseFluteId,
@@ -669,13 +670,19 @@ export const createPitchScreen =
     const instrumentNames = (): { noteName?: (midi: number) => string | null } => {
       const inst = c.instruments ? instrument() : null;
       if (!inst || inst.family !== 'shakuhachi') return {};
-      return { noteName: (midi) => fingeringFor(inst, midi)?.name ?? null };
+      // the traditional name first, the Western one after it: "Ro (D4)"
+      return {
+        noteName: (midi) => {
+          const name = fingeringFor(inst, midi)?.name;
+          return name ? `${name} (${midiLabel(midi)})` : null;
+        },
+      };
     };
     /** The bars view, with the instrument's own note names where it has them. */
     const barsRenderer = (): Renderer => {
       const names = instrumentNames();
       return names.noteName
-        ? new PitchHighwayRenderer({ ...names, gutter: 46 })
+        ? new PitchHighwayRenderer({ ...names, gutter: 96 })
         : createRenderer(profile.renderer);
     };
 

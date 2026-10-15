@@ -204,13 +204,21 @@ export class StaffRenderer implements Renderer {
         g.fillText(sign, x0 - head - 2, y);
       }
       if (names) {
-        const label = this.options.noteName?.(n.pitch) ?? spelled.replace(/\d/, '');
+        const full = this.options.noteName?.(n.pitch) ?? spelled.replace(/\d/, '');
+        // "Ro (D4)": the instrument's name on one line and the Western name small beneath it
+        const split = full.indexOf(' (');
+        const label = split < 0 ? full : full.slice(0, split);
+        const sub = split < 0 ? '' : full.slice(split + 1);
         // a long name (Tsu, Chi) is left off when the note before it has not left room for it
-        const width = label.length * gap * 0.62 + 4;
+        const width = Math.max(label.length, sub.length) * gap * 0.62 + 4;
         if (x0 - lastLabelX >= width) {
           g.textAlign = 'center';
           g.fillStyle = COLORS.muted;
           g.fillText(label, x0, y + head + gap * 0.9);
+          if (sub) {
+            g.font = `500 ${Math.max(9, Math.round(gap * 0.75))}px system-ui, sans-serif`;
+            g.fillText(sub, x0, y + head + gap * 1.9);
+          }
           lastLabelX = x0;
         }
       }

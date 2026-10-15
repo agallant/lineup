@@ -157,6 +157,18 @@ describe('StaffRenderer', () => {
     expect(g.texts()).not.toContain('F♯'); // the name replaces the letter, the sign stays
   });
 
+  it('writes an instrument name with the Western name in brackets small beneath it', () => {
+    const g = new Recorder();
+    const names: Record<number, string> = { 60: 'Ro (C4)', 66: 'Tsu (F♯4)', 72: 'Re (C5)' };
+    new StaffRenderer({ noteName: (m) => names[m] ?? null }).draw(
+      g as unknown as Canvas2D,
+      size,
+      view(),
+    );
+    expect(g.texts()).toEqual(expect.arrayContaining(['Ro', '(C4)', 'Tsu', '(F♯4)', 'Re', '(C5)']));
+    expect(g.texts()).not.toContain('Ro (C4)');
+  });
+
   it('shows note names unless asked to hide them, and always marks a sharp', () => {
     const shown = new Recorder();
     new StaffRenderer({ names: true }).draw(shown as unknown as Canvas2D, size, view());
