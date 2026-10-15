@@ -84,11 +84,21 @@ const DEFS: readonly PackDef[] = [
     blurb:
       'Tunes and strum rhythms from Mexico, Japan, Germany, Brazil, Spain, Jamaica and beyond.',
     test: (c) =>
-      /^(sing|wind|keys)-(la-cucaracha|sakura|twinkle|canon-theme|deck-the-halls|frere-jacques|au-clair|alle-meine-entchen|haenschen-klein)$/.test(
+      /^(sing|wind|keys)-(la-cucaracha|sakura|twinkle|canon-theme|deck-the-halls|frere-jacques|au-clair|alle-meine-entchen|haenschen-klein|kaeru-no-uta)$/.test(
         c.id,
       ) ||
       /^strum-(reggae|bossa|flamenco|tango|polka|ranchera)$/.test(c.id) ||
       /^bass-latin-/.test(c.id),
+  },
+  {
+    id: 'world-rhythms',
+    title: 'Rhythms of the world',
+    blurb:
+      'Clave, tresillo, tala claps, Arabic and Balkan meters: clap the patterns behind the music.',
+    test: (c) =>
+      /^(clap|hand)-(son-clave|rumba-clave|bossa-clave|tresillo|habanera|cinquillo|bembe-bell|flamenco-solea|teental|jhaptal|rupak|rachenitsa|aksak|kopanitsa|maqsum|baladi|saidi)$/.test(
+        c.id,
+      ),
   },
   {
     id: 'christmas',

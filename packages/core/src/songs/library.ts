@@ -354,6 +354,15 @@ const TUNES: readonly Tune[] = [
       G4 E4 E4:2 | F4 D4 D4:2 | C4 E4 G4 G4 | C4:4`,
   },
   {
+    id: 'kaeru-no-uta',
+    title: 'Kaeru no uta (The Frog Song)',
+    artist: 'Traditional (Japan)',
+    bpm: 112,
+    tonic: 60,
+    notes: `C4 D4 E4 F4 | E4 D4 C4:2 | E4 F4 G4 A4 | G4 F4 E4:2 |
+      C4 C4 C4 C4 | C4:.5 C4:.5 D4:.5 D4:.5 E4:.5 E4:.5 F4:.5 F4:.5 | E4 D4 C4:2`,
+  },
+  {
     id: 'fur-elise',
     title: 'Für Elise (opening, chromatic)',
     artist: 'Beethoven',
@@ -664,6 +673,151 @@ export const CLAP_SONGS: Readonly<Record<string, Chart>> = {
     { hit: 'x..x.xx..x.x | x..x.xx..x.x | x..x.xx..x.x | x.xx.xx.....' },
     3,
   ),
+  // Rhythms of the world: bell and clave patterns, tala claps and odd meters. A clap is a hit.
+  'clap-son-clave': grooveChart(
+    {
+      title: 'World rhythm: son clave 3-2 (Cuba)',
+      artist: 'Traditional',
+      bpm: 92,
+      instruments: ['clap'],
+    },
+    { hit: 'x..x..x...x.x... | x..x..x...x.x... | x..x..x...x.x... | x..x..x...x.x...' },
+    4,
+  ),
+  'clap-rumba-clave': grooveChart(
+    {
+      title: 'World rhythm: rumba clave (Cuba)',
+      artist: 'Traditional',
+      bpm: 88,
+      instruments: ['clap'],
+    },
+    { hit: 'x..x...x..x.x... | x..x...x..x.x... | x..x...x..x.x... | x..x...x..x.x...' },
+    4,
+  ),
+  'clap-bossa-clave': grooveChart(
+    {
+      title: 'World rhythm: bossa nova clave (Brazil)',
+      artist: 'Traditional',
+      bpm: 90,
+      instruments: ['clap'],
+    },
+    { hit: 'x..x..x...x..x.. | x..x..x...x..x.. | x..x..x...x..x.. | x..x..x...x..x..' },
+    4,
+  ),
+  'clap-tresillo': grooveChart(
+    {
+      title: 'World rhythm: tresillo, 3+3+2 (Cuba and beyond)',
+      artist: 'Traditional',
+      bpm: 100,
+      instruments: ['clap'],
+    },
+    { hit: 'x..x..x. | x..x..x. | x..x..x. | x..x..x.' },
+  ),
+  'clap-habanera': grooveChart(
+    {
+      title: 'World rhythm: habanera (Cuba, Spain, Argentina)',
+      artist: 'Traditional',
+      bpm: 84,
+      instruments: ['clap'],
+    },
+    { hit: 'x..xx.x.x..xx.x. | x..xx.x.x..xx.x. | x..xx.x.x..xx.x. | x..xx.x.x..xx.x.' },
+    4,
+  ),
+  'clap-cinquillo': grooveChart(
+    {
+      title: 'World rhythm: cinquillo (Cuba, Haiti)',
+      artist: 'Traditional',
+      bpm: 96,
+      instruments: ['clap'],
+    },
+    { hit: 'x.xx.xx. | x.xx.xx. | x.xx.xx. | x.xx.xx.' },
+  ),
+  'clap-bembe-bell': grooveChart(
+    {
+      title: 'World rhythm: bembé bell in 12/8 (West Africa, Cuba)',
+      artist: 'Traditional',
+      bpm: 72,
+      instruments: ['clap'],
+    },
+    { hit: 'x.x.xx.x.x.x | x.x.xx.x.x.x | x.x.xx.x.x.x | x.x.xx.x.x.x' },
+    3,
+  ),
+  'clap-flamenco-solea': grooveChart(
+    {
+      title: 'World rhythm: soleá compás, twelve counts (Spain)',
+      artist: 'Traditional',
+      bpm: 132,
+      instruments: ['clap'],
+      beatsPerBar: 12,
+    },
+    { hit: '..x..x.x.x.x | ..x..x.x.x.x | ..x..x.x.x.x | ..x..x.x.x.x' },
+    1,
+  ),
+  'clap-teental': grooveChart(
+    {
+      title: 'World rhythm: teental, 16 beats in four groups (India)',
+      artist: 'Traditional',
+      bpm: 100,
+      instruments: ['clap'],
+    },
+    { hit: 'x...x.......x... | x...x.......x... | x...x.......x...' },
+    1,
+  ),
+  'clap-jhaptal': grooveChart(
+    {
+      title: 'World rhythm: jhaptal, 2+3+2+3 (India)',
+      artist: 'Traditional',
+      bpm: 120,
+      instruments: ['clap'],
+      beatsPerBar: 10,
+    },
+    { hit: 'x.x....x.. | x.x....x.. | x.x....x.. | x.x....x..' },
+    1,
+  ),
+  'clap-rupak': grooveChart(
+    {
+      title: 'World rhythm: rupak, 3+2+2 (India)',
+      artist: 'Traditional',
+      bpm: 120,
+      instruments: ['clap'],
+      beatsPerBar: 7,
+    },
+    { hit: '...x.x. | ...x.x. | ...x.x. | ...x.x. | ...x.x. | ...x.x.' },
+    1,
+  ),
+  'clap-rachenitsa': grooveChart(
+    {
+      title: 'World rhythm: rachenitsa, 7/8 as 2+2+3 (Bulgaria)',
+      artist: 'Traditional',
+      bpm: 180,
+      instruments: ['clap'],
+      beatsPerBar: 7,
+    },
+    { hit: 'x.x.x.. | x.x.x.. | x.x.x.. | x.x.x.. | x.x.x.. | x.x.x..' },
+    1,
+  ),
+  'clap-aksak': grooveChart(
+    {
+      title: 'World rhythm: aksak, 9/8 as 2+2+2+3 (Turkey, Balkans)',
+      artist: 'Traditional',
+      bpm: 200,
+      instruments: ['clap'],
+      beatsPerBar: 9,
+    },
+    { hit: 'x.x.x.x.. | x.x.x.x.. | x.x.x.x.. | x.x.x.x.. | x.x.x.x..' },
+    1,
+  ),
+  'clap-kopanitsa': grooveChart(
+    {
+      title: 'World rhythm: kopanitsa, 11/8 as 2+2+3+2+2 (Bulgaria)',
+      artist: 'Traditional',
+      bpm: 190,
+      instruments: ['clap'],
+      beatsPerBar: 11,
+    },
+    { hit: 'x.x.x..x.x. | x.x.x..x.x. | x.x.x..x.x. | x.x.x..x.x.' },
+    1,
+  ),
   'clap-sixteenths': grooveChart(
     { title: 'Clap: running sixteenths', artist: 'Lineup', bpm: 76, instruments: ['clap'] },
     { hit: 'xxxxx.x. | x.xxxxxx | xxxxx.x. | x.x.x.x.' },
@@ -682,6 +836,43 @@ export const HAND_SONGS: Readonly<Record<string, Chart>> = {
     {
       clap: 'x.x.x... | ........ | x.x.x... | ........',
       tap: '........ | x.x.x... | ........ | x.xxx.x.',
+    },
+  ),
+  // Arabic rhythms: the clap is the deep dum, the tap the lighter tek
+  'hand-maqsum': grooveChart(
+    {
+      title: 'World rhythm: maqsum (Arabic)',
+      artist: 'Traditional',
+      bpm: 90,
+      instruments: ['hand-percussion'],
+    },
+    {
+      clap: 'x...x... | x...x... | x...x... | x...x...',
+      tap: '.x.x..x. | .x.x..x. | .x.x..x. | .x.x..x.',
+    },
+  ),
+  'hand-baladi': grooveChart(
+    {
+      title: 'World rhythm: baladi (Egypt)',
+      artist: 'Traditional',
+      bpm: 90,
+      instruments: ['hand-percussion'],
+    },
+    {
+      clap: 'xx..x... | xx..x... | xx..x... | xx..x...',
+      tap: '...x..x. | ...x..x. | ...x..x. | ...x..x.',
+    },
+  ),
+  'hand-saidi': grooveChart(
+    {
+      title: 'World rhythm: saidi (Egypt)',
+      artist: 'Traditional',
+      bpm: 90,
+      instruments: ['hand-percussion'],
+    },
+    {
+      clap: 'x..xx... | x..xx... | x..xx... | x..xx...',
+      tap: '.x....x. | .x....x. | .x....x. | .x....x.',
     },
   ),
   'hand-heartbeat': grooveChart(

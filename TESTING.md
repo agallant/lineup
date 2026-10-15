@@ -260,13 +260,18 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] **Do the new tunes sound right?** Twinkle, La Cucaracha, Sakura (opening), Canon (theme), Deck the Halls,
       We Wish You a Merry Christmas. Please say which, if any, have a wrong note or rhythm; they were written
       from memory and are marked "opening" or "theme" where they stop early.
+- [ ] **World rhythms** (Beatline, Clap, and Clap & tap): son clave, rumba clave, bossa nova clave, tresillo,
+      habanera, cinquillo, the bembé bell, soleá, teental, jhaptal, rupak, rachenitsa, aksak, kopanitsa, maqsum,
+      baladi and saidi are in the "Rhythms of the world" pack. Do they feel like the real rhythms? The odd
+      meters (7, 9, 10, 11, 12 counts) are counted one count per beat, so set the tempo to taste. Which are wrong?
+- [ ] **Kaeru no uta** (the Japanese frog song) was written from memory: right tune?
 
 ### Backing music and drums
 
 - [ ] **Listen to the feels** (headphones; set Play-along music and Drums on a game's set-up page): do
       _Match the song_, the waltz, boom-chick, walking bass, bossa and reggae sound musical and in time? Any
-- [ ] **Drum sounds** are now synthesized (a kick that thumps down in pitch, a noisy snare, hi-hats, a rim click, toms) instead of beeps. Do they sound like a drum kit on your iPad speakers and on headphones? Too boomy, too hissy, too quiet or loud against the music? Say which drum and I will adjust it.
       that jar, or are too loud, too thin or too busy? Is the **fill** at the end of a phrase welcome?
+- [ ] **Drum sounds** are now synthesized (a kick that thumps down in pitch, a noisy snare, hi-hats, a rim click, toms) instead of beeps. Do they sound like a drum kit on your iPad speakers and on headphones? Too boomy, too hissy, too quiet or loud against the music? Say which drum and I will adjust it.
 - [ ] Does **Match the song** pick sensibly for a slow ballad, a march, a waltz? Does the change of feel every
       eight bars sound deliberate?
 - [ ] The **tanpura** drone under a Singline or Windline song: pleasant, and the right pitch for the key?

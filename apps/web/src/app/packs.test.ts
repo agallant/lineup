@@ -9,6 +9,7 @@ describe('song packs', () => {
     expect(packs.map((p) => p.id)).toEqual([
       'campfire',
       'world',
+      'world-rhythms',
       'christmas',
       'lullabies',
       'waltz',
