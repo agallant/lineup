@@ -78,6 +78,15 @@ built so a finding changes a number or a table, not a design.
 - Whistles, recorders, flutes, ukuleles, hand drums and the iPad microphone have only been tried as
   synthetic sounds, so thresholds (clarity, level, timing windows) are educated defaults.
 
+## Sound quality
+
+Instrument sounds are synthesized per instrument (`apps/web/src/app/game/voices.ts`); the piano is a
+recorded CC0 upright (VSCO 2 Community Edition) once it has loaded, with the synthesized piano as the
+fallback. Still synthesized, for want of a verified licence: guitar, ukulele and bass (VSCO has none;
+the CC0 Meadowlark library is electronic one-shots; Tone.js sets are CC-BY with unverified Freesound
+parts). Candidates to check when time allows: a CC0 guitar/bass multisample whose licence can be read
+at the source, an organ and a flute from VSCO 2 CE (CC0), and a marimba for the jingles.
+
 ## How each milestone ships
 
 One pull request per milestone, reviewed by CodeRabbit and merged only on a real approval with CI
