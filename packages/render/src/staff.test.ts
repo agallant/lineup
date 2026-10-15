@@ -169,6 +169,36 @@ describe('StaffRenderer', () => {
     expect(g.texts()).not.toContain('Ro (C4)');
   });
 
+  it('leaves a name off when the one before it, being wider, has not left room', () => {
+    // a wide name then a narrow one 45 px later: the narrow name alone would fit, but its left edge
+    // lands inside the right edge of the wide one
+    const close = chartFromBeats({ title: 'T', bpm: 60 }, [
+      { beat: 1, beats: 0.3, pitch: 60 },
+      { beat: 1.42, beats: 0.3, pitch: 62 },
+    ]);
+    const names: Record<number, string> = { 60: 'Tsu', 62: 'Ri' };
+    const g = new Recorder();
+    new StaffRenderer({ noteName: (m) => names[m] ?? null }).draw(
+      g as unknown as Canvas2D,
+      size,
+      view({ notes: close.notes, statuses: close.notes.map(() => 'pending' as const) }),
+    );
+    expect(g.texts()).toContain('Tsu');
+    expect(g.texts()).not.toContain('Ri');
+    // far enough apart, both are written
+    const apart = chartFromBeats({ title: 'T', bpm: 60 }, [
+      { beat: 1, beats: 0.3, pitch: 60 },
+      { beat: 2.5, beats: 0.3, pitch: 62 },
+    ]);
+    const h = new Recorder();
+    new StaffRenderer({ noteName: (m) => names[m] ?? null }).draw(
+      h as unknown as Canvas2D,
+      size,
+      view({ notes: apart.notes, statuses: apart.notes.map(() => 'pending' as const) }),
+    );
+    expect(h.texts()).toEqual(expect.arrayContaining(['Tsu', 'Ri']));
+  });
+
   it('shows note names unless asked to hide them, and always marks a sharp', () => {
     const shown = new Recorder();
     new StaffRenderer({ names: true }).draw(shown as unknown as Canvas2D, size, view());

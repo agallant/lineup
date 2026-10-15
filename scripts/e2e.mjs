@@ -492,6 +492,24 @@ const scenarios = {
       check(before !== after, `New song picks another seed (${before} -> ${after})`);
       check(/Random flute song/.test(await text(page, 'song-info')), 'the song info names it');
 
+      // today's challenge is a random melody in any scale: opened on a flute it still gets its menu entry
+      await page.goto(URL_BASE + '#/wind');
+      await page.selectOption('[data-id=instrument]', 'naf-a');
+      await page.uncheck('[data-id=opt-all-songs]');
+      await page.goto(URL_BASE + '#/wind?daily=1');
+      await page.reload();
+      check(
+        (await page.inputValue('[data-id=song]')) === 'random-melody',
+        `the daily challenge opens on a flute with its random melody (${await page.inputValue('[data-id=song]')})`,
+      );
+      await page.goto(URL_BASE + '#/wind');
+      await page.evaluate(() => {
+        const s = JSON.parse(localStorage.getItem('lineup.settings.v1') || '{}');
+        s.songs = { ...(s.songs || {}), 'wind-all-songs': 'off' };
+        localStorage.setItem('lineup.settings.v1', JSON.stringify(s));
+      });
+      await page.reload();
+
       // a link to a flute song chooses a flute to play it on
       await page.goto(URL_BASE + '#/wind');
       await page.selectOption('[data-id=instrument]', 'whistle-d');

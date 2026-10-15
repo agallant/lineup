@@ -418,6 +418,11 @@ export const createPitchScreen =
         });
       }
     }
+    // today's challenge is a random melody in any scale, so a flute offers every song for it
+    if (allSongsBox && wantsDaily(location.hash) && !allSongsBox.checked) {
+      allSongsBox.checked = true;
+      settings.update({ songs: { ...settings.get().songs, [ALL_SONGS_KEY]: 'on' } });
+    }
     buildSongMenu(settings.get().songs[c.profileId] ?? undefined);
     allSongsBox?.addEventListener('change', () => {
       settings.update({

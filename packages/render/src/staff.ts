@@ -145,7 +145,8 @@ export class StaffRenderer implements Renderer {
     g.clip();
 
     const head = gap * 0.62;
-    let lastLabelX = -Infinity;
+    // where the last name written ends, so the next one starts clear of it
+    let lastLabelRight = -Infinity;
     view.notes.forEach((n, i) => {
       if (n.pitch === undefined) return;
       const d = Math.max(n.duration, 0.2);
@@ -209,9 +210,9 @@ export class StaffRenderer implements Renderer {
         const split = full.indexOf(' (');
         const label = split < 0 ? full : full.slice(0, split);
         const sub = split < 0 ? '' : full.slice(split + 1);
-        // a long name (Tsu, Chi) is left off when the note before it has not left room for it
-        const width = Math.max(label.length, sub.length) * gap * 0.62 + 4;
-        if (x0 - lastLabelX >= width) {
+        // a long name (Tsu, Chi) is left off when the name before it has not left room for it
+        const half = (Math.max(label.length, sub.length) * gap * 0.62) / 2 + 2;
+        if (x0 - half >= lastLabelRight) {
           g.textAlign = 'center';
           g.fillStyle = COLORS.muted;
           g.fillText(label, x0, y + head + gap * 0.9);
@@ -219,7 +220,7 @@ export class StaffRenderer implements Renderer {
             g.font = `500 ${Math.max(9, Math.round(gap * 0.75))}px system-ui, sans-serif`;
             g.fillText(sub, x0, y + head + gap * 1.9);
           }
-          lastLabelX = x0;
+          lastLabelRight = x0 + half;
         }
       }
       g.globalAlpha = 1;
