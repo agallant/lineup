@@ -47,7 +47,7 @@ npm test           # Vitest, all packages
 npm run format     # Prettier
 npm run e2e        # real-browser checks in headless Chromium (needs Playwright; CI runs it as its own job),
                    # including an axe-core accessibility audit of every screen in three colour schemes
-node scripts/check-dist.mjs   # after a build: relative paths, and a size budget (180 KB gzipped)
+node scripts/check-dist.mjs   # after a build: relative paths, and a size budget (200 KB gzipped)
 ```
 
 Mic access needs a secure context (HTTPS or `localhost`).
@@ -297,13 +297,16 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    **🎲 Random waltz (3/4)** (the same in three beats to the bar, counted in with three clicks) and **🎲 Random melody (picked)**. Pick a
    level (and optionally **Aim for** a difficulty from 1 to 10), press _New song_ or type a seed to replay one; the seed is shown in the song info.
    **Hits to strum** (packs **The Beatles** and **Number-one hits to strum**, and in the song list as
-   `Artist · capo N`): the chords of about 240 well-known songs from 1958 to 1991, such as _Help!_, _Come
+   `Artist · capo N`): the chords of about 410 well-known songs from 1958 to 1991 (everything that reached the top forty, and all
+   the Beatles), such as _Help!_, _Come
    Together_ and _Eight Days a Week_. They come from the McGill Billboard chord annotations (CC0), read by
    `scripts/import-billboard.mjs` into `packages/core/src/songs/pop-data.ts`: chord sequences, tempo and
    meter only, with no melody and no lyrics. Chords are simplified (sevenths, suspensions and inversions
    become plain chords, a bar holds at most two) and the verses and choruses are condensed to a playable
    length. Songs are moved to a key whose chords the ukulele and guitar tables have; the artist line says
-   which capo fret restores the recorded key (or that it was moved up).
+   which capo fret restores the recorded key (or that it was moved up). A further 17 newer songs (_Someone
+   Like You_, _Wonderwall_, _Riptide_, _Despacito_ and others) are the progressions people play them with,
+   written by hand in `pop-modern.ts`: check one against the recording before relying on it.
 3. **Also check the chords** (off by default, experimental): the analyzer is told which chords the
    song uses and a strum of a clearly different chord misses ("wrong chord" is counted on the results
    screen). A strum it cannot name still counts for timing. Turn it off if it penalises you unfairly

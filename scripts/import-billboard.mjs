@@ -5,7 +5,7 @@
 //   node scripts/import-billboard.mjs <path to the dataset checkout> [--out <file.json>] [--ts <file.ts>]
 //
 // Prints a summary; with --out it also writes every convertible song as JSON. With --ts <file> it writes the
-// curated set (the top ten hits and everything by the Beatles) as the TypeScript data module the app uses.
+// curated set (everything that reached the top forty, and everything by the Beatles) as the TypeScript data module the app uses.
 import { readFileSync, readdirSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -293,7 +293,10 @@ out.sort((a, b) => a.peak - b.peak || a.title.localeCompare(b.title));
 const unique = [];
 const names = new Set();
 for (const song of out) {
-  const key = `${song.title}|${song.artist}`.toLowerCase().replace(/[^a-z0-9|]/g, '');
+  // "The Righteous Brothers" and "Righteous Brothers" are one act, as the app's song ids see them
+  const key = `${song.title}|${song.artist.replace(/^the\s+/i, '')}`
+    .toLowerCase()
+    .replace(/[^a-z0-9|]/g, '');
   if (names.has(key)) continue;
   names.add(key);
   unique.push(song);
@@ -311,7 +314,7 @@ console.log(
 if (outFile) writeFileSync(outFile, JSON.stringify(out));
 
 if (tsFile) {
-  const chosen = out.filter((s) => s.peak <= 10 || /beatles/i.test(s.artist));
+  const chosen = out.filter((s) => s.peak <= 40 || /beatles/i.test(s.artist));
   const q = (x) => JSON.stringify(x);
   const rows = chosen.map(
     (s) =>

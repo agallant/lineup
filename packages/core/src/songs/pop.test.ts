@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GUITAR_CHORD_FRETS, UKULELE_CHORD_FRETS } from '../chords';
 import { getSong, songsFor } from './index';
 import { POP_DATA } from './pop-data';
+import { POP_MODERN } from './pop-modern';
 import { POP_FAVORITES, POP_SONGS, popChart, popId, popPattern } from './pop';
 
 describe('pop songs', () => {
@@ -79,5 +80,15 @@ describe('pop songs', () => {
     expect(popPattern(4, 2, 70).replace(/ /g, '')).toHaveLength(8);
     expect(popPattern(2, 3, 60).replace(/ /g, '')).toHaveLength(6);
     expect(POP_FAVORITES.size).toBeGreaterThan(40);
+  });
+
+  it('has the modern hand-written songs too, playable and apart from the rest', () => {
+    expect(POP_MODERN.length).toBeGreaterThanOrEqual(15);
+    const ids = [...POP_DATA, ...POP_MODERN].map(popId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const s of POP_MODERN) {
+      expect(getSong(popId(s)).notes.length, s.title).toBeGreaterThan(20);
+      expect(POP_FAVORITES.has(popId(s)), s.title).toBe(false);
+    }
   });
 });
