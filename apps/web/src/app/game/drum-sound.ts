@@ -37,7 +37,10 @@ export function canPlayDrums(ctx: object): ctx is DrumContext {
   return (
     typeof c.createBuffer === 'function' &&
     typeof c.createBufferSource === 'function' &&
-    typeof c.createBiquadFilter === 'function'
+    typeof c.createBiquadFilter === 'function' &&
+    typeof c.sampleRate === 'number' &&
+    Number.isFinite(c.sampleRate) &&
+    c.sampleRate > 0
   );
 }
 
