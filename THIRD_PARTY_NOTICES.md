@@ -111,3 +111,11 @@ The chords of the "hits to strum" songs (`packages/core/src/songs/pop-data.ts`) 
 `scripts/import-billboard.mjs` from the McGill Billboard chord annotations, released under CC0 and
 cited as asked: John Ashley Burgoyne, Jonathan Wild and Ichiro Fujinaga, "An expert ground truth set
 for audio chord recognition and music analysis", ISMIR 2011.
+
+## Piano samples (VSCO 2 Community Edition)
+
+The ten recorded notes in `apps/web/public/samples/piano/` (the sound of the piano in Keyline, ear
+training and the beginner steps) are from the "Upright Nr. 1" piano of VSCO 2 Community Edition,
+Versilian Studios, released under CC0 1.0 (public domain). Credit is not required but is given, as
+the authors ask: https://github.com/sgossner/vsco-2-ce. The recordings were shortened, made mono and
+compressed to MP3; they were not otherwise changed.

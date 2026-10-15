@@ -1,4 +1,5 @@
 import { canPlayDrums, noise, type DrumContext } from './drum-sound';
+import { loadPianoSamples, nearestPianoSample } from './samples';
 
 /**
  * Instrument voices, built from Web Audio nodes so no sample files are needed: a plucked string (steel
@@ -164,7 +165,32 @@ function plucked(ctx: VoiceContext, kind: StringKind, midi: number, at: number, 
   return finish(r);
 }
 
+/** A recorded piano note, stretched to the pitch, once the samples have arrived. */
+function sampledPiano(
+  ctx: VoiceContext,
+  midi: number,
+  at: number,
+  level: number,
+): VoiceNote | null {
+  const s = nearestPianoSample(ctx, midi);
+  if (!s) return null;
+  const r = rig(ctx, at, midi < 60 ? 0.18 : 0.1);
+  const src = ctx.createBufferSource();
+  src.buffer = s.buffer;
+  src.playbackRate.value = 2 ** ((midi - s.midi) / 12);
+  const g = ctx.createGain();
+  // every sample is brought to the loudness of the synthesized piano
+  g.gain.value = (0.19 * level) / s.peak;
+  src.connect(g).connect(r.env);
+  src.start(at);
+  r.sources.push(src);
+  return finish(r);
+}
+
 function piano(ctx: VoiceContext, midi: number, at: number, level: number) {
+  loadPianoSamples(ctx as unknown as BaseAudioContext);
+  const recorded = sampledPiano(ctx, midi, at, level);
+  if (recorded) return recorded;
   const r = rig(ctx, at, midi < 60 ? 0.18 : 0.1);
   const f0 = hz(midi);
   // a bright note sings longer in the low register; the strings stiffen the upper partials sharp

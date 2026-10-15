@@ -298,6 +298,7 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] Do the quiet backing tones still leak into the microphone with headphones **off** (the warning is
       still needed)?
 - [ ] **Instrument sounds** are now synthesized per instrument: plucked ukulele/guitar chords (strummed a hair apart), a piano for the Keyline keys, ear training and step-mode notes, a bass, an organ drone, a flute guide tone, a pad, and a marimba-like celebration jingle. On your iPad, which still sound fake or harsh, too quiet or loud against each other? Is the Keyline piano still instant when you press a key?
+- [ ] The **piano** is now a recording (a real upright, a few notes stretched to the rest) after the first second or so of using Keyline, ear training or step mode; before that it is the synthesized one. Does the real piano sound good on the iPad, and is the switch between the two noticeable? Does it still work with no network once the app has been visited (airplane mode)?
 - [ ] **Install**: from the home page, "install it on this device" shows the right steps for your iPad, and
       adding it to the Home Screen works as described.
 

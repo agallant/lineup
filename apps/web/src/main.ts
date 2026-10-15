@@ -25,6 +25,7 @@ import { packsScreen } from './app/screens/packs';
 import { metronomeScreen } from './app/screens/metronome';
 import { tunerScreen } from './app/screens/tuner';
 import { windScreen } from './app/screens/wind';
+import { pianoSampleUrls } from './app/game/samples';
 
 const app = document.getElementById('app');
 if (!app) throw new Error('#app missing');
@@ -78,6 +79,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
         urls: [
           location.href.split('#')[0],
           new URL(INPUT_WORKLET_URL, location.href).href,
+          ...pianoSampleUrls(),
           ...loaded,
           './manifest.webmanifest',
           './icons/icon-192.png',
