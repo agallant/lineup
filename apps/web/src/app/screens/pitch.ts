@@ -19,6 +19,8 @@ import {
   instrumentRoot,
   isFluteScale,
   isPentatonicFamily,
+  isPentatonicSong,
+  fingeringFor,
   parseFluteId,
   PENTATONIC_GROUP,
   registerShift,
@@ -65,7 +67,9 @@ import {
 } from '@lineup/input';
 import { micSupported, openMic, openSyntheticInput, type MicSession } from '@lineup/input/mic';
 import {
+  PitchHighwayRenderer,
   StaffRenderer,
+  type Renderer,
   createRenderer,
   preferFlats,
   drawMeter,
@@ -117,6 +121,9 @@ import {
 } from '../song-picker';
 import { TourStore, mountTour } from '../tour';
 import type { Screen } from '../router';
+
+/** The setting that lists every song on a pentatonic flute, not only the ones it can play. */
+const ALL_SONGS_KEY = 'wind-all-songs';
 
 /** What differs between the pitch-based games (Singline, Windline); everything else is shared. */
 export interface PitchScreenConfig {
@@ -182,6 +189,7 @@ const setup = (c: PitchScreenConfig) => `
     <h2 class="step">${c.instruments ? 'Instrument, song &amp; key' : 'Song &amp; key'}</h2>
     ${c.instruments ? '<div class="row"><label>Instrument <select data-id="instrument"></select></label></div>' : ''}
     <div data-id="song-filters"></div>
+    ${c.instruments ? '<label class="check" data-id="all-songs-label" hidden><input type="checkbox" data-id="opt-all-songs" /> Show every song, including ones with notes this flute does not have (for advanced players)</label>' : ''}
     <div class="row">
       <label>Song <select data-id="song"></select></label>
       <label>Version <select data-id="variation"></select></label>
@@ -347,13 +355,22 @@ export const createPitchScreen =
     const onFlute = (): boolean =>
       c.instruments === true && isPentatonicFamily(instrument().family);
     const picker = loadPicker(safeLocalStorage());
+    /** A pentatonic flute lists the songs it can play whole; this lets an advanced player see the rest too. */
+    const allSongsBox = c.instruments ? S<HTMLInputElement>('opt-all-songs') : null;
+    const showEverySong = (): boolean => allSongsBox?.checked === true;
+    if (allSongsBox) allSongsBox.checked = settings.get().songs[ALL_SONGS_KEY] === 'on';
     /** Fills the song menu for the instrument now chosen, keeping `keep` selected when it is still there. */
     const buildSongMenu = (keep?: string) => {
       const previous = keep ?? songSel.value;
-      songs = allSongs.filter((s) => s.category !== 'flute' || onFlute());
+      const narrow = onFlute() && !showEverySong();
+      if (allSongsBox) S('all-songs-label').hidden = !onFlute();
+      // a pentatonic flute offers what it can play: its own songs and any that use only its five notes
+      songs = allSongs.filter((s) =>
+        s.category === 'flute' ? onFlute() : !narrow || isPentatonicSong(s.chart),
+      );
       const random = [
         ...(onFlute() ? [{ value: RANDOM_FLUTE, label: '🎲 Random flute song' }] : []),
-        { value: RANDOM_MELODY, label: '🎲 Random melody' },
+        ...(narrow ? [] : [{ value: RANDOM_MELODY, label: '🎲 Random melody' }]),
       ];
       // a random song chosen before keeps the menu on the random songs
       picker.random = random.some((r) => r.value === previous);
@@ -362,8 +379,12 @@ export const createPitchScreen =
           songSel,
           { songs, stars: (id) => stars.get(id) ?? null, random, state: picker },
           wanted,
-          // a new player starts on the first step of this game's learning path
-          picker.random ? (random[0]?.value ?? null) : defaultSongId(c.profileId, songs),
+          // a new player starts on the first step of this game's learning path; a flute on its own songs
+          picker.random
+            ? (random[0]?.value ?? null)
+            : onFlute()
+              ? (songs.find((s) => s.category === 'flute')?.id ?? defaultSongId(c.profileId, songs))
+              : defaultSongId(c.profileId, songs),
         );
         if (changed) songSel.dispatchEvent(new Event('change'));
       };
@@ -397,6 +418,17 @@ export const createPitchScreen =
       }
     }
     buildSongMenu(settings.get().songs[c.profileId] ?? undefined);
+    allSongsBox?.addEventListener('change', () => {
+      settings.update({
+        songs: { ...settings.get().songs, [ALL_SONGS_KEY]: allSongsBox.checked ? 'on' : 'off' },
+      });
+      buildSongMenu();
+      if (songSel.value) {
+        settings.update({ songs: { ...settings.get().songs, [c.profileId]: songSel.value } });
+      }
+      showChallenge();
+      refreshRange();
+    });
     // opened from today's challenge: choose its random melody (the same for everyone today)
     const dailyGame: DailyGame = c.profileId === 'wind' ? 'windline' : 'singline';
     if (wantsDaily(location.hash)) {
@@ -628,6 +660,23 @@ export const createPitchScreen =
       }
       const moved = transposeChart(song, shift);
       return c.instruments ? rescaleChart(moved, settings.get().speed) : moved;
+    };
+
+    /**
+     * How the instrument names its notes (a shakuhachi's Ro, Tsu, Re), so the staff and the bars call a
+     * note the same thing as the fingering chart does; nothing for an instrument with plain letter names.
+     */
+    const instrumentNames = (): { noteName?: (midi: number) => string | null } => {
+      const inst = c.instruments ? instrument() : null;
+      if (!inst || inst.family !== 'shakuhachi') return {};
+      return { noteName: (midi) => fingeringFor(inst, midi)?.name ?? null };
+    };
+    /** The bars view, with the instrument's own note names where it has them. */
+    const barsRenderer = (): Renderer => {
+      const names = instrumentNames();
+      return names.noteName
+        ? new PitchHighwayRenderer({ ...names, gutter: 46 })
+        : createRenderer(profile.renderer);
     };
 
     /** Windline: count the right note in whatever octave the player plays it. */
@@ -999,8 +1048,12 @@ export const createPitchScreen =
       );
       const renderer =
         opts.notation === 'staff'
-          ? new StaffRenderer({ names: opts.staffNames, flats: preferFlats(chart.meta.tonic) })
-          : createRenderer(profile.renderer);
+          ? new StaffRenderer({
+              names: opts.staffNames,
+              flats: preferFlats(chart.meta.tonic),
+              ...instrumentNames(),
+            })
+          : barsRenderer();
       const endAt = chartEnd(chart) + 0.9;
       // Windline: the fingering of the note being played and the next one, redrawn when they change
       const inst = instrument();
@@ -1129,8 +1182,12 @@ export const createPitchScreen =
         engine: pitchEngine(game, fit ? fit.octave : 0, 'Sing or play'),
         renderer:
           opts.notation === 'staff'
-            ? new StaffRenderer({ names: opts.staffNames, flats: preferFlats(chart.meta.tonic) })
-            : createRenderer(profile.renderer),
+            ? new StaffRenderer({
+                names: opts.staffNames,
+                flats: preferFlats(chart.meta.tonic),
+                ...instrumentNames(),
+              })
+            : barsRenderer(),
         forward: onSetupMessage,
         onFinish: () => {
           m.onMessage = onSetupMessage;

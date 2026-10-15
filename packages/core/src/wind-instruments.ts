@@ -304,6 +304,27 @@ const MINOR_PENTATONIC_STEPS: ReadonlySet<number> = new Set([0, 3, 5, 7, 10]);
 const ownScale = (family: WindFamily): ReadonlySet<number> =>
   isPentatonicFamily(family) ? MINOR_PENTATONIC_STEPS : MAJOR_STEPS;
 
+/** The semitones above the major tonic that a major pentatonic scale holds (do re mi sol la). */
+const MAJOR_PENTATONIC_STEPS: ReadonlySet<number> = new Set([0, 2, 4, 7, 9]);
+
+/**
+ * Whether every pitched note of a song is one of the five notes of the pentatonic scale on its tonic,
+ * so a pentatonic flute (which has those notes and no others) can play it whole. Its relative minor
+ * pentatonic holds the same notes, so a song in either mood qualifies. A song with no stated tonic
+ * is taken not to.
+ */
+export function isPentatonicSong(chart: Pick<Chart, 'meta' | 'notes'>): boolean {
+  const tonic = chart.meta.tonic;
+  if (tonic === undefined) return false;
+  let any = false;
+  for (const n of chart.notes) {
+    if (n.pitch === undefined) continue;
+    any = true;
+    if (!MAJOR_PENTATONIC_STEPS.has((((n.pitch - tonic) % 12) + 12) % 12)) return false;
+  }
+  return any;
+}
+
 /** One note the instrument has a fingering for, with the fingering to play it. */
 export interface ScaleNote {
   midi: number;

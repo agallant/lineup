@@ -405,6 +405,28 @@ const scenarios = {
         heading === 'Pentatonic flute songs',
         `they come first, under their own heading (${heading})`,
       );
+      // a pentatonic flute lists what it can play: songs with a fourth or a seventh are for advanced players
+      check(
+        (await hasOption('wind-hot-cross-buns')) && !(await hasOption('wind-ode-to-joy')),
+        'a pentatonic flute lists songs of its five notes, not ones with other notes',
+      );
+      check(
+        await page.isVisible('[data-id=opt-all-songs]'),
+        'and offers to show every song, for advanced players',
+      );
+      await page.click('[data-id=src-random]');
+      check(
+        (await hasOption('random-flute')) && !(await hasOption('random-melody')),
+        'the generator offers only the random flute song',
+      );
+      await page.click('[data-id=src-library]');
+      await page.check('[data-id=opt-all-songs]');
+      check(await hasOption('wind-ode-to-joy'), 'showing every song brings back the rest');
+      await page.click('[data-id=src-random]');
+      check(await hasOption('random-melody'), 'and the general random melody');
+      await page.click('[data-id=src-library]');
+      await page.uncheck('[data-id=opt-all-songs]');
+      check(!(await hasOption('wind-ode-to-joy')), 'turning it off narrows the list again');
       await pickSong(page, 'flute-rain-on-the-mesa');
       const rows = await page.$$eval('[data-id=chart] .fing-row', (r) =>
         r.map((x) => x.textContent),

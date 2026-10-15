@@ -510,3 +510,5 @@ smoke-tested in headless Chromium using a synthetic WAV as a fake mic.
 | Pitch correct on all 4 strings            | not yet     | not yet  | not yet        |
 | One onset per pluck, one per strum        | not yet     | not yet  | not yet        |
 | Audio interface selectable, right channel | not yet     | not yet  | not yet        |
+
+Third-party notices (the clef outlines and the chord data): [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

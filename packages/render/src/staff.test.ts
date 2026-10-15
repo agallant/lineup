@@ -1,5 +1,5 @@
 import { chartFromBeats, getProfile } from '@lineup/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { COLORS, type Canvas2D, type RenderView } from './renderer';
 import {
   StaffRenderer,
@@ -41,6 +41,8 @@ class Recorder {
   fillText = (...a: unknown[]) => this.rec('fillText', a);
   clip = (...a: unknown[]) => this.rec('clip', a);
   rect = (...a: unknown[]) => this.rec('rect', a);
+  translate = (...a: unknown[]) => this.rec('translate', a);
+  scale = (...a: unknown[]) => this.rec('scale', a);
   texts = () => this.calls.filter((c) => c.op === 'fillText').map((c) => String(c.args[0]));
   count = (op: string) => this.calls.filter((c) => c.op === op).length;
 }
@@ -120,6 +122,39 @@ describe('StaffRenderer', () => {
     expect(g.count('arc')).toBe(3);
     // five lines + ledger line(s) for middle C + stems + the now line
     expect(g.count('stroke')).toBeGreaterThanOrEqual(5 + 1 + 3 + 1);
+  });
+
+  it('draws the clef as a shape where the canvas can, not as a letter', () => {
+    class FakePath {
+      constructor(readonly d: string) {}
+    }
+    vi.stubGlobal('Path2D', FakePath);
+    try {
+      const g = new Recorder();
+      new StaffRenderer().draw(g as unknown as Canvas2D, size, view());
+      expect(g.texts()).not.toContain('G');
+      expect(g.texts()).not.toContain('treble');
+      const filled = g.calls.filter((c) => c.op === 'fill' && c.args[0] instanceof FakePath);
+      expect(filled).toHaveLength(1);
+      // flipped, so the font's y-up outline stands the right way round
+      const scale = g.calls.find((c) => c.op === 'scale')!;
+      expect(Number(scale.args[1])).toBeLessThan(0);
+      expect(Number(scale.args[0])).toBeGreaterThan(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('names notes the way the instrument does where it has names, and keeps letters for the rest', () => {
+    const g = new Recorder();
+    const names: Record<number, string> = { 60: 'Ro', 66: 'Tsu' };
+    new StaffRenderer({ noteName: (m) => names[m] ?? null }).draw(
+      g as unknown as Canvas2D,
+      size,
+      view(),
+    );
+    expect(g.texts()).toEqual(expect.arrayContaining(['Ro', 'Tsu']));
+    expect(g.texts()).not.toContain('F♯'); // the name replaces the letter, the sign stays
   });
 
   it('shows note names unless asked to hide them, and always marks a sharp', () => {

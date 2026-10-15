@@ -45,6 +45,11 @@ export interface LayoutOptions {
   margin?: number;
   /** Pixels reserved at the left for note names. */
   gutter?: number;
+  /**
+   * What an instrument calls a note (a shakuhachi's Ro, Tsu, Re), used on the axis and on the bars in
+   * place of the letter; null for a note it has no name for. The axis then names only those notes.
+   */
+  noteName?: (midi: number) => string | null;
 }
 
 /** The semitone range to show: chart range plus margin, at least `minSpan` tall, centred. */
@@ -199,9 +204,11 @@ export class PitchHighwayRenderer implements Renderer {
       g.moveTo(l.left, y);
       g.lineTo(size.width, y);
       g.stroke();
-      if (natural && spp >= 8) {
+      const own = this.options.noteName;
+      const label = own ? own(m) : natural ? midiName(m) : null;
+      if (label && spp >= 8) {
         g.fillStyle = m % 12 === 0 ? COLORS.text : COLORS.muted;
-        g.fillText(midiName(m), l.left - 4, y);
+        g.fillText(label, l.left - 4, y);
       }
     }
   }
@@ -240,7 +247,13 @@ export class PitchHighwayRenderer implements Renderer {
       g.fill();
       g.shadowBlur = 0;
       g.globalAlpha = 1;
-      bars.push({ x: x0, y: cy, w, h: barH, text: midiName(n.pitch) });
+      bars.push({
+        x: x0,
+        y: cy,
+        w,
+        h: barH,
+        text: this.options.noteName?.(n.pitch) ?? midiName(n.pitch),
+      });
     });
     return bars;
   }
