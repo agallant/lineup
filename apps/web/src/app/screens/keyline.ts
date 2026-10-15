@@ -8,6 +8,7 @@ import {
   songsFor,
   type Chart,
 } from '@lineup/core';
+import { canPlayVoices, startVoice } from '../game/voices';
 import { createRenderer, fitCanvas, midiName, pianoKeyAt, pianoLayout } from '@lineup/render';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
@@ -135,8 +136,12 @@ const PLAY = `
   <p class="muted" data-id="keys-hint"></p>
 `;
 
-/** Turns a key press into a short piano-like tone; returns a function that lets it fade out. */
+/** Turns a key press into a piano note; returns a function that lets it fade out. */
 function sound(ctx: AudioContext, midi: number, velocity: number): () => void {
+  if (canPlayVoices(ctx)) {
+    const note = startVoice(ctx, 'piano', midi, ctx.currentTime, 0.5 + 1.1 * velocity);
+    return () => note.release(ctx.currentTime);
+  }
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = 'triangle';

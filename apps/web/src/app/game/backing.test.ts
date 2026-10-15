@@ -44,9 +44,9 @@ describe('planBacking', () => {
       (e) => e.kind === 'tone',
     );
     expect(tones).toEqual([
-      { kind: 'tone', songTime: 0, duration: 0.5, midi: 60 },
-      { kind: 'tone', songTime: 0.5, duration: 1, midi: 64 },
-      { kind: 'tone', songTime: 2, duration: 0.5, midi: 67 },
+      { kind: 'tone', songTime: 0, duration: 0.5, midi: 60, voice: 'flute' },
+      { kind: 'tone', songTime: 0.5, duration: 1, midi: 64, voice: 'flute' },
+      { kind: 'tone', songTime: 2, duration: 0.5, midi: 67, voice: 'flute' },
     ]);
   });
 

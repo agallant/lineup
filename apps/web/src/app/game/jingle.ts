@@ -1,4 +1,5 @@
 import type { PlayOutcome } from '../progress';
+import { canPlayVoices, playVoice, type VoiceContext } from './voices';
 
 /** A short celebration as notes: MIDI pitch, start (seconds from now) and length. */
 export type Jingle = readonly { midi: number; at: number; length: number }[];
@@ -51,6 +52,11 @@ export interface JingleOut {
 export function playJingle(ctx: JingleOut, kind: JingleKind): void {
   const t0 = ctx.currentTime + 0.05;
   for (const n of JINGLES[kind]) {
+    // bright mallet notes where the context can make them, else bare tones
+    if (canPlayVoices(ctx)) {
+      playVoice(ctx as unknown as VoiceContext, 'mallet', n.midi, t0 + n.at, n.length, 1.1);
+      continue;
+    }
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
