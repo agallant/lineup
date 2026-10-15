@@ -3,7 +3,8 @@ import { toPitchFrame, type AnalyzerMessage } from '@lineup/input';
 import type { MicSession } from '@lineup/input/mic';
 import { fitCanvas, midiName, type Renderer, type RenderView } from '@lineup/render';
 import { escapeHtml, playTone } from './audio';
-import { LANE_PITCH, midiToHz, playTonesNow } from './game/backing';
+import { LANE_DRUM, LANE_PITCH, midiToHz, playTonesNow } from './game/backing';
+import { canPlayVoices, playVoice } from './game/voices';
 import { HitMonitor } from './game/beatline-game';
 import { HitStepGame } from './game/hit-step-game';
 import { jingleFor, playJingle } from './game/jingle';
@@ -73,7 +74,19 @@ export function pitchEngine(game: StepGame, octave: number, verb: string): StepE
     sound(ctx) {
       const target = game.target;
       if (target === null) return ctx.currentTime;
-      void playTone(ctx, midiToHz(target + octave), TONE_S, 0.22);
+      if (canPlayVoices(ctx)) {
+        // a singer is given a piano note, a wind player a flute's
+        playVoice(
+          ctx,
+          verb === 'Sing' ? 'piano' : 'flute',
+          target + octave,
+          ctx.currentTime,
+          TONE_S,
+          1.3,
+        );
+      } else {
+        void playTone(ctx, midiToHz(target + octave), TONE_S, 0.22);
+      }
       return ctx.currentTime + TONE_S;
     },
   };
@@ -117,7 +130,12 @@ export function hitEngine(
       if (s.chord) {
         const midis = chordMidis(profile, s.chord) ?? [];
         // the strings in turn, quickly, as a strum, and the chord left ringing
-        const tones = midis.map((midi) => ({ midi: midi + 12, duration: 0.9, level: 0.5 }));
+        const tones = midis.map((midi) => ({
+          midi: midi + 12,
+          duration: 0.9,
+          level: 0.9,
+          voice: 'pluck' as const,
+        }));
         return playTonesNow(ctx, tones, 0.025);
       }
       const midi = LANE_PITCH[s.lane ?? 'hit'] ?? 66;
@@ -126,6 +144,7 @@ export function hitEngine(
         duration: 0.12,
         level: 1.6,
         wave: 'triangle' as OscillatorType,
+        drum: LANE_DRUM[s.lane ?? 'hit'] ?? ('rim' as const),
       }));
       return playTonesNow(ctx, tones, 0.4);
     },

@@ -2,6 +2,7 @@ import type { Chart, SongClock } from '@lineup/core';
 import { planAccompaniment, type AccompanimentLevel } from './accompaniment';
 import { planDrums, type DrumStyle } from './drums';
 import { canPlayDrums, playDrum, type DrumVoice } from './drum-sound';
+import { canPlayVoices, playVoice, type Voice, type VoiceContext } from './voices';
 
 export type BackingEvent =
   | { kind: 'click'; songTime: number; accent: boolean }
@@ -16,6 +17,8 @@ export type BackingEvent =
       wave?: OscillatorType;
       /** A drum to synthesize instead of a pitched tone (the pitch is then only a fallback). */
       drum?: DrumVoice;
+      /** An instrument to sound the note on instead of a bare oscillator (the wave is the fallback). */
+      voice?: Voice;
     };
 
 /** A held tone under the whole song: nothing, the key note, or the key note with its fifth. */
@@ -58,6 +61,7 @@ export function planBacking(
           songTime: n.t,
           duration: Math.max(n.duration, 0.2),
           midi: n.pitch,
+          voice: 'flute',
         });
       }
     }
@@ -83,6 +87,9 @@ export interface BackingHandle {
   stop(): void;
 }
 
+/** The voices whose simultaneous notes are a chord struck by a hand. */
+const STRUMMED: ReadonlySet<Voice> = new Set(['pluck', 'nylon', 'piano', 'pad']);
+
 export const midiToHz = (midi: number): number => 440 * 2 ** ((midi - 69) / 12);
 
 /** Schedules the events on the audio clock using the song clock's mapping. Nothing is scheduled in the past. */
@@ -93,6 +100,8 @@ export function playBacking(
 ): BackingHandle {
   const nodes: AudioScheduledSourceNode[] = [];
   const now = ctx.currentTime;
+  let lastTime = Number.NaN;
+  let chordIndex = 0;
   for (const e of events) {
     const at = clock.toSourceTime(e.songTime);
     if (at < now - 0.02) continue;
@@ -100,6 +109,24 @@ export function playBacking(
       nodes.push(...playDrum(ctx, e.drum, Math.max(at, now), e.level ?? 1));
       continue;
     }
+    if (e.kind === 'tone' && e.voice && canPlayVoices(ctx)) {
+      // the notes of a chord struck together are played a hair apart, as a hand would
+      const together = e.songTime === lastTime && STRUMMED.has(e.voice);
+      chordIndex = together ? chordIndex + 1 : 0;
+      lastTime = e.songTime;
+      nodes.push(
+        ...playVoice(
+          ctx as unknown as VoiceContext,
+          e.voice,
+          e.midi,
+          Math.max(at, now) + chordIndex * 0.011,
+          e.duration,
+          e.level ?? 1,
+        ),
+      );
+      continue;
+    }
+    lastTime = e.kind === 'tone' ? e.songTime : lastTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain).connect(ctx.destination);
@@ -169,6 +196,7 @@ export function planDrone(chart: Chart, rootMidi: number, drone: Drone): Backing
     midi,
     level,
     wave: 'sine',
+    voice: 'organ',
   });
   if (drone === 'tanpura') {
     // the drone of Indian classical music: the fifth, the key note twice and the low key note, plucked
@@ -183,7 +211,15 @@ export function planDrone(chart: Chart, rootMidi: number, drone: Drone): Backing
     ];
     for (let t = -lead, i = 0; t < end; t += step, i++) {
       const [midi, level] = round[i % round.length]!;
-      out.push({ kind: 'tone', songTime: t, duration: step * 2.2, midi, level, wave: 'triangle' });
+      out.push({
+        kind: 'tone',
+        songTime: t,
+        duration: step * 2.2,
+        midi,
+        level,
+        wave: 'triangle',
+        voice: 'tanpura',
+      });
     }
     return out;
   }
@@ -213,6 +249,16 @@ export function planAllBacking(
   return events.sort((a, b) => a.songTime - b.songTime);
 }
 
+/** The drum that stands for each lane of a rhythm when it is played back to be heard. */
+export const LANE_DRUM: Readonly<Record<string, DrumVoice>> = {
+  kick: 'kick',
+  snare: 'snare',
+  hat: 'hat',
+  clap: 'rim',
+  tap: 'tomhigh',
+  hit: 'rim',
+};
+
 /** A pitch for each lane of a rhythm, so it can be heard as ticks: low for a kick, high for a hat. */
 export const LANE_PITCH: Readonly<Record<string, number>> = {
   kick: 43,
@@ -232,6 +278,7 @@ export function rhythmTones(chart: Chart): Extract<BackingEvent, { kind: 'tone' 
     midi: LANE_PITCH[n.lane ?? 'hit'] ?? 66,
     level: 1.6,
     wave: 'triangle' as const,
+    drum: LANE_DRUM[n.lane ?? 'hit'] ?? ('rim' as const),
   }));
 }
 
@@ -241,7 +288,14 @@ export function rhythmTones(chart: Chart): Extract<BackingEvent, { kind: 'tone' 
  */
 export function playTonesNow(
   ctx: AudioOut,
-  tones: readonly { midi: number; duration: number; level?: number; wave?: OscillatorType }[],
+  tones: readonly {
+    midi: number;
+    duration: number;
+    level?: number;
+    wave?: OscillatorType;
+    voice?: Voice;
+    drum?: DrumVoice;
+  }[],
   gap = 0,
 ): number {
   const clock = { toSourceTime: (t: number) => ctx.currentTime + 0.03 + t } as SongClock;
@@ -252,6 +306,8 @@ export function playTonesNow(
     midi: t.midi,
     ...(t.level === undefined ? {} : { level: t.level }),
     ...(t.wave === undefined ? {} : { wave: t.wave }),
+    ...(t.voice === undefined ? {} : { voice: t.voice }),
+    ...(t.drum === undefined ? {} : { drum: t.drum }),
   }));
   playBacking(ctx, clock, events);
   return (

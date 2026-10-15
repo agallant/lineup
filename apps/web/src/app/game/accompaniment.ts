@@ -8,6 +8,7 @@ import {
   type Rng,
 } from '@lineup/core';
 import type { BackingEvent } from './backing';
+import type { Voice } from './voices';
 
 /**
  * What to play under a song. `bass` is a bass line; `full` the bass with chords held on top; the rest
@@ -184,7 +185,18 @@ const tone = (
   midi,
   level,
   wave,
+  voice: voiceFor(wave, duration),
 });
+
+/**
+ * The instrument for a part: the low notes are a bass, the short notes of a pattern are plucked
+ * strings, and a long soft chord is a pad. (The wave is what the pattern was written with.)
+ */
+function voiceFor(wave: OscillatorType, duration: number): Voice {
+  if (wave === 'triangle') return 'bass';
+  if (wave === 'square') return 'pluck';
+  return duration >= 0.6 ? 'pad' : 'pluck';
+}
 
 /** The bass note and the notes of a chord, in the octaves the accompaniment plays in. */
 const bassOf = (h: Harmony): number => inOctave(h.root, 40);

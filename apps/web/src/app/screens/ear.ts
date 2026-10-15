@@ -12,6 +12,7 @@ import {
 } from '@lineup/core';
 import { escapeHtml, closeAudio } from '../audio';
 import { jingleFor, playJingle } from '../game/jingle';
+import { canPlayVoices, playVoice } from '../game/voices';
 import { rewardHtml } from '../game/reward';
 import { ProgressStore } from '../progress';
 import type { Screen } from '../router';
@@ -31,7 +32,7 @@ const GAP_S = 0.15;
 const NEXT_MS = 1100;
 
 /** The oscillators of the question last played, so a new one can cut them off instead of overlapping. */
-let sounding: OscillatorNode[] = [];
+let sounding: AudioScheduledSourceNode[] = [];
 
 /** Plays a question's notes softly on the audio output, cutting off any still sounding or waiting. */
 function playQuestion(ctx: AudioContext, q: EarQuestion): void {
@@ -47,6 +48,10 @@ function playQuestion(ctx: AudioContext, q: EarQuestion): void {
   // a key-setting arpeggio first, quick and quiet, then a pause before the note asked about
   q.lead?.forEach((midi, i) => {
     const start = t0 + i * 0.32;
+    if (canPlayVoices(ctx)) {
+      sounding.push(...playVoice(ctx, 'piano', midi, start, 0.4, 0.6));
+      return;
+    }
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
@@ -63,6 +68,10 @@ function playQuestion(ctx: AudioContext, q: EarQuestion): void {
   q.notes.forEach((midi, i) => {
     const start = q.together ? t0 : t0 + i * (NOTE_S + GAP_S);
     const length = q.together ? 1.6 : NOTE_S;
+    if (canPlayVoices(ctx)) {
+      sounding.push(...playVoice(ctx, 'piano', midi, start, length, q.together ? 0.7 : 1));
+      return;
+    }
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';

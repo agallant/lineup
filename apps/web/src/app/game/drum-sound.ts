@@ -15,7 +15,7 @@ export type DrumContext = Pick<
 
 /** A second of white noise, made once per context and shared by the snare, rim and hats. */
 const noiseBuffers = new WeakMap<object, AudioBuffer>();
-function noise(ctx: DrumContext): AudioBuffer {
+export function noise(ctx: DrumContext): AudioBuffer {
   let b = noiseBuffers.get(ctx);
   if (!b) {
     b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
