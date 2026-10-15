@@ -502,6 +502,10 @@ const scenarios = {
         (await page.inputValue('[data-id=song]')) === 'random-melody',
         `the daily challenge opens on a flute with its random melody (${await page.inputValue('[data-id=song]')})`,
       );
+      check(
+        await page.isChecked('[data-id=opt-all-songs]'),
+        'and the show-every-song choice it made is still on after the daily setup',
+      );
       await page.goto(URL_BASE + '#/wind');
       await page.evaluate(() => {
         const s = JSON.parse(localStorage.getItem('lineup.settings.v1') || '{}');
