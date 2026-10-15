@@ -1,4 +1,4 @@
-import { rateChart, songCategory, songsFor, type Chart } from '@lineup/core';
+import { POP_FAVORITES, rateChart, songCategory, songsFor, type Chart } from '@lineup/core';
 import { starsBySong } from './scoreboard';
 import type { BestScore } from './scores';
 
@@ -89,6 +89,19 @@ const DEFS: readonly PackDef[] = [
       ) ||
       /^strum-(reggae|bossa|flamenco|tango|polka|ranchera)$/.test(c.id) ||
       /^bass-latin-/.test(c.id),
+  },
+  {
+    id: 'beatles',
+    title: 'The Beatles',
+    blurb: 'The chords of Beatles hits to strum on a ukulele or guitar, moved to easy keys.',
+    test: (c) => /^pop-beatles-/.test(c.id),
+  },
+  {
+    id: 'pop-hits',
+    title: 'Number-one hits to strum',
+    blurb:
+      'The chords of songs that reached the top three, 1958 to 1991: strum along on a ukulele or guitar.',
+    test: (c) => POP_FAVORITES.has(c.id),
   },
   {
     id: 'world-rhythms',

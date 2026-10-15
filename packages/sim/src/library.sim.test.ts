@@ -20,6 +20,7 @@ import {
   getSong,
   getProfile,
   melodyScalesFor,
+  songsFor,
   rhythmExercises,
   strumChart,
   UKULELE_CHORD_FRETS,
@@ -116,6 +117,32 @@ describe('library: ukulele songs', () => {
       expect(counts.good).toBe(0);
       expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
     },
+  );
+});
+
+describe('library: pop songs (a sample of the Beatles and other hits)', () => {
+  const sample = songsFor('ukulele-strum')
+    .filter(({ id }) =>
+      /^pop-beatles-(help|love-me-do|come-together|eight-days)|^pop-(otis-redding|the-turtles|bobbie-gentry)-/.test(
+        id,
+      ),
+    )
+    .map(({ id, chart }) => [id, chart] as [string, Chart]);
+
+  it('has the sample songs', () => expect(sample.length).toBeGreaterThanOrEqual(5));
+
+  it.each(sample)(
+    '%s: a steady player scores (nearly) every strum',
+    (_id, chart) => {
+      const rendered = renderPerformance(chart, ukuleleStrumPerformer, { latency: LATENCY });
+      const r = runDiscrete(rendered, chart, getProfile('ukulele-strum'), {
+        latencyOffset: LATENCY,
+      });
+      const { counts } = r.score;
+      expect(counts.miss / chart.notes.length).toBeLessThan(0.06);
+      expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
+    },
+    60_000,
   );
 });
 
