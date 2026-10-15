@@ -441,7 +441,8 @@ export const createPitchScreen =
       settings.update({
         challenge: dailyFor(dailyGame).spec,
         variation: 'original',
-        songs: { ...current.songs, [c.profileId]: RANDOM_MELODY },
+        // from the latest settings, so the "show every song" choice made above is kept
+        songs: { ...settings.get().songs, [c.profileId]: RANDOM_MELODY },
       });
       current.songs[c.profileId] = RANDOM_MELODY;
     }
