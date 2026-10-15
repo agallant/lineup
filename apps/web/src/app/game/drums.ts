@@ -1,5 +1,6 @@
 import { createRng, hashSeed, pick, type Chart, type Rng } from '@lineup/core';
 import type { BackingEvent } from './backing';
+import type { DrumVoice } from './drum-sound';
 
 /**
  * A drum feel played quietly under a song. `auto` picks one to suit the song (its meter and tempo) and
@@ -51,7 +52,7 @@ export const DRUM_LABELS: Readonly<Record<DrumStyle, string>> = {
   bossa: 'Bossa nova',
 };
 
-/** Pitches (MIDI) standing in for the drums: oscillators only, so a kick is a low thud and a hat a high tick. */
+/** Pitches (MIDI) naming each drum; they are the fallback when a context cannot synthesize the drums. */
 const KICK = 36;
 const TOM_LOW = 48;
 const TOM_HIGH = 55;
@@ -60,14 +61,29 @@ const RIM = 74;
 const HAT = 96;
 const OPEN_HAT = 91;
 
-const drum = (songTime: number, midi: number, duration: number, level: number): BackingEvent => ({
-  kind: 'tone',
-  songTime,
-  duration,
-  midi,
-  level,
-  wave: midi === HAT || midi === OPEN_HAT || midi === SNARE || midi === RIM ? 'square' : 'triangle',
-});
+const VOICES: ReadonlyMap<number, DrumVoice> = new Map([
+  [KICK, 'kick'],
+  [TOM_LOW, 'tomlow'],
+  [TOM_HIGH, 'tomhigh'],
+  [SNARE, 'snare'],
+  [RIM, 'rim'],
+  [HAT, 'hat'],
+  [OPEN_HAT, 'openhat'],
+]);
+
+const drum = (songTime: number, midi: number, duration: number, level: number): BackingEvent => {
+  const voice = VOICES.get(midi);
+  return {
+    kind: 'tone',
+    songTime,
+    duration,
+    midi,
+    level,
+    wave:
+      midi === HAT || midi === OPEN_HAT || midi === SNARE || midi === RIM ? 'square' : 'triangle',
+    ...(voice ? { drum: voice } : {}),
+  };
+};
 
 /** One hit of a bar: beats from the bar line, which drum, how loud. */
 type Hit = readonly [at: number, drum: number, level: number];

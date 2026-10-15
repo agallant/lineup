@@ -9,6 +9,7 @@ import {
   playBacking,
   rhythmTones,
   type AudioOut,
+  type BackingEvent,
 } from './backing';
 
 const chart = chartFromBeats({ title: 'T', bpm: 120, countInBeats: 4 }, [
@@ -250,5 +251,59 @@ describe('droneKeyNote', () => {
   it('falls back to the tonic, or C, when unsure', () => {
     expect(droneKeyNote(song(62, [64, 66]))).toBe(62);
     expect(droneKeyNote(song(undefined, [64, 66]))).toBe(60);
+  });
+});
+
+const runningClock = () => {
+  const c = new SongClock({ currentTime: 0 });
+  c.start(0, 0.5);
+  return c;
+};
+
+describe('drum events', () => {
+  const drumEvents: BackingEvent[] = [
+    { kind: 'tone', songTime: 0, duration: 0.1, midi: 36, level: 1.6, drum: 'kick' },
+    { kind: 'tone', songTime: 0.5, duration: 0.1, midi: 62, level: 0.9, drum: 'snare' },
+    { kind: 'tone', songTime: 1, duration: 0.1, midi: 96, level: 0.4, drum: 'hat' },
+  ];
+
+  it('are pitched ticks on a context that cannot synthesize them', () => {
+    const { ctx, started } = fakeAudio(0);
+    playBacking(ctx, runningClock(), drumEvents);
+    expect(started).toHaveLength(3);
+  });
+
+  it('are synthesized on a full context, and stop cancels them all', () => {
+    const { ctx, started, stopped } = fakeAudio(0);
+    const sources: { stopped: number }[] = [];
+    const node = () => {
+      const n: Record<string, unknown> = {
+        frequency: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {} },
+        Q: { value: 0 },
+        stopCount: 0,
+        connect: (x: unknown) => x,
+        disconnect() {},
+        start() {},
+        stop() {
+          sources.push({ stopped: 1 });
+        },
+      };
+      return n;
+    };
+    const full = {
+      ...ctx,
+      sampleRate: 100,
+      createBuffer: () => ({ getChannelData: () => new Float32Array(100) }),
+      createBufferSource: node,
+      createBiquadFilter: node,
+      createOscillator: node,
+    } as unknown as AudioOut;
+    const handle = playBacking(full, runningClock(), drumEvents);
+    expect(started).toHaveLength(0); // none went down the pitched path
+    expect(stopped).toHaveLength(0);
+    const scheduled = sources.length;
+    expect(scheduled).toBeGreaterThan(0);
+    handle.stop();
+    expect(sources.length).toBeGreaterThan(scheduled); // every source was told to stop
   });
 });

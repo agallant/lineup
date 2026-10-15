@@ -265,6 +265,7 @@ Items for features still to come are added here as they ship, under the mileston
 
 - [ ] **Listen to the feels** (headphones; set Play-along music and Drums on a game's set-up page): do
       _Match the song_, the waltz, boom-chick, walking bass, bossa and reggae sound musical and in time? Any
+- [ ] **Drum sounds** are now synthesized (a kick that thumps down in pitch, a noisy snare, hi-hats, a rim click, toms) instead of beeps. Do they sound like a drum kit on your iPad speakers and on headphones? Too boomy, too hissy, too quiet or loud against the music? Say which drum and I will adjust it.
       that jar, or are too loud, too thin or too busy? Is the **fill** at the end of a phrase welcome?
 - [ ] Does **Match the song** pick sensibly for a slow ballad, a march, a waltz? Does the change of feel every
       eight bars sound deliberate?
