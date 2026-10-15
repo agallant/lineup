@@ -405,6 +405,28 @@ const scenarios = {
         heading === 'Pentatonic flute songs',
         `they come first, under their own heading (${heading})`,
       );
+      // a pentatonic flute lists what it can play: songs with a fourth or a seventh are for advanced players
+      check(
+        (await hasOption('wind-hot-cross-buns')) && !(await hasOption('wind-ode-to-joy')),
+        'a pentatonic flute lists songs of its five notes, not ones with other notes',
+      );
+      check(
+        await page.isVisible('[data-id=opt-all-songs]'),
+        'and offers to show every song, for advanced players',
+      );
+      await page.click('[data-id=src-random]');
+      check(
+        (await hasOption('random-flute')) && !(await hasOption('random-melody')),
+        'the generator offers only the random flute song',
+      );
+      await page.click('[data-id=src-library]');
+      await page.check('[data-id=opt-all-songs]');
+      check(await hasOption('wind-ode-to-joy'), 'showing every song brings back the rest');
+      await page.click('[data-id=src-random]');
+      check(await hasOption('random-melody'), 'and the general random melody');
+      await page.click('[data-id=src-library]');
+      await page.uncheck('[data-id=opt-all-songs]');
+      check(!(await hasOption('wind-ode-to-joy')), 'turning it off narrows the list again');
       await pickSong(page, 'flute-rain-on-the-mesa');
       const rows = await page.$$eval('[data-id=chart] .fing-row', (r) =>
         r.map((x) => x.textContent),
@@ -469,6 +491,24 @@ const scenarios = {
       const after = await page.inputValue('[data-id=challenge-seed]');
       check(before !== after, `New song picks another seed (${before} -> ${after})`);
       check(/Random flute song/.test(await text(page, 'song-info')), 'the song info names it');
+
+      // today's challenge is a random melody in any scale: opened on a flute it still gets its menu entry
+      await page.goto(URL_BASE + '#/wind');
+      await page.selectOption('[data-id=instrument]', 'naf-a');
+      await page.uncheck('[data-id=opt-all-songs]');
+      await page.goto(URL_BASE + '#/wind?daily=1');
+      await page.reload();
+      check(
+        (await page.inputValue('[data-id=song]')) === 'random-melody',
+        `the daily challenge opens on a flute with its random melody (${await page.inputValue('[data-id=song]')})`,
+      );
+      await page.goto(URL_BASE + '#/wind');
+      await page.evaluate(() => {
+        const s = JSON.parse(localStorage.getItem('lineup.settings.v1') || '{}');
+        s.songs = { ...(s.songs || {}), 'wind-all-songs': 'off' };
+        localStorage.setItem('lineup.settings.v1', JSON.stringify(s));
+      });
+      await page.reload();
 
       // a link to a flute song chooses a flute to play it on
       await page.goto(URL_BASE + '#/wind');

@@ -55,13 +55,15 @@ export function fingeringChartHtml(instrument: WindInstrument, used: ReadonlySet
     return `<p>No fingering chart for a generic instrument: choose a specific whistle or recorder above to see its fingerings, or use the chart that came with yours.</p>`;
   }
   const rows = scale
-    .map(
-      (n) =>
-        `<div class="fing-row${used.has(n.midi) ? ' used' : ''}${n.chromatic ? ' chromatic' : ''}"><span class="fing-note">${n.label}</span>${holesHtml(instrument.family, n.fingering)}${hintHtml(n)}</div>`,
+    .map((n) =>
+      // an instrument with its own note names leads with the name and gives the Western one after it
+      n.fingering.holes === '' && n.fingering.name !== undefined
+        ? `<div class="fing-row${used.has(n.midi) ? ' used' : ''}${n.chromatic ? ' chromatic' : ''}">${holesHtml(instrument.family, n.fingering)}<span class="fing-note">(${n.label})</span>${hintHtml(n)}</div>`
+        : `<div class="fing-row${used.has(n.midi) ? ' used' : ''}${n.chromatic ? ' chromatic' : ''}"><span class="fing-note">${n.label}</span>${holesHtml(instrument.family, n.fingering)}${hintHtml(n)}</div>`,
     )
     .join('');
   if (instrument.family === 'shakuhachi') {
-    return `${rows}<p class="fing-key">Notes in this song are highlighted, with their traditional syllables (Ro Tsu Re Chi Ri); an arrow marks the higher octave (kan), played with a stronger, more focused breath. Fingerings, and the half-hole and meri notes between these, differ between schools (Kinko, Tozan and others): use your teacher’s chart.</p>`;
+    return `${rows}<p class="fing-key">Notes in this song are highlighted, with their traditional syllables (Ro Tsu Re Chi Ri), and the Western note name in brackets; an arrow marks the higher octave (kan), played with a stronger, more focused breath. Fingerings, and the half-hole and meri notes between these, differ between schools (Kinko, Tozan and others): use your teacher’s chart.</p>`;
   }
   const own =
     instrument.family === 'native-flute'

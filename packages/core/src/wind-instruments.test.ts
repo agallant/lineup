@@ -13,12 +13,13 @@ import {
   instrumentRoot,
   isGenericWind,
   isPentatonicFamily,
+  isPentatonicSong,
   registerShift,
   shiftForInstrument,
   windScale,
   type WindInstrument,
 } from './wind-instruments';
-import { songsFor } from './songs';
+import { getSong, songsFor } from './songs';
 
 const inst = (id: string): WindInstrument => findWindInstrument(id)!;
 
@@ -357,5 +358,32 @@ describe('the pentatonic flutes', () => {
       // the song comes home on the flute's lowest note
       expect(c.notes.at(-1)!.pitch! + shift, i.id).toBe(instrumentRoot(i));
     }
+  });
+});
+
+describe('isPentatonicSong', () => {
+  const song = (tonic: number | undefined, pitches: number[]) => ({
+    meta: { title: 't', bpm: 60, countInBeats: 0, ...(tonic === undefined ? {} : { tonic }) },
+    notes: pitches.map((pitch, i) => ({ t: i, duration: 1, pitch })),
+  });
+
+  it('is true when every note is one of the five (do re mi sol la), in either mood', () => {
+    expect(isPentatonicSong(song(60, [60, 62, 64, 67, 69, 72, 48]) as never)).toBe(true);
+    expect(isPentatonicSong(song(67, [67, 69, 71, 74, 76]) as never)).toBe(true);
+  });
+
+  it('is false for a fourth or seventh, a chromatic note, no notes, or no tonic', () => {
+    expect(isPentatonicSong(song(60, [60, 62, 65]) as never)).toBe(false); // F is the fourth
+    expect(isPentatonicSong(song(60, [60, 62, 71]) as never)).toBe(false); // B is the seventh
+    expect(isPentatonicSong(song(60, [60, 61]) as never)).toBe(false);
+    expect(isPentatonicSong(song(60, []) as never)).toBe(false);
+    expect(isPentatonicSong(song(undefined, [60, 62]) as never)).toBe(false);
+  });
+
+  it('sorts the library: the flute songs all qualify, and Ode to Joy does not', () => {
+    for (const s of songsFor('wind').filter((x) => x.category === 'flute')) {
+      expect(isPentatonicSong(s.chart), s.id).toBe(true);
+    }
+    expect(isPentatonicSong(getSong('wind-ode-to-joy'))).toBe(false);
   });
 });

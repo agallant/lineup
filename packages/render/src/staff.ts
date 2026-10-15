@@ -1,4 +1,5 @@
 import type { ChartNote } from '@lineup/core';
+import { canDrawClef, clefWidth, drawClef } from './clef';
 import { COLORS, type Canvas2D, type RenderSize, type RenderView, type Renderer } from './renderer';
 
 /** Which clef the staff is drawn with. */
@@ -74,6 +75,11 @@ function statusColor(status: RenderView['statuses'][number], active: boolean): s
 export interface StaffOptions {
   /** Write each note's letter name beside its notehead. Off, the player reads the staff. */
   names?: boolean;
+  /**
+   * What an instrument calls a note (a shakuhachi's Ro, Tsu, Re), written under it instead of the letter;
+   * null for a note it has no name for, which keeps its letter.
+   */
+  noteName?: (midi: number) => string | null;
   /** Write black keys as flats (for a song in a flat key) rather than sharps. */
   flats?: boolean;
   /** Seconds of the future visible to the right of the now line. */
@@ -94,11 +100,13 @@ export class StaffRenderer implements Renderer {
   draw(g: Canvas2D, size: RenderSize, view: RenderView): void {
     const { names = true, flats = false, lookAhead = 5, nowFraction = 0.28 } = this.options;
     const clef = clefFor(view.notes);
-    const left = 54;
-    const nowX = left + (size.width - left) * nowFraction;
-    const pxPerSec = (size.width - nowX) / lookAhead;
     // the staff is five lines with room above and below for ledger lines and the trail
     const gap = Math.max(10, Math.min(30, size.height / 12));
+    const drawn = canDrawClef();
+    // room at the left for the clef, drawn as a shape
+    const left = drawn ? Math.max(54, Math.round(gap * (clefWidth(clef) + 1.2))) : 54;
+    const nowX = left + (size.width - left) * nowFraction;
+    const pxPerSec = (size.width - nowX) / lookAhead;
     const bottomY = size.height / 2 + gap * 2;
     const yOf = (step: number) => bottomY - (step * gap) / 2;
     const xOf = (t: number) => nowX + (t - view.time) * pxPerSec;
@@ -118,12 +126,17 @@ export class StaffRenderer implements Renderer {
       g.stroke();
     }
     g.fillStyle = COLORS.text;
-    g.font = `italic 700 ${Math.round(gap * 3.2)}px Georgia, serif`;
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillText(clef === 'treble' ? 'G' : 'F', left / 2, yOf(clef === 'treble' ? 2 : 6));
-    g.font = `${Math.max(9, Math.round(gap * 0.8))}px system-ui, sans-serif`;
-    g.fillText(clef === 'treble' ? 'treble' : 'bass', left / 2, yOf(-3));
+    if (drawn) {
+      // the clef names the line it curls round: the G line (step 2) or the F line (step 6)
+      drawClef(g, clef, (left - gap * clefWidth(clef)) / 2, yOf(clef === 'treble' ? 2 : 6), gap);
+    } else {
+      g.font = `italic 700 ${Math.round(gap * 3.2)}px Georgia, serif`;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(clef === 'treble' ? 'G' : 'F', left / 2, yOf(clef === 'treble' ? 2 : 6));
+      g.font = `${Math.max(9, Math.round(gap * 0.8))}px system-ui, sans-serif`;
+      g.fillText(clef === 'treble' ? 'treble' : 'bass', left / 2, yOf(-3));
+    }
 
     // everything that scrolls stays right of the clef
     g.save();
@@ -132,6 +145,8 @@ export class StaffRenderer implements Renderer {
     g.clip();
 
     const head = gap * 0.62;
+    // where the last name written ends, so the next one starts clear of it
+    let lastLabelRight = -Infinity;
     view.notes.forEach((n, i) => {
       if (n.pitch === undefined) return;
       const d = Math.max(n.duration, 0.2);
@@ -190,9 +205,23 @@ export class StaffRenderer implements Renderer {
         g.fillText(sign, x0 - head - 2, y);
       }
       if (names) {
-        g.textAlign = 'center';
-        g.fillStyle = COLORS.muted;
-        g.fillText(spelled.replace(/\d/, ''), x0, y + head + gap * 0.9);
+        const full = this.options.noteName?.(n.pitch) ?? spelled.replace(/\d/, '');
+        // "Ro (D4)": the instrument's name on one line and the Western name small beneath it
+        const split = full.indexOf(' (');
+        const label = split < 0 ? full : full.slice(0, split);
+        const sub = split < 0 ? '' : full.slice(split + 1);
+        // a long name (Tsu, Chi) is left off when the name before it has not left room for it
+        const half = (Math.max(label.length, sub.length) * gap * 0.62) / 2 + 2;
+        if (x0 - half >= lastLabelRight) {
+          g.textAlign = 'center';
+          g.fillStyle = COLORS.muted;
+          g.fillText(label, x0, y + head + gap * 0.9);
+          if (sub) {
+            g.font = `500 ${Math.max(9, Math.round(gap * 0.75))}px system-ui, sans-serif`;
+            g.fillText(sub, x0, y + head + gap * 1.9);
+          }
+          lastLabelRight = x0 + half;
+        }
       }
       g.globalAlpha = 1;
     });

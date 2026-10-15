@@ -20,6 +20,8 @@ export type Canvas2D = Pick<
   | 'fillText'
   | 'clip'
   | 'rect'
+  | 'translate'
+  | 'scale'
   | 'fillStyle'
   | 'strokeStyle'
   | 'lineWidth'
