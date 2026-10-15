@@ -266,6 +266,16 @@ Items for features still to come are added here as they ship, under the mileston
       meters (7, 9, 10, 11, 12 counts) are counted one count per beat, so set the tempo to taste. Which are wrong?
 - [ ] **Kaeru no uta** (the Japanese frog song) was written from memory: right tune?
 
+### Hits to strum (Beatles and others)
+
+- [ ] **Strumline > Songs: pick a Beatles song** (Help!, Come Together, Eight Days a Week, Love Me Do, A Hard
+      Day's Night, I Saw Her Standing There, Ob-La-Di, Ob-La-Da). Play it on the ukulele and the guitar: are the
+      chords the right ones for the song, and does the tempo feel right? These were read from a research
+      data set of chord annotations and simplified, so say which are wrong or too fast/slow.
+- [ ] Does **capo N** in the artist line put it in the recorded key when you actually use a capo?
+- [ ] Is the long list of hits easy to find your way around (search, sort by difficulty or A to Z)? The
+      packs **The Beatles** and **Number-one hits to strum** are the shortcuts.
+
 ### Backing music and drums
 
 - [ ] **Listen to the feels** (headphones; set Play-along music and Drums on a game's set-up page): do
