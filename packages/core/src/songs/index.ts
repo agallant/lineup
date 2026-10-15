@@ -1,3 +1,4 @@
+import { POP_SONGS } from './pop';
 import { loadChart, type Chart } from '../chart';
 import { chordChangeDrills, exerciseCharts } from '../generate/exercises';
 import { generateChordSong, parseChordSongId } from '../generate/chordsong';
@@ -68,6 +69,7 @@ export const builtinSongs: Readonly<Record<string, Chart>> = {
     }),
   ),
   ...LIBRARY,
+  ...POP_SONGS,
   ...FLUTE_SONGS,
   ...BASS_SONGS,
   ...KEY_TUNES,
@@ -123,3 +125,4 @@ export * from './interchange';
 export * from './bass';
 export * from './keys';
 export * from './midi';
+export { POP_FAVORITES, POP_SONGS, popChart, popId, popPattern, type PopSong } from './pop';
