@@ -375,17 +375,21 @@ export const createPitchScreen =
       ];
       // a random song chosen before keeps the menu on the random songs
       picker.random = random.some((r) => r.value === previous);
-      const rebuild = (wanted: string | null, reveal = false) => {
+      const rebuild = (wanted: string | null, reveal = false, kind = false) => {
         const changed = rebuildPicker(
           songSel,
           { songs, stars: (id) => stars.get(id) ?? null, random, state: picker },
           wanted,
-          // a new player starts on the first step of this game's learning path; a flute on its own songs
-          picker.random
-            ? (random[0]?.value ?? null)
-            : onFlute()
-              ? (songs.find((s) => s.category === 'flute')?.id ?? defaultSongId(c.profileId, songs))
-              : defaultSongId(c.profileId, songs),
+          // a new player starts on the first step of this game's learning path; a flute on its own songs;
+          // a new kind of song, on its first song
+          kind
+            ? null
+            : picker.random
+              ? (random[0]?.value ?? null)
+              : onFlute()
+                ? (songs.find((s) => s.category === 'flute')?.id ??
+                  defaultSongId(c.profileId, songs))
+                : defaultSongId(c.profileId, songs),
           reveal,
         );
         if (changed) songSel.dispatchEvent(new Event('change'));
@@ -393,9 +397,10 @@ export const createPitchScreen =
       mountPickerControls(S('song-filters'), picker, {
         hasRandom: true,
         songs,
-        onChange: () => {
+        onChange: (what) => {
           savePicker(safeLocalStorage(), picker);
-          rebuild(songSel.value);
+          // choosing a kind of song starts a new list, on its first song
+          rebuild(what === 'kind' ? null : songSel.value, false, what === 'kind');
         },
       });
       rebuild(previous, true);

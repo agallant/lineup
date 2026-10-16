@@ -166,6 +166,7 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
   computer keyboard (A S D F G H J K and W E T Y U O P; Z and X change octave). Pieces for both hands,
   chord pieces and exercises (five fingers, scales, arpeggios, hands apart, black keys), with a Learn path.
   The pitch is read from the key, so there is no microphone and no octave forgiveness: the right key counts.
+  **Free play** (the button beside Play) is just a piano to fool around on, with no song, score or timing.
 - **Voice range** (Options, Singline): say your voice type and each song gets a line about how it sits
   in it ("sits well", "an octave lower is easier"), and the guide tone plays in your octave; any
   octave of the right note still counts.

@@ -1289,6 +1289,22 @@ const scenarios = {
         document.querySelector('[data-id=midi-status]').textContent.includes('Test Piano'),
       );
       check(true, 'keys: a connected MIDI keyboard is named');
+      // free play: a keyboard to fool around on, with no score, that Stop returns from
+      await page.click('[data-id=free]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 10000 });
+      check(
+        /Free play/.test(await text(page, 'stage-play')) &&
+          (await page.$('[data-id=score]')) === null,
+        'keys: free play opens a keyboard with no score',
+      );
+      await page.evaluate(() => {
+        window.__midiSend([0x90, 60, 100]);
+        window.__midiSend([0x80, 60, 0]);
+      });
+      await page.waitForTimeout(500);
+      await page.click('[data-id=stop]');
+      await page.waitForSelector('[data-id=free]:visible', { timeout: 10000 });
+      check(true, 'keys: Stop leaves free play for the setup');
       await pickSong(page, 'keys-ex-five-finger');
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');
@@ -1777,6 +1793,20 @@ const scenarios = {
       check(
         exercises.length > 0 && !exercises.includes('sing-hot-cross-buns'),
         `picker: Exercises lists only exercises (${exercises.length}, not the ${all.length} beginner songs)`,
+      );
+      // choosing a kind starts a new list on its first song, with a count line to say so
+      await page.fill('[data-id=picker-query]', '');
+      // from another kind and a song that is not first, to Exercises: the list starts on its first song
+      await page.selectOption('[data-id=picker-category]', 'folk');
+      const folk = await options();
+      await page.selectOption('[data-id=song]', folk[folk.length - 1]);
+      await page.selectOption('[data-id=picker-category]', 'exercise');
+      const exFirst = (await options())[0];
+      check(
+        (await page.inputValue('[data-id=song]')) === exFirst &&
+          exFirst.startsWith('ex-') &&
+          /songs? in Exercises/.test(await text(page, 'picker-count')),
+        `picker: choosing Exercises selects its first exercise and says how many (${await text(page, 'picker-count')})`,
       );
       await page.fill('[data-id=picker-query]', 'buns');
       check(

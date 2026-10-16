@@ -301,6 +301,8 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] The **piano** is now a recording (a real upright, a few notes stretched to the rest) after the first second or so of using Keyline, ear training or step mode; before that it is the synthesized one. Does the real piano sound good on the iPad, and is the switch between the two noticeable? Does it still work with no network once the app has been visited (airplane mode)?
 - [ ] **Hits to strum** now has about 430 songs (the Billboard top forty to 1991 and a few newer ones written by hand). Do the chords of songs you know sound right, and is the long list still easy to search on the iPad? Tell me any that are wrong and I will fix them.
 - [ ] The **song menus** now start with a **Kind of song** menu (beginner and easy, folk, The Beatles, number-one hits, newer songs, world rhythms, exercises, all) before the song list, and the **Search** box is always in view and looks through every kind. Is it quick to find a song on the iPad now, and are the kinds the right ones? Anything miscategorised?
+- [ ] **Keyline free play** (the "Free play: just fool around" button next to Play): a three-octave piano (two on a phone) with no score and no timing. Touch, slide across the keys for a glissando, or use a MIDI keyboard. Does it sound and feel right? Anything you would want in it (a sustain pedal, a recorder, other sounds)?
+- [ ] **Song menus**: choosing a kind of song now starts a new list on its first song, and a line under the menus says how many songs are in it. Does that make it clear that the list changed?
 - [ ] **Install**: from the home page, "install it on this device" shows the right steps for your iPad, and
       adding it to the Home Screen works as described.
 
