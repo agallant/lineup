@@ -2,6 +2,7 @@ import type { Chart } from '../chart';
 import { chartFromBeats, type BeatNote } from '../chart';
 import { UKULELE_CHORD_FRETS } from '../chords';
 import { POP_DATA } from './pop-data';
+import { POP_MODERN } from './pop-modern';
 
 /**
  * One well-known song as its chords: where it sat on the chart, how fast it goes, and a chord (or two,
@@ -100,12 +101,15 @@ export function popChart(song: PopSong): Chart {
   );
 }
 
+/** The annotated songs and the hand-written modern ones. */
+const ALL_POP: readonly PopSong[] = [...POP_DATA, ...POP_MODERN];
+
 /** Every song in the table as a chart, by identifier. */
 export const POP_SONGS: Readonly<Record<string, Chart>> = Object.fromEntries(
-  POP_DATA.map((s, i) => {
+  ALL_POP.map((s, i) => {
     const id = popId(s);
     // a clash would silently replace one song with another
-    if (POP_DATA.findIndex((o) => popId(o) === id) !== i)
+    if (ALL_POP.findIndex((o) => popId(o) === id) !== i)
       throw new Error(`two songs share the id ${id}`);
     return [id, popChart(s)];
   }),
