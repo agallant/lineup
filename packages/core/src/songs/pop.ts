@@ -119,3 +119,6 @@ export const POP_SONGS: Readonly<Record<string, Chart>> = Object.fromEntries(
 export const POP_FAVORITES: ReadonlySet<string> = new Set(
   POP_DATA.filter((s) => s.peak <= 3).map(popId),
 );
+
+/** The hand-written songs newer than the chart annotations. */
+export const POP_NEWER: ReadonlySet<string> = new Set(POP_MODERN.map(popId));

@@ -375,7 +375,7 @@ export const createPitchScreen =
       ];
       // a random song chosen before keeps the menu on the random songs
       picker.random = random.some((r) => r.value === previous);
-      const rebuild = (wanted: string | null) => {
+      const rebuild = (wanted: string | null, reveal = false) => {
         const changed = rebuildPicker(
           songSel,
           { songs, stars: (id) => stars.get(id) ?? null, random, state: picker },
@@ -386,17 +386,19 @@ export const createPitchScreen =
             : onFlute()
               ? (songs.find((s) => s.category === 'flute')?.id ?? defaultSongId(c.profileId, songs))
               : defaultSongId(c.profileId, songs),
+          reveal,
         );
         if (changed) songSel.dispatchEvent(new Event('change'));
       };
       mountPickerControls(S('song-filters'), picker, {
         hasRandom: true,
+        songs,
         onChange: () => {
           savePicker(safeLocalStorage(), picker);
           rebuild(songSel.value);
         },
       });
-      rebuild(previous);
+      rebuild(previous, true);
     };
     // a link to a flute song needs a flute to play it on: choose the A minor Native American flute
     {

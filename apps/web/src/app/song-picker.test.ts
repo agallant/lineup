@@ -1,7 +1,18 @@
 import { chartFromBeats, type Chart } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
 import { songMenuGroups, type MenuSong } from './song-menu';
-import { DEFAULT_PICKER, defaultSongId, filterSongs, loadPicker, savePicker } from './song-picker';
+import {
+  DEFAULT_PICKER,
+  categoriesFor,
+  categoriesOf,
+  defaultSongId,
+  effectiveCategory,
+  filterSongs,
+  loadPicker,
+  revealsAll,
+  savePicker,
+  LONG_LIST,
+} from './song-picker';
 
 class Mem {
   data = new Map<string, string>();
@@ -105,13 +116,21 @@ describe('defaultSongId', () => {
 describe('saved picker choices', () => {
   it('keeps the sort, band and hide-cleared, not the search', () => {
     const store = new Mem();
-    savePicker(store, { query: 'x', sort: 'az', band: 'hard', hideCleared: true, random: true });
+    savePicker(store, {
+      query: 'x',
+      sort: 'az',
+      band: 'hard',
+      hideCleared: true,
+      random: true,
+      category: 'exercise',
+    });
     expect(loadPicker(store)).toEqual({
       query: '',
       sort: 'az',
       band: 'hard',
       hideCleared: true,
       random: false,
+      category: 'exercise',
     });
   });
   it('survives corrupt storage and a missing store', () => {
@@ -122,5 +141,96 @@ describe('saved picker choices', () => {
     expect(loadPicker(store)).toEqual(DEFAULT_PICKER);
     expect(loadPicker(null)).toEqual(DEFAULT_PICKER);
     expect(() => savePicker(null, DEFAULT_PICKER)).not.toThrow();
+  });
+});
+
+describe('kinds of song', () => {
+  /** A hard song has many fast notes; an easy one a few slow ones. */
+  const mk = (id: string, title: string, category: MenuSong['category'], bpm = 60): MenuSong => ({
+    id,
+    chart:
+      bpm > 150
+        ? chartFromBeats(
+            { title, bpm },
+            Array.from({ length: 200 }, (_, i) => ({ beat: i * 0.25 })),
+          )
+        : chartFromBeats(
+            { title, bpm },
+            Array.from({ length: 4 }, (_, i) => ({ beat: i * 2 })),
+          ),
+    category,
+  });
+  const many = [
+    mk('pop-beatles-test-tune', 'Test Tune', 'song', 220),
+    mk('pop-someone-hit', 'Some Hit', 'song', 220),
+    mk('ex-scale', 'C major scale', 'exercise'),
+    mk('x-hot', 'Hot Cross Buns', 'song', 40),
+    mk('x-rhythm', 'World rhythm: son clave', 'song', 40),
+    mk('x-flute', 'Flute tune', 'flute', 40),
+  ];
+
+  it('puts each song in every kind it belongs to', () => {
+    expect(categoriesOf(many[0]!)).toEqual(['all', 'hits', 'beatles']);
+    expect(categoriesOf(many[2]!)).toEqual(['all', 'exercise']);
+    expect(categoriesOf(many[3]!)).toEqual(['all', 'folk', 'beginner']);
+    expect(categoriesOf(many[4]!)).toEqual(['all', 'world', 'beginner']);
+    expect(categoriesOf(many[5]!)).toEqual(['all', 'flute']);
+  });
+
+  it('offers only kinds that have songs, with counts, in menu order', () => {
+    expect(categoriesFor(many).map((c) => `${c.id}:${c.count}`)).toEqual([
+      'beginner:2',
+      'folk:1',
+      'beatles:1',
+      'hits:2',
+      'world:1',
+      'flute:1',
+      'exercise:1',
+      'all:6',
+    ]);
+  });
+
+  it('starts a short menu on all songs and a long one on the first kind', () => {
+    expect(effectiveCategory(many, '')).toBe('all');
+    const long = Array.from({ length: 50 }, (_, i) => mk(`x${i}`, `Song ${i}`, 'song', 40));
+    expect(effectiveCategory(long, '')).toBe('beginner');
+    expect(effectiveCategory(long, 'folk')).toBe('folk');
+    expect(effectiveCategory(long, 'exercise')).toBe('beginner'); // none here
+  });
+
+  it('shows only the chosen kind, but a search looks through all of them', () => {
+    const only = (category: string, query = '') =>
+      filterSongs(many, { ...DEFAULT_PICKER, category, query }).map((s) => s.id);
+    expect(only('exercise')).toEqual(['ex-scale']);
+    expect(only('beatles')).toEqual(['pop-beatles-test-tune']);
+    expect(only('exercise', 'hot')).toEqual(['x-hot']);
+  });
+
+  it('shows every kind to offer a song asked for by name that the kind chosen hides', () => {
+    const fill = (category: string, query = '', random = false) => ({
+      songs: many,
+      stars: () => null,
+      random: [],
+      state: { ...DEFAULT_PICKER, category, query, random },
+    });
+    // a folk song is hidden by the Exercises kind
+    expect(revealsAll(fill('exercise'), 'x-hot')).toBe(true);
+    // ...but not when it is shown anyway, unknown, searched for, or random songs are chosen
+    expect(revealsAll(fill('folk'), 'x-hot')).toBe(false);
+    expect(revealsAll(fill('exercise'), 'no-such-song')).toBe(false);
+    expect(revealsAll(fill('exercise', 'hot'), 'x-hot')).toBe(false);
+    expect(revealsAll(fill('exercise', '', true), 'x-hot')).toBe(false);
+    // and a short menu already shows all
+    expect(revealsAll(fill('all'), 'x-hot')).toBe(false);
+    // a difficulty filter that hides it under every kind is no reason to leave this one
+    const hard = { ...fill('folk'), state: { ...fill('folk').state, band: 'hard' as const } };
+    expect(revealsAll(hard, 'x-hot')).toBe(false);
+  });
+
+  it('names the length at which a menu starts on its first kind', () => {
+    const at = (n: number) =>
+      Array.from({ length: n }, (_, i) => mk(`x${i}`, `Song ${i}`, 'song', 40));
+    expect(effectiveCategory(at(LONG_LIST), '')).toBe('all');
+    expect(effectiveCategory(at(LONG_LIST + 1), '')).toBe('beginner');
   });
 });
