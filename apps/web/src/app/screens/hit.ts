@@ -487,13 +487,17 @@ export const createHitScreen =
       const saved = settings.get().songs[`${c.keyPrefix}:${profile.id}`] ?? null;
       picker.random = saved !== null && random.some((r) => r.value === saved);
       /** Refills the menu from the filters, keeping the chosen song when it is still on offer. */
-      const rebuild = (wanted: string | null, reveal = false) => {
+      const rebuild = (wanted: string | null, reveal = false, kind = false) => {
         const changed = rebuildPicker(
           songSel,
           { songs, stars: (id) => stars.get(id) ?? null, random, state: picker },
           wanted,
-          // a new player starts on the first step of this game's learning path
-          picker.random ? (random[0]?.value ?? null) : defaultSongId(profile.id, songs, profile.id),
+          // a new player starts on the first step of this game's learning path; a new kind, on its first song
+          kind
+            ? null
+            : picker.random
+              ? (random[0]?.value ?? null)
+              : defaultSongId(profile.id, songs, profile.id),
           reveal,
         );
         if (changed) songSel.dispatchEvent(new Event('change'));
@@ -504,7 +508,7 @@ export const createHitScreen =
         onChange: (what) => {
           savePicker(safeLocalStorage(), picker);
           // choosing a kind of song starts a new list, on its first song
-          rebuild(what === 'kind' ? null : songSel.value);
+          rebuild(what === 'kind' ? null : songSel.value, false, what === 'kind');
         },
       });
       rebuild(saved, true);

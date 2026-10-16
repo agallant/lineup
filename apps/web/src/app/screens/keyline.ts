@@ -273,13 +273,14 @@ export const keylineScreen: Screen = (root) => {
   const stars = starsBySong(scores.entries(), PROFILE_ID);
   const picker = loadPicker(store);
   /** Refills the menu from the filters, keeping the chosen song when it is still shown. */
-  const rebuild = (wanted: string | null, reveal = false) => {
+  const rebuild = (wanted: string | null, reveal = false, kind = false) => {
     const all = songs();
     const changed = rebuildPicker(
       songSel,
       { songs: all, stars: (id) => stars.get(id) ?? null, random: [], state: picker },
       wanted,
-      defaultSongId(PROFILE_ID, all),
+      // a new kind of song starts on its first song
+      kind ? null : defaultSongId(PROFILE_ID, all),
       reveal,
     );
     if (changed) songSel.dispatchEvent(new Event('change'));
@@ -290,7 +291,7 @@ export const keylineScreen: Screen = (root) => {
     onChange: (what) => {
       savePicker(store, picker);
       // choosing a kind of song starts a new list, on its first song
-      rebuild(what === 'kind' ? null : songSel.value);
+      rebuild(what === 'kind' ? null : songSel.value, false, what === 'kind');
     },
   });
   // the song last played, else (for a new player) the first step of the learning path

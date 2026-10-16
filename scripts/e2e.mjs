@@ -1796,11 +1796,17 @@ const scenarios = {
       );
       // choosing a kind starts a new list on its first song, with a count line to say so
       await page.fill('[data-id=picker-query]', '');
+      // from another kind and a song that is not first, to Exercises: the list starts on its first song
+      await page.selectOption('[data-id=picker-category]', 'folk');
+      const folk = await options();
+      await page.selectOption('[data-id=song]', folk[folk.length - 1]);
       await page.selectOption('[data-id=picker-category]', 'exercise');
+      const exFirst = (await options())[0];
       check(
-        (await page.inputValue('[data-id=song]')).startsWith('ex-') &&
+        (await page.inputValue('[data-id=song]')) === exFirst &&
+          exFirst.startsWith('ex-') &&
           /songs? in Exercises/.test(await text(page, 'picker-count')),
-        `picker: choosing Exercises selects an exercise and says how many (${await text(page, 'picker-count')})`,
+        `picker: choosing Exercises selects its first exercise and says how many (${await text(page, 'picker-count')})`,
       );
       await page.fill('[data-id=picker-query]', 'buns');
       check(
