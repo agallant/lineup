@@ -1289,6 +1289,22 @@ const scenarios = {
         document.querySelector('[data-id=midi-status]').textContent.includes('Test Piano'),
       );
       check(true, 'keys: a connected MIDI keyboard is named');
+      // free play: a keyboard to fool around on, with no score, that Stop returns from
+      await page.click('[data-id=free]');
+      await page.waitForSelector('[data-id=stage]:visible', { timeout: 10000 });
+      check(
+        /Free play/.test(await text(page, 'stage-play')) &&
+          (await page.$('[data-id=score]')) === null,
+        'keys: free play opens a keyboard with no score',
+      );
+      await page.evaluate(() => {
+        window.__midiSend([0x90, 60, 100]);
+        window.__midiSend([0x80, 60, 0]);
+      });
+      await page.waitForTimeout(500);
+      await page.click('[data-id=stop]');
+      await page.waitForSelector('[data-id=free]:visible', { timeout: 10000 });
+      check(true, 'keys: Stop leaves free play for the setup');
       await pickSong(page, 'keys-ex-five-finger');
       await page.uncheck('[data-id=opt-metronome]');
       await page.click('[data-id=demo]');

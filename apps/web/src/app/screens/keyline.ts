@@ -1,6 +1,7 @@
 import {
   SongClock,
   chartEnd,
+  chartFromBeats,
   getProfile,
   letterGrade,
   midiToFrequency,
@@ -99,6 +100,7 @@ const TEMPLATE = `
     <div class="row">
       <button data-id="play" class="primary">Play</button>
       <button data-id="demo">Watch auto-play demo</button>
+      <button data-id="free">Free play: just fool around</button>
     </div>
     <p class="status" data-id="setup-status" role="status"></p>
   </div>
@@ -122,6 +124,17 @@ const STEP_PLAY = `
   <p class="muted" data-id="keys-hint"></p>
 `;
 
+const FREE_PLAY = `
+  <div class="hud">
+    <div><strong>Free play</strong> <small>no score, no timing</small></div>
+    <button data-id="stop">Stop</button>
+  </div>
+  <div class="stage-wrap">
+    <canvas class="stage" data-id="stage" role="img" aria-label="A piano keyboard to play freely: touch or click the keys"></canvas>
+  </div>
+  <p class="muted" data-id="keys-hint"></p>
+`;
+
 const PLAY = `
   <div class="hud">
     <div><span class="label">Score</span> <strong data-id="score">0</strong></div>
@@ -135,6 +148,17 @@ const PLAY = `
   </div>
   <p class="muted" data-id="keys-hint"></p>
 `;
+
+/**
+ * The chart of free play: no song, only two notes a long time away, which set the keyboard to span C3 to
+ * C6 (C4 to C6 on a narrow screen, where more keys would be too small to touch) so nothing falls and
+ * there is nothing to be scored on.
+ */
+const freeChart = (narrow: boolean): Chart =>
+  chartFromBeats({ title: 'Free play', bpm: 60, instruments: ['keyboard'] }, [
+    { beat: 100000, pitch: narrow ? 60 : 48 },
+    { beat: 100001, pitch: 84 },
+  ]);
 
 /** Turns a key press into a piano note; returns a function that lets it fade out. */
 function sound(ctx: AudioContext, midi: number, velocity: number): () => void {
@@ -340,21 +364,22 @@ export const keylineScreen: Screen = (root) => {
     keyHandler = null;
   };
 
-  const run = (demo: boolean) => {
+  const run = (demo: boolean, free = false) => {
     if (beginInFlight) return;
     beginInFlight = true;
     try {
-      const chart = chartToPlay();
+      // free play has no song: a silent chart far in the future only sets the range of the keyboard
+      const chart = free ? freeChart(window.innerWidth < 600) : chartToPlay();
       const ctx = new AudioContext();
       void ctx.resume();
       sessionStart = new Date();
-      const step = !demo && settings.get().stepMode;
-      stages.play.innerHTML = step ? STEP_PLAY : PLAY;
+      const step = !demo && !free && settings.get().stepMode;
+      stages.play.innerHTML = free ? FREE_PLAY : step ? STEP_PLAY : PLAY;
       show('play');
       const P = <T extends HTMLElement = HTMLElement>(id: string): T =>
         stages.play.querySelector<T>(`[data-id="${id}"]`)!;
       const stage = P<HTMLCanvasElement>('stage');
-      const overlay = step ? null : P('overlay');
+      const overlay = step || free ? null : P('overlay');
       const spb = 60 / chart.meta.bpm;
       const countIn = chart.meta.countInBeats * spb;
       const offset = demo ? 0 : Number(timingBox.value) / 1000;
@@ -364,20 +389,21 @@ export const keylineScreen: Screen = (root) => {
       const stepGame = step ? new KeyStepGame(chart, profile) : null;
       const opts = settings.get();
       // the step mode always sounds the notes it asks; the player's own presses sound as the option says
-      const withSound = soundBox.checked || demo;
+      const withSound = soundBox.checked || demo || free;
       let passedAt = 0;
-      backing = step
-        ? null
-        : playBacking(
-            ctx,
-            clock,
-            planAllBacking(chart, {
-              metronome: opts.metronome,
-              guideTone: false,
-              accompaniment: 'off',
-              drums: opts.drums,
-            }),
-          );
+      backing =
+        step || free
+          ? null
+          : playBacking(
+              ctx,
+              clock,
+              planAllBacking(chart, {
+                metronome: opts.metronome,
+                guideTone: false,
+                accompaniment: 'off',
+                drums: opts.drums,
+              }),
+            );
       const renderer = createRenderer(profile.renderer);
 
       // keys sounding now, so a release can fade the tone
@@ -405,7 +431,7 @@ export const keylineScreen: Screen = (root) => {
         toAudioTime(e.timeStamp, performance.now(), ctx.currentTime);
 
       const pitched = chart.notes.flatMap((n) => (n.pitch === undefined ? [] : [n.pitch]));
-      let base = Math.floor(Math.min(...pitched, 60) / 12) * 12;
+      let base = free ? 60 : Math.floor(Math.min(...pitched, 60) / 12) * 12;
       const hint = P('keys-hint');
       const showHint = () => {
         hint.textContent = demo
@@ -591,6 +617,7 @@ export const keylineScreen: Screen = (root) => {
         game.update();
         const { g, width, height } = fitCanvas(stage);
         renderer.draw(g, { width, height }, game.view());
+        if (free) return;
         const s = game.session.score;
         P('score').textContent = String(s.score);
         P('combo').textContent = String(s.combo);
@@ -772,6 +799,7 @@ export const keylineScreen: Screen = (root) => {
 
   $<HTMLButtonElement>('play').addEventListener('click', () => run(false));
   $<HTMLButtonElement>('demo').addEventListener('click', () => run(true));
+  $<HTMLButtonElement>('free').addEventListener('click', () => run(false, true));
 
   return () => {
     disposed = true;
