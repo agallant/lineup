@@ -9,7 +9,9 @@ import {
   effectiveCategory,
   filterSongs,
   loadPicker,
+  revealsAll,
   savePicker,
+  LONG_LIST,
 } from './song-picker';
 
 class Mem {
@@ -202,5 +204,30 @@ describe('kinds of song', () => {
     expect(only('exercise')).toEqual(['ex-scale']);
     expect(only('beatles')).toEqual(['pop-beatles-test-tune']);
     expect(only('exercise', 'hot')).toEqual(['x-hot']);
+  });
+
+  it('shows every kind to offer a song asked for by name that the kind chosen hides', () => {
+    const fill = (category: string, query = '', random = false) => ({
+      songs: many,
+      stars: () => null,
+      random: [],
+      state: { ...DEFAULT_PICKER, category, query, random },
+    });
+    // a folk song is hidden by the Exercises kind
+    expect(revealsAll(fill('exercise'), 'x-hot')).toBe(true);
+    // ...but not when it is shown anyway, unknown, searched for, or random songs are chosen
+    expect(revealsAll(fill('folk'), 'x-hot')).toBe(false);
+    expect(revealsAll(fill('exercise'), 'no-such-song')).toBe(false);
+    expect(revealsAll(fill('exercise', 'hot'), 'x-hot')).toBe(false);
+    expect(revealsAll(fill('exercise', '', true), 'x-hot')).toBe(false);
+    // and a short menu already shows all
+    expect(revealsAll(fill('all'), 'x-hot')).toBe(false);
+  });
+
+  it('names the length at which a menu starts on its first kind', () => {
+    const at = (n: number) =>
+      Array.from({ length: n }, (_, i) => mk(`x${i}`, `Song ${i}`, 'song', 40));
+    expect(effectiveCategory(at(LONG_LIST), '')).toBe('all');
+    expect(effectiveCategory(at(LONG_LIST + 1), '')).toBe('beginner');
   });
 });

@@ -98,6 +98,9 @@ export function categoriesFor(songs: readonly MenuSong[]): Category[] {
   }));
 }
 
+/** A menu longer than this many songs starts on its first kind of song instead of on all of them. */
+export const LONG_LIST = 40;
+
 /**
  * The kind of song to show: the one chosen when this game has it, else the first kind on offer when the
  * library is long (a short menu needs no narrowing, so it starts on all).
@@ -106,7 +109,7 @@ export function effectiveCategory(songs: readonly MenuSong[], chosen: string): s
   const cats = categoriesFor(songs);
   if (chosen && cats.some((c) => c.id === chosen)) return chosen;
   const all = cats.find((c) => c.id === 'all')?.count ?? 0;
-  return all > 40 && cats[0] ? cats[0].id : 'all';
+  return all > LONG_LIST && cats[0] ? cats[0].id : 'all';
 }
 
 const BAND_RANGE: Record<Band, [number, number]> = {
@@ -313,6 +316,20 @@ export function mountPickerControls(
 }
 
 /**
+ * Whether a song asked for by name is in the library but hidden by the kind of song shown, so the menu
+ * must show every kind to offer it. Never so during a search or while random songs are chosen.
+ */
+export function revealsAll(fill: PickerFill, wanted: string): boolean {
+  return (
+    !fill.state.random &&
+    fill.state.query.trim() === '' &&
+    effectiveCategory(fill.songs, fill.state.category) !== 'all' &&
+    fill.songs.some((s) => s.id === wanted) &&
+    !filterSongs(fill.songs, fill.state, fill.stars).some((s) => s.id === wanted)
+  );
+}
+
+/**
  * Fills a song menu and chooses what is selected: `wanted` when it is on offer, else `fallback`,
  * else the first song. Returns true when the selection is not what it was before, so the caller can
  * tell the rest of the screen.
@@ -330,15 +347,7 @@ export function rebuildPicker(
   const has = (v: string | null): v is string =>
     v !== null && [...select.options].some((o) => o.value === v && !o.disabled);
   // a song asked for by name (a link, the last one played) is never hidden by the kind chosen
-  if (
-    reveal &&
-    wanted !== null &&
-    !has(wanted) &&
-    !fill.state.random &&
-    fill.state.query.trim() === '' &&
-    effectiveCategory(fill.songs, fill.state.category) !== 'all' &&
-    fill.songs.some((s) => s.id === wanted)
-  ) {
+  if (reveal && wanted !== null && !has(wanted) && revealsAll(fill, wanted)) {
     fill.state.category = 'all';
     fillPicker(select, fill);
     fill.state.refresh?.();
