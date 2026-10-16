@@ -125,4 +125,12 @@ export * from './interchange';
 export * from './bass';
 export * from './keys';
 export * from './midi';
-export { POP_FAVORITES, POP_SONGS, popChart, popId, popPattern, type PopSong } from './pop';
+export {
+  POP_FAVORITES,
+  POP_NEWER,
+  POP_SONGS,
+  popChart,
+  popId,
+  popPattern,
+  type PopSong,
+} from './pop';

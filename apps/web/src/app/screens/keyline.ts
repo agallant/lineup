@@ -249,25 +249,27 @@ export const keylineScreen: Screen = (root) => {
   const stars = starsBySong(scores.entries(), PROFILE_ID);
   const picker = loadPicker(store);
   /** Refills the menu from the filters, keeping the chosen song when it is still shown. */
-  const rebuild = (wanted: string | null) => {
+  const rebuild = (wanted: string | null, reveal = false) => {
     const all = songs();
     const changed = rebuildPicker(
       songSel,
       { songs: all, stars: (id) => stars.get(id) ?? null, random: [], state: picker },
       wanted,
       defaultSongId(PROFILE_ID, all),
+      reveal,
     );
     if (changed) songSel.dispatchEvent(new Event('change'));
   };
   mountPickerControls($('song-filters'), picker, {
     hasRandom: false,
+    songs: songs(),
     onChange: () => {
       savePicker(store, picker);
       rebuild(songSel.value);
     },
   });
   // the song last played, else (for a new player) the first step of the learning path
-  rebuild(settings.get().songs[SONG_KEY] ?? null);
+  rebuild(settings.get().songs[SONG_KEY] ?? null, true);
   const refreshSong = () => {
     $('song-info').textContent = songSummary(entry().chart);
     $('best').textContent = describeBest(scores.best(bestKey()));
