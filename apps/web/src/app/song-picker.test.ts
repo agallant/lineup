@@ -222,6 +222,9 @@ describe('kinds of song', () => {
     expect(revealsAll(fill('exercise', '', true), 'x-hot')).toBe(false);
     // and a short menu already shows all
     expect(revealsAll(fill('all'), 'x-hot')).toBe(false);
+    // a difficulty filter that hides it under every kind is no reason to leave this one
+    const hard = { ...fill('folk'), state: { ...fill('folk').state, band: 'hard' as const } };
+    expect(revealsAll(hard, 'x-hot')).toBe(false);
   });
 
   it('names the length at which a menu starts on its first kind', () => {

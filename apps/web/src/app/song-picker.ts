@@ -316,17 +316,16 @@ export function mountPickerControls(
 }
 
 /**
- * Whether a song asked for by name is in the library but hidden by the kind of song shown, so the menu
+ * Whether a song asked for by name is in the library but outside the kind of song shown, so the menu
  * must show every kind to offer it. Never so during a search or while random songs are chosen.
  */
 export function revealsAll(fill: PickerFill, wanted: string): boolean {
-  return (
-    !fill.state.random &&
-    fill.state.query.trim() === '' &&
-    effectiveCategory(fill.songs, fill.state.category) !== 'all' &&
-    fill.songs.some((s) => s.id === wanted) &&
-    !filterSongs(fill.songs, fill.state, fill.stars).some((s) => s.id === wanted)
-  );
+  if (fill.state.random || fill.state.query.trim() !== '') return false;
+  const category = effectiveCategory(fill.songs, fill.state.category);
+  if (category === 'all') return false;
+  const song = fill.songs.find((s) => s.id === wanted);
+  // only the kind matters here: a difficulty or "hide cleared" filter would hide it under every kind
+  return song !== undefined && !categoriesOf(song).includes(category);
 }
 
 /**
