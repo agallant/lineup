@@ -234,7 +234,12 @@ export function mountPickerControls(
     hasRandom,
     songs,
     onChange,
-  }: { hasRandom: boolean; songs: readonly MenuSong[]; onChange: () => void },
+  }: {
+    hasRandom: boolean;
+    songs: readonly MenuSong[];
+    /** Called when a choice changes; `'kind'` when the kind of song was chosen, which starts a new list. */
+    onChange: (what?: 'kind') => void;
+  },
 ): { sync: () => void } {
   const categories = categoriesFor(songs);
   box.innerHTML = `
@@ -248,6 +253,7 @@ export function mountPickerControls(
         .join('')}</select></label>
       <label>Search <input data-id="picker-query" type="search" placeholder="Any title" autocomplete="off" /></label>
     </div>
+    <p class="muted" data-id="picker-count" role="status"></p>
     <details data-id="picker-filters">
       <summary>Sort and filter</summary>
       <div class="row">
@@ -277,9 +283,9 @@ export function mountPickerControls(
     if (state.band !== 'all' || state.hideCleared || state.sort !== 'easy')
       $<HTMLDetailsElement>('picker-filters').open = true;
   };
-  const changed = () => {
+  const changed = (what?: 'kind') => {
     sync();
-    onChange();
+    onChange(what);
   };
   $('src-library').addEventListener('click', () => {
     state.random = false;
@@ -291,7 +297,7 @@ export function mountPickerControls(
   });
   $<HTMLSelectElement>('picker-category').addEventListener('change', (e) => {
     state.category = (e.target as HTMLSelectElement).value;
-    changed();
+    changed('kind');
   });
   $<HTMLInputElement>('picker-query').addEventListener('input', (e) => {
     state.query = (e.target as HTMLInputElement).value;
@@ -313,6 +319,17 @@ export function mountPickerControls(
   state.refresh = sync;
   sync();
   return { sync };
+}
+
+/** How many songs the menu shows, and of which kind, for the line under the menus. */
+export function countText(fill: PickerFill, count: number): string {
+  if (fill.state.random) return '';
+  if (count === 0) return 'No songs match: change the search or filters';
+  const noun = count === 1 ? 'song' : 'songs';
+  if (fill.state.query.trim() !== '') return `${count} ${noun} match your search`;
+  const kind = effectiveCategory(fill.songs, fill.state.category);
+  const label = CATEGORY_LABELS.find((c) => c.id === kind)?.label ?? '';
+  return kind === 'all' ? `${count} ${noun}` : `${count} ${noun} in ${label}`;
 }
 
 /**
@@ -342,15 +359,17 @@ export function rebuildPicker(
   reveal = false,
 ): boolean {
   const before = select.value;
-  fillPicker(select, fill);
+  let count = fillPicker(select, fill);
   const has = (v: string | null): v is string =>
     v !== null && [...select.options].some((o) => o.value === v && !o.disabled);
   // a song asked for by name (a link, the last one played) is never hidden by the kind chosen
   if (reveal && wanted !== null && !has(wanted) && revealsAll(fill, wanted)) {
     fill.state.category = 'all';
-    fillPicker(select, fill);
+    count = fillPicker(select, fill);
     fill.state.refresh?.();
   }
+  const counter = select.closest('main, #app')?.querySelector('[data-id="picker-count"]');
+  if (counter) counter.textContent = countText(fill, count);
   const first = [...select.options].find((o) => !o.disabled)?.value ?? '';
   select.value = has(wanted) ? wanted : has(fallback) ? fallback : first;
   // with no song to play, Play and the demo wait until the filters show one again

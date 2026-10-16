@@ -501,9 +501,10 @@ export const createHitScreen =
       mountPickerControls(S('song-filters'), picker, {
         hasRandom: random.length > 0,
         songs,
-        onChange: () => {
+        onChange: (what) => {
           savePicker(safeLocalStorage(), picker);
-          rebuild(songSel.value);
+          // choosing a kind of song starts a new list, on its first song
+          rebuild(what === 'kind' ? null : songSel.value);
         },
       });
       rebuild(saved, true);

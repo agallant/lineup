@@ -263,9 +263,10 @@ export const keylineScreen: Screen = (root) => {
   mountPickerControls($('song-filters'), picker, {
     hasRandom: false,
     songs: songs(),
-    onChange: () => {
+    onChange: (what) => {
       savePicker(store, picker);
-      rebuild(songSel.value);
+      // choosing a kind of song starts a new list, on its first song
+      rebuild(what === 'kind' ? null : songSel.value);
     },
   });
   // the song last played, else (for a new player) the first step of the learning path

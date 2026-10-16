@@ -5,6 +5,7 @@ import {
   DEFAULT_PICKER,
   categoriesFor,
   categoriesOf,
+  countText,
   defaultSongId,
   effectiveCategory,
   filterSongs,
@@ -232,5 +233,20 @@ describe('kinds of song', () => {
       Array.from({ length: n }, (_, i) => mk(`x${i}`, `Song ${i}`, 'song', 40));
     expect(effectiveCategory(at(LONG_LIST), '')).toBe('all');
     expect(effectiveCategory(at(LONG_LIST + 1), '')).toBe('beginner');
+  });
+
+  it('says how many songs are shown and of which kind', () => {
+    const fill = (category: string, query = '', random = false) => ({
+      songs: many,
+      stars: () => null,
+      random: [],
+      state: { ...DEFAULT_PICKER, category, query, random },
+    });
+    expect(countText(fill('exercise'), 1)).toBe('1 song in Exercises and scales');
+    expect(countText(fill('beginner'), 2)).toBe('2 songs in Beginner and easy songs');
+    expect(countText(fill('all'), 6)).toBe('6 songs');
+    expect(countText(fill('exercise', 'hot'), 3)).toBe('3 songs match your search');
+    expect(countText(fill('folk'), 0)).toBe('No songs match: change the search or filters');
+    expect(countText(fill('folk', '', true), 2)).toBe('');
   });
 });

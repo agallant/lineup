@@ -1778,6 +1778,14 @@ const scenarios = {
         exercises.length > 0 && !exercises.includes('sing-hot-cross-buns'),
         `picker: Exercises lists only exercises (${exercises.length}, not the ${all.length} beginner songs)`,
       );
+      // choosing a kind starts a new list on its first song, with a count line to say so
+      await page.fill('[data-id=picker-query]', '');
+      await page.selectOption('[data-id=picker-category]', 'exercise');
+      check(
+        (await page.inputValue('[data-id=song]')).startsWith('ex-') &&
+          /songs? in Exercises/.test(await text(page, 'picker-count')),
+        `picker: choosing Exercises selects an exercise and says how many (${await text(page, 'picker-count')})`,
+      );
       await page.fill('[data-id=picker-query]', 'buns');
       check(
         (await options()).join() === 'sing-hot-cross-buns' &&

@@ -393,9 +393,10 @@ export const createPitchScreen =
       mountPickerControls(S('song-filters'), picker, {
         hasRandom: true,
         songs,
-        onChange: () => {
+        onChange: (what) => {
           savePicker(safeLocalStorage(), picker);
-          rebuild(songSel.value);
+          // choosing a kind of song starts a new list, on its first song
+          rebuild(what === 'kind' ? null : songSel.value);
         },
       });
       rebuild(previous, true);
