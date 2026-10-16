@@ -229,6 +229,12 @@ async function pickSong(page, value) {
     await page.selectOption('[data-id=picker-category]', 'all');
   await page.selectOption('[data-id=song]', value);
 }
+/** Shows every kind of song in the open menu (the default kind can hide most of a long list). */
+async function showAllKinds(page) {
+  await page.waitForSelector('[data-id=song]');
+  if (await page.$('[data-id=picker-category]'))
+    await page.selectOption('[data-id=picker-category]', 'all');
+}
 const text = async (page, id) => ((await page.textContent(`[data-id=${id}]`)) ?? '').trim();
 
 /** Clicks "Copy session log" on the results screen and checks what landed on the clipboard. */
@@ -571,6 +577,7 @@ const scenarios = {
         ['wind', 'ex-wind-major-pentatonic-up-down', 11],
       ]) {
         await page.goto(URL_BASE + '#/' + route);
+        await showAllKinds(page);
         const groups = await page.$$eval('[data-id=song] optgroup', (g) => g.map((x) => x.label));
         check(
           groups.join() === 'Songs,Exercises' && (await page.$('[data-id=src-random]')) !== null,
@@ -1235,6 +1242,7 @@ const scenarios = {
     await session(null, async (page) => {
       await page.goto(URL_BASE + '#/bass');
       await page.waitForSelector('[data-id=song]');
+      await showAllKinds(page);
       const songs = await page.$$eval('[data-id=song] option', (o) => o.length);
       check(songs >= 30, `bass: ${songs} songs and exercises in the menu`);
       check(await page.isHidden('[data-id=chords-opt]'), 'bass: no chord option');
@@ -2075,6 +2083,7 @@ const scenarios = {
       const has = async (route, mode, title) => {
         await page.goto(URL_BASE + '#/' + route);
         if (mode) await page.selectOption('[data-id=mode]', mode);
+        await showAllKinds(page);
         return page.evaluate(
           (t) =>
             [...document.querySelectorAll('[data-id=song] option')].some((o) =>
