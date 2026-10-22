@@ -298,8 +298,8 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    **🎲 Random waltz (3/4)** (the same in three beats to the bar, counted in with three clicks) and **🎲 Random melody (picked)**. Pick a
    level (and optionally **Aim for** a difficulty from 1 to 10), press _New song_ or type a seed to replay one; the seed is shown in the song info.
    **Hits to strum** (packs **The Beatles** and **Number-one hits to strum**, and in the song list as
-   `Artist · capo N`): the chords of about 410 well-known songs from 1958 to 1991 (everything that reached the top forty, and all
-   the Beatles), such as _Help!_, _Come
+   `Artist · capo N`): the chords of about 510 well-known songs from 1958 to 1991 (every song of the annotations that converts to
+   chords Strumline can play, the Beatles among them), such as _Help!_, _Come
    Together_ and _Eight Days a Week_. They come from the McGill Billboard chord annotations (CC0), read by
    `scripts/import-billboard.mjs` into `packages/core/src/songs/pop-data.ts`: chord sequences, tempo and
    meter only, with no melody and no lyrics. Chords are simplified (sevenths, suspensions and inversions
