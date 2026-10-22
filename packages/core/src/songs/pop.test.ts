@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { GUITAR_CHORD_FRETS, UKULELE_CHORD_FRETS } from '../chords';
 import { getSong, songsFor } from './index';
 import { POP_DATA } from './pop-data';
+import { POP_GENRES } from './pop-genres';
 import { POP_MODERN } from './pop-modern';
-import { POP_FAVORITES, POP_SONGS, popChart, popId, popPattern } from './pop';
+import { POP_FAVORITES, POP_GENRE, POP_SONGS, popChart, popId, popPattern } from './pop';
 
 describe('pop songs', () => {
   it('has a few hundred, each a valid strum chart with a unique id', () => {
@@ -89,6 +90,21 @@ describe('pop songs', () => {
     for (const s of POP_MODERN) {
       expect(getSong(popId(s)).notes.length, s.title).toBeGreaterThan(20);
       expect(POP_FAVORITES.has(popId(s)), s.title).toBe(false);
+    }
+  });
+
+  it('has jazz, blues and classical progressions, each a playable chart apart from the hits', () => {
+    expect(POP_GENRES.length).toBeGreaterThanOrEqual(10);
+    expect(new Set(POP_GENRES.map((s) => s.genre))).toEqual(
+      new Set(['jazz', 'blues', 'classical']),
+    );
+    const ids = [...POP_DATA, ...POP_MODERN, ...POP_GENRES].map(popId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const s of POP_GENRES) {
+      const id = popId(s);
+      expect(POP_GENRE.get(id), s.title).toBe(s.genre);
+      expect(POP_SONGS[id]!.notes.length, s.title).toBeGreaterThan(30);
+      expect(POP_FAVORITES.has(id), s.title).toBe(false);
     }
   });
 });

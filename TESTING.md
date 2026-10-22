@@ -303,6 +303,7 @@ Items for features still to come are added here as they ship, under the mileston
 - [ ] The **song menus** now start with a **Kind of song** menu (beginner and easy, folk, The Beatles, number-one hits, newer songs, world rhythms, exercises, all) before the song list, and the **Search** box is always in view and looks through every kind. Is it quick to find a song on the iPad now, and are the kinds the right ones? Anything miscategorised?
 - [ ] **Keyline free play** (the "Free play: just fool around" button next to Play): a three-octave piano (two on a phone) with no score and no timing. Touch, slide across the keys for a glissando, or use a MIDI keyboard. Does it sound and feel right? Anything you would want in it (a sustain pedal, a recorder, other sounds)?
 - [ ] **Song menus**: choosing a kind of song now starts a new list on its first song, and a line under the menus says how many songs are in it. Does that make it clear that the list changed?
+- [ ] **More songs to strum**: about 590 now (every annotated Billboard song to 1991, newer ones written by hand, and jazz, blues and classical progressions under their own kinds). Do the jazz and classical ones sound right (they are simplified to the chords Strumline has: _Autumn Leaves_, _Fly Me to the Moon_, _All of Me_, rhythm changes, the canon, the folia)? Anything you would add?
 - [ ] **Install**: from the home page, "install it on this device" shows the right steps for your iPad, and
       adding it to the Home Screen works as described.
 

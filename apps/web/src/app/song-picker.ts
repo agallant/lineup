@@ -1,5 +1,5 @@
 import type { KeyValueStore } from '@lineup/core';
-import { POP_FAVORITES, POP_NEWER, rateChart } from '@lineup/core';
+import { POP_FAVORITES, POP_GENRE, POP_NEWER, rateChart } from '@lineup/core';
 import { COURSES } from './courses';
 import { escapeHtml } from './audio';
 import { fillSongMenu, type MenuSong, type SongSort } from './song-menu';
@@ -61,6 +61,8 @@ const CATEGORY_LABELS: readonly { id: string; label: string }[] = [
   { id: 'top', label: 'Number-one hits' },
   { id: 'newer', label: 'Newer songs' },
   { id: 'hits', label: 'Hit songs (all)' },
+  { id: 'jazz', label: 'Jazz and blues' },
+  { id: 'classical', label: 'Classical and early music' },
   { id: 'world', label: 'World rhythms' },
   { id: 'flute', label: 'Pentatonic flute songs' },
   { id: 'exercise', label: 'Exercises and scales' },
@@ -74,7 +76,9 @@ export function categoriesOf(song: MenuSong): string[] {
   if (song.category === 'exercise') out.push('exercise');
   if (song.category === 'flute') out.push('flute');
   if (/^World rhythm/.test(song.chart.meta.title)) out.push('world');
-  if (pop) {
+  const genre = POP_GENRE.get(song.id);
+  if (genre) out.push(genre === 'classical' ? 'classical' : 'jazz');
+  if (pop && !genre) {
     out.push('hits');
     if (song.id.startsWith('pop-beatles-')) out.push('beatles');
     if (POP_FAVORITES.has(song.id)) out.push('top');
