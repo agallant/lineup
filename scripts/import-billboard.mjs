@@ -314,7 +314,8 @@ console.log(
 if (outFile) writeFileSync(outFile, JSON.stringify(out));
 
 if (tsFile) {
-  const chosen = out.filter((s) => s.peak <= 100 || /beatles/i.test(s.artist));
+  // every song that converts (Hot 100 peaks never go beyond 100, so there is nothing left to leave out)
+  const chosen = out;
   const q = (x) => JSON.stringify(x);
   const rows = chosen.map(
     (s) =>
