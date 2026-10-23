@@ -158,7 +158,7 @@ export const POP_GENRES: readonly (PopSong & { genre: PopGenre })[] = [
       'Baroque pattern',
       1700,
       80,
-      loop('Am | Dm | G | C | F | Dm | E7 | Am', 4),
+      loop('Am | Dm | G | C | F | Bm | E7 | Am', 4),
     ),
   ),
 ];
