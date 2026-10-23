@@ -54,4 +54,13 @@ export const POP_MODERN: readonly PopSong[] = [
   song('Perfect', 'Ed Sheeran', 2017, 63, loop('G | Em | C | D', 8), { capo: 1, steps: 3 }),
   song('Hello', 'Adele', 2015, 79, loop('Em | C | G | D', 8), { capo: 1 }),
   song("Don't Look Back in Anger", 'Oasis', 1995, 82, loop('C | G | Am | E | F | G | C | C', 3)),
+  song('Ho Hey', 'The Lumineers', 2012, 80, loop('C | F | Am | G', 8)),
+  song(
+    'Hey There Delilah',
+    "Plain White T's",
+    2006,
+    104,
+    loop('D | F#m | D | F#m | Bm | G | A | A', 3),
+  ),
+  song('Mad World', 'Gary Jules', 2001, 72, loop('Em | G | D | A', 8)),
 ];

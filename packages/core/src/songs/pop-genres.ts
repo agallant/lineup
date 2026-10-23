@@ -111,6 +111,56 @@ export const POP_GENRES: readonly (PopSong & { genre: PopGenre })[] = [
       loop('Dm | C | Dm | A | F | C | Dm A | Dm', 4),
     ),
   ),
+  withGenre(
+    'jazz',
+    song(
+      'ii-V-I in C (jazz cadence)',
+      'Jazz standard pattern',
+      1940,
+      90,
+      loop('Dm | G7 | C | C', 8),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'I-vi-ii-V turnaround (jazz)',
+      'Jazz standard pattern',
+      1940,
+      100,
+      loop('C | Am | Dm | G7', 8),
+    ),
+  ),
+  withGenre(
+    'blues',
+    song(
+      'Minor blues in A',
+      'Blues form',
+      1950,
+      90,
+      loop('Am | Am | Am | Am | Dm | Dm | Am | Am | E7 | Dm | Am | E7', 3),
+    ),
+  ),
+  withGenre(
+    'classical',
+    song(
+      'Andalusian cadence (flamenco)',
+      'Traditional (Spanish)',
+      1600,
+      90,
+      loop('Am | G | F | E', 8),
+    ),
+  ),
+  withGenre(
+    'classical',
+    song(
+      'Circle of fifths (Baroque sequence)',
+      'Baroque pattern',
+      1700,
+      80,
+      loop('Am | Dm | G | C | F | Dm | E7 | Am', 4),
+    ),
+  ),
 ];
 
 export type PopGenre = 'jazz' | 'blues' | 'classical';
