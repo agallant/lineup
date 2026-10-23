@@ -127,6 +127,7 @@ export * from './keys';
 export * from './midi';
 export {
   POP_FAVORITES,
+  POP_GENRE,
   POP_NEWER,
   POP_SONGS,
   popChart,

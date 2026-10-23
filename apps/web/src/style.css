@@ -1177,6 +1177,29 @@ summary {
   min-height: 44px;
 }
 
+/* the flex layout hides the browser's own marker: draw one, so a folded section looks folded */
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 1.2em;
+  flex: none;
+  transition: transform 0.12s;
+}
+
+details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  summary::before {
+    transition: none;
+  }
+}
+
 input[type='range'] {
   height: 36px;
   touch-action: pan-y;

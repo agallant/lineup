@@ -249,4 +249,16 @@ describe('kinds of song', () => {
     expect(countText(fill('folk'), 0)).toBe('No songs match: change the search or filters');
     expect(countText(fill('folk', '', true), 2)).toBe('');
   });
+
+  it('puts the jazz, blues and classical progressions in their own kinds, not among the hits', () => {
+    const mkPop = (id: string): MenuSong => ({ id, chart: chart(id, 100), category: 'song' });
+    expect(categoriesOf(mkPop('pop-jazz-standard-joseph-kosma-autumn-leaves'))).toEqual([
+      'all',
+      'jazz',
+      'beginner',
+    ]);
+    expect(categoriesOf(mkPop('pop-pachelbel-canon-in-d-the-ground-in-four-beat-bars'))).toContain(
+      'classical',
+    );
+  });
 });

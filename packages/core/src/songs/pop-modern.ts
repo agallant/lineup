@@ -7,9 +7,9 @@ import type { PopSong } from './pop';
  * are facts about a song; there is no melody and no text. `year` is the release year and `peak` is 99
  * (the chart position is not recorded for these).
  */
-const loop = (bars: string, times: number): string => Array(times).fill(bars).join(' | ');
+export const loop = (bars: string, times: number): string => Array(times).fill(bars).join(' | ');
 
-const song = (
+export const song = (
   title: string,
   artist: string,
   year: number,
@@ -52,4 +52,6 @@ export const POP_MODERN: readonly PopSong[] = [
   }),
   song('Thinking Out Loud', 'Ed Sheeran', 2014, 79, loop('D | D | G | A', 8)),
   song('Perfect', 'Ed Sheeran', 2017, 63, loop('G | Em | C | D', 8), { capo: 1, steps: 3 }),
+  song('Hello', 'Adele', 2015, 79, loop('Em | C | G | D', 8), { capo: 1 }),
+  song("Don't Look Back in Anger", 'Oasis', 1995, 82, loop('C | G | Am | E | F | G | C | C', 3)),
 ];
