@@ -305,7 +305,7 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    meter only, with no melody and no lyrics. Chords are simplified (sevenths, suspensions and inversions
    become plain chords, a bar holds at most two) and the verses and choruses are condensed to a playable
    length. Songs are moved to a key whose chords the ukulele and guitar tables have; the artist line says
-   which capo fret restores the recorded key (or that it was moved up). A further 17 newer songs (_Someone
+   which capo fret restores the recorded key (or that it was moved up). Many newer songs (_Someone
    Like You_, _Wonderwall_, _Riptide_, _Despacito_ and others) are the progressions people play them with,
    written by hand in `pop-modern.ts`: check one against the recording before relying on it.
    The importer now keeps every annotated song (about 510), and `pop-genres.ts` adds jazz, blues and classical progressions (_Autumn Leaves_, _All of Me_, rhythm changes, twelve-bar blues, the canon, the folia and other Renaissance and Baroque grounds), simplified to the chords Strumline has: outlines, not lead sheets. The **Kind of song** menu lists them under _Jazz and blues_ and _Classical and early music_. About sixty more well-known songs (pop, country, folk, reggae) were added by hand from progressions published on public tab sites; chord sequences only, no melody or text.
