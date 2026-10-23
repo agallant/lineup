@@ -1282,3 +1282,16 @@ dialog.install-dialog ol {
 dialog.install-dialog li {
   margin: 6px 0;
 }
+
+@media (max-width: 600px) {
+  label:has(> select[data-id='song']) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+  select[data-id='song'] {
+    max-width: 100%;
+    width: 100%;
+  }
+}
