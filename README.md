@@ -308,7 +308,7 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    which capo fret restores the recorded key (or that it was moved up). A further 17 newer songs (_Someone
    Like You_, _Wonderwall_, _Riptide_, _Despacito_ and others) are the progressions people play them with,
    written by hand in `pop-modern.ts`: check one against the recording before relying on it.
-   The importer now keeps every annotated song (about 510), and `pop-genres.ts` adds jazz, blues and classical progressions (_Autumn Leaves_, _All of Me_, rhythm changes, twelve-bar blues, the canon, the folia and other Renaissance and Baroque grounds), simplified to the chords Strumline has: outlines, not lead sheets. The **Kind of song** menu lists them under _Jazz and blues_ and _Classical and early music_.
+   The importer now keeps every annotated song (about 510), and `pop-genres.ts` adds jazz, blues and classical progressions (_Autumn Leaves_, _All of Me_, rhythm changes, twelve-bar blues, the canon, the folia and other Renaissance and Baroque grounds), simplified to the chords Strumline has: outlines, not lead sheets. The **Kind of song** menu lists them under _Jazz and blues_ and _Classical and early music_. About sixty more well-known songs (pop, country, folk, reggae) were added by hand from progressions published on public tab sites; chord sequences only, no melody or text.
 3. **Also check the chords** (off by default, experimental): the analyzer is told which chords the
    song uses and a strum of a clearly different chord misses ("wrong chord" is counted on the results
    screen). A strum it cannot name still counts for timing. Turn it off if it penalises you unfairly
