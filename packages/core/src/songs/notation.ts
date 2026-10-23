@@ -5,7 +5,7 @@ import {
   type ChartMeta,
   type ChartNote,
 } from '../chart';
-import { UKULELE_CHORD_FRETS } from '../chords';
+import { ukuleleHasChord } from '../chords';
 import { GUITAR_STANDARD, guitarOpenFor, guitarPluck } from '../guitar';
 
 /**
@@ -154,7 +154,7 @@ export function strumChart(
   }
   const notes: BeatNote[] = [];
   tokens(bars).forEach((chord, bar) => {
-    if (!UKULELE_CHORD_FRETS[chord]) throw new Error(`no ukulele fingering for chord "${chord}"`);
+    if (!ukuleleHasChord(chord)) throw new Error(`no ukulele fingering for chord "${chord}"`);
     steps.forEach((step, i) => {
       if (step === '.') return;
       if (step !== 'D' && step !== 'U') throw new Error(`bad strum step "${step}"`);

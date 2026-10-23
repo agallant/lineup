@@ -1,5 +1,5 @@
 import { chartFromBeats, type BeatNote, type Chart } from '../chart';
-import { UKULELE_CHORD_FRETS } from '../chords';
+import { ukuleleHasChord } from '../chords';
 import { createRng, pick, pickWeighted, type Rng } from './random';
 import { isMelodyLevel, isSeed, MELODY_LEVELS, type MelodyLevel } from './melody';
 
@@ -242,7 +242,7 @@ export function generateChordSong(spec: ChordSongSpec): Chart {
   const fill = compact(patterns.fill);
   const notes: BeatNote[] = [];
   bars.forEach((chord, bar) => {
-    if (!UKULELE_CHORD_FRETS[chord]) throw new Error(`no ukulele fingering for chord "${chord}"`);
+    if (!ukuleleHasChord(chord)) throw new Error(`no ukulele fingering for chord "${chord}"`);
     // the contrast phrase takes the other pattern at the harder levels
     const letter = form[Math.floor(bar / 4)]!;
     const base = spec.level !== 'easy' && letter === 'B' ? alternative : main;

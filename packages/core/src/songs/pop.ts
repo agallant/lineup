@@ -1,6 +1,6 @@
 import type { Chart } from '../chart';
 import { chartFromBeats, type BeatNote } from '../chart';
-import { UKULELE_CHORD_FRETS } from '../chords';
+import { ukuleleHasChord } from '../chords';
 import { POP_DATA } from './pop-data';
 import { POP_GENRES } from './pop-genres';
 import { POP_MODERN } from './pop-modern';
@@ -70,8 +70,7 @@ export function popChart(song: PopSong): Chart {
   song.bars.split('|').forEach((bar, i) => {
     const chords = bar.trim().split(/\s+/);
     for (const chord of chords) {
-      if (!UKULELE_CHORD_FRETS[chord])
-        throw new Error(`${song.title}: no fingering for "${chord}"`);
+      if (!ukuleleHasChord(chord)) throw new Error(`${song.title}: no fingering for "${chord}"`);
     }
     pattern.forEach((step, k) => {
       if (step === '.') return;

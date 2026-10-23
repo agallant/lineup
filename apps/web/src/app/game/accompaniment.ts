@@ -2,6 +2,7 @@ import {
   createRng,
   hashSeed,
   notePitch,
+  parseChordName,
   pick,
   type Chart,
   type ChartNote,
@@ -54,22 +55,28 @@ interface Harmony {
   root: number;
   minor: boolean;
   seventh: boolean;
+  /** The semitones of the chord's notes above the root, when it is more than a plain triad or seventh. */
+  tones?: readonly number[];
+  /** The bass note's pitch class for a slash chord. */
+  bass?: number;
 }
 
 /** Pitch classes of the chord's notes above the root. */
-const intervals = (h: Harmony): number[] => [0, h.minor ? 3 : 4, 7, ...(h.seventh ? [10] : [])];
+const intervals = (h: Harmony): number[] =>
+  h.tones ? [...h.tones] : [0, h.minor ? 3 : 4, 7, ...(h.seventh ? [10] : [])];
 
-const NAMES: Readonly<Record<string, number>> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-
-/** The harmony a chord name such as "F#m", "Bb" or "G7" stands for, or null if it is not one. */
+/** The harmony a chord name such as "F#m", "Bb", "G7", "Dsus4" or "C/E" stands for, or null if it is not one. */
 export function parseChord(name: string): Harmony | null {
-  const m = /^([A-G])([#b]?)(m(?!aj))?(7)?$/.exec(name);
-  if (!m) return null;
-  const accidental = m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0;
+  const c = parseChordName(name);
+  if (!c) return null;
+  const tones = c.quality.intervals;
+  const plain = ['', 'm', '7', 'm7'].includes(c.quality.id);
   return {
-    root: mod12(NAMES[m[1]!]! + accidental),
-    minor: m[3] !== undefined,
-    seventh: m[4] !== undefined,
+    root: c.root,
+    minor: tones.includes(3) && !tones.includes(4),
+    seventh: tones.includes(10) || tones.includes(11),
+    ...(plain ? {} : { tones }),
+    ...(c.bass === null ? {} : { bass: c.bass }),
   };
 }
 
@@ -199,7 +206,7 @@ function voiceFor(wave: OscillatorType, duration: number): Voice {
 }
 
 /** The bass note and the notes of a chord, in the octaves the accompaniment plays in. */
-const bassOf = (h: Harmony): number => inOctave(h.root, 40);
+const bassOf = (h: Harmony): number => inOctave(h.bass ?? h.root, 40);
 const triadOf = (h: Harmony, low = 55): number[] =>
   intervals(h).map((iv) => inOctave(h.root + iv, low));
 

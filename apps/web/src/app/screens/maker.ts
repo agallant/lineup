@@ -93,7 +93,7 @@ export const makerScreen: Screen = (root) => {
           <label>Strum pattern <input data-id="pattern" type="text" spellcheck="false" /></label>
           <label>Beats to the bar <select data-id="beats"><option value="4">4</option><option value="3">3 (waltz)</option></select></label>
         </div>
-        <p class="muted">Chords: C G Am F D Em Dm A G7 C7 A7 D7 Bm Bb Gm Cm F#m E E7 B7. The pattern is one bar
+        <p class="muted">Chords: any chord by name, such as C, F#m, Bb, B7, Cmaj7, Dsus4, Em7, E5 or G/B (a letter, then # or b, then m, 7, maj7, m7, sus2, sus4, add9, 6, 9, dim, aug...). The pattern is one bar
           of eighth notes: <code>D</code> down, <code>U</code> up, <code>.</code> nothing (8 steps for 4 beats, 6 for a waltz).</p>
       </div>
 

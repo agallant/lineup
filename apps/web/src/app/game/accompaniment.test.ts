@@ -7,11 +7,14 @@ const tones = (chart: Chart, level: 'bass' | 'full') =>
 
 describe('parseChord', () => {
   it('reads roots, minors and sevenths', () => {
-    expect(parseChord('C')).toEqual({ root: 0, minor: false, seventh: false });
-    expect(parseChord('F#m')).toEqual({ root: 6, minor: true, seventh: false });
-    expect(parseChord('Bb')).toEqual({ root: 10, minor: false, seventh: false });
-    expect(parseChord('G7')).toEqual({ root: 7, minor: false, seventh: true });
+    expect(parseChord('C')).toMatchObject({ root: 0, minor: false, seventh: false });
+    expect(parseChord('F#m')).toMatchObject({ root: 6, minor: true, seventh: false });
+    expect(parseChord('Bb')).toMatchObject({ root: 10, minor: false, seventh: false });
+    expect(parseChord('G7')).toMatchObject({ root: 7, minor: false, seventh: true });
     expect(parseChord('Hm')).toBeNull();
+    expect(parseChord('Dsus4')).toMatchObject({ root: 2, minor: false, tones: [0, 5, 7] });
+    expect(parseChord('Cmaj7')).toMatchObject({ root: 0, seventh: true, tones: [0, 4, 7, 11] });
+    expect(parseChord('G/B')).toMatchObject({ root: 7, bass: 11 });
   });
 });
 
