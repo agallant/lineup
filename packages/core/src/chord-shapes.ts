@@ -27,44 +27,45 @@ const GUITAR_STANDARD_OPEN = [40, 45, 50, 55, 59, 64];
  * The shapes that slide up the neck: frets relative to the barre fret, and the string the root is
  * on (0 is the low E). The E form has its root on the low E string, the A form on the A string.
  */
-const BARRE_FORMS: Readonly<Record<string, readonly { string: number; rel: (number | null)[] }[]>> =
-  {
-    '': [
-      { string: 0, rel: [0, 2, 2, 1, 0, 0] },
-      { string: 1, rel: [null, 0, 2, 2, 2, 0] },
-    ],
-    m: [
-      { string: 0, rel: [0, 2, 2, 0, 0, 0] },
-      { string: 1, rel: [null, 0, 2, 2, 1, 0] },
-    ],
-    '7': [
-      { string: 0, rel: [0, 2, 0, 1, 0, 0] },
-      { string: 1, rel: [null, 0, 2, 0, 2, 0] },
-    ],
-    maj7: [
-      { string: 0, rel: [0, 2, 1, 1, 0, 0] },
-      { string: 1, rel: [null, 0, 2, 1, 2, 0] },
-    ],
-    m7: [
-      { string: 0, rel: [0, 2, 0, 0, 0, 0] },
-      { string: 1, rel: [null, 0, 2, 0, 1, 0] },
-    ],
-    sus4: [
-      { string: 0, rel: [0, 2, 2, 2, 0, 0] },
-      { string: 1, rel: [null, 0, 2, 2, 3, 0] },
-    ],
-    sus2: [{ string: 1, rel: [null, 0, 2, 2, 0, 0] }],
-    '6': [
-      { string: 0, rel: [0, 2, 2, 1, 2, 0] },
-      { string: 1, rel: [null, 0, 2, 2, 2, 2] },
-    ],
-    m7b5: [{ string: 1, rel: [null, 0, 1, 0, 1, null] }],
-    dim: [{ string: 1, rel: [null, 0, 1, 2, 1, null] }],
-    '5': [
-      { string: 0, rel: [0, 2, 2, null, null, null] },
-      { string: 1, rel: [null, 0, 2, 2, null, null] },
-    ],
-  };
+export const GUITAR_BARRE_FORMS: Readonly<
+  Record<string, readonly { string: number; rel: (number | null)[] }[]>
+> = {
+  '': [
+    { string: 0, rel: [0, 2, 2, 1, 0, 0] },
+    { string: 1, rel: [null, 0, 2, 2, 2, 0] },
+  ],
+  m: [
+    { string: 0, rel: [0, 2, 2, 0, 0, 0] },
+    { string: 1, rel: [null, 0, 2, 2, 1, 0] },
+  ],
+  '7': [
+    { string: 0, rel: [0, 2, 0, 1, 0, 0] },
+    { string: 1, rel: [null, 0, 2, 0, 2, 0] },
+  ],
+  maj7: [
+    { string: 0, rel: [0, 2, 1, 1, 0, 0] },
+    { string: 1, rel: [null, 0, 2, 1, 2, 0] },
+  ],
+  m7: [
+    { string: 0, rel: [0, 2, 0, 0, 0, 0] },
+    { string: 1, rel: [null, 0, 2, 0, 1, 0] },
+  ],
+  sus4: [
+    { string: 0, rel: [0, 2, 2, 2, 0, 0] },
+    { string: 1, rel: [null, 0, 2, 2, 3, 0] },
+  ],
+  sus2: [{ string: 1, rel: [null, 0, 2, 2, 0, 0] }],
+  '6': [
+    { string: 0, rel: [0, 2, 2, 1, 2, 0] },
+    { string: 1, rel: [null, 0, 2, 2, 2, 2] },
+  ],
+  m7b5: [{ string: 1, rel: [null, 0, 1, 0, 1, null] }],
+  dim: [{ string: 1, rel: [null, 0, 1, 2, 1, null] }],
+  '5': [
+    { string: 0, rel: [0, 2, 2, null, null, null] },
+    { string: 1, rel: [null, 0, 2, 2, null, null] },
+  ],
+};
 
 const mod12 = (n: number): number => ((n % 12) + 12) % 12;
 /** The highest fret a generated fingering reaches. */
@@ -100,7 +101,8 @@ function search(open: readonly number[], chord: ParsedChord, mutes: boolean): Vo
   const need = required(chord);
   const bass = chord.bass ?? chord.root;
   const bassMatters = mutes; // a ukulele's strings are not in pitch order
-  const minNotes = mutes ? Math.min(3, chordPitchClasses(chord).length) : open.length;
+  // a power chord has two notes but is played with the root doubled
+  const minNotes = mutes ? 3 : open.length;
   const all = new Set(chordPitchClasses(chord));
   const found = new Map<string, Voicing>();
   const frets: (number | null)[] = [];
@@ -168,7 +170,7 @@ function search(open: readonly number[], chord: ParsedChord, mutes: boolean): Vo
   for (let window = 0; window <= MAX_FRET - SPAN; window++) visit(0, window);
   // the movable barre shapes guitarists know (the E and A forms) are favoured where they fit
   if (mutes && open.length === 6 && open.every((o, i) => o === GUITAR_STANDARD_OPEN[i])) {
-    for (const t of BARRE_FORMS[chord.quality.id] ?? []) {
+    for (const t of GUITAR_BARRE_FORMS[chord.quality.id] ?? []) {
       const base = mod12(
         chord.bass === null ? chord.root - open[t.string]! : chord.root - open[t.string]!,
       );

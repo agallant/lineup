@@ -161,6 +161,39 @@ export const POP_GENRES: readonly (PopSong & { genre: PopGenre })[] = [
       loop('Am | Dm | G | C | F | Bm | E7 | Am', 4),
     ),
   ),
+  withGenre(
+    'jazz',
+    song(
+      'Blue Bossa',
+      'Kenny Dorham',
+      1963,
+      130,
+      loop(
+        'Cm7 | Cm7 | Fm7 | Fm7 | Dm7b5 | G7 | Cm7 | Cm7 | Ebm7 | Ab7 | Dbmaj7 | Dbmaj7 | Dm7b5 | G7 | Cm7 | Cm7',
+        2,
+      ),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'The Girl from Ipanema',
+      'Antonio Carlos Jobim',
+      1962,
+      128,
+      loop('Fmaj7 | Fmaj7 | G7 | G7 | Gm7 | Gb7 | Fmaj7 | Gb7', 4),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Summertime',
+      'George Gershwin',
+      1935,
+      66,
+      loop('Am | E7 | Am | E7 | Dm | Dm | Am | E7 | Am | Am', 3),
+    ),
+  ),
 ];
 
 export type PopGenre = 'jazz' | 'blues' | 'classical';

@@ -1,6 +1,6 @@
 import type { Chart, ChartNote } from './chart';
 import { UKULELE_OPEN, chordVoicings } from './chord-shapes';
-import { canonicalChordName } from './chord-theory';
+import { ROOT_NAMES, canonicalChordName, parseChordName } from './chord-theory';
 import { GUITAR_STANDARD, guitarFamily, retuneFrets } from './guitar';
 import type { InstrumentProfile } from './profile';
 
@@ -88,6 +88,9 @@ export function chordFrets(
   if (name === null) return null;
   if (Object.hasOwn(curated, name)) return curated[name]!;
   const g = guitarFamily(profileId);
+  // two-note power chords are a guitar's: the ukulele plays the major chord of the same root
+  const parsed = parseChordName(name);
+  if (!g && parsed?.quality.id === '5') return chordFrets(profileId, ROOT_NAMES[parsed.root]!);
   const key = `${g ? g.tuning.suffix || 'standard' : 'ukulele'}|${name}`;
   if (!made.has(key)) {
     const best = chordVoicings(g ? g.tuning.open : UKULELE_OPEN, name, g !== null)[0];
@@ -106,7 +109,8 @@ export const ukuleleHasChord = (chord: string): boolean => chordFrets(undefined,
  */
 export function noteFrets(note: ChartNote, profileId?: string): readonly (number | null)[] | null {
   const explicit = note.expected?.frets;
-  if (explicit) return explicit;
+  // frets written for another instrument (four strings against six) are not this one's
+  if (explicit && explicit.length === (guitarFamily(profileId) ? 6 : 4)) return explicit;
   const chord = note.expected?.chord;
   return chord === undefined ? null : chordFrets(profileId, chord);
 }

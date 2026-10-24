@@ -13,6 +13,7 @@ import {
   MELODY_LEVELS,
   exerciseCharts,
   chordChangeDrills,
+  chordPracticeExercises,
   generateChordSong,
   generateFluteSong,
   generateGroove,
@@ -261,6 +262,17 @@ describe('generated and exercise material, played through the real chain', () =>
     const { counts } = uke(chart).score;
     // the same few strums right after a change can be missed in the simulation (see the README)
     expect(counts.miss / chart.notes.length).toBeLessThan(0.1);
+    expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
+  });
+
+  it.each(
+    Object.entries(chordPracticeExercises()).filter(([, c]) =>
+      c.meta.instruments?.includes('ukulele-strum'),
+    ),
+  )('%s: the ukulele strums are almost all heard', (_, chart) => {
+    const { counts } = uke(chart).score;
+    // chords a note apart (a major and its seventh) can blur in the simulation, as in the drills
+    expect(counts.miss / chart.notes.length).toBeLessThan(0.2);
     expect(counts.perfect + counts.good + counts.miss).toBe(chart.notes.length);
   });
 

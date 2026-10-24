@@ -69,6 +69,12 @@ describe('chord fingerings for every chord', () => {
     expect(mod12(Math.min(...lowest))).toBe(11);
   });
 
+  it('plays a power chord as the major chord on the ukulele, in three notes on the guitar', () => {
+    expect(chordFrets(undefined, 'F5')).toEqual(chordFrets(undefined, 'F'));
+    expect(chordFrets('guitar-strum', 'E5')).toEqual([0, 2, 2, null, null, null]);
+    expect(chordFrets('guitar-strum', 'Db5')).toEqual([null, 4, 6, 6, null, null]);
+  });
+
   it('knows no fingering for what is not a chord', () => {
     expect(chordFrets(undefined, 'Hm')).toBeNull();
     expect(ukuleleHasChord('Hm')).toBe(false);

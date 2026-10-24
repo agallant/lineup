@@ -1,3 +1,4 @@
+export * from './chord-practice';
 export * from './exercises';
 export * from './random';
 export * from './theory';

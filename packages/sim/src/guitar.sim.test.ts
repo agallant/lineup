@@ -64,7 +64,8 @@ describe('guitar songs', () => {
   it('the guitar has the same songs as the ukulele, retargeted', () => {
     const uke = songsFor('ukulele-strum');
     const gtr = songsFor('guitar-strum');
-    expect(gtr.map((s) => s.id)).toEqual(uke.map((s) => s.id));
+    // every ukulele song first, then the guitar's own exercises (barre and power chords)
+    expect(gtr.slice(0, uke.length).map((s) => s.id)).toEqual(uke.map((s) => s.id));
     for (const s of gtr) expect(s.chart.meta.instruments, s.id).toContain('guitar-strum');
   });
 
@@ -104,6 +105,30 @@ describe('guitar: a calibrated player who strums the right chords', () => {
     const r = play(four, {}, { chords: chordShapesFor(profile, chartChords(four)) });
     expect(r.score.accuracy).toBeGreaterThan(0.9);
   });
+});
+
+describe('guitar: barre, slid and power chords', () => {
+  const ids = songsFor('guitar-strum')
+    .map((s) => s.id)
+    .filter((id) => id.startsWith('ex-guitar-strum-'));
+
+  it.each(ids)('%s: every strum is heard on time', (id) => {
+    const chart = getSong(id);
+    expect(chart.notes.length).toBeGreaterThan(8);
+    const r = play(chart);
+    // a long-ringing barre chord can read as one stroke too many when the next one sounds
+    expect(r.inputs.length).toBeGreaterThanOrEqual(chart.notes.length);
+    expect(r.inputs.length).toBeLessThanOrEqual(chart.notes.length + 2);
+    expect(r.score.accuracy).toBeGreaterThan(0.85);
+  });
+
+  it.each(['Gmaj7', 'Dsus4', 'F#m', 'B', 'Bb', 'C#m7', 'Eb', 'Ab', 'E5', 'G/B'])(
+    '%s sounds the notes of the chord',
+    (name) => {
+      const midis = chordShapesFor(profile, [name])[name]!;
+      expect(midis.length).toBeGreaterThanOrEqual(2);
+    },
+  );
 });
 
 describe('alternate tunings', () => {

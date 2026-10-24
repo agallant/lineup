@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadChart } from '../chart';
 import { rateChart } from '../difficulty';
 import { getProfile } from '../profiles';
-import { UKULELE_CHORD_FRETS } from '../chords';
+import { ukuleleHasChord } from '../chords';
 import { getSong, songCategory, songsFor } from '../songs';
 import {
   EXERCISE_KINDS,
@@ -325,7 +325,7 @@ describe('chord change drills', () => {
   const drills = chordChangeDrills();
 
   it('are valid ukulele exercises with tidy ids, and speed up the changes', () => {
-    expect(Object.keys(drills)).toHaveLength(8);
+    expect(Object.keys(drills)).toHaveLength(16);
     for (const [id, chart] of Object.entries(drills)) {
       expect(id).toMatch(/^ex-ukulele-strum-changes-[a-z0-9]+-[a-z0-9]+$/);
       expect(loadChart(chart).ok, id).toBe(true);
@@ -346,6 +346,6 @@ describe('chord change drills', () => {
 
   it('only use chords that have a fingering', () => {
     for (const chart of Object.values(drills))
-      for (const n of chart.notes) expect(UKULELE_CHORD_FRETS[n.expected!.chord!]).toBeDefined();
+      for (const n of chart.notes) expect(ukuleleHasChord(n.expected!.chord!)).toBe(true);
   });
 });

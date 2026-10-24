@@ -8,6 +8,27 @@
 // curated set (every song of the dataset that converts to chords Strumline can play) as the TypeScript data module the app uses.
 import { readFileSync, readdirSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { pathToFileURL } from 'node:url';
+
+// the chord library is TypeScript: bundle it once so the importer can score how easy a key is to play
+const work = mkdtempSync(join(tmpdir(), 'billboard-'));
+writeFileSync(
+  join(work, 'entry.ts'),
+  `export { chordVoicings, UKULELE_OPEN } from '${join(process.cwd(), 'packages/core/src/chord-shapes').replaceAll('\\', '/')}';\nexport { ROOT_NAMES } from '${join(process.cwd(), 'packages/core/src/chord-theory').replaceAll('\\', '/')}';\n`,
+);
+execFileSync(
+  'npx',
+  ['rolldown', join(work, 'entry.ts'), '--file', join(work, 'lib.mjs'), '--format', 'esm'],
+  {
+    stdio: 'ignore',
+  },
+);
+const { chordVoicings, UKULELE_OPEN, ROOT_NAMES } = await import(
+  pathToFileURL(join(work, 'lib.mjs')).href
+);
 
 const dir = process.argv[2]?.startsWith('--') ? undefined : process.argv[2];
 /** The value after a flag, which must be there and must not itself be a flag. */
@@ -48,34 +69,27 @@ const NOTE = {
   B: 11,
   Cb: 11,
 };
-const NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
-// the chords Strumline has fingerings for
-const MAJ = new Set(['C', 'G', 'F', 'D', 'A', 'E', 'Bb']);
-const MIN = new Set(['A', 'E', 'D', 'B', 'G', 'C', 'F#']);
-const DOM = new Set(['G', 'C', 'A', 'D', 'E', 'B']);
+/** What each Harte quality becomes: the plain chord people strum (extensions dropped), keeping sus, dim and aug. */
+function qualityOf(qual) {
+  if (/^sus4\(b7\)$/.test(qual)) return '7sus4';
+  if (qual === 'sus4') return 'sus4';
+  if (qual === 'sus2') return 'sus2';
+  if (/^(dim|hdim)/.test(qual)) return 'dim';
+  if (qual === 'aug') return 'aug';
+  if (/^min/.test(qual)) return 'm';
+  if (/^(7|9|11|13)/.test(qual)) return '7';
+  return '';
+}
 
-/** A Harte chord ("A:min7/5", "C:maj") as { root, q } with q one of maj, min, 7, or null for no chord. */
+/** A Harte chord ("A:min7/5", "C:maj") as { root, q } with q one of '', m, 7, sus4... ; null for no chord. */
 function parseChord(tok) {
   if (tok === 'N' || tok === 'X' || tok === '*' || tok === '&pause') return null;
-  const m = /^([A-G][b#]?)(?::([^/(]*))?(?:\([^)]*\))?(?:\/\S*)?$/.exec(tok);
+  const m = /^([A-G][b#]?)(?::([^/(]*))?(?:\(([^)]*)\))?(?:\/\S*)?$/.exec(tok);
   if (!m) return undefined;
   const root = NOTE[m[1]];
   if (root === undefined) return undefined;
   const qual = (m[2] ?? 'maj').trim();
-  let q;
-  if (
-    qual === '' ||
-    qual === 'maj' ||
-    (/^(maj7|maj9|6|9\)?|add|sus|aug|maj6|5|1)/.test(qual) && !/^9$|^7|^11|^13/.test(qual))
-  )
-    q = 'maj';
-  else if (/^(min|dim|hdim)/.test(qual)) q = 'min';
-  else if (/^(7|9|11|13)/.test(qual)) q = '7';
-  else if (/^maj/.test(qual)) q = 'maj';
-  else q = 'maj';
-  if (qual === 'sus4' || qual === 'sus2' || qual === 'sus4(b7)')
-    q = qual.includes('b7') ? '7' : 'maj';
-  return { root, q };
+  return { root, q: qualityOf(qual === 'sus4' && m[3] === 'b7' ? 'sus4(b7)' : qual) };
 }
 
 function parseFile(path) {
@@ -229,42 +243,24 @@ for (const id of readdirSync(join(dir, 'billboard-2.0-salami_chords'))) {
     stats.short++;
     continue;
   }
-  // transpose down (a capo) or up so that every chord has a fingering
+  // move the song (down with a capo, or up) to the key whose chords are easiest on the ukulele
+  const names = new Map();
+  const labelOf = (c, shift) => `${ROOT_NAMES[(c.root + shift + 120) % 12]}${c.q}`;
   let best = null;
   for (let shift = -7; shift <= 5; shift++) {
-    let cost = shift < 0 ? -shift + (shift < -5 ? 3 : 0) : shift > 0 ? 2 + shift : 0;
-    let unplayable = 0;
-    const bars = kept.map((bar) =>
-      bar.map((c) => {
-        const root = (c.root + shift + 120) % 12;
-        const name = NAMES[root];
-        const sharp = name === 'Db' ? 'C#' : name === 'Eb' ? 'D#' : name === 'Ab' ? 'G#' : name;
-        let q = c.q;
-        if (q === '7' && !DOM.has(name)) {
-          q = 'maj';
-          cost += 1;
-        }
-        const ok =
-          q === 'min'
-            ? MIN.has(sharp === 'Gb' ? 'F#' : sharp)
-            : MAJ.has(name) || (q === '7' && DOM.has(name));
-        if (!ok) unplayable++;
-        const label =
-          q === 'min'
-            ? `${sharp === 'F#' || name === 'F#' ? 'F#' : name}m`
-            : q === '7'
-              ? `${name}7`
-              : name;
-        return label;
-      }),
-    );
-    const score = unplayable * 100 + cost;
-    if (!best || score < best.score) best = { shift, score, unplayable, bars };
+    const counts = new Map();
+    for (const bar of kept)
+      for (const c of bar) counts.set(labelOf(c, shift), (counts.get(labelOf(c, shift)) ?? 0) + 1);
+    let cost = shift < 0 ? -shift * 1.5 + (shift < -5 ? 3 : 0) : shift > 0 ? 3 + shift : 0;
+    for (const [label, n] of counts) {
+      if (!names.has(label))
+        names.set(label, chordVoicings(UKULELE_OPEN, label, false)[0]?.cost ?? 99);
+      cost += names.get(label) * Math.min(2, 0.4 + n / 12);
+    }
+    if (!best || cost < best.score) best = { shift, score: cost };
   }
-  if (best.unplayable > 0) {
-    stats.unplayable++;
-    continue;
-  }
+  best.bars = kept.map((bar) => bar.map((c) => labelOf(c, best.shift)));
+  best.unplayable = 0;
   stats.ok++;
   const info = index.get(id);
   // without the chart index there is no year, position, title or artist to trust
