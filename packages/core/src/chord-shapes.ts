@@ -97,10 +97,16 @@ function required(chord: ParsedChord): Set<number> {
 }
 
 /** Every playable fingering of a chord on strings tuned `open` (low to high), easiest first. */
-function search(open: readonly number[], chord: ParsedChord, mutes: boolean): Voicing[] {
+function search(
+  open: readonly number[],
+  chord: ParsedChord,
+  mutes: boolean,
+  strictBass = mutes,
+): Voicing[] {
   const need = required(chord);
   const bass = chord.bass ?? chord.root;
-  const bassMatters = mutes; // a ukulele's strings are not in pitch order
+  // a guitar's lowest string sounds the bass; a ukulele's strings are not in pitch order, so its bass counts only when asked
+  const bassMatters = strictBass;
   // a power chord has two notes but is played with the root doubled
   const minNotes = mutes ? 3 : open.length;
   const all = new Set(chordPitchClasses(chord));
@@ -204,6 +210,14 @@ export function chordVoicings(
   let all = cache.get(key);
   if (!all) {
     all = search(open, chord, mutes);
+    // a ukulele's slash chord has the named bass lowest when that is easy to finger (C/E is 0 4 3 3);
+    // its strings are not in pitch order, so otherwise it is just the chord
+    if (!mutes && chord.bass !== null) {
+      const strict = search(open, chord, mutes, true).filter(
+        (v) => Math.max(...v.frets.map((f) => f ?? 0)) <= 4,
+      );
+      if (strict.length > 0) all = strict;
+    }
     cache.set(key, all);
   }
   return all;

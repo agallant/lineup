@@ -75,6 +75,14 @@ describe('chord fingerings for every chord', () => {
     expect(chordFrets('guitar-strum', 'Db5')).toEqual([null, 4, 6, 6, null, null]);
   });
 
+  it('gives a ukulele slash chord its bass when that is easy, else the plain chord', () => {
+    const lowest = (frets: readonly (number | null)[]) =>
+      mod12(Math.min(...frets.map((f, i) => UKULELE_OPEN[i]! + f!)));
+    expect(lowest(chordFrets(undefined, 'C/E')!)).toBe(4);
+    expect(chordFrets(undefined, 'G/B')).toEqual(chordFrets(undefined, 'G'));
+    expect(chordFrets(undefined, 'D/F#')).toEqual(chordFrets(undefined, 'D'));
+  });
+
   it('knows no fingering for what is not a chord', () => {
     expect(chordFrets(undefined, 'Hm')).toBeNull();
     expect(ukuleleHasChord('Hm')).toBe(false);
