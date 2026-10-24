@@ -917,6 +917,12 @@ ul.collection {
   gap: 6px;
 }
 
+ul.collection li {
+  /* a long title wraps inside its card instead of widening the grid */
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 ul.collection li a {
   display: flex;
   align-items: center;
