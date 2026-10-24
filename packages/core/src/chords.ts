@@ -91,6 +91,14 @@ export function chordFrets(
   // two-note power chords are a guitar's: the ukulele plays the major chord of the same root
   const parsed = parseChordName(name);
   if (!g && parsed?.quality.id === '5') return chordFrets(profileId, ROOT_NAMES[parsed.root]!);
+  // a ukulele slash chord keeps its bass only when a fingering with that note lowest is easy; else the chord
+  if (!g && parsed && parsed.bass !== null) {
+    const easy = chordVoicings(UKULELE_OPEN, name, false)[0];
+    const lowest = easy ? Math.min(...easy.frets.map((f, i) => UKULELE_OPEN[i]! + (f ?? 0))) : -1;
+    if (lowest % 12 !== parsed.bass) {
+      return chordFrets(profileId, `${ROOT_NAMES[parsed.root]}${parsed.quality.id}`);
+    }
+  }
   const key = `${g ? g.tuning.suffix || 'standard' : 'ukulele'}|${name}`;
   if (!made.has(key)) {
     const best = chordVoicings(g ? g.tuning.open : UKULELE_OPEN, name, g !== null)[0];

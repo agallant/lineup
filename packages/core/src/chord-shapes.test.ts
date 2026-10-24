@@ -81,6 +81,9 @@ describe('chord fingerings for every chord', () => {
     expect(lowest(chordFrets(undefined, 'C/E')!)).toBe(4);
     expect(chordFrets(undefined, 'G/B')).toEqual(chordFrets(undefined, 'G'));
     expect(chordFrets(undefined, 'D/F#')).toEqual(chordFrets(undefined, 'D'));
+    // a bass that is not in the chord is left out, not added to it
+    expect(chordFrets(undefined, 'C/B')).toEqual(chordFrets(undefined, 'C'));
+    expect(chordFrets(undefined, 'Am/G#')).toEqual(chordFrets(undefined, 'Am'));
   });
 
   it('knows no fingering for what is not a chord', () => {
