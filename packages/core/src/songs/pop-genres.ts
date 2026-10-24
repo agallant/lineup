@@ -356,6 +356,228 @@ export const POP_GENRES: readonly (PopSong & { genre: PopGenre })[] = [
       loop('C | C | C | C | F | F | C | C | C | G7 | C | C', 3),
     ),
   ),
+  withGenre('christmas', song('Last Christmas', 'Wham!', 1984, 108, loop('D | Bm | Em | A', 8))),
+  withGenre(
+    'christmas',
+    song(
+      'Silent Night',
+      'Traditional (Franz Gruber)',
+      1818,
+      76,
+      loop('G | G | G | G | C | C | G | G | D7 | D7 | G | G', 2),
+      { beatsPerBar: 3 },
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'Away in a Manger',
+      'Traditional',
+      1885,
+      84,
+      loop('G | G7 | C | G | D | C | G | G | G | G7 | C | G | D7 | G | Am | D7', 2),
+      { beatsPerBar: 3 },
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'It Came Upon the Midnight Clear',
+      'Traditional',
+      1849,
+      80,
+      loop('C | F | C | D7 | G7 | C | F | C | G7 | C | E7 | Am | G | D7 | G | C', 2),
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song('Up on the Housetop', 'Traditional', 1864, 120, loop('F C | G7 C | C F | C G7', 4)),
+  ),
+  withGenre(
+    'christmas',
+    song('The First Noel', 'Traditional', 1833, 76, loop('G | D | C | G | C | G | C D | G', 3), {
+      beatsPerBar: 3,
+    }),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'All I Want for Christmas Is You',
+      'Mariah Carey',
+      1994,
+      150,
+      loop('G B7 | Em Eb6 | G E7 | Am7 Cm6 | G Em | Am7 D', 4),
+    ),
+  ),
+  withGenre('world', song('La Bamba', 'Ritchie Valens', 1958, 150, loop('C | F | G | F', 8))),
+  withGenre('world', song('Oye Como Va', 'Tito Puente', 1962, 122, loop('Am7 | D7', 16))),
+  withGenre(
+    'world',
+    song(
+      'Guantanamera',
+      'Traditional (Cuba)',
+      1929,
+      120,
+      loop('C | G7 | C | G7 | C | F | G7 | C', 4),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Kalinka',
+      'Traditional (Russia)',
+      1860,
+      128,
+      loop('Am | E | Am | E | Am | E | Am | Am', 4),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Sakura Sakura',
+      'Traditional (Japan)',
+      1888,
+      76,
+      loop('Am | E7 | Am | Dm | Am | E7 | Dm | Am', 4),
+    ),
+  ),
+  withGenre(
+    'world',
+    song('Hevenu Shalom Aleichem', 'Traditional (Israel)', 1970, 120, loop('Dm | Gm | A7 | Dm', 8)),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Hava Nagila',
+      'Traditional (Israel)',
+      1918,
+      140,
+      loop('Dm | Dm | A7 | A7 | Dm | Gm | A7 | Dm', 4),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Cielito Lindo',
+      'Traditional (Mexico)',
+      1882,
+      110,
+      loop('C | G7 | C | G7 | C | F | C | G7 | C', 3),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Scarborough Fair',
+      'Traditional (England)',
+      1670,
+      84,
+      loop('Am | C | G | Am | C | D | Am | C | G | Am | G | Em | Am', 3),
+      { beatsPerBar: 3 },
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Amazing Grace',
+      'John Newton',
+      1779,
+      76,
+      loop('G | G | C | G | G | Em | D | D | G | G7 | C | G | G | D | G | G', 2),
+      { beatsPerBar: 3 },
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Loch Lomond',
+      'Traditional (Scotland)',
+      1841,
+      84,
+      loop('C | Am | F | G | F | Am | Dm | F | G7 | C | Am | Dm | G | C | C | C', 2),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'The Wild Rover',
+      'Traditional (Ireland)',
+      1850,
+      120,
+      loop('G | C | G | D | G | C | G | D | G', 4),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Molly Malone',
+      'Traditional (Ireland)',
+      1883,
+      100,
+      loop('C | Am | Dm | G | C | Em | Dm G | C | Am | Dm | G | C | Em C | G C', 2),
+      { beatsPerBar: 3 },
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Danny Boy',
+      'Traditional (Ireland)',
+      1913,
+      72,
+      loop('C | C7 | F | Fm | C | Am | D7 | G | C | C7 | F | Fm | C | Am | Dm G | C', 2),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Auld Lang Syne',
+      'Traditional (Scotland)',
+      1788,
+      88,
+      loop('G | D | Em | C | G | D | Em | C | G', 4),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Swing Low, Sweet Chariot',
+      'Traditional (spiritual)',
+      1870,
+      80,
+      loop('D | G | D | A7 | D7 | G | D | A7 | D', 4),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Jamaica Farewell',
+      'Harry Belafonte',
+      1956,
+      108,
+      loop('G | C | G | D7 | G | C | G | D7 | G', 4),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Many Rivers to Cross',
+      'Jimmy Cliff',
+      1969,
+      68,
+      loop('G | Bm | C | Bm | C | D | G | G', 4),
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Puff, the Magic Dragon',
+      'Peter, Paul and Mary',
+      1963,
+      100,
+      loop('G | Bm | C | G | C | G | Em | A7 | D7 | G', 3),
+    ),
+  ),
 ];
 
 export type PopGenre = 'jazz' | 'blues' | 'classical' | 'christmas' | 'world';
