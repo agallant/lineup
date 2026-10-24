@@ -113,10 +113,15 @@ describe('guitarChart', () => {
     expect(guitarChart(voice)).toBe(voice);
   });
 
-  it('the guitar has every ukulele song, and none of its own ids differ', () => {
-    expect(songsFor('guitar-strum').map((s) => s.id)).toEqual(
-      songsFor('ukulele-strum').map((s) => s.id),
-    );
+  it('the guitar has every ukulele song, then exercises for its own shapes', () => {
+    const uke = songsFor('ukulele-strum').map((s) => s.id);
+    const ids = songsFor('guitar-strum').map((s) => s.id);
+    expect(ids.slice(0, uke.length)).toEqual(uke);
+    const own = ids.slice(uke.length);
+    expect(own.length).toBeGreaterThan(5);
+    expect(own.every((id) => id.startsWith('ex-guitar-strum-'))).toBe(true);
+    // only the standard tuning's profile has them: their frets are for its strings
+    expect(songsFor('guitar-strum-dropd').map((s) => s.id)).toEqual(uke);
   });
 });
 

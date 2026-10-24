@@ -218,6 +218,8 @@ export const homeScreen: Screen = (root) => {
     <ul class="menu">
       <li><a class="card" href="#/tuner" data-id="tuner-link"><strong>Tuner</strong>
         <span>Tune any instrument or voice, with reference tones; ukulele, guitar and bass modes too. Not a game.</span></a></li>
+      <li><a class="card" href="#/chords" data-id="chords-link"><strong>Chord finder</strong>
+        <span>Any chord for the ukulele or guitar, in several places on the neck. Not a game.</span></a></li>
       <li><a class="card" href="#/metronome" data-id="metronome-link"><strong>Metronome</strong>
         <span>Tempo, tap tempo, accents, subdivisions and a speed trainer for practice. Not a game.</span></a></li>
     </ul>

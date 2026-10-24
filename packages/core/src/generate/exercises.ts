@@ -253,6 +253,9 @@ export function exerciseCharts(profileId: string): Record<string, Chart> {
   return out;
 }
 
+/** A chord name as it appears in an id: lower case, a sharp written "s" ("F#m" is "fsm"). */
+const idPart = (chord: string): string => chord.toLowerCase().replace('#', 's');
+
 /** Pairs of chords worth practising changes between, easiest first. */
 const CHANGE_PAIRS: readonly (readonly [string, string])[] = [
   ['C', 'Am'],
@@ -263,6 +266,14 @@ const CHANGE_PAIRS: readonly (readonly [string, string])[] = [
   ['G', 'Em'],
   ['D', 'A'],
   ['Dm', 'G7'],
+  ['E', 'A'],
+  ['Bm', 'G'],
+  ['E', 'B7'],
+  ['D', 'Dsus4'],
+  ['B', 'E'],
+  ['F#m', 'B'],
+  ['Bb', 'Eb'],
+  ['C#m', 'A'],
 ];
 
 /**
@@ -290,7 +301,7 @@ export function chordChangeDrills(): Record<string, Chart> {
       }
       which = 0; // each speed starts again on the first chord
     }
-    out[`ex-ukulele-strum-changes-${a.toLowerCase()}-${b.toLowerCase()}`] = chartFromBeats(
+    out[`ex-ukulele-strum-changes-${idPart(a)}-${idPart(b)}`] = chartFromBeats(
       {
         title: `Chord changes: ${a} and ${b}`,
         artist: 'Lineup',

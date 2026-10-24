@@ -1,5 +1,5 @@
 import type { Chart } from '../chart';
-import { UKULELE_CHORD_FRETS, chordFretsFor } from '../chords';
+import { chordFrets } from '../chords';
 import { guitarOpenFor } from '../guitar';
 import { midiLabel } from '../notes';
 
@@ -114,15 +114,15 @@ function soundingNotes(
 ): { pitches: number[]; drum: boolean } | null {
   if (n.pitch !== undefined) return { pitches: [n.pitch], drum: false };
   const open: readonly number[] = guitarOpenFor(guitarProfile) ?? UKULELE_OPEN;
-  const table = guitarProfile ? chordFretsFor(guitarProfile) : UKULELE_CHORD_FRETS;
   const frets = n.expected?.frets;
   if (frets && frets.length === open.length) {
     const held = frets.flatMap((f, i) => (f === null ? [] : [open[i]! + f]));
     if (held.length > 0) return { pitches: held, drum: false };
   }
   const chord = n.expected?.chord;
-  if (chord !== undefined && Object.hasOwn(table, chord)) {
-    const pitches = table[chord]!.flatMap((f, i) => (f === null ? [] : [open[i]! + f]));
+  const held = chord === undefined ? null : chordFrets(guitarProfile, chord);
+  if (held) {
+    const pitches = held.flatMap((f, i) => (f === null ? [] : [open[i]! + f]));
     return { pitches, drum: false };
   }
   if (n.lane !== undefined && Object.hasOwn(DRUM_NOTES, n.lane)) {

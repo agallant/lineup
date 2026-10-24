@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GUITAR_CHORD_FRETS, UKULELE_CHORD_FRETS } from '../chords';
+import { chordFrets } from '../chords';
 import { getSong, songsFor } from './index';
 import { POP_DATA } from './pop-data';
 import { POP_GENRES } from './pop-genres';
@@ -32,8 +32,8 @@ describe('pop songs', () => {
   it('uses only chords the ukulele and the guitar have fingerings for', () => {
     for (const s of POP_DATA) {
       for (const chord of s.bars.split(/[|\s]+/).filter(Boolean)) {
-        expect(UKULELE_CHORD_FRETS[chord], `${s.title}: ${chord}`).toBeDefined();
-        expect(GUITAR_CHORD_FRETS[chord], `${s.title}: ${chord}`).toBeDefined();
+        expect(chordFrets(undefined, chord), `${s.title}: ${chord}`).not.toBeNull();
+        expect(chordFrets('guitar-strum', chord), `${s.title}: ${chord}`).not.toBeNull();
       }
     }
   });

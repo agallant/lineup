@@ -1,5 +1,6 @@
 import { POP_SONGS } from './pop';
 import { loadChart, type Chart } from '../chart';
+import { chordPracticeExercises } from '../generate/chord-practice';
 import { chordChangeDrills, exerciseCharts } from '../generate/exercises';
 import { generateChordSong, parseChordSongId } from '../generate/chordsong';
 import { generateFluteSong, parseFluteId } from '../generate/flute';
@@ -52,6 +53,7 @@ const EXERCISES: Record<string, Chart> = {
   ...exerciseCharts('wind'),
   ...exerciseCharts('ukulele-strum'),
   ...chordChangeDrills(),
+  ...chordPracticeExercises(),
   ...BASS_EXERCISES,
   ...KEY_EXERCISES,
   ...rhythmExercises('hand-percussion'),
@@ -109,10 +111,14 @@ export function songsFor(
 ): { id: string; chart: Chart; category: SongCategory }[] {
   // the guitar plays the ukulele's songs, with the guitar's fingerings
   if (guitarFamily(profileId)?.kind === 'strum') {
-    return songsFor('ukulele-strum').map((s) => ({
-      ...s,
-      chart: guitarChart(s.chart, profileId),
-    }));
+    const own = Object.entries(builtinSongs)
+      .filter(([, chart]) => chart.meta.instruments?.includes(profileId))
+      .map(([id, chart]) => ({ id, chart, category: songCategory(id) }));
+    return [
+      ...songsFor('ukulele-strum').map((s) => ({ ...s, chart: guitarChart(s.chart, profileId) })),
+      // exercises written for the guitar's own shapes (barre chords, power chords)
+      ...own,
+    ];
   }
   return Object.entries(builtinSongs)
     .filter(([, chart]) => chart.meta.instruments?.includes(profileId))

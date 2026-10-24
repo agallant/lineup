@@ -1,4 +1,4 @@
-import { chordFretsFor, guitarOpenFor } from '@lineup/core';
+import { chordFrets, guitarOpenFor } from '@lineup/core';
 import {
   GUITAR_OPEN_MIDI,
   UKE_CHORDS,
@@ -28,7 +28,9 @@ export const ukuleleStrumPerformer: Performer = (note, index, sampleRate) => {
     return ukeNote(UKE_OPEN_MIDI[string]! + fret, sampleRate, { seed: 100 + index, duration: 0.5 });
   }
   const chord = note.expected?.chord ?? 'C';
-  const frets = UKE_CHORDS[chord] ?? UKE_CHORDS['C']!;
+  const frets = (UKE_CHORDS[chord] ??
+    chordFrets(undefined, chord) ??
+    UKE_CHORDS['C']!) as readonly [number, number, number, number];
   const direction = note.expected?.direction ?? (note.lane === 'up' ? 'up' : 'down');
   return ukeStrum(frets, sampleRate, { direction, seed: 100 + index });
 };
@@ -39,7 +41,6 @@ export const ukuleleStrumPerformer: Performer = (note, index, sampleRate) => {
  */
 export function guitarStrumPerformerFor(profileId = 'guitar-strum'): Performer {
   const open = guitarOpenFor(profileId) ?? GUITAR_OPEN_MIDI;
-  const chords = chordFretsFor(profileId);
   return (note, index, sampleRate) => {
     const played = (note.expected?.frets ?? []).flatMap((fret, string) =>
       fret === null || fret === undefined || open[string] === undefined ? [] : [{ string, fret }],
@@ -49,7 +50,7 @@ export function guitarStrumPerformerFor(profileId = 'guitar-strum'): Performer {
       return ukeNote(open[string]! + fret, sampleRate, { seed: 100 + index, duration: 0.6 });
     }
     const chord = note.expected?.chord ?? 'C';
-    const frets = chords[chord] ?? chords['C']!;
+    const frets = chordFrets(profileId, chord) ?? chordFrets(profileId, 'C')!;
     const direction = note.expected?.direction ?? (note.lane === 'up' ? 'up' : 'down');
     return guitarStrum(frets, sampleRate, { direction, seed: 100 + index }, open);
   };

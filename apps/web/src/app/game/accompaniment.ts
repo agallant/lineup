@@ -2,6 +2,7 @@ import {
   createRng,
   hashSeed,
   notePitch,
+  parseChordName,
   pick,
   type Chart,
   type ChartNote,
@@ -54,22 +55,28 @@ interface Harmony {
   root: number;
   minor: boolean;
   seventh: boolean;
+  /** The semitones of the chord's notes above the root, when it is more than a plain triad or seventh. */
+  tones?: readonly number[];
+  /** The bass note's pitch class for a slash chord. */
+  bass?: number;
 }
 
 /** Pitch classes of the chord's notes above the root. */
-const intervals = (h: Harmony): number[] => [0, h.minor ? 3 : 4, 7, ...(h.seventh ? [10] : [])];
+const intervals = (h: Harmony): number[] =>
+  h.tones ? [...h.tones] : [0, h.minor ? 3 : 4, 7, ...(h.seventh ? [10] : [])];
 
-const NAMES: Readonly<Record<string, number>> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-
-/** The harmony a chord name such as "F#m", "Bb" or "G7" stands for, or null if it is not one. */
+/** The harmony a chord name such as "F#m", "Bb", "G7", "Dsus4" or "C/E" stands for, or null if it is not one. */
 export function parseChord(name: string): Harmony | null {
-  const m = /^([A-G])([#b]?)(m(?!aj))?(7)?$/.exec(name);
-  if (!m) return null;
-  const accidental = m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0;
+  const c = parseChordName(name);
+  if (!c) return null;
+  const tones = c.quality.intervals;
+  const plain = ['', 'm', '7', 'm7'].includes(c.quality.id);
   return {
-    root: mod12(NAMES[m[1]!]! + accidental),
-    minor: m[3] !== undefined,
-    seventh: m[4] !== undefined,
+    root: c.root,
+    minor: tones.includes(3) && !tones.includes(4),
+    seventh: tones.includes(10) || tones.includes(11),
+    ...(plain ? {} : { tones }),
+    ...(c.bass === null ? {} : { bass: c.bass }),
   };
 }
 
@@ -199,7 +206,10 @@ function voiceFor(wave: OscillatorType, duration: number): Voice {
 }
 
 /** The bass note and the notes of a chord, in the octaves the accompaniment plays in. */
-const bassOf = (h: Harmony): number => inOctave(h.root, 40);
+const bassOf = (h: Harmony): number => inOctave(h.bass ?? h.root, 40);
+/** The chord's fifth (perfect, flat or raised) at or above its bass note. */
+const fifthOf = (h: Harmony): number =>
+  inOctave(h.root + (intervals(h).find((iv) => iv >= 6 && iv <= 8) ?? 7), bassOf(h));
 const triadOf = (h: Harmony, low = 55): number[] =>
   intervals(h).map((iv) => inOctave(h.root + iv, low));
 
@@ -214,7 +224,7 @@ function chordEvents(
 ): BackingEvent[] {
   const events: BackingEvent[] = [];
   const bass = bassOf(h);
-  const fifth = bass + 7;
+  const fifth = fifthOf(h);
   const length = to - from;
   // the root on the first beat, and the fifth half way through a longer bar
   const half = beatsPerBar >= 4 ? 2 : -1;
@@ -292,7 +302,7 @@ const FEELS: Readonly<Record<string, (c: BarContext) => BackingEvent[]>> = {
     for (let b = 0; b < c.perBar; b++) {
       const at = c.from + b * c.spb;
       if (b % 2 === 0) {
-        const note = b === 0 ? bassOf(c.h) : bassOf(c.h) + 7;
+        const note = b === 0 ? bassOf(c.h) : fifthOf(c.h);
         out.push(tone(at, c.spb * 0.7, note, 1.4, 'triangle'));
       } else {
         for (const m of triadOf(c.h)) out.push(tone(at, c.spb * 0.25, m, 0.42, 'sine'));
@@ -309,7 +319,7 @@ const FEELS: Readonly<Record<string, (c: BarContext) => BackingEvent[]>> = {
     for (let b = 0; b < c.perBar; b++) {
       const at = c.from + b * c.spb;
       if (b % 2 === 0)
-        out.push(tone(at, c.spb * 0.4, b === 0 ? bassOf(c.h) : bassOf(c.h) + 7, 1.6, 'triangle'));
+        out.push(tone(at, c.spb * 0.4, b === 0 ? bassOf(c.h) : fifthOf(c.h), 1.6, 'triangle'));
       else for (const m of triadOf(c.h)) out.push(tone(at, c.spb * 0.18, m, 0.5, 'square'));
     }
     return out;
@@ -317,8 +327,9 @@ const FEELS: Readonly<Record<string, (c: BarContext) => BackingEvent[]>> = {
   walking: (c) => {
     // a quarter note on each beat: root, third, fifth, then a step into the next chord
     const r = bassOf(c.h);
-    const third = r + (c.h.minor ? 3 : 4);
-    const line = [r, third, r + 7, c.perBar >= 4 ? approach(c) : r + 7];
+    const third = inOctave(c.h.root + (intervals(c.h)[1] ?? (c.h.minor ? 3 : 4)), r);
+    const fifth = fifthOf(c.h);
+    const line = [r, third, fifth, c.perBar >= 4 ? approach(c) : fifth];
     const out: BackingEvent[] = [];
     for (let b = 0; b < c.perBar; b++) {
       out.push(tone(c.from + b * c.spb, c.spb * 0.85, line[Math.min(b, 3)]!, 1.4, 'triangle'));
@@ -330,12 +341,12 @@ const FEELS: Readonly<Record<string, (c: BarContext) => BackingEvent[]>> = {
     const r = bassOf(c.h);
     const out: BackingEvent[] = [
       tone(c.from, c.spb * 1.4, r, 1.4, 'triangle'),
-      tone(c.from + c.spb * 1.5, c.spb * 0.4, r + 7, 1.2, 'triangle'),
+      tone(c.from + c.spb * 1.5, c.spb * 0.4, fifthOf(c.h), 1.2, 'triangle'),
     ];
     if (c.perBar >= 4) {
       out.push(
         tone(c.from + c.spb * 2, c.spb * 1.4, r, 1.4, 'triangle'),
-        tone(c.from + c.spb * 3.5, c.spb * 0.4, r + 7, 1.2, 'triangle'),
+        tone(c.from + c.spb * 3.5, c.spb * 0.4, fifthOf(c.h), 1.2, 'triangle'),
       );
     }
     for (const at of [1, 2.5]) {
