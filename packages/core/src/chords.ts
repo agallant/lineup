@@ -1,6 +1,6 @@
 import type { Chart, ChartNote } from './chart';
 import { UKULELE_OPEN, chordVoicings } from './chord-shapes';
-import { ROOT_NAMES, canonicalChordName, parseChordName } from './chord-theory';
+import { ROOT_NAMES, canonicalChordName, chordPitchClasses, parseChordName } from './chord-theory';
 import { GUITAR_STANDARD, guitarFamily, retuneFrets } from './guitar';
 import type { InstrumentProfile } from './profile';
 
@@ -95,7 +95,8 @@ export function chordFrets(
   if (!g && parsed && parsed.bass !== null) {
     const easy = chordVoicings(UKULELE_OPEN, name, false)[0];
     const lowest = easy ? Math.min(...easy.frets.map((f, i) => UKULELE_OPEN[i]! + (f ?? 0))) : -1;
-    if (lowest % 12 !== parsed.bass) {
+    const inChord = chordPitchClasses({ ...parsed, bass: null }).includes(parsed.bass);
+    if (!inChord || lowest % 12 !== parsed.bass) {
       return chordFrets(profileId, `${ROOT_NAMES[parsed.root]}${parsed.quality.id}`);
     }
   }

@@ -209,15 +209,21 @@ export function chordVoicings(
   const key = `${open.join('.')}|${mutes}|${canonicalChordName(name)}`;
   let all = cache.get(key);
   if (!all) {
-    if (!mutes && chord.bass !== null) {
+    if (
+      !mutes &&
+      chord.bass !== null &&
+      chordPitchClasses({ ...chord, bass: null }).includes(chord.bass)
+    ) {
       // a ukulele's slash chord has the named bass lowest when that is easy to finger (C/E is 0 4 3 3);
-      // its strings are not in pitch order, so otherwise it is just the chord (C/B is C)
+      // its strings are not in pitch order, so otherwise (and for a bass outside the chord, like C/D)
+      // it is just the chord
       const strict = search(open, chord, mutes, true).filter(
         (v) => Math.max(...v.frets.map((f) => f ?? 0)) <= 4,
       );
       all = strict.length > 0 ? strict : search(open, { ...chord, bass: null }, mutes);
     } else {
-      all = search(open, chord, mutes);
+      // (a ukulele's bass outside the chord is dropped: C/D is C)
+      all = search(open, !mutes ? { ...chord, bass: null } : chord, mutes);
     }
     cache.set(key, all);
   }
