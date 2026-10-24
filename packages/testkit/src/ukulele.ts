@@ -46,7 +46,7 @@ export interface StrumOptions {
  * strokes the reverse.
  */
 export function ukeStrum(
-  frets: readonly [number, number, number, number],
+  frets: readonly [number | null, number | null, number | null, number | null],
   sampleRate: number,
   {
     direction = 'down',
@@ -61,7 +61,10 @@ export function ukeStrum(
   const out = new Float32Array(Math.round((duration + 4 * gap) * sampleRate));
   const order = direction === 'down' ? [0, 1, 2, 3] : [3, 2, 1, 0];
   order.forEach((stringIdx, k) => {
-    const hz = midiToHz(UKE_OPEN_MIDI[stringIdx]! + frets[stringIdx]!);
+    const fret = frets[stringIdx];
+    // a muted string sounds nothing
+    if (fret === null || fret === undefined) return;
+    const hz = midiToHz(UKE_OPEN_MIDI[stringIdx]! + fret);
     const a = amplitude * (0.85 + 0.15 * (r() + 1)); // 0.85..1.15
     const body = pluck(hz, duration, sampleRate, {
       amplitude: a * 0.25,

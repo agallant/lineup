@@ -55,7 +55,7 @@ import {
 import { micSupported, openMic, openSyntheticInput, type MicSession } from '@lineup/input/mic';
 import { createRenderer, drawMeter, fitCanvas } from '@lineup/render';
 import { renderPerformanceAsync, type Performer } from '@lineup/sim';
-import { scheduleClicks } from '../audio';
+import { escapeHtml, scheduleClicks } from '../audio';
 import { buildInfoText } from '../build-info';
 import { copyText } from '../clipboard';
 import {
@@ -169,6 +169,7 @@ const setup = (c: HitScreenConfig) => `
     </div>
     <p data-id="mode-note"></p>
     <p data-id="song-info"></p>
+    <p class="muted" data-id="chord-shapes" hidden></p>
     <p data-id="best"></p>
   </section>
 
@@ -468,6 +469,19 @@ export const createHitScreen =
         ? `${chart.meta.title} · ${songSummary(chart)}`
         : songSummary(chart);
       S('best').textContent = describeBest(scores.best(bestKey()));
+      // the song's chords, each a link to how to finger it (and to choose another fingering)
+      const chords = c.strum ? chartChords(chart) : [];
+      const shapes = S('chord-shapes');
+      shapes.hidden = chords.length === 0;
+      shapes.innerHTML =
+        chords.length === 0
+          ? ''
+          : `Chords: ${chords
+              .map(
+                (name) =>
+                  `<a href="#/chords?chord=${encodeURIComponent(name)}&amp;instrument=${profile.id.startsWith('guitar') ? 'guitar' : 'ukulele'}">${escapeHtml(name)}</a>`,
+              )
+              .join(' · ')}. Tap one to see how to finger it, or to choose another shape.`;
     };
 
     const picker = loadPicker(safeLocalStorage());

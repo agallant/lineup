@@ -261,4 +261,16 @@ describe('kinds of song', () => {
       'classical',
     );
   });
+  it('puts Christmas and world songs in their own kinds', () => {
+    const mkPop = (id: string): MenuSong => ({ id, chart: chart(id, 100), category: 'song' });
+    const xmas = categoriesOf(mkPop('pop-wham-last-christmas'));
+    expect(xmas).toContain('christmas');
+    expect(xmas).not.toContain('hits');
+    const world = categoriesOf(mkPop('pop-ritchie-valens-la-bamba'));
+    expect(world).toContain('world');
+    expect(world).not.toContain('hits');
+    expect(categoriesFor([mkPop('pop-wham-last-christmas')]).map((c) => c.label)).toContain(
+      'Christmas and holiday songs',
+    );
+  });
 });

@@ -93,10 +93,10 @@ describe('pop songs', () => {
     }
   });
 
-  it('has jazz, blues and classical progressions, each a playable chart apart from the hits', () => {
-    expect(POP_GENRES.length).toBeGreaterThanOrEqual(10);
+  it('has jazz, blues, classical, Christmas and world songs, each a playable chart apart from the hits', () => {
+    expect(POP_GENRES.length).toBeGreaterThanOrEqual(50);
     expect(new Set(POP_GENRES.map((s) => s.genre))).toEqual(
-      new Set(['jazz', 'blues', 'classical']),
+      new Set(['jazz', 'blues', 'classical', 'christmas', 'world']),
     );
     const ids = [...POP_DATA, ...POP_MODERN, ...POP_GENRES].map(popId);
     expect(new Set(ids).size).toBe(ids.length);

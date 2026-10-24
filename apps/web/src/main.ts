@@ -23,6 +23,7 @@ import { strumScreen } from './app/screens/strum';
 import { freeScreen } from './app/screens/free';
 import { packsScreen } from './app/screens/packs';
 import { metronomeScreen } from './app/screens/metronome';
+import { applyStoredChordPrefs } from './app/chord-prefs';
 import { chordsScreen } from './app/screens/chords';
 import { tunerScreen } from './app/screens/tuner';
 import { windScreen } from './app/screens/wind';
@@ -40,6 +41,7 @@ if (!app) throw new Error('#app missing');
 const footer = document.getElementById('build-info');
 if (footer) footer.textContent = buildInfoText();
 
+applyStoredChordPrefs();
 listenForInstallOffer();
 startRouter(
   app,

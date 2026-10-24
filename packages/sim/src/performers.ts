@@ -28,9 +28,10 @@ export const ukuleleStrumPerformer: Performer = (note, index, sampleRate) => {
     return ukeNote(UKE_OPEN_MIDI[string]! + fret, sampleRate, { seed: 100 + index, duration: 0.5 });
   }
   const chord = note.expected?.chord ?? 'C';
-  const frets = (UKE_CHORDS[chord] ??
-    chordFrets(undefined, chord) ??
-    UKE_CHORDS['C']!) as readonly [number, number, number, number];
+  // the fingering the games use (a player's choice included), else the testkit's own
+  const frets = (chordFrets(undefined, chord) ??
+    UKE_CHORDS[chord] ??
+    UKE_CHORDS['C']!) as readonly [number | null, number | null, number | null, number | null];
   const direction = note.expected?.direction ?? (note.lane === 'up' ? 'up' : 'down');
   return ukeStrum(frets, sampleRate, { direction, seed: 100 + index });
 };

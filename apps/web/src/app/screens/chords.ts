@@ -4,6 +4,7 @@ import {
   ROOT_NAMES,
   UKULELE_OPEN,
   chordFrets,
+  defaultFingering,
   chordPitchClasses,
   chordPositions,
   describeFingering,
@@ -11,6 +12,8 @@ import {
   type Voicing,
 } from '@lineup/core';
 import { chordDiagramSvg } from '../chord-diagram';
+import { chooseFingering } from '../chord-prefs';
+import { hashParam } from '../courses';
 import { escapeHtml, closeAudio } from '../audio';
 import { playTonesNow } from '../game/backing';
 import type { Screen } from '../router';
@@ -42,6 +45,13 @@ function loadSaved(): Saved {
 /** A chord finder: any chord by name, with where to play it on the ukulele or guitar, in several places on the neck. */
 export const chordsScreen: Screen = (root) => {
   const saved = loadSaved();
+  // a link from a song names the chord (and instrument) to look at
+  const linked = hashParam(location.hash, 'chord');
+  if (linked && parseChordName(linked)) saved.chord = linked;
+  const linkedInstrument = hashParam(location.hash, 'instrument');
+  if (linkedInstrument === 'guitar' || linkedInstrument === 'ukulele') {
+    saved.instrument = linkedInstrument;
+  }
   const save = () => {
     try {
       safeLocalStorage()?.setItem(STORE_KEY, JSON.stringify(saved));
@@ -163,8 +173,9 @@ export const chordsScreen: Screen = (root) => {
       saved.instrument === 'ukulele' && parsed.quality.id === '5'
         ? ROOT_NAMES[parsed.root]!
         : saved.chord;
-    const best = chordFrets(profileId(), asPlayed);
-    if (best === null) {
+    const used = chordFrets(profileId(), asPlayed);
+    const easiest = defaultFingering(profileId(), asPlayed);
+    if (used === null || easiest === null) {
       const named = chordPitchClasses(parsed).length;
       status.textContent = `The ${saved.instrument} has no fingering for ${saved.chord}${named > open().length ? ` (it has ${named} different notes and the ${saved.instrument} has ${open().length} strings)` : ''}. Try leaving out the bass note or a simpler kind.`;
       result.hidden = true;
@@ -172,31 +183,51 @@ export const chordsScreen: Screen = (root) => {
     }
     result.hidden = false;
     // the notes this fingering really sounds, from the root up
-    const sounding = new Set(best.flatMap((f, i) => (f === null ? [] : [(open()[i]! + f) % 12])));
+    const sounding = new Set(used.flatMap((f, i) => (f === null ? [] : [(open()[i]! + f) % 12])));
     const spelled = [...sounding]
       .sort((a, b) => ((a - parsed.root + 12) % 12) - ((b - parsed.root + 12) % 12))
       .map((pc) => ROOT_NAMES[pc]);
     title.textContent = `${saved.chord}: ${parsed.quality.label}${parsed.bass === null ? '' : ` with ${ROOT_NAMES[parsed.bass]} in the bass`}`;
     notes.textContent = `Notes: ${spelled.join(' ')}${asPlayed === saved.chord ? '' : `. The ukulele plays ${saved.chord} as ${asPlayed}.`}`;
-    const first = describeFingering(best);
+    const same = (a: readonly (number | null)[], b: readonly (number | null)[]) =>
+      a.join(',') === b.join(',');
     const rest = chordPositions(open(), asPlayed, saved.instrument === 'guitar', 8).filter(
-      (v) => v.frets.join(',') !== first.frets.join(','),
+      (v) => !same(v.frets, easiest),
     );
     const cards: { v: Voicing; label: string }[] = [
-      { v: first, label: 'Easiest' },
+      { v: describeFingering(easiest), label: 'Easiest' },
       ...rest.map((v) => ({ v, label: v.position === 0 ? 'Open position' : `Fret ${v.position}` })),
     ];
+    // a fingering chosen earlier that the list above does not show is kept in view
+    if (!cards.some((c) => same(c.v.frets, used))) {
+      cards.splice(1, 0, { v: describeFingering(used), label: 'Your choice' });
+    }
     diagrams.innerHTML = cards
-      .map(
-        ({ v, label }, i) => `<figure class="chord-card">
+      .map(({ v, label }, i) => {
+        const isUsed = same(v.frets, used);
+        return `<figure class="chord-card${isUsed ? ' chosen' : ''}">
           ${chordDiagramSvg(v, `${saved.chord} ${label}`)}
-          <figcaption>${escapeHtml(label)}</figcaption>
+          <figcaption>${escapeHtml(label)}${isUsed ? ' · used in songs' : ''}</figcaption>
           <button type="button" data-hear="${i}">Hear it</button>
-        </figure>`,
-      )
+          <button type="button" data-use="${i}" ${isUsed ? 'disabled' : ''}>Use this one</button>
+        </figure>`;
+      })
       .join('');
     for (const b of diagrams.querySelectorAll<HTMLButtonElement>('[data-hear]')) {
       b.addEventListener('click', () => hear(cards[Number(b.dataset['hear'])]!.v.frets));
+    }
+    for (const b of diagrams.querySelectorAll<HTMLButtonElement>('[data-use]')) {
+      b.addEventListener('click', () => {
+        const pick = cards[Number(b.dataset['use'])]!;
+        // the easiest one is the default: choosing it forgets any other choice
+        chooseFingering(
+          saved.instrument,
+          asPlayed,
+          same(pick.v.frets, easiest) ? null : pick.v.frets,
+        );
+        show();
+        status.textContent = `Songs and exercises now use this ${asPlayed} on the ${saved.instrument}, except the slide-a-shape exercises, which teach their own shapes.`;
+      });
     }
   };
 
