@@ -12,7 +12,10 @@ class Memory implements Pick<Storage, 'getItem' | 'setItem'> {
   }
 }
 
-afterEach(() => setChordPreferences({}));
+afterEach(() => {
+  setChordPreferences({});
+  applyStoredChordPrefs(null);
+});
 
 describe('chosen chord fingerings', () => {
   it('replace the default for that chord and instrument only, until forgotten', () => {
@@ -38,6 +41,21 @@ describe('chosen chord fingerings', () => {
     expect(chordFrets('guitar-strum', 'F')).toEqual([null, null, 3, 2, 1, 1]);
     // a guitar in another tuning is not affected: the shape is for standard tuning
     expect(chordFrets('guitar-strum-dropd', 'F')).not.toEqual([null, null, 3, 2, 1, 1]);
+  });
+
+  it('keep earlier choices of the visit when storage is blocked', () => {
+    const blocked = {
+      getItem: () => {
+        throw new Error('blocked');
+      },
+      setItem: () => {
+        throw new Error('blocked');
+      },
+    };
+    chooseFingering('ukulele', 'Bm', [9, 7, 7, 7], blocked);
+    chooseFingering('ukulele', 'Cm', [5, 3, 3, 3], blocked);
+    expect(chordFrets(undefined, 'Bm')).toEqual([9, 7, 7, 7]);
+    expect(chordFrets(undefined, 'Cm')).toEqual([5, 3, 3, 3]);
   });
 
   it('ignore damaged or wrongly shaped entries', () => {

@@ -226,7 +226,7 @@ export const chordsScreen: Screen = (root) => {
           same(pick.v.frets, easiest) ? null : pick.v.frets,
         );
         show();
-        status.textContent = `Songs and exercises now use this ${asPlayed} on the ${saved.instrument}.`;
+        status.textContent = `Songs and exercises now use this ${asPlayed} on the ${saved.instrument}, except the slide-a-shape exercises, which teach their own shapes.`;
       });
     }
   };

@@ -33,6 +33,12 @@ export function loadChordPrefs(storage: Pick<Storage, 'getItem'> | null): Prefs 
   return out;
 }
 
+/** The fingerings in use this visit: kept here too, so a blocked or failing store does not lose earlier choices. */
+let current: Prefs = { ukulele: {}, guitar: {} };
+
+const isEmpty = (p: Prefs): boolean =>
+  Object.keys(p['ukulele']!).length === 0 && Object.keys(p['guitar']!).length === 0;
+
 /** Saves one chosen fingering (or, with `frets` null, forgets it) and puts it to use at once. */
 export function chooseFingering(
   instrument: 'ukulele' | 'guitar',
@@ -40,12 +46,15 @@ export function chooseFingering(
   frets: readonly (number | null)[] | null,
   storage: Pick<Storage, 'getItem' | 'setItem'> | null = safeLocalStorage(),
 ): void {
-  const prefs = loadChordPrefs(storage);
+  // what the device holds, else what this visit already chose (storage may be blocked)
+  const stored = loadChordPrefs(storage);
+  const prefs = isEmpty(stored) ? current : stored;
   // kept under the chord's one canonical name, so "Db" and "C#" are the same chord
   const name = canonicalChordName(chord) ?? chord;
   const table = Object.fromEntries(Object.entries(prefs[instrument]!).filter(([k]) => k !== name));
   if (frets !== null) table[name] = [...frets];
   prefs[instrument] = table;
+  current = prefs;
   try {
     storage?.setItem(KEY, JSON.stringify(prefs));
   } catch {
@@ -58,5 +67,6 @@ export function chooseFingering(
 export function applyStoredChordPrefs(
   storage: Pick<Storage, 'getItem'> | null = safeLocalStorage(),
 ): void {
-  setChordPreferences(loadChordPrefs(storage) as ChordPreferences);
+  current = loadChordPrefs(storage);
+  setChordPreferences(current as ChordPreferences);
 }
