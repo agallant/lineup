@@ -317,7 +317,7 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    easiest way to play it (a barre chord for most sharps and flats; the E and A shapes on the guitar), so a
    song or a **My songs** chord song can use whatever it needs. The **Chord finder** (`#/chords`, under
    Tools) shows any chord for the ukulele or the guitar in several places on the neck, with a diagram, and
-   plays it; the exercises _Every major chord_, _Slide a shape_ (one shape moved up the neck), blues in
+   plays it, and lets you **choose which fingering** songs use for a chord (kept on the device; it applies to the ukulele and the standard-tuned guitar, and each song's chord list links to the finder); the exercises _Every major chord_, _Slide a shape_ (one shape moved up the neck), blues in
    every key, sus and seventh chords, and the Learn paths _Strumline: every chord_ and _guitar barre and
    power chords_ practise them.
 3. **Also check the chords** (off by default, experimental): the analyzer is told which chords the
