@@ -194,9 +194,171 @@ export const POP_GENRES: readonly (PopSong & { genre: PopGenre })[] = [
       loop('Am | E7 | Am | E7 | Dm | Dm | Am | E7 | Am | Am', 3),
     ),
   ),
+  withGenre(
+    'jazz',
+    song(
+      'Giant Steps',
+      'John Coltrane',
+      1960,
+      140,
+      loop(
+        'Bmaj7 D7 | Gmaj7 Bb7 | Ebmaj7 | Am7 D7 | Gmaj7 Bb7 | Ebmaj7 F#7 | Bmaj7 | Fm7 Bb7 | Ebmaj7 | Am7 D7 | Gmaj7 | C#m7 F#7 | Bmaj7 | Fm7 Bb7 | Ebmaj7 | C#m7 F#7',
+        2,
+      ),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'So What',
+      'Miles Davis',
+      1959,
+      136,
+      loop(
+        'Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Ebm7 | Ebm7 | Ebm7 | Ebm7 | Ebm7 | Ebm7 | Ebm7 | Ebm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7',
+        1,
+      ),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Freddie Freeloader',
+      'Miles Davis',
+      1959,
+      120,
+      loop('Bb7 | Bb7 | Bb7 | Bb7 | Eb7 | Eb7 | Bb7 | Bb7 | F7 | Eb7 | Bb7 | Bb7', 3),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Mr. P.C.',
+      'John Coltrane',
+      1959,
+      160,
+      loop('Cm7 | Cm7 | Cm7 | Cm7 | Fm7 | Fm7 | Cm7 | Cm7 | Ab7 | G7 | Cm7 | G7', 3),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      "Billie's Bounce (bebop blues in F)",
+      'Charlie Parker',
+      1945,
+      180,
+      loop('F7 | Bb7 | F7 | F7 | Bb7 | Bb7 | F7 | D7 | Gm7 | C7 | F7 D7 | Gm7 C7', 3),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Blues for Alice',
+      'Charlie Parker',
+      1951,
+      160,
+      loop(
+        'Fmaj7 | Em7b5 A7 | Dm7 G7 | Cm7 F7 | Bb7 | Bbm7 Eb7 | Am7 | Abm7 Db7 | Gm7 | C7 | Fmaj7 D7 | Gm7 C7',
+        3,
+      ),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'All the Things You Are',
+      'Jerome Kern',
+      1939,
+      120,
+      loop(
+        'Fm7 | Bbm7 | Eb7 | Abmaj7 | Dbmaj7 | Dm7 G7 | Cmaj7 | Cmaj7 | Cm7 | Fm7 | Bb7 | Ebmaj7 | Abmaj7 | Am7 D7 | Gmaj7 | Gmaj7',
+        2,
+      ),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Satin Doll',
+      'Duke Ellington',
+      1953,
+      120,
+      loop('Dm7 G7 | Dm7 G7 | Em7 A7 | Em7 A7 | Am7 D7 | Abm7 Db7 | Dm7 G7 | C6', 4),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Misty',
+      'Erroll Garner',
+      1954,
+      66,
+      loop('Ebmaj7 | Bbm7 Eb7 | Abmaj7 | Abm7 Db7 | Ebmaj7 Cm7 | Fm7 Bb7 | Gm7 C7 | Fm7 Bb7', 4),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Take the A Train',
+      'Billy Strayhorn',
+      1941,
+      170,
+      loop('C6 | C6 | D7 | D7 | Dm7 | G7 | C6 | Dm7 G7', 4),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Sweet Georgia Brown',
+      'Ben Bernie',
+      1925,
+      200,
+      loop('E7 | E7 | A7 | A7 | D7 | D7 | G | G', 4),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Minor Swing',
+      'Django Reinhardt',
+      1937,
+      200,
+      loop('Am | Am | Dm | Dm | E7 | E7 | Am | Am | Dm | Dm | E7 | E7 | Am | E7 | Am | Am', 2),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Watermelon Man',
+      'Herbie Hancock',
+      1962,
+      112,
+      loop('F7 | F7 | F7 | F7 | Bb7 | Bb7 | F7 | F7 | C7 | Bb7 | F7 | F7', 3),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'My Funny Valentine',
+      'Richard Rodgers',
+      1937,
+      60,
+      loop('Cm | Cm | Cm7 | Cm6 | Abmaj7 | Fm7 | Dm7b5 G7 | Cm', 4),
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'When the Saints Go Marching In (Dixieland)',
+      'Traditional',
+      1896,
+      140,
+      loop('C | C | C | C | F | F | C | C | C | G7 | C | C', 3),
+    ),
+  ),
 ];
 
-export type PopGenre = 'jazz' | 'blues' | 'classical';
+export type PopGenre = 'jazz' | 'blues' | 'classical' | 'christmas' | 'world';
 
 function withGenre(genre: PopGenre, s: PopSong): PopSong & { genre: PopGenre } {
   return { ...s, genre };

@@ -73,12 +73,49 @@ export function chordFretsFor(
 
 const made = new Map<string, readonly (number | null)[] | null>();
 
+/** The fingerings a player chose over the default ones: instrument ("ukulele", "guitar") -> chord name -> frets. */
+export type ChordPreferences = Readonly<
+  Record<string, Readonly<Record<string, readonly (number | null)[]>>>
+>;
+
+let preferences: ChordPreferences = {};
+
+/** Sets the fingerings players chose (the app keeps them on the device); an empty set clears them. */
+export function setChordPreferences(prefs: ChordPreferences): void {
+  preferences = prefs;
+}
+
+/** The instrument a chosen fingering belongs to: the ukulele or the standard-tuned guitar (others have none). */
+export function preferenceInstrument(profileId: string | undefined): 'ukulele' | 'guitar' | null {
+  const g = guitarFamily(profileId);
+  if (!g) return 'ukulele';
+  return g.tuning.open === GUITAR_STANDARD ? 'guitar' : null;
+}
+
+function preferredFingering(
+  profileId: string | undefined,
+  chord: string,
+): readonly (number | null)[] | null {
+  const instrument = preferenceInstrument(profileId);
+  const name = canonicalChordName(chord);
+  const chosen = instrument && name ? preferences[instrument]?.[name] : undefined;
+  return chosen && chosen.length === (instrument === 'guitar' ? 6 : 4) ? chosen : null;
+}
+
 /**
  * The fingering of any chord the games name ("C", "F#m7", "Bsus4", "G/B") on an instrument profile:
  * the hand-picked one when there is one, else the easiest the shape search finds (a barre chord
  * for a sharp or flat key). Null for a name that is not a chord.
  */
 export function chordFrets(
+  profileId: string | undefined,
+  chord: string,
+): readonly (number | null)[] | null {
+  return preferredFingering(profileId, chord) ?? defaultFingering(profileId, chord);
+}
+
+/** The fingering the games use when the player has not chosen one (see {@link chordFrets}). */
+export function defaultFingering(
   profileId: string | undefined,
   chord: string,
 ): readonly (number | null)[] | null {

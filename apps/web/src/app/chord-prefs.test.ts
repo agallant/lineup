@@ -1,0 +1,57 @@
+import { chordFrets, setChordPreferences } from '@lineup/core';
+import { afterEach, describe, expect, it } from 'vitest';
+import { applyStoredChordPrefs, chooseFingering, loadChordPrefs } from './chord-prefs';
+
+class Memory implements Pick<Storage, 'getItem' | 'setItem'> {
+  data = new Map<string, string>();
+  getItem(k: string) {
+    return this.data.get(k) ?? null;
+  }
+  setItem(k: string, v: string) {
+    this.data.set(k, v);
+  }
+}
+
+afterEach(() => setChordPreferences({}));
+
+describe('chosen chord fingerings', () => {
+  it('replace the default for that chord and instrument only, until forgotten', () => {
+    const store = new Memory();
+    const easiest = chordFrets(undefined, 'Bm');
+    chooseFingering('ukulele', 'Bm', [9, 7, 7, 7], store);
+    expect(chordFrets(undefined, 'Bm')).toEqual([9, 7, 7, 7]);
+    expect(chordFrets(undefined, 'Cm')).not.toEqual([9, 7, 7, 7]);
+    expect(chordFrets('guitar-strum', 'Bm')).toEqual([null, 2, 4, 4, 3, 2]);
+    // another spelling of the same chord
+    chooseFingering('ukulele', 'Db', [1, 1, 1, 4], store);
+    expect(chordFrets(undefined, 'C#')).toEqual([1, 1, 1, 4]);
+    chooseFingering('ukulele', 'Bm', null, store);
+    expect(chordFrets(undefined, 'Bm')).toEqual(easiest);
+  });
+
+  it('are kept on the device and put to use when the app starts', () => {
+    const store = new Memory();
+    chooseFingering('guitar', 'F', [null, null, 3, 2, 1, 1], store);
+    setChordPreferences({});
+    expect(chordFrets('guitar-strum', 'F')).not.toEqual([null, null, 3, 2, 1, 1]);
+    applyStoredChordPrefs(store);
+    expect(chordFrets('guitar-strum', 'F')).toEqual([null, null, 3, 2, 1, 1]);
+    // a guitar in another tuning is not affected: the shape is for standard tuning
+    expect(chordFrets('guitar-strum-dropd', 'F')).not.toEqual([null, null, 3, 2, 1, 1]);
+  });
+
+  it('ignore damaged or wrongly shaped entries', () => {
+    const store = new Memory();
+    store.setItem(
+      'lineup.chordprefs.v1',
+      JSON.stringify({
+        ukulele: { C: [1, 2, 3], G: 'x', D: [2, 2, 2, 0], Am: [2, 0, 0, 99] },
+        guitar: [],
+      }),
+    );
+    expect(loadChordPrefs(store).ukulele).toEqual({ D: [2, 2, 2, 0] });
+    store.setItem('lineup.chordprefs.v1', 'not json');
+    expect(loadChordPrefs(store)).toEqual({ ukulele: {}, guitar: {} });
+    expect(loadChordPrefs(null)).toEqual({ ukulele: {}, guitar: {} });
+  });
+});

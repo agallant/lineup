@@ -2355,6 +2355,42 @@ const scenarios = {
         /not a chord/.test(await text(page, 'status')),
         'chords: a bad name is explained, not shown',
       );
+      // choose another fingering for a chord, and see it used and remembered
+      await page.selectOption('[data-id=instrument]', 'ukulele');
+      await page.fill('[data-id=name]', 'Bm');
+      await page.waitForFunction(() =>
+        document.querySelector('[data-id=title]')?.textContent?.startsWith('Bm:'),
+      );
+      const before = await page.$$eval('[data-id=diagrams] svg', (n) =>
+        n[1]?.getAttribute('aria-label'),
+      );
+      await page.click('[data-use="1"]');
+      await page.waitForFunction(() =>
+        /now use/.test(document.querySelector('[data-id=status]')?.textContent ?? ''),
+      );
+      const used = await page.$eval('.chord-card.chosen svg', (n) => n.getAttribute('aria-label'));
+      check(used === before, `chords: "Use this one" picks that fingering (${used})`);
+      await page.goto(URL_BASE + '#/strum?song=strum-four-chords');
+      await page.waitForSelector('[data-id=chord-shapes] a');
+      const links = await page.$$eval('[data-id=chord-shapes] a', (n) =>
+        n.map((e) => e.getAttribute('href')),
+      );
+      check(
+        links.length === 4 && links.every((h) => /^#\/chords\?chord=/.test(h)),
+        `chords: a song lists its chords as links to the finder (${links.length})`,
+      );
+      await page.goto(URL_BASE + '#/chords?chord=Bm&instrument=ukulele');
+      await page.waitForSelector('.chord-card.chosen');
+      check(
+        (await page.$eval('.chord-card.chosen figcaption', (n) => n.textContent)).includes(
+          'used in songs',
+        ) && (await page.$eval('[data-id=name]', (n) => n.value)) === 'Bm',
+        'chords: a link opens the finder on that chord, and the choice is remembered',
+      );
+      await page.goto(URL_BASE + '#/chords');
+      await page.waitForSelector('[data-id=name]');
+      await page.selectOption('[data-id=instrument]', 'guitar');
+      await page.fill('[data-id=name]', 'Bsus4');
       await page.reload();
       await page.waitForSelector('[data-id=name]');
       check(

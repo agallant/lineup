@@ -63,7 +63,8 @@ const CATEGORY_LABELS: readonly { id: string; label: string }[] = [
   { id: 'hits', label: 'Hit songs (all)' },
   { id: 'jazz', label: 'Jazz and blues' },
   { id: 'classical', label: 'Classical and early music' },
-  { id: 'world', label: 'World rhythms' },
+  { id: 'christmas', label: 'Christmas and holiday songs' },
+  { id: 'world', label: 'World rhythms and songs' },
   { id: 'flute', label: 'Pentatonic flute songs' },
   { id: 'exercise', label: 'Exercises and scales' },
   { id: 'all', label: 'All songs' },
@@ -77,7 +78,9 @@ export function categoriesOf(song: MenuSong): string[] {
   if (song.category === 'flute') out.push('flute');
   if (/^World rhythm/.test(song.chart.meta.title)) out.push('world');
   const genre = POP_GENRE.get(song.id);
-  if (genre) out.push(genre === 'classical' ? 'classical' : 'jazz');
+  if (genre) {
+    out.push(genre === 'classical' || genre === 'christmas' || genre === 'world' ? genre : 'jazz');
+  }
   if (pop && !genre) {
     out.push('hits');
     if (song.id.startsWith('pop-beatles-')) out.push('beatles');

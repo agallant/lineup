@@ -2,7 +2,7 @@ import type { Chart } from '../chart';
 import { chartFromBeats, type BeatNote } from '../chart';
 import { ukuleleHasChord } from '../chords';
 import { POP_DATA } from './pop-data';
-import { POP_GENRES } from './pop-genres';
+import { POP_GENRES, type PopGenre } from './pop-genres';
 import { POP_MODERN } from './pop-modern';
 
 /**
@@ -124,6 +124,6 @@ export const POP_FAVORITES: ReadonlySet<string> = new Set(
 export const POP_NEWER: ReadonlySet<string> = new Set(POP_MODERN.map(popId));
 
 /** The genre of each jazz, blues and classical progression, by song id. */
-export const POP_GENRE: ReadonlyMap<string, 'jazz' | 'blues' | 'classical'> = new Map(
+export const POP_GENRE: ReadonlyMap<string, PopGenre> = new Map(
   POP_GENRES.map((s) => [popId(s), s.genre]),
 );
