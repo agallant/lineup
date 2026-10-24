@@ -183,6 +183,12 @@ function search(open: readonly number[], chord: ParsedChord, mutes: boolean): Vo
   return [...found.values()].sort((a, b) => a.cost - b.cost || a.position - b.position);
 }
 
+/** A fingering (frets per string) described as a voicing: where it sits, its fingers and any barre. */
+export function describeFingering(frets: readonly (number | null)[]): Voicing {
+  const { fingers, barre, low } = hand(frets);
+  return { frets, position: frets.includes(0) ? 0 : low, fingers, barre, cost: 0 };
+}
+
 const cache = new Map<string, Voicing[]>();
 
 /**

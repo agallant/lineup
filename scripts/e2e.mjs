@@ -6,7 +6,7 @@
 // Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
-//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|responsive|picker|install|backing|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
+//   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|chords|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|responsive|picker|install|backing|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1620,6 +1620,7 @@ const scenarios = {
         'make',
         'free',
         'tuner',
+        'chords',
         'metronome',
         'ear',
         'options',
@@ -1660,6 +1661,7 @@ const scenarios = {
       'make',
       'free',
       'tuner',
+      'chords',
       'metronome',
       'ear',
       'calibrate',
@@ -2023,6 +2025,7 @@ const scenarios = {
       'make',
       'free',
       'tuner',
+      'chords',
       'metronome',
       'ear',
       'mic',
@@ -2311,6 +2314,53 @@ const scenarios = {
         (await page.inputValue('[data-id=mode]')) === 'drum-kit' &&
           (await page.inputValue('[data-id=song]')) === 'ex-drum-kit-kick-snare',
         'learn: a drum step opens Beatline in the kit mode with its exercise chosen',
+      );
+    });
+  },
+
+  async chords() {
+    console.log('\n# Chord finder shows any chord, in several places, for each instrument');
+    await session(fixtures.silence, async (page) => {
+      await page.goto(URL_BASE + '#/chords');
+      await page.waitForSelector('[data-id=diagrams] svg');
+      check(
+        (await text(page, 'title')).startsWith('C:'),
+        `chords: starts on C (${await text(page, 'title')})`,
+      );
+      await page.fill('[data-id=name]', 'F#m7');
+      await page.waitForFunction(() =>
+        document.querySelector('[data-id=title]')?.textContent?.startsWith('F#m7'),
+      );
+      const uke = await page.$$eval('[data-id=diagrams] svg', (n) => n.length);
+      check(uke >= 3, `chords: F#m7 on the ukulele in ${uke} places`);
+      check(
+        (await text(page, 'notes')).includes('F# A C# E'),
+        `chords: names the notes (${await text(page, 'notes')})`,
+      );
+      await page.selectOption('[data-id=instrument]', 'guitar');
+      await page.click('[data-root="11"]');
+      await page.selectOption('[data-id=quality]', 'sus4');
+      await page.waitForFunction(() =>
+        document.querySelector('[data-id=title]')?.textContent?.startsWith('Bsus4'),
+      );
+      const labels = await page.$$eval('[data-id=diagrams] svg', (n) =>
+        n.map((e) => e.getAttribute('aria-label')),
+      );
+      check(
+        labels.length >= 3 && labels.every((l) => /^Bsus4 /.test(l)),
+        `chords: Bsus4 on the guitar (${labels.length} fingerings)`,
+      );
+      await page.fill('[data-id=name]', 'H9');
+      check(
+        /not a chord/.test(await text(page, 'status')),
+        'chords: a bad name is explained, not shown',
+      );
+      await page.reload();
+      await page.waitForSelector('[data-id=name]');
+      check(
+        (await page.inputValue('[data-id=name]')) === 'Bsus4' &&
+          (await page.inputValue('[data-id=instrument]')) === 'guitar',
+        'chords: the instrument and last chord are remembered',
       );
     });
   },

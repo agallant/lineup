@@ -47,7 +47,7 @@ npm test           # Vitest, all packages
 npm run format     # Prettier
 npm run e2e        # real-browser checks in headless Chromium (needs Playwright; CI runs it as its own job),
                    # including an axe-core accessibility audit of every screen in three colour schemes
-node scripts/check-dist.mjs   # after a build: relative paths, and a size budget (200 KB gzipped)
+node scripts/check-dist.mjs   # after a build: relative paths, and a size budget (230 KB gzipped)
 ```
 
 Mic access needs a secure context (HTTPS or `localhost`).
@@ -203,7 +203,7 @@ All of this stays on the device (browser storage); nothing is sent anywhere.
 - **Practice goal**: pick minutes per week in Options; the home menu and scoreboard show the last
   seven and fourteen days.
 - **Up next** (home): a card pointing at the open step of the learning path you played most recently.
-- **Learn** (`#/learn`): seven short paths (Singline, Windline, scales and modes for each, ukulele chords, clap rhythm, drum kit) of
+- **Learn** (`#/learn`): nine short paths (Singline, Windline, scales and modes for each, ukulele chords, clap rhythm, drum kit) of
   songs and exercises in order of difficulty. A step opens when the one before has a star (60%) and is
   mastered at two (80%); each step opens its game with the song already chosen.
 - **Scoreboard** (`#/scores`) lists your best score on every song with stars (★ 60%, ★★ 80%, ★★★ 95%
@@ -290,7 +290,7 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    timing only: Lineup hears that you played, not which string or fret.
    More songs: chord songs (fifties progression, Skip to My Lou, 12-bar blues, a waltz, a minor
    one), three melodies to pick (Hot Cross Buns, Mary Had a Little Lamb, Ode to Joy), and
-   **Exercises**: eight chord-change drills (two chords alternating, the changes coming faster as it goes), major, dorian and pentatonic scales, thirds, arpeggios, long tones and a chromatic
+   **Exercises**: sixteen chord-change drills (two chords alternating, the changes coming faster as it goes), major, dorian and pentatonic scales, thirds, arpeggios, long tones and a chromatic
    scale, plucked on single strings. Under "Random": **🎲 Random chord song** (sixteen bars in four
    phrases such as A A′ B A′, the chords walked fresh from a grammar of how chords usually move
    (so two songs are rarely alike), in C, G or D at the easy level and also F or A above it, the
@@ -298,17 +298,28 @@ the direction arrow is a guide, since direction is not detected (see Limitations
    **🎲 Random waltz (3/4)** (the same in three beats to the bar, counted in with three clicks) and **🎲 Random melody (picked)**. Pick a
    level (and optionally **Aim for** a difficulty from 1 to 10), press _New song_ or type a seed to replay one; the seed is shown in the song info.
    **Hits to strum** (packs **The Beatles** and **Number-one hits to strum**, and in the song list as
-   `Artist · capo N`): the chords of about 510 well-known songs from 1958 to 1991 (every song of the annotations that converts to
-   chords Strumline can play, the Beatles among them), such as _Help!_, _Come
+   `Artist · capo N`): the chords of about 595 well-known songs from 1958 to 1991 (every annotated song that converts,
+   the Beatles among them), such as _Help!_, _Come
    Together_ and _Eight Days a Week_. They come from the McGill Billboard chord annotations (CC0), read by
    `scripts/import-billboard.mjs` into `packages/core/src/songs/pop-data.ts`: chord sequences, tempo and
-   meter only, with no melody and no lyrics. Chords are simplified (sevenths, suspensions and inversions
-   become plain chords, a bar holds at most two) and the verses and choruses are condensed to a playable
-   length. Songs are moved to a key whose chords the ukulele and guitar tables have; the artist line says
-   which capo fret restores the recorded key (or that it was moved up). Many newer songs (_Someone
+   meter only, with no melody and no lyrics. Chords are simplified (sevenths and extensions become plain
+   chords or sevenths, inversions are dropped, a bar holds at most two; suspended, diminished and
+   augmented chords are kept) and the verses and choruses are condensed to a playable length. Each song is
+   moved to the key whose chords are easiest on the ukulele (a capo for a lower key); the artist line
+   says which capo fret restores the recorded key (or that it was moved up). Many newer songs (_Someone
    Like You_, _Wonderwall_, _Riptide_, _Despacito_ and others) are the progressions people play them with,
    written by hand in `pop-modern.ts`: check one against the recording before relying on it.
-   The importer now keeps every annotated song (about 510), and `pop-genres.ts` adds jazz, blues and classical progressions (_Autumn Leaves_, _All of Me_, rhythm changes, twelve-bar blues, the canon, the folia and other Renaissance and Baroque grounds), simplified to the chords Strumline has: outlines, not lead sheets. The **Kind of song** menu lists them under _Jazz and blues_ and _Classical and early music_. About sixty more well-known songs (pop, country, folk, reggae) were added by hand from progressions published on public tab sites; chord sequences only, no melody or text.
+   The importer keeps every annotated song, and `pop-genres.ts` adds jazz, blues and classical progressions (_Autumn Leaves_, _All of Me_, rhythm changes, twelve-bar blues, the canon, the folia and other Renaissance and Baroque grounds), simplified to the chords Strumline has: outlines, not lead sheets. The **Kind of song** menu lists them under _Jazz and blues_ and _Classical and early music_. Over a hundred more well-known songs (pop, rock, country, folk, reggae) were added by hand from
+   progressions published on public tab sites; chord sequences only, no melody or text.
+   **Every chord** is available (`chord-theory.ts`, `chord-shapes.ts`): any of the twelve roots in
+   seventeen kinds (major, minor, sevenths, sus, add9, sixths, ninths, diminished, augmented, power chords)
+   and slash chords such as G/B. A chord outside the hand-picked open shapes is fingered by a search for the
+   easiest way to play it (a barre chord for most sharps and flats; the E and A shapes on the guitar), so a
+   song or a **My songs** chord song can use whatever it needs. The **Chord finder** (`#/chords`, under
+   Tools) shows any chord for the ukulele or the guitar in several places on the neck, with a diagram, and
+   plays it; the exercises _Every major chord_, _Slide a shape_ (one shape moved up the neck), blues in
+   every key, sus and seventh chords, and the Learn paths _Strumline: every chord_ and _guitar barre and
+   power chords_ practise them.
 3. **Also check the chords** (off by default, experimental): the analyzer is told which chords the
    song uses and a strum of a clearly different chord misses ("wrong chord" is counted on the results
    screen). A strum it cannot name still counts for timing. Turn it off if it penalises you unfairly

@@ -1295,3 +1295,30 @@ dialog.install-dialog li {
     width: 100%;
   }
 }
+
+/* the chord finder's diagrams */
+.diagrams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chord-card {
+  margin: 0;
+  padding: 8px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.chord-card svg {
+  display: block;
+  margin: 0 auto 4px;
+  color: var(--text);
+}
+
+.chord-card figcaption {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
