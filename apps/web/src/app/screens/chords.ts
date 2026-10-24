@@ -158,14 +158,28 @@ export const chordsScreen: Screen = (root) => {
     }
     status.textContent = '';
     syncPickers(saved.chord);
-    const best = chordFrets(profileId(), saved.chord);
-    result.hidden = best === null;
-    if (best === null) return;
-    const spelled = chordPitchClasses(parsed).map((pc) => ROOT_NAMES[pc]);
+    // the ukulele plays a two-note power chord as the major chord of the same root
+    const asPlayed =
+      saved.instrument === 'ukulele' && parsed.quality.id === '5'
+        ? ROOT_NAMES[parsed.root]!
+        : saved.chord;
+    const best = chordFrets(profileId(), asPlayed);
+    if (best === null) {
+      const named = chordPitchClasses(parsed).length;
+      status.textContent = `The ${saved.instrument} has no fingering for ${saved.chord}${named > open().length ? ` (it has ${named} different notes and the ${saved.instrument} has ${open().length} strings)` : ''}. Try leaving out the bass note or a simpler kind.`;
+      result.hidden = true;
+      return;
+    }
+    result.hidden = false;
+    // the notes this fingering really sounds, from the root up
+    const sounding = new Set(best.flatMap((f, i) => (f === null ? [] : [(open()[i]! + f) % 12])));
+    const spelled = [...sounding]
+      .sort((a, b) => ((a - parsed.root + 12) % 12) - ((b - parsed.root + 12) % 12))
+      .map((pc) => ROOT_NAMES[pc]);
     title.textContent = `${saved.chord}: ${parsed.quality.label}${parsed.bass === null ? '' : ` with ${ROOT_NAMES[parsed.bass]} in the bass`}`;
-    notes.textContent = `Notes: ${spelled.join(' ')}`;
+    notes.textContent = `Notes: ${spelled.join(' ')}${asPlayed === saved.chord ? '' : `. The ukulele plays ${saved.chord} as ${asPlayed}.`}`;
     const first = describeFingering(best);
-    const rest = chordPositions(open(), saved.chord, saved.instrument === 'guitar', 8).filter(
+    const rest = chordPositions(open(), asPlayed, saved.instrument === 'guitar', 8).filter(
       (v) => v.frets.join(',') !== first.frets.join(','),
     );
     const cards: { v: Voicing; label: string }[] = [

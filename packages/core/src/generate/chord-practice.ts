@@ -166,7 +166,7 @@ export function chordPracticeExercises(): Record<string, Chart> {
         title,
         guitar,
         form.rel,
-        (k) => open + k + 1,
+        (k) => open + k,
         quality,
         [1, 2, 3, 4, 5, 6, 7, 8],
       ),

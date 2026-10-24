@@ -171,9 +171,7 @@ function search(open: readonly number[], chord: ParsedChord, mutes: boolean): Vo
   // the movable barre shapes guitarists know (the E and A forms) are favoured where they fit
   if (mutes && open.length === 6 && open.every((o, i) => o === GUITAR_STANDARD_OPEN[i])) {
     for (const t of GUITAR_BARRE_FORMS[chord.quality.id] ?? []) {
-      const base = mod12(
-        chord.bass === null ? chord.root - open[t.string]! : chord.root - open[t.string]!,
-      );
+      const base = mod12(chord.root - open[t.string]!);
       for (const b of base === 0 ? [0, 12] : [base]) {
         const shape = t.rel.map((r) => (r === null ? null : r + b));
         if (shape.every((f) => f === null || f <= MAX_FRET)) consider(shape, 3);

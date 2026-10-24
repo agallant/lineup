@@ -1,4 +1,4 @@
-import { generateChordSong, getSong, type Chart } from '@lineup/core';
+import { generateChordSong, getSong, strumChart, type Chart } from '@lineup/core';
 import { describe, expect, it } from 'vitest';
 import { parseChord, planAccompaniment } from './accompaniment';
 
@@ -15,6 +15,28 @@ describe('parseChord', () => {
     expect(parseChord('Dsus4')).toMatchObject({ root: 2, minor: false, tones: [0, 5, 7] });
     expect(parseChord('Cmaj7')).toMatchObject({ root: 0, seventh: true, tones: [0, 4, 7, 11] });
     expect(parseChord('G/B')).toMatchObject({ root: 7, bass: 11 });
+  });
+});
+
+describe('bass lines follow the chord, not a plain triad', () => {
+  const bassNotes = (bars: string) =>
+    tones(strumChart({ title: 'Test', bpm: 80 }, bars, 'D . . . D . . .'), 'bass')
+      .filter((t) => t.wave === 'triangle')
+      .map((t) => t.midi % 12);
+
+  it('puts the flat fifth under a diminished chord and the sharp fifth under an augmented one', () => {
+    expect(bassNotes('Bdim | Bdim')).toContain(5); // F, not F#
+    expect(bassNotes('Bdim | Bdim')).not.toContain(6);
+    expect(bassNotes('Caug | Caug')).toContain(8); // G#, not G
+    expect(bassNotes('Caug | Caug')).not.toContain(7);
+  });
+
+  it('keeps the root-and-fifth of a plain chord and takes a slash chord’s fifth from its root', () => {
+    expect(bassNotes('C | C')).toEqual(expect.arrayContaining([0, 7]));
+    const slash = bassNotes('G/B | G/B');
+    expect(slash).toContain(11); // the bass B
+    expect(slash).toContain(2); // D, the fifth of G
+    expect(slash).not.toContain(6);
   });
 });
 
