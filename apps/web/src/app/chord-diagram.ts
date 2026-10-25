@@ -3,7 +3,7 @@ import type { Voicing } from '@lineup/core';
 /** The fret rows a diagram shows below the nut (or below its first fret label). */
 const ROWS = 5;
 const W = 122;
-const LEFT = 32;
+const LEFT = 34;
 const RIGHT = 14;
 const TOP = 30;
 const ROW_H = 20;
@@ -67,7 +67,7 @@ export function chordDiagramSvg(voicing: Voicing, label: string): string {
   });
   if (start > 1) {
     parts.push(
-      `<text x="${LEFT - 12}" y="${y(0) + ROW_H / 2 + 4}" text-anchor="end" font-size="12" fill="currentColor">${start}fr</text>`,
+      `<text x="${LEFT - 9}" y="${y(0) + ROW_H / 2 + 4}" text-anchor="end" font-size="12" fill="currentColor">${start}fr</text>`,
     );
   }
   const text = frets.map((f) => (f === null ? 'x' : String(f))).join(' ');

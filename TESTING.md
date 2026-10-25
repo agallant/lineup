@@ -324,3 +324,5 @@ Write anything you notice here, or just tell me in the chat:
 - [ ] Chord finder: the fret number ("7fr") now sits to the left of the diagram, clear of the dots; the cards line up in a grid with full-width buttons.
 - [ ] Song menus (Strumline, Singline, Windline, Keyline) show most of a long title instead of cutting it short.
 - [ ] Song packs: nothing sticks out sideways on a tablet.
+- [ ] Options: "Choose File" (restore from a backup) looks like the other buttons and is easy to tap.
+- [ ] Chord finder on a guitar: a shape up at fret 10 or 12 shows its "10fr"/"12fr" label fully.

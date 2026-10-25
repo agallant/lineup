@@ -1341,3 +1341,16 @@ dialog.install-dialog li {
 select[data-id='song'] {
   max-width: min(86vw, 34rem);
 }
+
+/* the native "Choose File" button looks like the app's own buttons */
+input[type='file']::file-selector-button {
+  min-height: 44px;
+  margin-right: 10px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
