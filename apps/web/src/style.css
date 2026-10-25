@@ -1304,12 +1304,15 @@ dialog.install-dialog li {
 
 /* the chord finder's diagrams */
 .diagrams {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 12px;
 }
 
 .chord-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin: 0;
   padding: 8px;
   text-align: center;
@@ -1325,6 +1328,16 @@ dialog.install-dialog li {
 }
 
 .chord-card figcaption {
+  margin-bottom: 6px;
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+.chord-card button {
+  width: 100%;
+}
+
+/* the song menu is the longest: let it show most of a title before it cuts off */
+select[data-id='song'] {
+  max-width: min(86vw, 34rem);
 }

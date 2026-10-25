@@ -2,8 +2,8 @@ import type { Voicing } from '@lineup/core';
 
 /** The fret rows a diagram shows below the nut (or below its first fret label). */
 const ROWS = 5;
-const W = 110;
-const LEFT = 18;
+const W = 122;
+const LEFT = 32;
 const RIGHT = 14;
 const TOP = 30;
 const ROW_H = 20;
@@ -11,7 +11,7 @@ const ROW_H = 20;
 /**
  * A chord fingering as a small picture: strings standing up (lowest on the left), fret lines across,
  * a dot where a string is held, a ring above an open string, a cross above a muted one, a bar
- * across a barre, and the fret number beside the first row when the shape sits up the neck.
+ * across a barre, and the fret number to the left of the first row when the shape sits up the neck.
  * The colours come from the page (`currentColor` and the accent), so it suits both themes.
  */
 export function chordDiagramSvg(voicing: Voicing, label: string): string {
@@ -67,7 +67,7 @@ export function chordDiagramSvg(voicing: Voicing, label: string): string {
   });
   if (start > 1) {
     parts.push(
-      `<text x="${W - 2}" y="${y(0) + ROW_H / 2 + 4}" text-anchor="end" font-size="12" fill="currentColor">${start}fr</text>`,
+      `<text x="${LEFT - 12}" y="${y(0) + ROW_H / 2 + 4}" text-anchor="end" font-size="12" fill="currentColor">${start}fr</text>`,
     );
   }
   const text = frets.map((f) => (f === null ? 'x' : String(f))).join(' ');
