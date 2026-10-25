@@ -318,3 +318,9 @@ Items for features still to come are added here as they ship, under the mileston
 Write anything you notice here, or just tell me in the chat:
 
 -
+
+## Polish pass (to look at on the iPad)
+
+- [ ] Chord finder: the fret number ("7fr") now sits to the left of the diagram, clear of the dots; the cards line up in a grid with full-width buttons.
+- [ ] Song menus (Strumline, Singline, Windline, Keyline) show most of a long title instead of cutting it short.
+- [ ] Song packs: nothing sticks out sideways on a tablet.
