@@ -35,6 +35,14 @@ export function loadChordPrefs(storage: Pick<Storage, 'getItem'> | null): Prefs 
 
 /** The fingerings in use this visit: kept here too, so a blocked or failing store does not lose earlier choices. */
 let current: Prefs = { ukulele: {}, guitar: {} };
+/** Chords forgotten this visit: kept out of the merge even if a store that will not write still holds them. */
+const forgotten: Record<'ukulele' | 'guitar', Set<string>> = {
+  ukulele: new Set(),
+  guitar: new Set(),
+};
+
+const withoutForgotten = (table: Prefs[string], gone: Set<string>): Prefs[string] =>
+  Object.fromEntries(Object.entries(table).filter(([k]) => !gone.has(k)));
 
 /** Saves one chosen fingering (or, with `frets` null, forgets it) and puts it to use at once. */
 export function chooseFingering(
@@ -46,13 +54,18 @@ export function chooseFingering(
   // what the device holds with this visit's choices over it (a blocked or failing store loses none)
   const stored = loadChordPrefs(storage);
   const prefs: Prefs = {
-    ukulele: { ...stored['ukulele'], ...current['ukulele'] },
-    guitar: { ...stored['guitar'], ...current['guitar'] },
+    ukulele: withoutForgotten({ ...stored['ukulele'], ...current['ukulele'] }, forgotten.ukulele),
+    guitar: withoutForgotten({ ...stored['guitar'], ...current['guitar'] }, forgotten.guitar),
   };
   // kept under the chord's one canonical name, so "Db" and "C#" are the same chord
   const name = canonicalChordName(chord) ?? chord;
   const table = Object.fromEntries(Object.entries(prefs[instrument]!).filter(([k]) => k !== name));
-  if (frets !== null) table[name] = [...frets];
+  if (frets !== null) {
+    table[name] = [...frets];
+    forgotten[instrument].delete(name);
+  } else {
+    forgotten[instrument].add(name);
+  }
   prefs[instrument] = table;
   current = prefs;
   try {
@@ -68,5 +81,7 @@ export function applyStoredChordPrefs(
   storage: Pick<Storage, 'getItem'> | null = safeLocalStorage(),
 ): void {
   current = loadChordPrefs(storage);
+  forgotten.ukulele.clear();
+  forgotten.guitar.clear();
   setChordPreferences(current as ChordPreferences);
 }

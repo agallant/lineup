@@ -71,6 +71,20 @@ describe('chosen chord fingerings', () => {
     expect(chordFrets(undefined, 'Cm')).toEqual([5, 3, 3, 3]);
   });
 
+  it('keep a forgotten chord forgotten when the store will not write', () => {
+    const readOnly = {
+      getItem: () =>
+        JSON.stringify({ ukulele: { Bm: [9, 7, 7, 7], Dm: [2, 2, 1, 0] }, guitar: {} }),
+      setItem: () => {
+        throw new Error('full');
+      },
+    };
+    chooseFingering('ukulele', 'Bm', null, readOnly);
+    chooseFingering('ukulele', 'Cm', [5, 3, 3, 3], readOnly);
+    expect(chordFrets(undefined, 'Bm')).not.toEqual([9, 7, 7, 7]);
+    expect(chordFrets(undefined, 'Dm')).toEqual([2, 2, 1, 0]);
+  });
+
   it('ignore damaged or wrongly shaped entries', () => {
     const store = new Memory();
     store.setItem(
