@@ -98,7 +98,7 @@ export function computeLayout(
   const right = size.width;
   const plotWidth = Math.max(1, right - left);
   const nowX = left + plotWidth * nowFraction;
-  const lookAhead = preferred ?? fitLookAhead(right - nowX, 5, 2.5);
+  const lookAhead = preferred ?? fitLookAhead(right - nowX, 5);
   const pxPerSec = (right - nowX) / lookAhead;
   return {
     nowX,

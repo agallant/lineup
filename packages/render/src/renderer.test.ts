@@ -13,6 +13,10 @@ describe('fitLookAhead', () => {
     expect(270 / seconds).toBeGreaterThanOrEqual(MIN_PX_PER_SEC);
   });
 
+  it('keeps 100 px a second on a small phone (a 206 px span after the now line)', () => {
+    expect(206 / fitLookAhead(206, 5)).toBeGreaterThanOrEqual(MIN_PX_PER_SEC);
+  });
+
   it('never goes under its floor', () => {
     expect(fitLookAhead(50, 4, 2)).toBe(2);
   });

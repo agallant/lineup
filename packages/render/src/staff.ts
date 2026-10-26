@@ -113,7 +113,7 @@ export class StaffRenderer implements Renderer {
     // room at the left for the clef, drawn as a shape
     const left = drawn ? Math.max(54, Math.round(gap * (clefWidth(clef) + 1.2))) : 54;
     const nowX = left + (size.width - left) * nowFraction;
-    const lookAhead = preferred ?? fitLookAhead(size.width - nowX, 5, 2.5);
+    const lookAhead = preferred ?? fitLookAhead(size.width - nowX, 5);
     const pxPerSec = (size.width - nowX) / lookAhead;
     const bottomY = size.height / 2 + gap * 2;
     const yOf = (step: number) => bottomY - (step * gap) / 2;
