@@ -1,6 +1,7 @@
 import { noteFromFrequency, type ChartNote } from '@lineup/core';
 import {
   COLORS,
+  fitLookAhead,
   roundedRect,
   type Canvas2D,
   type RenderSize,
@@ -84,13 +85,20 @@ export function pitchRangeFor(
 export function computeLayout(
   size: RenderSize,
   notes: readonly ChartNote[],
-  { lookAhead = 5, nowFraction = 0.28, minSpan = 14, margin = 2, gutter = 34 }: LayoutOptions = {},
+  {
+    lookAhead: preferred,
+    nowFraction = 0.28,
+    minSpan = 14,
+    margin = 2,
+    gutter = 34,
+  }: LayoutOptions = {},
 ): HighwayLayout {
   const { low, high } = pitchRangeFor(notes, minSpan, margin);
   const left = gutter;
   const right = size.width;
   const plotWidth = Math.max(1, right - left);
   const nowX = left + plotWidth * nowFraction;
+  const lookAhead = preferred ?? fitLookAhead(right - nowX, 5);
   const pxPerSec = (right - nowX) / lookAhead;
   return {
     nowX,

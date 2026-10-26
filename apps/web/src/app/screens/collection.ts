@@ -8,6 +8,7 @@ import {
   type Family,
 } from '../collection';
 import { starText } from '../progress';
+import { songCards } from '../song-cards';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
 import { safeLocalStorage } from '../settings';
@@ -19,14 +20,12 @@ const familyHtml = (f: Family): string => `
       <strong>${TIER_LABEL[f.tier]}</strong>
       <span class="muted">${nextGoal(f)}</span></p>
     <span class="bar" role="img" aria-label="${f.cleared} of ${f.total} songs with three stars"><span style="width:${Math.round((f.cleared / f.total) * 100)}%"></span></span>
-    <ul class="collection">
-      ${f.items
-        .map(
-          (i) =>
-            `<li class="${(i.stars ?? 0) >= 3 ? 'cleared' : i.stars === null ? 'new' : ''}"><a href="${songHref(i.profileId, i.songId)}"><span class="stars" aria-label="${i.stars ?? 0} of 3 stars">${starText(i.stars ?? 0)}</span> ${escapeHtml(i.title)}</a></li>`,
-        )
-        .join('')}
-    </ul>
+    ${songCards(
+      f.items.map((i) => ({
+        done: (i.stars ?? 0) >= 3,
+        html: `<li class="${(i.stars ?? 0) >= 3 ? 'cleared' : i.stars === null ? 'new' : ''}"><a href="${songHref(i.profileId, i.songId)}"><span class="stars" aria-label="${i.stars ?? 0} of 3 stars">${starText(i.stars ?? 0)}</span> ${escapeHtml(i.title)}</a></li>`,
+      })),
+    )}
   </section>`;
 
 /** What the next medal needs, in words. */

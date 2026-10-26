@@ -326,3 +326,8 @@ Write anything you notice here, or just tell me in the chat:
 - [ ] Song packs: nothing sticks out sideways on a tablet.
 - [ ] Options: "Choose File" (restore from a backup) looks like the other buttons and is easy to tap.
 - [ ] Chord finder on a guitar: a shape up at fret 10 or 12 shows its "10fr"/"12fr" label fully.
+- [ ] Song packs and Collection on a phone: each group shows its first few songs (the ones still to clear first) and "Show all N songs" opens the rest; the pages are short to scroll.
+- [ ] Options on a phone: every checkbox is the same size, even when its label wraps onto two lines.
+- [ ] Menus on a phone (Ear training, Singline, ...): a long menu fits inside its panel instead of sticking out or cutting off early.
+- [ ] Metronome: the Volume slider sits level with its label.
+- [ ] Beatline, Singline, Windline on a phone in portrait: quick notes no longer run together (the view shows a little less ahead so each note has room).

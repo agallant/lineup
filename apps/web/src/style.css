@@ -342,6 +342,8 @@ input[type='text'] {
 }
 
 .check input {
+  /* a label that wraps onto two lines must not squeeze its box smaller */
+  flex: none;
   width: 22px;
   height: 22px;
 }
@@ -1353,4 +1355,30 @@ input[type='file']::file-selector-button {
   color: var(--text);
   font: inherit;
   cursor: pointer;
+}
+
+.more-songs {
+  margin-top: 6px;
+}
+
+/* an empty message line at the end of a panel takes no room (it still announces what comes) */
+.panel > .status:last-child:empty {
+  min-height: 0;
+  margin: 0;
+}
+
+/* a slider sits level with its label, not below the text's baseline */
+label:has(> input[type='range']) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* on a phone a long menu takes the whole line under its label instead of cutting its text short */
+@media (max-width: 520px) {
+  select,
+  select[data-id='song'] {
+    /* the page gutters and a panel's padding */
+    max-width: calc(100vw - 72px);
+  }
 }

@@ -1,6 +1,13 @@
 import type { ChartNote } from '@lineup/core';
 import { canDrawClef, clefWidth, drawClef } from './clef';
-import { COLORS, type Canvas2D, type RenderSize, type RenderView, type Renderer } from './renderer';
+import {
+  COLORS,
+  fitLookAhead,
+  type Canvas2D,
+  type RenderSize,
+  type RenderView,
+  type Renderer,
+} from './renderer';
 
 /** Which clef the staff is drawn with. */
 export type Clef = 'treble' | 'bass';
@@ -98,7 +105,7 @@ export class StaffRenderer implements Renderer {
   constructor(private readonly options: StaffOptions = {}) {}
 
   draw(g: Canvas2D, size: RenderSize, view: RenderView): void {
-    const { names = true, flats = false, lookAhead = 5, nowFraction = 0.28 } = this.options;
+    const { names = true, flats = false, lookAhead: preferred, nowFraction = 0.28 } = this.options;
     const clef = clefFor(view.notes);
     // the staff is five lines with room above and below for ledger lines and the trail
     const gap = Math.max(10, Math.min(30, size.height / 12));
@@ -106,6 +113,7 @@ export class StaffRenderer implements Renderer {
     // room at the left for the clef, drawn as a shape
     const left = drawn ? Math.max(54, Math.round(gap * (clefWidth(clef) + 1.2))) : 54;
     const nowX = left + (size.width - left) * nowFraction;
+    const lookAhead = preferred ?? fitLookAhead(size.width - nowX, 5);
     const pxPerSec = (size.width - nowX) / lookAhead;
     const bottomY = size.height / 2 + gap * 2;
     const yOf = (step: number) => bottomY - (step * gap) / 2;

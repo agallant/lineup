@@ -1,6 +1,7 @@
 import type { ChartNote, Lane } from '@lineup/core';
 import {
   COLORS,
+  fitLookAhead,
   type Canvas2D,
   type HitFlash,
   type RenderSize,
@@ -43,24 +44,27 @@ export interface LaneLayoutOptions {
 export function computeLaneLayout(
   size: RenderSize,
   laneCount: number,
-  { lookAhead = 4, nowFraction = 0.2, gutter = 56 }: LaneLayoutOptions = {},
+  { lookAhead: preferred, nowFraction = 0.2, gutter = 56 }: LaneLayoutOptions = {},
 ): LaneLayout {
   const left = gutter;
   const right = size.width;
   const nowX = left + (right - left) * nowFraction;
+  const lookAhead = preferred ?? fitLookAhead(right - nowX, 4);
   const top = 6;
   const bottom = Math.max(top + 1, size.height - 6);
   const laneHeight = (bottom - top) / Math.max(1, laneCount);
+  const pxPerSec = (right - nowX) / lookAhead;
   return {
     nowX,
-    pxPerSec: (right - nowX) / lookAhead,
+    pxPerSec,
     lookAhead,
     left,
     right,
     top,
     bottom,
     laneHeight,
-    radius: Math.max(6, Math.min(24, laneHeight * 0.34)),
+    // no bigger than quick notes (eighths at 120 bpm) leave room for, so they never run together
+    radius: Math.max(6, Math.min(24, laneHeight * 0.34, pxPerSec * 0.1)),
   };
 }
 

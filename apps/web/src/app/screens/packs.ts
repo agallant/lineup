@@ -2,6 +2,7 @@ import { escapeHtml } from '../audio';
 import { songHref } from '../collection';
 import { buildPacks, type Pack } from '../packs';
 import { starText } from '../progress';
+import { songCards } from '../song-cards';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
 import { safeLocalStorage } from '../settings';
@@ -25,14 +26,12 @@ const packHtml = (p: Pack): string => `
   <section class="panel pack" data-pack="${p.id}">
     <h2>${escapeHtml(p.title)} <small>${p.cleared} of ${p.songs.length} with three stars</small></h2>
     <p class="muted">${escapeHtml(p.blurb)}</p>
-    <ul class="collection">
-      ${p.songs
-        .map(
-          (s) =>
-            `<li class="${(s.stars ?? 0) >= 3 ? 'cleared' : s.stars === null ? 'new' : ''}"><a href="${songHref(s.profileId, s.songId)}"><span class="stars" aria-label="${s.stars ?? 0} of 3 stars">${starText(s.stars ?? 0)}</span> ${escapeHtml(s.title)} <small class="muted">${GAME[s.profileId] ?? ''} · difficulty ${s.rating}</small></a></li>`,
-        )
-        .join('')}
-    </ul>
+    ${songCards(
+      p.songs.map((s) => ({
+        done: (s.stars ?? 0) >= 3,
+        html: `<li class="${(s.stars ?? 0) >= 3 ? 'cleared' : s.stars === null ? 'new' : ''}"><a href="${songHref(s.profileId, s.songId)}"><span class="stars" aria-label="${s.stars ?? 0} of 3 stars">${starText(s.stars ?? 0)}</span> ${escapeHtml(s.title)} <small class="muted">${GAME[s.profileId] ?? ''} · difficulty ${s.rating}</small></a></li>`,
+      })),
+    )}
   </section>`;
 
 /** Song packs: themed sets of songs from across the games, each song opening in its game. */
