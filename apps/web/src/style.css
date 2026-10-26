@@ -1404,3 +1404,11 @@ label:has(> input[type='range']) {
   width: 100%;
   margin: 6px 0;
 }
+
+/* a meter beside its reading (the microphone's clarity) stays on one line */
+dd .bar {
+  display: inline-block;
+  width: 120px;
+  margin: 0 8px 0 0;
+  vertical-align: middle;
+}
