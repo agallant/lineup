@@ -1181,7 +1181,9 @@ h2.step::before {
 /* touch targets: folded sections, sliders and file pickers are at least a finger tall */
 summary {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  column-gap: 0.35em;
   min-height: 44px;
 }
 

@@ -337,3 +337,5 @@ Write anything you notice here, or just tell me in the chat:
 - [ ] Collection: open "Show all N songs" on a big group (Strumline songs) and type in "Find a song": the list narrows as you type.
 - [ ] How to play: new sections on Chords (finder and choosing a fingering) and on Learn, packs and the collection.
 - [ ] Windline on a phone: Speed and Octave each have their own line; the microphone's clarity meter and its reading sit on one line.
+- [ ] Keyline: the drums note no longer warns about the microphone (Keyline does not listen); Bassline says "A quiet drum loop".
+- [ ] Folded sections with a note in brackets ("Hit monitor and checks (for troubleshooting)") wrap under the title on a phone instead of splitting into columns.

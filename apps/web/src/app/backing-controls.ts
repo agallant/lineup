@@ -16,7 +16,8 @@ export const DRONE_LABELS: Readonly<Record<Drone, string>> = {
 /**
  * The backing options on a game's set-up page: the feel of the play-along music and the drum loop,
  * kept in the same settings as Options so a change here shows there. Either can be left out when the
- * game has no use for it (a rhythm game has no chords to play along with).
+ * game has no use for it (a rhythm game has no chords to play along with); `mic: false` drops the
+ * headphones advice for a game that does not listen (Keyline).
  */
 export function mountBackingControls(
   box: HTMLElement,
@@ -25,7 +26,8 @@ export function mountBackingControls(
     music = true,
     drums = true,
     drone = false,
-  }: { music?: boolean; drums?: boolean; drone?: boolean } = {},
+    mic = true,
+  }: { music?: boolean; drums?: boolean; drone?: boolean; mic?: boolean } = {},
 ): void {
   const labels: Record<string, string> = {
     off: 'Off',
@@ -55,7 +57,7 @@ export function mountBackingControls(
           : ''
       }
     </div>
-    <p class="muted">Quiet music under the song. “Match the song” picks a feel to suit its tempo and meter and changes it as the song goes. Use headphones, or the microphone will hear it.</p>`;
+    <p class="muted">${music ? 'Quiet music under the song.' : 'A quiet drum loop under the song.'} “Match the song” picks a feel to suit its tempo and meter and changes it as the song goes.${mic ? ' Use headphones, or the microphone will hear it.' : ''}</p>`;
   const music$ = box.querySelector<HTMLSelectElement>('[data-id=backing-music]');
   const drums$ = box.querySelector<HTMLSelectElement>('[data-id=backing-drums]');
   const drone$ = box.querySelector<HTMLSelectElement>('[data-id=backing-drone]');

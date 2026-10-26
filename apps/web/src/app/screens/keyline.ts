@@ -258,7 +258,7 @@ export const keylineScreen: Screen = (root) => {
     const all = songs();
     return all.find((s) => s.id === songSel.value) ?? all[0]!;
   };
-  mountBackingControls($('backing-box'), settings, { music: false });
+  mountBackingControls($('backing-box'), settings, { music: false, mic: false });
   const stepBox = $<HTMLInputElement>('opt-step');
   stepBox.checked = settings.get().stepMode;
   stepBox.addEventListener('change', () => {
