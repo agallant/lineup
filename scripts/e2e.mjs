@@ -1183,6 +1183,16 @@ const scenarios = {
       await page.click('[data-id=pack-games] [data-game=Keyline]');
       const keys = await page.$$eval('[data-pack] a', (a) => a.map((x) => x.getAttribute('href')));
       const keyPacks = await page.$$eval('[data-pack]', (p) => p.length);
+      // the choice is remembered when the page comes back
+      await page.reload();
+      await page.waitForSelector('[data-id=pack-games]');
+      const kept =
+        (await page.getAttribute('[data-id=pack-games] [data-game=Keyline]', 'aria-pressed')) ===
+          'true' &&
+        (await page.$$eval('[data-pack] a', (a) =>
+          a.every((x) => x.getAttribute('href').startsWith('#/keys')),
+        ));
+      check(kept, 'packs: the Keyline choice is remembered after a reload');
       await page.click('[data-id=pack-games] [data-game=All]');
       check(
         keys.length > 0 && keys.every((h) => h.startsWith('#/keys')) && keyPacks < all,
