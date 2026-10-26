@@ -1,4 +1,4 @@
-import { chordFrets, setChordPreferences } from '@lineup/core';
+import { chordFrets, defaultFingering, setChordPreferences } from '@lineup/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { applyStoredChordPrefs, chooseFingering, loadChordPrefs } from './chord-prefs';
 
@@ -74,7 +74,7 @@ describe('chosen chord fingerings', () => {
   it('keep a forgotten chord forgotten when the store will not write', () => {
     const readOnly = {
       getItem: () =>
-        JSON.stringify({ ukulele: { Bm: [9, 7, 7, 7], Dm: [2, 2, 1, 0] }, guitar: {} }),
+        JSON.stringify({ ukulele: { Bm: [9, 7, 7, 7], Dm: [2, 5, 5, 5] }, guitar: {} }),
       setItem: () => {
         throw new Error('full');
       },
@@ -82,7 +82,9 @@ describe('chosen chord fingerings', () => {
     chooseFingering('ukulele', 'Bm', null, readOnly);
     chooseFingering('ukulele', 'Cm', [5, 3, 3, 3], readOnly);
     expect(chordFrets(undefined, 'Bm')).not.toEqual([9, 7, 7, 7]);
-    expect(chordFrets(undefined, 'Dm')).toEqual([2, 2, 1, 0]);
+    // a Dm up the neck, not the one songs use anyway, so a dropped preference would show
+    expect(defaultFingering('ukulele-strum', 'Dm')).not.toEqual([2, 5, 5, 5]);
+    expect(chordFrets(undefined, 'Dm')).toEqual([2, 5, 5, 5]);
   });
 
   it('ignore damaged or wrongly shaped entries', () => {
