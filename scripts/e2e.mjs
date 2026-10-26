@@ -2317,6 +2317,20 @@ const scenarios = {
         /1 of \d+ mastered/.test(await page.textContent('[data-course=voice-first-steps] h2')),
         'learn: progress is counted',
       );
+      // the game buttons narrow the paths to one game, and All brings them back
+      await page.click('[data-id=learn-games] [data-game=Beatline]');
+      const beatOnly = await page.$$eval('section[data-course]', (s) =>
+        s.filter((x) => !x.hidden).map((x) => x.dataset.game),
+      );
+      await page.click('[data-id=learn-games] [data-game=All]');
+      check(
+        beatOnly.length >= 1 && beatOnly.every((g) => g === 'Beatline'),
+        `learn: the Beatline button shows only Beatline paths (${beatOnly.length})`,
+      );
+      check(
+        (await page.getAttribute('section[data-course]', 'data-course')) === 'voice-first-steps',
+        'learn: a path under way comes first',
+      );
       await page.click('[data-id=continue-voice-first-steps]');
       await page.waitForSelector('[data-id=song]');
       check(
