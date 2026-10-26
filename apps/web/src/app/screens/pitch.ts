@@ -235,20 +235,20 @@ const setup = (c: PitchScreenConfig) => `
     </label>
     ${
       c.instruments
-        ? `<label>Speed
+        ? `<div class="row"><label>Speed
       <select data-id="speed">
         <option value="0.5">50%</option>
         <option value="0.65">65%</option>
         <option value="0.8">80%</option>
         <option value="1">100%</option>
       </select>
-    </label>
-    <label>Octave
+    </label></div>
+    <div class="row"><label>Octave
       <select data-id="octave">
         <option value="auto">Any octave: follow how I play (recommended)</option>
         <option value="exact">Exactly the octave shown</option>
       </select>
-    </label>
+    </label></div>
     <label class="check"><input type="checkbox" data-id="opt-fingerings" /> Show the fingering of the current and next note while playing</label>`
         : ''
     }

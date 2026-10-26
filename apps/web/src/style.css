@@ -1181,7 +1181,9 @@ h2.step::before {
 /* touch targets: folded sections, sliders and file pickers are at least a finger tall */
 summary {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  column-gap: 0.35em;
   min-height: 44px;
 }
 
@@ -1381,4 +1383,34 @@ label:has(> input[type='range']) {
     /* the page gutters and a panel's padding */
     max-width: calc(100vw - 72px);
   }
+}
+
+/* a phone on its side while playing: the song gets the height, the page title steps aside */
+@media (orientation: landscape) and (max-height: 500px) {
+  main:has(> [data-id='stage-play']:not([hidden])) > h1 {
+    display: none;
+  }
+
+  main:has(> [data-id='stage-play']:not([hidden])) > p:first-child {
+    margin: 0 0 4px;
+  }
+
+  main:has(> [data-id='stage-play']:not([hidden])) canvas.stage {
+    height: calc(100vh - 110px);
+    min-height: 200px;
+  }
+}
+
+.song-find {
+  display: block;
+  width: 100%;
+  margin: 6px 0;
+}
+
+/* a meter beside its reading (the microphone's clarity) stays on one line */
+dd .bar {
+  display: inline-block;
+  width: 120px;
+  margin: 0 8px 0 0;
+  vertical-align: middle;
 }

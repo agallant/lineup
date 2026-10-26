@@ -83,7 +83,7 @@ export const emptyProgress = (): ProgressState => ({
   weeksDone: 0,
 });
 
-/** The games (four for an instrument, and ear training), by the profile ids that belong to each. */
+/** The games (six for an instrument, and ear training), by the profile ids that belong to each. */
 export const GAMES = [
   { id: 'singline', label: 'Singline', profiles: ['voice'] },
   { id: 'windline', label: 'Windline', profiles: ['wind'] },
@@ -253,7 +253,7 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   {
     id: 'all-games',
     title: 'Full band',
-    description: 'Play all four instrument games.',
+    description: 'Play Singline, Windline, Strumline and Beatline.',
     earned: (s) =>
       ['singline', 'windline', 'beatline', 'strumline'].every((g) => (s.perGame[g] ?? 0) > 0),
   },

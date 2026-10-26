@@ -331,3 +331,12 @@ Write anything you notice here, or just tell me in the chat:
 - [ ] Menus on a phone (Ear training, Singline, ...): a long menu fits inside its panel instead of sticking out or cutting off early.
 - [ ] Metronome: the Volume slider sits level with its label.
 - [ ] Beatline, Singline, Windline on a phone in portrait: quick notes no longer run together (the view shows a little less ahead so each note has room).
+- [ ] Home: the practice line reads "Practice in the last seven days: N minutes · set a weekly goal" (the link opens Options), separate from the themed week.
+- [ ] Tuner: "Reference pitch: A = 440 Hz" with − and +; "Reset to 440" shows only after changing it.
+- [ ] A phone on its side while playing: the game title steps aside so the song lane is as tall as it can be; Back and Stop stay.
+- [ ] Collection: open "Show all N songs" on a big group (Strumline songs) and type in "Find a song": the list narrows as you type.
+- [ ] How to play: new sections on Chords (finder and choosing a fingering) and on Learn, packs and the collection.
+- [ ] Windline on a phone: Speed and Octave each have their own line; the microphone's clarity meter and its reading sit on one line.
+- [ ] Keyline: the drums note no longer warns about the microphone (Keyline does not listen); Bassline says "A quiet drum loop".
+- [ ] Folded sections with a note in brackets ("Hit monitor and checks (for troubleshooting)") wrap under the title on a phone instead of splitting into columns.
+- [ ] Learn: buttons at the top (All, Singline, Windline, ...) show only that game's paths and are remembered; a path you have begun comes first.

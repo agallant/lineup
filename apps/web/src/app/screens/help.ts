@@ -46,6 +46,25 @@ export const helpScreen: Screen = (root) => {
         speed trainer and saved presets. Both are under <strong>Tools</strong> on the home screen.</p>
     </section>
 
+    <section class="panel" data-id="help-chords">
+      <h2>Chords</h2>
+      <p>The <strong>Chord finder</strong> (under <strong>Tools</strong>) shows any chord on the ukulele or guitar, in
+        several places on the neck, with its notes and a <em>Hear it</em> button. A Strumline song lists its chords as
+        links to it. Tap <strong>Use this one</strong> under a shape and the songs and exercises use that fingering from
+        then on (choosing it under <em>Easiest</em> puts the usual one back).</p>
+    </section>
+
+    <section class="panel" data-id="help-paths">
+      <h2>Learn, packs and the collection</h2>
+      <ul>
+        <li><strong>Learn</strong>: step-by-step paths for each instrument. One star opens the next step; two stars master it.</li>
+        <li><strong>Song packs</strong>: themed sets (campfire, waltzes, world rhythms, ...) from every game.</li>
+        <li><strong>Collection</strong>: every song by group, with a bronze, silver or gold medal for how many you have
+          cleared with three stars. A long group shows its first few songs; <em>Show all</em> opens the rest, with a box to
+          find a song.</li>
+      </ul>
+    </section>
+
     <section class="panel">
       <h2>Songs, versions and parts</h2>
       <ul>

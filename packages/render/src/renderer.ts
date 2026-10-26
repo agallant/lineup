@@ -129,7 +129,7 @@ export const MIN_PX_PER_SEC = 100;
 /**
  * How many seconds ahead a scrolling view can show in `span` px: the preferred look-ahead on a wide
  * screen, less on a narrow phone so that quick notes keep their room. The floor (default 1.5 s) only
- * wins on views narrower than 150 px.
+ * wins when the span itself (the room after the now line, not the whole view) is under 150 px.
  */
 export function fitLookAhead(span: number, preferred: number, floor = 1.5): number {
   return Math.min(preferred, Math.max(floor, span / MIN_PX_PER_SEC));

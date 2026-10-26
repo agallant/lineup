@@ -1176,6 +1176,22 @@ const scenarios = {
         /#\/(sing|wind|strum|beat)\?/.test(page.url()),
         `packs: a song opens in its game (${page.url().split('#')[1]})`,
       );
+      // a long group folds away, and its find box narrows it
+      await page.goto(URL_BASE + '#/collection');
+      await page.waitForSelector('[data-family=strum-songs]');
+      const folded = await page.$$eval(
+        '[data-family=strum-songs] > ul.collection li',
+        (l) => l.length,
+      );
+      await page.click('[data-family=strum-songs] .more-songs summary');
+      await page.fill('[data-family=strum-songs] .song-find', 'blues');
+      const found = await page.$$eval('[data-family=strum-songs] .more-songs li', (l) =>
+        l.filter((li) => !li.hidden).map((li) => li.textContent.trim()),
+      );
+      check(
+        folded <= 6 && found.length >= 1 && found.every((t) => /blues/i.test(t)),
+        `collection: a long group shows ${folded} songs and finds the rest (${found.join(', ')})`,
+      );
       // two songs of my own, copied as a pack and pasted back as new songs
       await page.goto(URL_BASE + '#/make');
       for (const [title, notes] of [
@@ -2301,6 +2317,20 @@ const scenarios = {
         /1 of \d+ mastered/.test(await page.textContent('[data-course=voice-first-steps] h2')),
         'learn: progress is counted',
       );
+      // the game buttons narrow the paths to one game, and All brings them back
+      await page.click('[data-id=learn-games] [data-game=Beatline]');
+      const beatOnly = await page.$$eval('section[data-course]', (s) =>
+        s.filter((x) => !x.hidden).map((x) => x.dataset.game),
+      );
+      await page.click('[data-id=learn-games] [data-game=All]');
+      check(
+        beatOnly.length >= 1 && beatOnly.every((g) => g === 'Beatline'),
+        `learn: the Beatline button shows only Beatline paths (${beatOnly.length})`,
+      );
+      check(
+        (await page.getAttribute('section[data-course]', 'data-course')) === 'voice-first-steps',
+        'learn: a path under way comes first',
+      );
       await page.click('[data-id=continue-voice-first-steps]');
       await page.waitForSelector('[data-id=song]');
       check(
@@ -2527,7 +2557,7 @@ const scenarios = {
       );
       check((await page.$('[data-id=tuner-link]')) !== null, 'home: the tuner is under Tools');
       check(
-        /10 minutes of practice/.test(await text(page, 'week')),
+        /last seven days: 10 minutes/.test(await text(page, 'week')),
         `home: shows this week's practice (${await text(page, 'week')})`,
       );
       for (const [game, route, pick] of [
