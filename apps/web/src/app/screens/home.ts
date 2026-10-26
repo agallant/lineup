@@ -134,7 +134,7 @@ export const homeScreen: Screen = (root) => {
       }${state.freezes > 0 ? ` · ❄ ${state.freezes}` : ''} · ${trophies} of ${ACHIEVEMENTS.length} trophies</span>
     </a>
 
-    <section class="week-card" data-id="week" aria-label="Practice this week">
+    <section class="week-card" data-id="week" aria-label="Practice in the last seven days">
       <p class="muted">${
         goal > 0
           ? `Practice in the last seven days: ${minutes} of ${goal} minutes${minutes >= goal ? ' ✓ goal reached' : ''}`
