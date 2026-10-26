@@ -333,3 +333,4 @@ Write anything you notice here, or just tell me in the chat:
 - [ ] Beatline, Singline, Windline on a phone in portrait: quick notes no longer run together (the view shows a little less ahead so each note has room).
 - [ ] Home: the practice line reads "Practice in the last seven days: N minutes · set a weekly goal" (the link opens Options), separate from the themed week.
 - [ ] Tuner: "Reference pitch: A = 440 Hz" with − and +; "Reset to 440" shows only after changing it.
+- [ ] A phone on its side while playing: the game title steps aside so the song lane is as tall as it can be; Back and Stop stay.
