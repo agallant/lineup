@@ -2527,7 +2527,7 @@ const scenarios = {
       );
       check((await page.$('[data-id=tuner-link]')) !== null, 'home: the tuner is under Tools');
       check(
-        /10 minutes of practice/.test(await text(page, 'week')),
+        /last seven days: 10 minutes/.test(await text(page, 'week')),
         `home: shows this week's practice (${await text(page, 'week')})`,
       );
       for (const [game, route, pick] of [

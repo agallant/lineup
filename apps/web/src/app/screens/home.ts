@@ -137,8 +137,8 @@ export const homeScreen: Screen = (root) => {
     <section class="week-card" data-id="week" aria-label="Practice this week">
       <p class="muted">${
         goal > 0
-          ? `This week: ${minutes} of ${goal} minutes${minutes >= goal ? ' ✓ goal reached' : ''}`
-          : `This week: ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} of practice`
+          ? `Practice in the last seven days: ${minutes} of ${goal} minutes${minutes >= goal ? ' ✓ goal reached' : ''}`
+          : `Practice in the last seven days: ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} · <a href="#/options">set a weekly goal</a>`
       }</p>
       ${
         goal > 0

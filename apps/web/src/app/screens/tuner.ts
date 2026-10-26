@@ -105,11 +105,11 @@ export const tunerScreen: Screen = (root) => {
         </label>
       </div>
       <div class="row">
-        <span>A =</span>
+        <span>Reference pitch: A =</span>
         <button data-id="a4-down" aria-label="Lower the reference pitch by 1 hertz">−</button>
         <strong data-id="a4"></strong>
         <button data-id="a4-up" aria-label="Raise the reference pitch by 1 hertz">+</button>
-        <button data-id="a4-reset">440</button>
+        <button data-id="a4-reset">Reset to 440</button>
       </div>
     </section>
   `;
@@ -225,6 +225,8 @@ export const tunerScreen: Screen = (root) => {
     $('a4').textContent = `${saved.a4} Hz`;
     $<HTMLButtonElement>('a4-down').disabled = saved.a4 <= A4_RANGE.min;
     $<HTMLButtonElement>('a4-up').disabled = saved.a4 >= A4_RANGE.max;
+    // nothing to reset while the reference is the usual one
+    $<HTMLButtonElement>('a4-reset').hidden = saved.a4 === DEFAULT_A4;
   };
   const setA4 = (hz: number) => {
     saved.a4 = clampA4(hz);
