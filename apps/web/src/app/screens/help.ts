@@ -51,7 +51,8 @@ export const helpScreen: Screen = (root) => {
       <p>The <strong>Chord finder</strong> (under <strong>Tools</strong>) shows any chord on the ukulele or guitar, in
         several places on the neck, with its notes and a <em>Hear it</em> button. A Strumline song lists its chords as
         links to it. Tap <strong>Use this one</strong> under a shape and the songs and exercises use that fingering from
-        then on (choosing it under <em>Easiest</em> puts the usual one back).</p>
+        then on (choosing it under <em>Easiest</em> puts the usual one back). The slide-a-shape exercises keep
+        their own shapes, since moving one shape up the neck is what they teach.</p>
     </section>
 
     <section class="panel" data-id="help-paths">

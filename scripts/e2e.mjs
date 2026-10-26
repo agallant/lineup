@@ -1176,6 +1176,18 @@ const scenarios = {
         /#\/(sing|wind|strum|beat)\?/.test(page.url()),
         `packs: a song opens in its game (${page.url().split('#')[1]})`,
       );
+      // the game buttons keep only that game's songs, and drop packs left empty
+      await page.goto(URL_BASE + '#/packs');
+      await page.waitForSelector('[data-id=pack-games]');
+      const all = await page.$$eval('[data-pack]', (p) => p.length);
+      await page.click('[data-id=pack-games] [data-game=Keyline]');
+      const keys = await page.$$eval('[data-pack] a', (a) => a.map((x) => x.getAttribute('href')));
+      const keyPacks = await page.$$eval('[data-pack]', (p) => p.length);
+      await page.click('[data-id=pack-games] [data-game=All]');
+      check(
+        keys.length > 0 && keys.every((h) => h.startsWith('#/keys')) && keyPacks < all,
+        `packs: Keyline shows only keyboard songs (${keys.length} in ${keyPacks} of ${all} packs)`,
+      );
       // a long group folds away, and its find box narrows it
       await page.goto(URL_BASE + '#/collection');
       await page.waitForSelector('[data-family=strum-songs]');

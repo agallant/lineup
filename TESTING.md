@@ -340,3 +340,4 @@ Write anything you notice here, or just tell me in the chat:
 - [ ] Keyline: the drums note no longer warns about the microphone (Keyline does not listen); Bassline says "A quiet drum loop".
 - [ ] Folded sections with a note in brackets ("Hit monitor and checks (for troubleshooting)") wrap under the title on a phone instead of splitting into columns.
 - [ ] Learn: buttons at the top (All, Singline, Windline, ...) show only that game's paths and are remembered; a path you have begun comes first.
+- [ ] Song packs: buttons at the top (All, Singline, ...) keep only that game's songs; packs with none of them step aside; the choice is remembered.
