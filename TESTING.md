@@ -335,3 +335,4 @@ Write anything you notice here, or just tell me in the chat:
 - [ ] Tuner: "Reference pitch: A = 440 Hz" with − and +; "Reset to 440" shows only after changing it.
 - [ ] A phone on its side while playing: the game title steps aside so the song lane is as tall as it can be; Back and Stop stay.
 - [ ] Collection: open "Show all N songs" on a big group (Strumline songs) and type in "Find a song": the list narrows as you type.
+- [ ] How to play: new sections on Chords (finder and choosing a fingering) and on Learn, packs and the collection.
