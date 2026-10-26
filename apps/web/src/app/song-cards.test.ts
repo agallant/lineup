@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { songCards } from './song-cards';
+import { matchesFind, songCards } from './song-cards';
 
 const card = (n: number, done = false) => ({ html: `<li>${n}</li>`, done });
 
@@ -24,5 +24,16 @@ describe('song cards', () => {
     const html = songCards([card(1, true), card(2), card(3, true), card(4)]);
     expect(html.indexOf('<li>2</li>')).toBeLessThan(html.indexOf('<li>1</li>'));
     expect(html.indexOf('<li>4</li>')).toBeLessThan(html.indexOf('<li>3</li>'));
+  });
+
+  it('offer a find box only for a long group', () => {
+    expect(songCards(Array.from({ length: 20 }, (_, i) => card(i)))).not.toContain('song-find');
+    expect(songCards(Array.from({ length: 50 }, (_, i) => card(i)))).toContain('song-find');
+  });
+
+  it('match what was typed in any case, and everything when empty', () => {
+    expect(matchesFind('★★☆ Hey Jude', 'jude')).toBe(true);
+    expect(matchesFind('★★☆ Hey Jude', 'let it')).toBe(false);
+    expect(matchesFind('★★☆ Hey Jude', '  ')).toBe(true);
   });
 });

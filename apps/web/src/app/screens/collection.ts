@@ -8,7 +8,7 @@ import {
   type Family,
 } from '../collection';
 import { starText } from '../progress';
-import { songCards } from '../song-cards';
+import { songCards, wireSongFinds } from '../song-cards';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
 import { safeLocalStorage } from '../settings';
@@ -53,5 +53,6 @@ export const collectionScreen: Screen = (root) => {
       ${families.reduce((a, f) => a + f.total, 0)} songs with three stars</p>
     ${families.map(familyHtml).join('')}
   `;
+  wireSongFinds(root);
   return undefined;
 };

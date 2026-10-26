@@ -2,7 +2,7 @@ import { escapeHtml } from '../audio';
 import { songHref } from '../collection';
 import { buildPacks, type Pack } from '../packs';
 import { starText } from '../progress';
-import { songCards } from '../song-cards';
+import { songCards, wireSongFinds } from '../song-cards';
 import type { Screen } from '../router';
 import { ScoreStore } from '../scores';
 import { safeLocalStorage } from '../settings';
@@ -44,5 +44,6 @@ export const packsScreen: Screen = (root) => {
       your own songs can be shared from <a href="#/make">My songs</a>.</p>
     ${packs.map(packHtml).join('')}
   `;
+  wireSongFinds(root);
   return undefined;
 };

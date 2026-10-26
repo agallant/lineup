@@ -1176,6 +1176,22 @@ const scenarios = {
         /#\/(sing|wind|strum|beat)\?/.test(page.url()),
         `packs: a song opens in its game (${page.url().split('#')[1]})`,
       );
+      // a long group folds away, and its find box narrows it
+      await page.goto(URL_BASE + '#/collection');
+      await page.waitForSelector('[data-family=strum-songs]');
+      const folded = await page.$$eval(
+        '[data-family=strum-songs] > ul.collection li',
+        (l) => l.length,
+      );
+      await page.click('[data-family=strum-songs] .more-songs summary');
+      await page.fill('[data-family=strum-songs] .song-find', 'blues');
+      const found = await page.$$eval('[data-family=strum-songs] .more-songs li', (l) =>
+        l.filter((li) => !li.hidden).map((li) => li.textContent.trim()),
+      );
+      check(
+        folded <= 6 && found.length >= 1 && found.every((t) => /blues/i.test(t)),
+        `collection: a long group shows ${folded} songs and finds the rest (${found.join(', ')})`,
+      );
       // two songs of my own, copied as a pack and pasted back as new songs
       await page.goto(URL_BASE + '#/make');
       for (const [title, notes] of [
