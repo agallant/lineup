@@ -578,6 +578,206 @@ export const POP_GENRES: readonly (PopSong & { genre: PopGenre })[] = [
       loop('G | Bm | C | G | C | G | Em | A7 | D7 | G', 3),
     ),
   ),
+  withGenre(
+    'blues',
+    song(
+      'Blue Yodel No. 1 (T for Texas)',
+      'Jimmie Rodgers',
+      1927,
+      104,
+      'C | C | C | C | F | F | C | C | G7 | F | C | G7',
+    ),
+  ),
+  withGenre(
+    'blues',
+    song(
+      'The Thrill Is Gone',
+      'B.B. King',
+      1969,
+      90,
+      'Bm | Bm7 | Bm | Bm7 | Em | Em7 | Bm | Bm7 | Gmaj7 | F#7 | Bm | Bm',
+    ),
+  ),
+  withGenre(
+    'blues',
+    song(
+      'Born Under a Bad Sign',
+      'Albert King',
+      1967,
+      100,
+      'D7 | D7 | D7 | D7 | G7 | G7 | D7 | D7 | A7 | G7 | D7 | A7',
+    ),
+  ),
+  withGenre(
+    'blues',
+    song('Pride and Joy', 'Stevie Ray Vaughan', 1983, 118, 'E | E7 | A | E7 | B7 | A7 | E | B7'),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'Fairytale of New York',
+      'The Pogues',
+      1987,
+      92,
+      'C | F | C | G | C | F | C | G | C | C | G | Am | F | C | G | C | Am | C | F | C | G | C | G | C | F | G | C | Am | C | F | C | G | C',
+      { capo: 2 },
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Whiskey in the Jar',
+      'Traditional Irish (The Dubliners)',
+      1967,
+      128,
+      'C | Am | F | C | G | C | Am | F | C | G | C | F | C | G | C',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'The Christmas Song',
+      'Nat King Cole',
+      1946,
+      66,
+      'Cmaj7 | Dm7 | Em7 | Fmaj7 | Cmaj7 | Gm7 | C7 | Fmaj7 | Bb7 | Am | Fm6 | Cmaj7 | B7 | Em7 | Fm7 | Dm7 | G7',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      "Rockin' Around the Christmas Tree",
+      'Brenda Lee',
+      1958,
+      130,
+      'G | D7 | Am7 | D7 | G | C | Bm | Em7 | A7 | D7 | G | D7 | Am7 | D7 | G | Em | C | D | G',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'Jingle Bell Rock',
+      'Bobby Helms',
+      1957,
+      120,
+      'D | Dmaj7 | D6 | D | D6 | D | Em | A7 | Em | A7 | Em | A7 | A | Em | A7 | D | G | Gm | D | D7 | E | E7 | A | A7 | D | B7 | G | Gm | E7 | Gm | Em | A | A7 | D',
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'Corcovado',
+      'Antonio Carlos Jobim',
+      1960,
+      120,
+      'Am6 | E | Gm7 | C7 | Fdim | F6 | Fm7 | Bb7 | E7 | A7 | Am7 | Fm6 | G7 | Fm6',
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Waltzing Matilda',
+      'Traditional Australian',
+      1895,
+      100,
+      'G | D7 | G | C | G | A | D | C | G | Am | D | G | D7 | G | C | G | A | A7 | D | D7 | G | D7 | G | C | G | Am | D | G',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'Jingle Bells',
+      'James Lord Pierpont',
+      1857,
+      120,
+      'C | C | C | C | C | C | C | C | F | F | C | C | G7 | G7 | C | C',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song('Deck the Halls', 'Traditional Welsh', 1784, 110, 'C | G7 | C | G7 | C | F | C | G7 | C'),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'We Wish You a Merry Christmas',
+      'Traditional English',
+      1935,
+      110,
+      'C | F | D7 | G | E7 | Am | D7 | G | C | F | C | G7 | C',
+      { beatsPerBar: 3 },
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'Joy to the World',
+      'Isaac Watts and Lowell Mason',
+      1839,
+      100,
+      'C | C | G | C | F | C | G | C | C | C | G | C',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'O Come, All Ye Faithful',
+      'John Francis Wade',
+      1743,
+      92,
+      'G | D | G | D | G | D | G | C | G | D | G | D | G | D | G',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'Hark! The Herald Angels Sing',
+      'Mendelssohn and Wesley',
+      1840,
+      92,
+      'F | C | F | C | F | Bb | F | C | F | Dm | C | F',
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Bamboleo',
+      'Gipsy Kings',
+      1987,
+      120,
+      'Em | B7 | Em | B7 | Em | Am6 | B7 | Em | Em | Am6 | B7 | Em | Am7 | D7 | Gmaj7 | C | Am | B7 | Em',
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Volare',
+      'Gipsy Kings',
+      1989,
+      130,
+      'E | F#m | E | G#m | F#m | C#m | B7 | F#m | B7 | E | C#m | F#m | B7 | E',
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
+      'Mas Que Nada',
+      'Jorge Ben Jor',
+      1963,
+      110,
+      'Gm | Cm7 | Dm7 | Gm | C#dim | Gm | Cm7 | Gm | D7 | Gm | Cm7 | F | Gm | Cm7 | F | Gm',
+    ),
+  ),
+  withGenre(
+    'jazz',
+    song(
+      'What a Wonderful World',
+      'Louis Armstrong',
+      1967,
+      70,
+      'C | Em | F | Em | Dm | C | E7 | Am | Ab | Dm7 | G | C | G | C | Am | Em | Am | Em | Dm | C | G',
+    ),
+  ),
 ];
 
 export type PopGenre = 'jazz' | 'blues' | 'classical' | 'christmas' | 'world';

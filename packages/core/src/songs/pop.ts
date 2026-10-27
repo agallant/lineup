@@ -4,6 +4,7 @@ import { ukuleleHasChord } from '../chords';
 import { POP_DATA } from './pop-data';
 import { POP_GENRES, type PopGenre } from './pop-genres';
 import { POP_MODERN } from './pop-modern';
+import { POP_MORE } from './pop-more';
 
 /**
  * One well-known song as its chords: where it sat on the chart, how fast it goes, and a chord (or two,
@@ -101,8 +102,8 @@ export function popChart(song: PopSong): Chart {
   );
 }
 
-/** The annotated songs, the hand-written modern ones and the jazz, blues and classical progressions. */
-const ALL_POP: readonly PopSong[] = [...POP_DATA, ...POP_MODERN, ...POP_GENRES];
+/** The annotated songs, the hand-written modern ones, the further well-known songs and the jazz, blues and classical progressions. */
+const ALL_POP: readonly PopSong[] = [...POP_DATA, ...POP_MODERN, ...POP_MORE, ...POP_GENRES];
 
 /** Every song in the table as a chart, by identifier. */
 export const POP_SONGS: Readonly<Record<string, Chart>> = Object.fromEntries(
@@ -121,7 +122,10 @@ export const POP_FAVORITES: ReadonlySet<string> = new Set(
 );
 
 /** The hand-written songs newer than the chart annotations. */
-export const POP_NEWER: ReadonlySet<string> = new Set(POP_MODERN.map(popId));
+export const POP_NEWER: ReadonlySet<string> = new Set([
+  ...POP_MODERN.map(popId),
+  ...POP_MORE.filter((s) => s.year >= 1992).map(popId),
+]);
 
 /** The genre of each jazz, blues and classical progression, by song id. */
 export const POP_GENRE: ReadonlyMap<string, PopGenre> = new Map(

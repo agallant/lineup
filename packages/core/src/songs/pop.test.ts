@@ -4,7 +4,8 @@ import { getSong, songsFor } from './index';
 import { POP_DATA } from './pop-data';
 import { POP_GENRES } from './pop-genres';
 import { POP_MODERN } from './pop-modern';
-import { POP_FAVORITES, POP_GENRE, POP_SONGS, popChart, popId, popPattern } from './pop';
+import { POP_MORE } from './pop-more';
+import { POP_FAVORITES, POP_GENRE, POP_NEWER, POP_SONGS, popChart, popId, popPattern } from './pop';
 
 describe('pop songs', () => {
   it('has a few hundred, each a valid strum chart with a unique id', () => {
@@ -90,6 +91,27 @@ describe('pop songs', () => {
     for (const s of POP_MODERN) {
       expect(getSong(popId(s)).notes.length, s.title).toBeGreaterThan(20);
       expect(POP_FAVORITES.has(popId(s)), s.title).toBe(false);
+    }
+  });
+
+  it('has more well-known songs, each on chords both instruments can play', () => {
+    expect(POP_MORE.length).toBeGreaterThanOrEqual(200);
+    const ids = [...POP_DATA, ...POP_MODERN, ...POP_MORE, ...POP_GENRES].map(popId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const s of POP_MORE) {
+      const id = popId(s);
+      expect(POP_SONGS[id]!.notes.length, s.title).toBeGreaterThan(20);
+      expect(POP_FAVORITES.has(id), s.title).toBe(false);
+      expect(POP_GENRE.has(id), s.title).toBe(false);
+      // the newer ones are in the "newer songs" kind, the older ones are not
+      expect(POP_NEWER.has(id), s.title).toBe(s.year >= 1992);
+      for (const chord of s.bars.split(/[|\s]+/).filter(Boolean)) {
+        expect(chordFrets(undefined, chord), `${s.title}: ${chord}`).not.toBeNull();
+        expect(chordFrets('guitar-strum', chord), `${s.title}: ${chord}`).not.toBeNull();
+      }
+      const bars = s.bars.split('|').length;
+      const perSecond = POP_SONGS[id]!.notes.length / ((bars * s.beatsPerBar * 60) / s.bpm);
+      expect(perSecond, s.title).toBeLessThan(6.5);
     }
   });
 

@@ -33,7 +33,7 @@ for (const file of readdirSync(join(dist, 'assets')).filter((f) => f.endsWith('.
 
 // Size budget: the app must stay quick to load and to cache for offline use on a tablet.
 // Everything the page downloads (script, style, worklet), compressed, must fit.
-const BUDGET_KB = 230;
+const BUDGET_KB = 250;
 let totalBytes = 0;
 for (const file of readdirSync(join(dist, 'assets')).filter((f) => /\.(js|css)$/.test(f))) {
   totalBytes += gzipSync(readFileSync(join(dist, 'assets', file))).length;

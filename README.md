@@ -47,7 +47,7 @@ npm test           # Vitest, all packages
 npm run format     # Prettier
 npm run e2e        # real-browser checks in headless Chromium (needs Playwright; CI runs it as its own job),
                    # including an axe-core accessibility audit of every screen in three colour schemes
-node scripts/check-dist.mjs   # after a build: relative paths, and a size budget (230 KB gzipped)
+node scripts/check-dist.mjs   # after a build: relative paths, and a size budget (250 KB gzipped)
 ```
 
 Mic access needs a secure context (HTTPS or `localhost`).
