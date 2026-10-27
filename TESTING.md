@@ -341,3 +341,11 @@ Write anything you notice here, or just tell me in the chat:
 - [ ] Folded sections with a note in brackets ("Hit monitor and checks (for troubleshooting)") wrap under the title on a phone instead of splitting into columns.
 - [ ] Learn: buttons at the top (All, Singline, Windline, ...) show only that game's paths and are remembered; a path you have begun comes first.
 - [ ] Song packs: buttons at the top (All, Singline, ...) keep only that game's songs; packs with none of them step aside; the choice is remembered.
+
+## More songs to strum (about 280 new ones)
+
+- [ ] **Hits from the folk revival to the 2020s**: about 1,080 songs in the full Strumline catalogue now. The new ones are well-known chord progressions (Oasis, Coldplay, Radiohead, Nirvana, Taylor Swift, Billie Eilish, Fleetwood Mac, the Beatles, the Police, Elton John, Johnny Cash, Bob Marley, and more); they are outlines from chord sheets, so some will be a bar or a chord off. Tell me the ones that sound wrong and I will fix them.
+- [ ] **Newer songs** (since 1992) are also under "Newer songs" in the kind-of-song menu; the older ones are under "Hit songs (all)".
+- [ ] **Folk and carols**: _Oh! Susanna_, _Red River Valley_, _Shenandoah_, _Clementine_ and _Down in the Valley_ (waltz), _Jingle Bells_, _Deck the Halls_, _Joy to the World_ and others are under their own kinds (Christmas, world); do their chords feel right on your instrument?
+- [ ] **Waltz time**: _Waltz #2 (XO)_, _Ripple_, _If We Were Vampires_, _Down in the Valley_, _Home on the Range_, _Happy Birthday to You_ play in three beats a bar.
+- [ ] Anything in your own repertoire missing? Tell me and I will add it.

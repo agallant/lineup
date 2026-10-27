@@ -676,6 +676,71 @@ export const POP_GENRES: readonly (PopSong & { genre: PopGenre })[] = [
   withGenre(
     'world',
     song(
+      'Waltzing Matilda',
+      'Traditional Australian',
+      1895,
+      100,
+      'G | D7 | G | C | G | A | D | C | G | Am | D | G | D7 | G | C | G | A | A7 | D | D7 | G | D7 | G | C | G | Am | D | G',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'Jingle Bells',
+      'James Lord Pierpont',
+      1857,
+      120,
+      'C | C | C | C | C | C | C | C | F | F | C | C | G7 | G7 | C | C',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song('Deck the Halls', 'Traditional Welsh', 1784, 110, 'C | G7 | C | G7 | C | F | C | G7 | C'),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'We Wish You a Merry Christmas',
+      'Traditional English',
+      1935,
+      110,
+      'C | F | D7 | G | E7 | Am | D7 | G | C | F | C | G7 | C',
+      { beatsPerBar: 3 },
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'Joy to the World',
+      'Isaac Watts and Lowell Mason',
+      1839,
+      100,
+      'C | C | G | C | F | C | G | C | C | C | G | C',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'O Come, All Ye Faithful',
+      'John Francis Wade',
+      1743,
+      92,
+      'G | D | G | D | G | D | G | C | G | D | G | D | G | D | G',
+    ),
+  ),
+  withGenre(
+    'christmas',
+    song(
+      'Hark! The Herald Angels Sing',
+      'Mendelssohn and Wesley',
+      1840,
+      92,
+      'F | C | F | C | F | Bb | F | C | F | Dm | C | F',
+    ),
+  ),
+  withGenre(
+    'world',
+    song(
       'Bamboleo',
       'Gipsy Kings',
       1987,
