@@ -484,7 +484,7 @@ workflows come from
 - **CI** runs typecheck, lint, test and build. **CodeQL**, **zizmor** and **Dependency review**
   check the code, the workflows and new dependencies.
 - **E2E** (`.github/workflows/e2e.yaml`) runs `check:dist` and the headless-Chromium end-to-end
-  checks (Playwright is installed just for that job).
+  checks (Playwright comes from the lockfile; the job downloads its Chromium).
 - **PR preview** builds each PR into `gh-pages:/pr-preview/pr-N/`, comments the URL and a QR code,
   runs a Lighthouse mobile audit against it, and deletes the preview when the PR closes.
 - **Deploy** builds `main` into `dist/` and publishes it to the root of `gh-pages`, leaving
