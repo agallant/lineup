@@ -476,26 +476,26 @@ counts; **Clap + tap**, two lanes where you teach it your two sounds first; **Dr
 
 ## Deploy
 
-Everything goes through PRs. Nothing is pushed directly to `main`.
+Everything goes through PRs into `main`, reviewed by [CodeRabbit](https://coderabbit.ai). The
+workflows come from
+[`claude-coderabbit-pwa-template`](https://github.com/agallant/claude-coderabbit-pwa-template); see
+[CLAUDE.md](CLAUDE.md) for how changes land.
 
-- `.github/workflows/ci.yml` runs typecheck, lint, test and build on every PR (job `check`) and the
-  headless-Chromium end-to-end checks (job `e2e`, which installs Playwright just for that job)
-  and on `main`.
-- `.github/workflows/deploy.yml` builds `main` and publishes it to the root of
-  the `gh-pages` branch. It leaves `pr-preview/` alone.
-- `.github/workflows/preview.yml` builds each PR into `gh-pages:/pr-preview/pr-N/`,
-  comments the URL on the PR, and deletes the preview when the PR closes. It
-  uses [`rossjrw/pr-preview-action`](https://github.com/rossjrw/pr-preview-action).
+- **CI** runs typecheck, lint, test and build. **CodeQL**, **zizmor** and **Dependency review**
+  check the code, the workflows and new dependencies.
+- **E2E** (`.github/workflows/e2e.yaml`) runs `check:dist` and the headless-Chromium end-to-end
+  checks (Playwright comes from the lockfile; the job downloads its Chromium).
+- **PR preview** builds each PR into `gh-pages:/pr-preview/pr-N/`, comments the URL and a QR code,
+  runs a Lighthouse mobile audit against it, and deletes the preview when the PR closes.
+- **Deploy** builds `main` into `dist/` and publishes it to the root of `gh-pages`, leaving
+  `pr-preview/` alone.
 
-`.nojekyll` lives only at the root of `gh-pages` (the deploy workflow adds it); previews don't
-carry their own copy.
+The Vite `base` (in `apps/web/vite.config.ts`) is `./` (relative), so one build works both at the
+site root and in a preview subfolder. Routing uses hashes (`#/mic`) for the same reason. The service
+worker leaves `pr-preview/` URLs alone so the live app never answers for a preview.
 
-The Vite `base` (in `apps/web/vite.config.ts`) is `./` (relative), so one build works both at the site root
-and in a preview subfolder. Routing uses hashes (`#/mic`) for the same reason.
-
-**One-time setup (done in the GitHub UI):** Settings → Pages → Build and
-deployment → Source: **Deploy from a branch** → `gh-pages` / `(root)`. The
-`gh-pages` branch appears after the first preview or deploy run.
+**One-time setup (done in the GitHub UI):** Settings → Pages → Build and deployment → Source:
+**Deploy from a branch** → `gh-pages` / `(root)`.
 
 ## Mic & latency test (`#/mic`)
 

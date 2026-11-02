@@ -16,5 +16,8 @@ export default defineConfig({
   },
   build: {
     target: 'safari15',
+    // CI publishes dist/ at the repo root (the template's default build folder).
+    outDir: '../../dist',
+    emptyOutDir: true,
   },
 });

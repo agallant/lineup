@@ -3,7 +3,7 @@
 // microphone is replaced by Chromium's fake capture device playing generated WAVs,
 // or by the app's own auto-play demo adapter.
 //
-// Runs in CI as its own job (Playwright is installed there with --no-save) and locally with
+// Runs in CI as its own job (E2E workflow; Playwright is a dev dependency) and locally with
 // `npm run e2e` after `npm run build`. Exits non-zero if anything fails.
 //
 //   node scripts/e2e.mjs [demo|wind-demo|flute|exercises|melody|random-hits|variation|target|home|tuner|chords|listen|ear|free|tour|call|packs|staff|bass|keys|step|guitar|metronome|ux|responsive|picker|install|backing|duet|a11y|maker|learn|strum-demo|strum-picking|strum-live|offline|calibrate|live|bleed|beat-demo|beat-live|beat-leak|all] [--shots <dir>]
