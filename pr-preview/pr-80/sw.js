@@ -46,7 +46,7 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() =>
         caches
-          .match(req)
+          .match(req, { ignoreVary: true })
           .then((hit) => hit ?? new Response('Offline', { status: 503, statusText: 'Offline' })),
       ),
   );
