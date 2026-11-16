@@ -26,6 +26,14 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  // PR previews live under the live site's scope (/<repo>/pr-preview/pr-N/). The live worker
+  // leaves them alone so it never caches or serves a preview's files; a preview's own worker
+  // (registered inside pr-preview/) handles them.
+  if (
+    !self.location.pathname.includes('/pr-preview/') &&
+    new URL(req.url).pathname.includes('/pr-preview/')
+  )
+    return;
   event.respondWith(
     fetch(req, { cache: 'no-cache' })
       .then((res) => {
@@ -38,7 +46,7 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() =>
         caches
-          .match(req)
+          .match(req, { ignoreVary: true })
           .then((hit) => hit ?? new Response('Offline', { status: 503, statusText: 'Offline' })),
       ),
   );
